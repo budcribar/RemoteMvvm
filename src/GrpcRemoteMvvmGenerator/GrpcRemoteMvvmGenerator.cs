@@ -45,6 +45,9 @@ namespace PeakSWC.MvvmSourceGenerator
             // Handle Enums - they are typically represented as int32 in gRPC/Protobuf by default
             if (typeSymbol.TypeKind == TypeKind.Enum)
             {
+                // Could be refined by checking typeSymbol.EnumUnderlyingType.SpecialType
+                // and mapping to Int32Value, Int64Value, etc., accordingly.
+                // For simplicity and common practice, mapping to Int32Value.
                 return "Int32Value"; // Represents proto enum, which is int32 on the wire
             }
 
@@ -52,51 +55,80 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 // String
                 case SpecialType.System_String: return "StringValue";
+
                 // Boolean
                 case SpecialType.System_Boolean: return "BoolValue";
+
                 // Floating point
                 case SpecialType.System_Single: return "FloatValue";  // C# float (System.Single)
                 case SpecialType.System_Double: return "DoubleValue"; // C# double (System.Double)
+
                 // Standard integral types
                 case SpecialType.System_Int32: return "Int32Value";  // C# int (System.Int32)
                 case SpecialType.System_Int64: return "Int64Value";  // C# long (System.Int64)
                 case SpecialType.System_UInt32: return "UInt32Value"; // C# uint (System.UInt32)
                 case SpecialType.System_UInt64: return "UInt64Value"; // C# ulong (System.UInt64)
-                // Smaller integral types
+
+                // Smaller integral types (often promoted to 32-bit WKT wrappers or their direct proto types)
                 case SpecialType.System_SByte: return "Int32Value";  // C# sbyte (System.SByte)
-                case SpecialType.System_Byte: return "UInt32Value"; // C# byte (System.Byte)
+                case SpecialType.System_Byte: return "UInt32Value"; // C# byte (System.Byte), often mapped to uint32 or bytes
                 case SpecialType.System_Int16: return "Int32Value";  // C# short (System.Int16)
                 case SpecialType.System_UInt16: return "UInt32Value"; // C# ushort (System.UInt16)
+
                 // Char
-                case SpecialType.System_Char: return "StringValue";
+                case SpecialType.System_Char: return "StringValue"; // Represent char as a single-character StringValue.
+                                                                    // Alternatively, could be UInt32Value for its numeric UTF-16 value.
+
                 // DateTime & DateTimeOffset
-                case SpecialType.System_DateTime: return "Timestamp"; // Maps to google.protobuf.Timestamp
+                // google.protobuf.Timestamp is always UTC.
+                case SpecialType.System_DateTime: return "Timestamp"; // Maps to google.protobuf.Timestamp (should be UTC)
+
                 // Object (maps to Any)
                 case SpecialType.System_Object: return "Any"; // google.protobuf.Any
-                // Decimal
-                case SpecialType.System_Decimal: return "StringValue";
+
+                // Decimal: No direct WKT. Often represented as string or a custom message.
+                // For simplicity, mapping to StringValue or Any. StringValue is often preferred for precision.
+                case SpecialType.System_Decimal: return "StringValue"; // Or "google.type.Decimal" if using that extension, or a custom message.
+                                                                       // For WKT, StringValue is a common fallback.
             }
 
-            // Handle byte[]
-            if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arrayTypeSymbolByteCheck)
+            // Handle byte[] (for sequence of bytes)
+            if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
             {
-                if (arrayTypeSymbolByteCheck.ElementType.SpecialType == SpecialType.System_Byte && arrayTypeSymbolByteCheck.Rank == 1)
+                if (arrayTypeSymbol.ElementType.SpecialType == SpecialType.System_Byte && arrayTypeSymbol.Rank == 1)
                 {
                     return "BytesValue"; // Maps to google.protobuf.BytesValue
                 }
             }
 
-            string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString();
+            // Handle other specific System types by their full name (ToDisplayString might include nullability markers, use OriginalDefinition for cleaner check if needed)
+            string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString(); // Use OriginalDefinition to get non-nullable base type name
+
             switch (fullTypeName)
             {
-                case "System.TimeSpan": return "Duration";
-                case "System.Guid": return "StringValue";
-                case "System.DateTimeOffset": return "Timestamp";
-                case "System.Uri": return "StringValue";
-                case "System.Version": return "StringValue";
-                case "System.Numerics.BigInteger": return "StringValue";
+                case "System.TimeSpan":
+                    return "Duration"; // Maps to google.protobuf.Duration
+                case "System.Guid":
+                    return "StringValue"; // GUIDs are commonly represented as strings in Protobuf.
+                case "System.DateTimeOffset":
+                    // DateTimeOffset includes an offset. google.protobuf.Timestamp is UTC.
+                    // Common practice: convert to UTC DateTime then to Timestamp, or use a string/custom message.
+                    // Mapping to Timestamp implies conversion to UTC.
+                    return "Timestamp";
+                case "System.Uri":
+                    return "StringValue"; // URIs are typically represented as strings.
+                case "System.Version":
+                    return "StringValue"; // Versions are typically represented as strings.
+                case "System.Numerics.BigInteger":
+                    return "StringValue"; // BigInteger often represented as string to maintain precision.
+                                          // Alternatively, BytesValue if a binary representation is preferred.
             }
-            return "Any";
+
+            // Fallback for types not explicitly mapped above.
+            // "Any" is a reasonable default if the .proto field is designed to hold arbitrary types
+            // or if no specific WKT is suitable.
+            // Alternatively, you might want to throw an exception or log a warning for unmapped types.
+            return "Any"; // google.protobuf.Any
         }
 
         // New helper method to convert PascalCase to snake_case for .proto field names
@@ -782,104 +814,7 @@ namespace PeakSWC.MvvmSourceGenerator
 
             return sb.ToString();
         }
-        //private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol)
-        //{
-        //    // Handle Nullable<T> by getting the underlying type T
-        //    if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
-        //        namedTypeSymbolNullable.IsGenericType &&
-        //        namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
-        //    {
-        //        typeSymbol = namedTypeSymbolNullable.TypeArguments[0]; // Get T
-        //    }
-
-        //    // Handle Enums - they are typically represented as int32 in gRPC/Protobuf by default
-        //    if (typeSymbol.TypeKind == TypeKind.Enum)
-        //    {
-        //        // Could be refined by checking typeSymbol.EnumUnderlyingType.SpecialType
-        //        // and mapping to Int32Value, Int64Value, etc., accordingly.
-        //        // For simplicity and common practice, mapping to Int32Value.
-        //        return "Int32Value"; // Represents proto enum, which is int32 on the wire
-        //    }
-
-        //    switch (typeSymbol.SpecialType)
-        //    {
-        //        // String
-        //        case SpecialType.System_String: return "StringValue";
-
-        //        // Boolean
-        //        case SpecialType.System_Boolean: return "BoolValue";
-
-        //        // Floating point
-        //        case SpecialType.System_Single: return "FloatValue";  // C# float (System.Single)
-        //        case SpecialType.System_Double: return "DoubleValue"; // C# double (System.Double)
-
-        //        // Standard integral types
-        //        case SpecialType.System_Int32: return "Int32Value";  // C# int (System.Int32)
-        //        case SpecialType.System_Int64: return "Int64Value";  // C# long (System.Int64)
-        //        case SpecialType.System_UInt32: return "UInt32Value"; // C# uint (System.UInt32)
-        //        case SpecialType.System_UInt64: return "UInt64Value"; // C# ulong (System.UInt64)
-
-        //        // Smaller integral types (often promoted to 32-bit WKT wrappers or their direct proto types)
-        //        case SpecialType.System_SByte: return "Int32Value";  // C# sbyte (System.SByte)
-        //        case SpecialType.System_Byte: return "UInt32Value"; // C# byte (System.Byte), often mapped to uint32 or bytes
-        //        case SpecialType.System_Int16: return "Int32Value";  // C# short (System.Int16)
-        //        case SpecialType.System_UInt16: return "UInt32Value"; // C# ushort (System.UInt16)
-
-        //        // Char
-        //        case SpecialType.System_Char: return "StringValue"; // Represent char as a single-character StringValue.
-        //                                                            // Alternatively, could be UInt32Value for its numeric UTF-16 value.
-
-        //        // DateTime & DateTimeOffset
-        //        // google.protobuf.Timestamp is always UTC.
-        //        case SpecialType.System_DateTime: return "Timestamp"; // Maps to google.protobuf.Timestamp (should be UTC)
-
-        //        // Object (maps to Any)
-        //        case SpecialType.System_Object: return "Any"; // google.protobuf.Any
-
-        //        // Decimal: No direct WKT. Often represented as string or a custom message.
-        //        // For simplicity, mapping to StringValue or Any. StringValue is often preferred for precision.
-        //        case SpecialType.System_Decimal: return "StringValue"; // Or "google.type.Decimal" if using that extension, or a custom message.
-        //                                                               // For WKT, StringValue is a common fallback.
-        //    }
-
-        //    // Handle byte[] (for sequence of bytes)
-        //    if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
-        //    {
-        //        if (arrayTypeSymbol.ElementType.SpecialType == SpecialType.System_Byte && arrayTypeSymbol.Rank == 1)
-        //        {
-        //            return "BytesValue"; // Maps to google.protobuf.BytesValue
-        //        }
-        //    }
-
-        //    // Handle other specific System types by their full name (ToDisplayString might include nullability markers, use OriginalDefinition for cleaner check if needed)
-        //    string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString(); // Use OriginalDefinition to get non-nullable base type name
-
-        //    switch (fullTypeName)
-        //    {
-        //        case "System.TimeSpan":
-        //            return "Duration"; // Maps to google.protobuf.Duration
-        //        case "System.Guid":
-        //            return "StringValue"; // GUIDs are commonly represented as strings in Protobuf.
-        //        case "System.DateTimeOffset":
-        //            // DateTimeOffset includes an offset. google.protobuf.Timestamp is UTC.
-        //            // Common practice: convert to UTC DateTime then to Timestamp, or use a string/custom message.
-        //            // Mapping to Timestamp implies conversion to UTC.
-        //            return "Timestamp";
-        //        case "System.Uri":
-        //            return "StringValue"; // URIs are typically represented as strings.
-        //        case "System.Version":
-        //            return "StringValue"; // Versions are typically represented as strings.
-        //        case "System.Numerics.BigInteger":
-        //            return "StringValue"; // BigInteger often represented as string to maintain precision.
-        //                                  // Alternatively, BytesValue if a binary representation is preferred.
-        //    }
-
-        //    // Fallback for types not explicitly mapped above.
-        //    // "Any" is a reasonable default if the .proto field is designed to hold arbitrary types
-        //    // or if no specific WKT is suitable.
-        //    // Alternatively, you might want to throw an exception or log a warning for unmapped types.
-        //    return "Any"; // google.protobuf.Any
-        //}
+       
         private string LowercaseFirst(string str) => string.IsNullOrEmpty(str) ? str : char.ToLowerInvariant(str[0]) + str.Substring(1);
 
         
