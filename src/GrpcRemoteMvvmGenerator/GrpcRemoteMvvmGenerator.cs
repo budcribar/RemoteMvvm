@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
+using System.Reflection; // Not directly used in this snippet but present in original
 using System.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -12,7 +12,7 @@ namespace PeakSWC.MvvmSourceGenerator
     [Generator]
     public class GrpcRemoteMvvmGenerator : IIncrementalGenerator
     {
-        private const string GenerateGrpcRemoteAttributeFullName = "PeakSWC.Mvvm.Remote.Mvvm.GenerateGrpcRemoteAttribute"; 
+        private const string GenerateGrpcRemoteAttributeFullName = "PeakSWC.Mvvm.Remote.Mvvm.GenerateGrpcRemoteAttribute";
         private const string ObservablePropertyAttributeFullName = "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute";
         private const string RelayCommandAttributeFullName = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
@@ -42,9 +42,16 @@ namespace PeakSWC.MvvmSourceGenerator
             foreach (var classSyntax in classes)
             {
                 var semanticModel = compilation.GetSemanticModel(classSyntax.SyntaxTree);
-                var classSymbol = semanticModel.GetDeclaredSymbol(classSyntax);
 
-                if (classSymbol == null) continue;
+                // GetDeclaredSymbol returns ISymbol?. For a ClassDeclarationSyntax, 
+                // this should be an INamedTypeSymbol if it's not null.
+                // Use 'is' pattern matching to check the type and cast.
+                if (semanticModel.GetDeclaredSymbol(classSyntax) is not INamedTypeSymbol classSymbol)
+                {
+                    // If the symbol is null or not an INamedTypeSymbol, skip this class.
+                    continue;
+                }
+                // From this point onwards, 'classSymbol' is guaranteed to be an INamedTypeSymbol and not null.
 
                 // Get attribute data
                 var attributeData = classSymbol.GetAttributes().FirstOrDefault(ad =>
@@ -57,12 +64,12 @@ namespace PeakSWC.MvvmSourceGenerator
                 string serverImplNamespace = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "ServerImplNamespace").Value.Value?.ToString()
                                              ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.GrpcService";
                 string clientProxyNamespace = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "ClientProxyNamespace").Value.Value?.ToString()
-                                              ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.RemoteClient";
-
+                                               ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.RemoteClient";
 
                 var originalViewModelName = classSymbol.Name;
                 var originalViewModelFullName = classSymbol.ToDisplayString();
 
+                // Now, classSymbol is correctly typed as INamedTypeSymbol for these calls.
                 List<PropertyInfo> properties = GetObservableProperties(classSymbol);
                 List<CommandInfo> commands = GetRelayCommands(classSymbol);
 
@@ -104,7 +111,19 @@ namespace PeakSWC.MvvmSourceGenerator
                     {
                         // The generated property name is derived from the field name (e.g., _userName -> UserName)
                         string propertyName = fieldSymbol.Name.TrimStart('_');
-                        propertyName = char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1);
+                        if (propertyName.Length == 0 && fieldSymbol.Name.Length > 0) // Handle case like "_"
+                        {
+                            continue;
+                        }
+                        if (propertyName.Length > 0)
+                        {
+                            propertyName = char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1);
+                        }
+                        else // field was likely just "_" or empty after trim, invalid for property
+                        {
+                            continue;
+                        }
+
 
                         // Find the actual generated property symbol
                         var actualPropertySymbol = classSymbol.GetMembers(propertyName).OfType<IPropertySymbol>().FirstOrDefault();
@@ -140,7 +159,7 @@ namespace PeakSWC.MvvmSourceGenerator
                                 MethodName = methodSymbol.Name,
                                 CommandPropertyName = commandPropertyName,
                                 Parameters = methodSymbol.Parameters.Select(p => new ParameterInfo { Name = p.Name, Type = p.Type.ToDisplayString() }).ToList(),
-                                IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.ConstructedFrom.Name == "Task")))
+                                IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.ConstructedFrom?.Name == "Task")))
                             });
                         }
                     }
@@ -259,7 +278,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        // Pack newValue into notification.NewValue (e.g., using Any or specific types)");
             sb.AppendLine("        // notification.NewValue = Google.Protobuf.WellKnownTypes.Any.Pack(new StringValue { Value = newValue?.ToString() ?? \"\" });");
             sb.AppendLine();
-            sb.AppendLine("        List<IServerStreamWriter<PropertyChangeNotification>> currentSubscribers;");
+            sb.AppendLine("        List<IServerStreamWriter<PropertyChangeNotification>> currentSubscribers;"); // Corrected type from original comment
             sb.AppendLine("        lock(_subscriberLock) { currentSubscribers = _subscribers.ToList(); }");
             sb.AppendLine();
             sb.AppendLine("        foreach (var sub in currentSubscribers)");
@@ -305,7 +324,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"        get => _{LowercaseFirst(prop.Name)};");
                 sb.AppendLine("        set");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            if (SetProperty(ref _{LowercaseFirst(prop.Name)}, value))"); // From ObservableObject
+                sb.AppendLine($"            if (SetProperty(ref _{LowercaseFirst(prop.Name)}, value)) // From ObservableObject");
                 sb.AppendLine("            {");
                 sb.AppendLine("                // THIS PART REQUIRES ROBUST TYPE PACKING");
                 sb.AppendLine($"                // Example for string: var packedValue = Any.Pack(new StringValue {{ Value = value }});");
@@ -320,8 +339,8 @@ namespace PeakSWC.MvvmSourceGenerator
             foreach (var cmd in cmds)
             {
                 string commandType = cmd.IsAsync ? "IAsyncRelayCommand" : (cmd.Parameters.Any() ? $"IRelayCommand<{cmd.Parameters[0].Type}>" : "IRelayCommand");
-                string commandImplType = cmd.IsAsync ? "AsyncRelayCommand" : (cmd.Parameters.Any() ? $"RelayCommand<{cmd.Parameters[0].Type}>" : "RelayCommand");
-                string methodName = $"Execute{cmd.MethodName}Async"; // Client methods often async
+                //string commandImplType = cmd.IsAsync ? "AsyncRelayCommand" : (cmd.Parameters.Any() ? $"RelayCommand<{cmd.Parameters[0].Type}>" : "RelayCommand");
+                //string methodName = $"Execute{cmd.MethodName}Async"; // Client methods often async
 
                 sb.AppendLine($"    public {commandType} {cmd.CommandPropertyName} {{ get; }}");
                 sb.AppendLine();
@@ -334,10 +353,11 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 string executeMethodName = $"Remote{cmd.MethodName}";
                 if (cmd.IsAsync)
-                    sb.AppendLine($"        {cmd.CommandPropertyName} = new {(cmd.IsAsync ? "AsyncRelayCommand" : "RelayCommand")}({executeMethodName}Async);");
+                    sb.AppendLine($"        {cmd.CommandPropertyName} = new AsyncRelayCommand({executeMethodName}Async);");
+                else if (cmd.Parameters.Any())
+                    sb.AppendLine($"        {cmd.CommandPropertyName} = new RelayCommand<{cmd.Parameters[0].Type}>({executeMethodName});");
                 else
-                    sb.AppendLine($"        {cmd.CommandPropertyName} = new {(cmd.IsAsync ? "AsyncRelayCommand" : (cmd.Parameters.Any() ? $"RelayCommand <{ cmd.Parameters[0].Type}> " : "RelayCommand")) }({executeMethodName});");
-
+                    sb.AppendLine($"        {cmd.CommandPropertyName} = new RelayCommand({executeMethodName});");
             }
             sb.AppendLine("    }");
             sb.AppendLine();
@@ -360,9 +380,21 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 // Method signature needs to match constructor delegate for RelayCommand/AsyncRelayCommand
                 string paramList = cmd.Parameters.Any() ? $"{cmd.Parameters[0].Type} {LowercaseFirst(cmd.Parameters[0].Name)}" : "";
-                string requestCreation = cmd.Parameters.Any()
-                    ? $"new {protoNs}.{cmd.MethodName}Request {{ {cmd.Parameters[0].Name} = {LowercaseFirst(cmd.Parameters[0].Name)} }}"
-                    : $"new {protoNs}.{cmd.MethodName}Request()";
+                string requestInstanceName = cmd.Parameters.Any() ? LowercaseFirst(cmd.Parameters[0].Name) : "";
+
+                string requestCreation;
+                if (cmd.Parameters.Any())
+                {
+                    // Assuming the parameter name in proto message matches the C# parameter name (after lowercasing first char for var name)
+                    // And assuming the proto message field is PascalCase.
+                    string protoParamName = char.ToUpperInvariant(cmd.Parameters[0].Name[0]) + cmd.Parameters[0].Name.Substring(1);
+                    requestCreation = $"new {protoNs}.{cmd.MethodName}Request {{ {protoParamName} = {requestInstanceName} }}";
+                }
+                else
+                {
+                    requestCreation = $"new {protoNs}.{cmd.MethodName}Request()";
+                }
+
 
                 if (cmd.IsAsync)
                 {
@@ -378,10 +410,8 @@ namespace PeakSWC.MvvmSourceGenerator
                     sb.AppendLine($"        _ = _grpcClient.{cmd.MethodName}Async({requestCreation}); // Fire and forget or await response");
                     sb.AppendLine("    }");
                 }
-
                 sb.AppendLine();
             }
-
 
             sb.AppendLine("    private void StartListeningToPropertyChanges(CancellationToken cancellationToken)");
             sb.AppendLine("    {");
@@ -429,9 +459,7 @@ namespace PeakSWC.MvvmSourceGenerator
 
         // Helper record/class for storing extracted info
         internal record PropertyInfo { public string Name; public string Type; public ITypeSymbol FullTypeSymbol; }
-    internal record CommandInfo { public string MethodName; public string CommandPropertyName; public List<ParameterInfo> Parameters; public bool IsAsync;
+        internal record CommandInfo { public string MethodName; public string CommandPropertyName; public List<ParameterInfo> Parameters; public bool IsAsync; }
+        internal record ParameterInfo { public string Name; public string Type; }
     }
-    internal record ParameterInfo { public string Name; public string Type; }
-}
-
 }

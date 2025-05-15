@@ -22,13 +22,13 @@ public sealed class GenerateGrpcRemoteAttribute : Attribute
     /// Gets or sets the desired namespace for the generated server-side gRPC service implementation.
     /// If null or empty, a default will be used (e.g., [OriginalNamespace].GrpcService).
     /// </summary>
-    public string ServerImplNamespace { get; set; }
+    public string ServerImplNamespace { get; set; } = string.Empty;
 
     /// <summary>
     /// Gets or sets the desired namespace for the generated client-side proxy ViewModel.
     /// If null or empty, a default will be used (e.g., [OriginalNamespace].RemoteClient).
     /// </summary>
-    public string ClientProxyNamespace { get; set; }
+    public string ClientProxyNamespace { get; set; } = string.Empty;
 
 
     public GenerateGrpcRemoteAttribute(string protoCSharpNamespace, string grpcServiceName)
