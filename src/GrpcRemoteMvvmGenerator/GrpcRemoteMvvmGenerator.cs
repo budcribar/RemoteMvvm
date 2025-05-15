@@ -16,6 +16,44 @@ namespace PeakSWC.MvvmSourceGenerator
         private const string ObservablePropertyAttributeFullName = "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute";
         private const string RelayCommandAttributeFullName = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
+        // Diagnostic Descriptors
+        private static readonly DiagnosticDescriptor SGINFO001_GeneratorStarted = new DiagnosticDescriptor(
+            id: "SGINFO001", title: "Generator Execution", messageFormat: "GrpcRemoteMvvmGenerator Execute method started.",
+            category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGINFO002_NoClassesFound = new DiagnosticDescriptor(
+            id: "SGINFO002", title: "Generator Execution", messageFormat: "No classes found with the GenerateGrpcRemoteAttribute.",
+            category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGINFO003_ProcessingClass = new DiagnosticDescriptor(
+            id: "SGINFO003", title: "Generator Execution", messageFormat: "Processing class: {0}",
+            category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGWARN001_AttributeNotFound = new DiagnosticDescriptor(
+            id: "SGWARN001", title: "Attribute Resolution", messageFormat: "GenerateGrpcRemoteAttribute not found or not resolved on class {0}. Expected FQN: {1}",
+            category: "SourceGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGINFO004_AttributeFound = new DiagnosticDescriptor(
+            id: "SGINFO004", title: "Attribute Resolution", messageFormat: "Found GenerateGrpcRemoteAttribute on {0}.",
+            category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGERR001_MissingAttributeArgs = new DiagnosticDescriptor(
+            id: "SGERR001", title: "Attribute Usage", messageFormat: "Class '{0}' is missing required constructor arguments (protoCsNamespace, grpcServiceName) for [GenerateGrpcRemoteAttribute].",
+            category: "SourceGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGINFO005_ExtractedMembers = new DiagnosticDescriptor(
+            id: "SGINFO005", title: "Generator Execution", messageFormat: "Extracted {0} properties and {1} commands for {2}.",
+            category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGINFO006_GeneratedServerImpl = new DiagnosticDescriptor(
+            id: "SGINFO006", title: "Code Generation", messageFormat: "Generated server implementation for {0} in namespace {1}.",
+            category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
+
+        private static readonly DiagnosticDescriptor SGINFO007_GeneratedClientProxy = new DiagnosticDescriptor(
+            id: "SGINFO007", title: "Code Generation", messageFormat: "Generated client proxy for {0} in namespace {1}.",
+            category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
+
+
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
             IncrementalValuesProvider<ClassDeclarationSyntax> classDeclarations = context.SyntaxProvider
@@ -38,11 +76,11 @@ namespace PeakSWC.MvvmSourceGenerator
 
         private void Execute(Compilation compilation, System.Collections.Immutable.ImmutableArray<ClassDeclarationSyntax> classes, SourceProductionContext context)
         {
-            context.ReportDiagnostic(Diagnostic.Create("SGINFO001", "Generator", "GrpcRemoteMvvmGenerator Execute method started.", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 0));
+            context.ReportDiagnostic(Diagnostic.Create(SGINFO001_GeneratorStarted, Location.None));
 
             if (classes.IsDefaultOrEmpty)
             {
-                context.ReportDiagnostic(Diagnostic.Create("SGINFO002", "Generator", "No classes found with the GenerateGrpcRemoteAttribute.", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 0));
+                context.ReportDiagnostic(Diagnostic.Create(SGINFO002_NoClassesFound, Location.None));
                 return;
             }
 
@@ -55,22 +93,21 @@ namespace PeakSWC.MvvmSourceGenerator
                     continue;
                 }
 
-                context.ReportDiagnostic(Diagnostic.Create("SGINFO003", "Generator", $"Processing class: {classSymbol.ToDisplayString()}", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 0, classSyntax.GetLocation()));
+                context.ReportDiagnostic(Diagnostic.Create(SGINFO003_ProcessingClass, classSyntax.GetLocation(), classSymbol.ToDisplayString()));
 
                 var attributeData = classSymbol.GetAttributes().FirstOrDefault(ad =>
                 {
                     if (ad.AttributeClass == null) return false;
                     string? fqn = ad.AttributeClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                    // context.ReportDiagnostic(Diagnostic.Create("SGDEBUG001", "Generator", $"Class {classSymbol.Name} has attribute {fqn} (short: {ad.AttributeClass.Name})", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 1));
                     return fqn == GenerateGrpcRemoteAttributeFullName || ad.AttributeClass.Name == GenerateGrpcRemoteAttributeFullName;
                 });
 
                 if (attributeData == null)
                 {
-                    context.ReportDiagnostic(Diagnostic.Create("SGWARN001", "Generator", $"GenerateGrpcRemoteAttribute not found or not resolved on class {classSymbol.Name}. Expected FQN: {GenerateGrpcRemoteAttributeFullName}", DiagnosticSeverity.Warning, DiagnosticSeverity.Warning, true, 1, classSyntax.GetLocation()));
+                    context.ReportDiagnostic(Diagnostic.Create(SGWARN001_AttributeNotFound, classSyntax.GetLocation(), classSymbol.Name, GenerateGrpcRemoteAttributeFullName));
                     continue;
                 }
-                context.ReportDiagnostic(Diagnostic.Create("SGINFO004", "Generator", $"Found GenerateGrpcRemoteAttribute on {classSymbol.Name}.", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 0));
+                context.ReportDiagnostic(Diagnostic.Create(SGINFO004_AttributeFound, classSyntax.GetLocation(), classSymbol.Name));
 
 
                 string protoCsNamespace = string.Empty;
@@ -87,7 +124,7 @@ namespace PeakSWC.MvvmSourceGenerator
 
                 if (string.IsNullOrEmpty(protoCsNamespace) || string.IsNullOrEmpty(grpcServiceNameFromAttribute))
                 {
-                    context.ReportDiagnostic(Diagnostic.Create("SGERR001", "Generator", $"Class '{classSymbol.Name}' is missing required constructor arguments (protoCsNamespace, grpcServiceName) for [GenerateGrpcRemoteAttribute].", DiagnosticSeverity.Error, DiagnosticSeverity.Error, true, 0, attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation() ?? classSyntax.GetLocation()));
+                    context.ReportDiagnostic(Diagnostic.Create(SGERR001_MissingAttributeArgs, attributeData.ApplicationSyntaxReference?.GetSyntax().GetLocation() ?? classSyntax.GetLocation(), classSymbol.Name));
                     continue;
                 }
 
@@ -102,7 +139,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 List<PropertyInfoData> properties = GetObservableProperties(classSymbol);
                 List<CommandInfoData> commands = GetRelayCommands(classSymbol);
 
-                context.ReportDiagnostic(Diagnostic.Create("SGINFO005", "Generator", $"Extracted {properties.Count} properties and {commands.Count} commands for {originalViewModelName}.", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 0));
+                context.ReportDiagnostic(Diagnostic.Create(SGINFO005_ExtractedMembers, Location.None, properties.Count, commands.Count, originalViewModelName));
 
 
                 string serverImplCode = GenerateServerImplementation(
@@ -110,7 +147,7 @@ namespace PeakSWC.MvvmSourceGenerator
                     protoCsNamespace, grpcServiceNameFromAttribute,
                     properties, commands, compilation);
                 context.AddSource($"{originalViewModelName}GrpcServiceImpl.g.cs", SourceText.From(serverImplCode, Encoding.UTF8));
-                context.ReportDiagnostic(Diagnostic.Create("SGINFO006", "Generator", $"Generated server implementation for {originalViewModelName} in namespace {serverImplNamespace}.", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 0));
+                context.ReportDiagnostic(Diagnostic.Create(SGINFO006_GeneratedServerImpl, Location.None, originalViewModelName, serverImplNamespace));
 
 
                 string clientProxyCode = GenerateClientProxyViewModel(
@@ -118,7 +155,7 @@ namespace PeakSWC.MvvmSourceGenerator
                     protoCsNamespace, grpcServiceNameFromAttribute,
                     properties, commands, compilation);
                 context.AddSource($"{originalViewModelName}RemoteClient.g.cs", SourceText.From(clientProxyCode, Encoding.UTF8));
-                context.ReportDiagnostic(Diagnostic.Create("SGINFO007", "Generator", $"Generated client proxy for {originalViewModelName} in namespace {clientProxyNamespace}.", DiagnosticSeverity.Info, DiagnosticSeverity.Info, true, 0));
+                context.ReportDiagnostic(Diagnostic.Create(SGINFO007_GeneratedClientProxy, Location.None, originalViewModelName, clientProxyNamespace));
             }
         }
 
@@ -214,16 +251,14 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"            var state = new {protoCsNamespace}.{vmName}State();");
             foreach (var prop in props)
             {
-                string csharpPropertyName = prop.Name; // e.g., MonsterName
-                string protoMessageFieldName = ToPascalCase(prop.Name); // Assumes proto field is PascalCase, e.g. MonsterName
-                                                                        // If ProtoGeneratorUtil makes proto fields snake_case (e.g. monster_name),
-                                                                        // then Grpc.Tools will generate PascalCase C# properties (e.g. MonsterName) for the proto message.
-                                                                        // So, state.MonsterName should work if proto field is monster_name or MonsterName.
-
+                string csharpPropertyName = prop.Name;
+                string protoMessageFieldName = ToPascalCase(prop.Name);
                 sb.AppendLine($"            // Mapping property: {csharpPropertyName} to state.{protoMessageFieldName}");
-                sb.AppendLine($"            try {{ if (_viewModel.{csharpPropertyName} != null) state.{protoMessageFieldName} = _viewModel.{csharpPropertyName}; }} catch (Exception ex) {{ Console.WriteLine($\"Error mapping property {csharpPropertyName}: {{ex.Message}}\"); }}");
-                // Add more specific type handling if needed, e.g. for int:
-                // sb.AppendLine($"            state.{protoMessageFieldName} = _viewModel.{csharpPropertyName};");
+                sb.AppendLine($"            try {{");
+                // Basic assignment, assuming type compatibility or implicit conversion by Grpc.Tools generated setters
+                sb.AppendLine($"                var propValue = _viewModel.{csharpPropertyName};");
+                sb.AppendLine($"                if (propValue != null) state.{protoMessageFieldName} = propValue;");
+                sb.AppendLine($"            }} catch (Exception ex) {{ Console.WriteLine($\"Error mapping property {csharpPropertyName} to state.{protoMessageFieldName}: {{ex.Message}}\"); }}");
             }
             sb.AppendLine("            return Task.FromResult(state);");
             sb.AppendLine("        }");
@@ -243,12 +278,10 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            if (propertyInfo != null && propertyInfo.CanWrite)");
             sb.AppendLine("            {");
             sb.AppendLine("                try {");
-            sb.AppendLine("                    // This is a simplified unpacking. A robust solution would use a switch on propertyInfo.PropertyType or a dictionary of unpackers.");
             sb.AppendLine($"                   if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
             sb.AppendLine($"                   else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
             sb.AppendLine($"                   else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
-            // Add more types here, e.g., double, float, long, Timestamp, Duration
-            sb.AppendLine("                    // else if (request.NewValue.Is(Timestamp.Descriptor) && propertyInfo.PropertyType == typeof(DateTime)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Timestamp>().ToDateTime());");
+            sb.AppendLine("                    // TODO: Add more type checks and unpacking logic here (double, float, long, DateTime/Timestamp etc.)");
             sb.AppendLine("                    else { Console.WriteLine($\"[GrpcService:{vmName}] UpdatePropertyValue: Unpacking not implemented for property {request.PropertyName} and type {request.NewValue.TypeUrl}\"); }");
             sb.AppendLine("                } catch (Exception ex) { Console.WriteLine($\"[GrpcService:{vmName}] Error setting property {request.PropertyName}: {ex.Message}\"); }");
             sb.AppendLine("            }");
@@ -262,42 +295,31 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"        public override async Task<{protoCsNamespace}.{cmd.MethodName}Response> {cmd.MethodName}({protoCsNamespace}.{cmd.MethodName}Request request, ServerCallContext context)");
                 sb.AppendLine("        {");
                 string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
-                var parameters = new List<string>();
-                foreach (var p in cmd.Parameters)
-                {
-                    // Assumes request message has fields named with PascalCase, matching parameter names
-                    parameters.Add($"request.{ToPascalCase(p.Name)}");
-                }
-                string args = string.Join(", ", parameters);
 
                 if (cmd.IsAsync)
                 {
-                    sb.AppendLine($"            var command = {commandPropertyAccess} as IAsyncRelayCommand;"); // Basic IAsyncRelayCommand
-                    // More specific for parameters:
-                    // if (cmd.Parameters.Any()) command = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{cmd.Parameters[0].Type}>;
+                    sb.AppendLine($"            var command = {commandPropertyAccess} as IAsyncRelayCommand;");
                     sb.AppendLine($"            if (command != null)");
                     sb.AppendLine("            {");
-                    if (cmd.Parameters.Count == 1) // Simplified for single parameter commands
+                    if (cmd.Parameters.Count == 1)
                         sb.AppendLine($"                await command.ExecuteAsync(request.{ToPascalCase(cmd.Parameters[0].Name)});");
                     else if (cmd.Parameters.Count == 0)
                         sb.AppendLine("                await command.ExecuteAsync(null);");
                     else
-                        sb.AppendLine("                // TODO: Handle multiple parameters for async command execution, e.g., by passing 'request' object if command expects it.");
+                        sb.AppendLine("                // TODO: Handle multiple parameters for async command execution (e.g., pass 'request' object or use a tuple/custom object if command expects it).");
                     sb.AppendLine("            }");
                 }
                 else
                 {
-                    sb.AppendLine($"            var command = {commandPropertyAccess} as IRelayCommand;"); // Basic IRelayCommand
-                    // More specific for parameters:
-                    // if (cmd.Parameters.Any()) command = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand<{cmd.Parameters[0].Type}>;
+                    sb.AppendLine($"            var command = {commandPropertyAccess} as IRelayCommand;");
                     sb.AppendLine($"            if (command != null)");
                     sb.AppendLine("            {");
-                    if (cmd.Parameters.Count == 1) // Simplified for single parameter commands
+                    if (cmd.Parameters.Count == 1)
                         sb.AppendLine($"               command.Execute(request.{ToPascalCase(cmd.Parameters[0].Name)});");
                     else if (cmd.Parameters.Count == 0)
                         sb.AppendLine("                command.Execute(null);");
                     else
-                        sb.AppendLine("                // TODO: Handle multiple parameters for sync command execution, e.g., by passing 'request' object.");
+                        sb.AppendLine("                // TODO: Handle multiple parameters for sync command execution.");
                     sb.AppendLine("            }");
                 }
                 sb.AppendLine($"            return new {protoCsNamespace}.{cmd.MethodName}Response();");
@@ -313,8 +335,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            catch (Exception ex) { Console.WriteLine($\"[GrpcService:{vmName}] Error getting property value for {e.PropertyName}: {ex.Message}\"); return; }");
             sb.AppendLine();
             sb.AppendLine($"            var notification = new {protoCsNamespace}.PropertyChangeNotification {{ PropertyName = e.PropertyName }};");
-            sb.AppendLine("            // Pack newValue into notification.NewValue");
-            sb.AppendLine("            if (newValue == null) notification.NewValue = Any.Pack(new Empty()); // Or handle nulls differently");
+            sb.AppendLine("            if (newValue == null) notification.NewValue = Any.Pack(new Empty());");
             sb.AppendLine("            else if (newValue is string s) notification.NewValue = Any.Pack(new StringValue { Value = s });");
             sb.AppendLine("            else if (newValue is int i) notification.NewValue = Any.Pack(new Int32Value { Value = i });");
             sb.AppendLine("            else if (newValue is bool b) notification.NewValue = Any.Pack(new BoolValue { Value = b });");
@@ -322,8 +343,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });");
             sb.AppendLine("            else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });");
             sb.AppendLine("            else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
-            sb.AppendLine("            // Add more common types as needed");
-            sb.AppendLine("            else { Console.WriteLine($\"[GrpcService:{vmName}] PropertyChanged: Packing not implemented for type {newValue.GetType().FullName}\"); notification.NewValue = Any.Pack(new StringValue { Value = newValue.ToString() }); }"); // Fallback to string
+            sb.AppendLine("            else { Console.WriteLine($\"[GrpcService:{vmName}] PropertyChanged: Packing not implemented for type {newValue.GetType().FullName} of property {e.PropertyName}\"); notification.NewValue = Any.Pack(new StringValue { Value = newValue.ToString() }); }");
             sb.AppendLine();
             sb.AppendLine($"            List<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>> currentSubscribers;");
             sb.AppendLine("            lock(_subscriberLock) { currentSubscribers = _subscribers.ToList(); }");
@@ -363,14 +383,10 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("using System.Threading;");
             sb.AppendLine("using System.Threading.Tasks;");
             sb.AppendLine("using System.Collections.Generic;");
-            sb.AppendLine("using System.Diagnostics; // For Debug.WriteLine");
-            // For WPF, ensure this using is present if Application.Current.Dispatcher is used.
-            // It's better to pass a dispatcher or use a synchronization context if needed.
-            sb.AppendLine("#if WPF_DISPATCHER // Conditional compilation for WPF dispatcher");
+            sb.AppendLine("using System.Diagnostics;");
+            sb.AppendLine("#if WPF_DISPATCHER");
             sb.AppendLine("using System.Windows;");
             sb.AppendLine("#endif");
-
-
             sb.AppendLine();
             sb.AppendLine($"namespace {clientProxyNamespace}");
             sb.AppendLine("{");
@@ -400,7 +416,7 @@ namespace PeakSWC.MvvmSourceGenerator
 
                 if (cmd.Parameters.Any())
                 {
-                    var paramType = cmd.Parameters[0].Type; // Assuming single parameter for <T>
+                    var paramType = cmd.Parameters[0].Type;
                     methodGenericTypeArg = $"<{paramType}>";
                     commandInterfaceType = cmd.IsAsync ? $"IAsyncRelayCommand{methodGenericTypeArg}" : $"IRelayCommand{methodGenericTypeArg}";
                 }
@@ -419,7 +435,7 @@ namespace PeakSWC.MvvmSourceGenerator
 
                 if (cmd.Parameters.Any())
                 {
-                    methodGenericTypeArg = $"<{cmd.Parameters[0].Type}>"; // Assuming single parameter
+                    methodGenericTypeArg = $"<{cmd.Parameters[0].Type}>";
                     commandConcreteType += methodGenericTypeArg;
                 }
 
@@ -444,21 +460,16 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);");
             sb.AppendLine($"                var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);");
             sb.AppendLine("                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initial state received.\");");
-            sb.AppendLine("                // Unpack state and set initial local properties");
             foreach (var prop in props)
             {
-                // Assumes Grpc.Tools generates PascalCase C# properties from proto fields.
-                // If proto fields are snake_case (e.g., monster_name), Grpc.Tools generates PascalCase (e.g., MonsterName).
-                // If proto fields are PascalCase (e.g., MonsterName), Grpc.Tools generates PascalCase (e.g., MonsterName).
-                string protoStateFieldName = ToPascalCase(prop.Name); // Ensure this matches the C# property name on the proto-generated state message.
+                string protoStateFieldName = ToPascalCase(prop.Name);
                 sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
             }
             sb.AppendLine("                _isInitialized = true;");
             sb.AppendLine("                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initialized successfully.\");");
             sb.AppendLine("                StartListeningToPropertyChanges(_cts.Token);");
             sb.AppendLine("            }");
-            sb.AppendLine("            catch (RpcException ex)");
-            sb.AppendLine("            { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Failed to initialize: {ex.Status.StatusCode} - {ex.Status.Detail}\"); /* Handle error */ }");
+            sb.AppendLine("            catch (RpcException ex) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Failed to initialize: {ex.Status.StatusCode} - {ex.Status.Detail}\"); }");
             sb.AppendLine("            catch (OperationCanceledException) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Initialization cancelled.\"); }");
             sb.AppendLine("            catch (Exception ex) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unexpected error during initialization: {ex.Message}\"); }");
             sb.AppendLine("        }");
@@ -495,8 +506,9 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error executing command {cmd.MethodName}: {ex.Status.StatusCode} - {ex.Status.Detail}\"); }}");
                 sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Command {cmd.MethodName} cancelled.\"); }}");
                 sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unexpected error executing command {cmd.MethodName}: {ex.Message}\"); }}");
-                if (cmd.IsAsync && !cmd.Parameters.Any()) sb.AppendLine("            // return Task.CompletedTask; // Not needed for AsyncRelayCommand (no T)");
-                else if (cmd.IsAsync && cmd.Parameters.Any()) sb.AppendLine("            // return Task.CompletedTask; // Not needed for AsyncRelayCommand<T>");
+                // Corrected return for async methods with parameters
+                if (cmd.IsAsync && cmd.Parameters.Any()) sb.AppendLine("            // If the command method is Task<T>, this needs to return T or Task.FromResult(default(T))");
+                else if (cmd.IsAsync) sb.AppendLine("            // return Task.CompletedTask; // Not needed for AsyncRelayCommand (no T)");
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }
@@ -514,14 +526,14 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    {");
             sb.AppendLine("                        if (_isDisposed) break;");
             sb.AppendLine("                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Received property update: {update.PropertyName}\");");
-            sb.AppendLine("                        Action updateAction = () => {"); // Action to run on UI thread
+            sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                            switch (update.PropertyName)");
             sb.AppendLine("                            {");
             foreach (var prop in props)
             {
                 string wkt = GetProtoWellKnownTypeFor(prop.FullTypeSymbol!, compilation);
                 string csharpPropName = prop.Name;
-                sb.AppendLine($"                                case nameof({csharpPropName}):");
+                sb.AppendLine($"                                case nameof({csharpPropName}):"); // Using nameof should be fine if properties are on the client proxy
                 if (wkt == "StringValue") sb.AppendLine($"                                    if (update.NewValue.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
                 else if (wkt == "Int32Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int32Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int32Value>().Value; break;");
                 else if (wkt == "BoolValue") sb.AppendLine($"                                    if (update.NewValue.Is(BoolValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<BoolValue>().Value; break;");
@@ -529,17 +541,15 @@ namespace PeakSWC.MvvmSourceGenerator
                 else if (wkt == "FloatValue") sb.AppendLine($"                                    if (update.NewValue.Is(FloatValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<FloatValue>().Value; break;");
                 else if (wkt == "Int64Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int64Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int64Value>().Value; break;");
                 else if (wkt == "Timestamp" && prop.Type == "DateTime") sb.AppendLine($"                                    if (update.NewValue.Is(Timestamp.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Timestamp>().ToDateTime(); break;");
-                // Add more specific unpackers as needed
                 else sb.AppendLine($"                                    Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
             }
             sb.AppendLine("                                default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: {update.PropertyName}\"); break;");
             sb.AppendLine("                            }");
             sb.AppendLine("                        };");
-            sb.AppendLine("                        // Dispatch to UI thread if applicable (e.g., WPF, MAUI)");
             sb.AppendLine("                        #if WPF_DISPATCHER");
             sb.AppendLine("                        Application.Current?.Dispatcher.Invoke(updateAction);");
             sb.AppendLine("                        #else");
-            sb.AppendLine("                        updateAction(); // Execute directly if no dispatcher or in a non-UI context for the proxy");
+            sb.AppendLine("                        updateAction();");
             sb.AppendLine("                        #endif");
             sb.AppendLine("                    }");
             sb.AppendLine("                }");
@@ -569,12 +579,14 @@ namespace PeakSWC.MvvmSourceGenerator
         private string ToSnakeCase(string pascalCaseName)
         {
             if (string.IsNullOrEmpty(pascalCaseName)) return pascalCaseName;
-            return Regex.Replace(pascalCaseName, "(?<=[a-z0-9])[A-Z]|(?<=[A-Z])[A-Z](?=[a-z])", "_$0").ToLower();
+            // Handles "MyProperty" -> "my_property", "URLValue" -> "u_r_l_value" (improved slightly)
+            // Handles "MyURLValue" -> "my_u_r_l_value"
+            return Regex.Replace(pascalCaseName, "(?<=.)([A-Z])", "_$1").ToLower();
         }
 
         private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol, Compilation compilation)
         {
-            if (typeSymbol is null) return "Any"; // Should not happen if FullTypeSymbol is always set
+            if (typeSymbol is null) return "Any";
 
             if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
                 namedTypeSymbolNullable.IsGenericType &&
