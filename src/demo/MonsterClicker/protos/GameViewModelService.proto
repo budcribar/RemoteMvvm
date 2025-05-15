@@ -7,14 +7,18 @@ package monsterclicker_viewmodels_protos;
 
 option csharp_namespace = "MonsterClicker.ViewModels.Protos";
 
+// Message representing the full state of the GameViewModel
 message GameViewModelState {
+  // No observable properties found or mapped.
 }
 
+// Message for property change notifications
 message PropertyChangeNotification {
   string property_name = 1;
   google.protobuf.Any new_value = 2;
 }
 
+// Request to update a property's value
 message UpdatePropertyValueRequest {
   string property_name = 1;
   google.protobuf.Any new_value = 2;
