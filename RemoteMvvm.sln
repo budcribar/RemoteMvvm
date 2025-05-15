@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleViewModel", "src\test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "src\TestProject\TestProject.csproj", "{D2BA9BEC-70C9-478C-B19C-F050EBF24FDF}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsterClicker", "src\demo\MonsterClicker\MonsterClicker.csproj", "{8320DA7B-82A6-474A-AB17-1B464AA023D7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{D2BA9BEC-70C9-478C-B19C-F050EBF24FDF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2BA9BEC-70C9-478C-B19C-F050EBF24FDF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2BA9BEC-70C9-478C-B19C-F050EBF24FDF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8320DA7B-82A6-474A-AB17-1B464AA023D7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8320DA7B-82A6-474A-AB17-1B464AA023D7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8320DA7B-82A6-474A-AB17-1B464AA023D7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8320DA7B-82A6-474A-AB17-1B464AA023D7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
