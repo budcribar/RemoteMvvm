@@ -16,14 +16,8 @@
 	    <PrivateAssets>all</PrivateAssets>
 	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 	  </PackageReference>
-      <Protobuf Include="Protos\GameService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
+      <Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
-
-	<Target Name="GenerateProtoFile" BeforeTargets="ProtoCompile">
-		<Message Text="Generating GameService.proto file..." Importance="high" />
-		<Exec Command="dotnet run --project &quot;$(MSBuildProjectDirectory)\..\ProtoGeneratorUtil\ProtoGeneratorUtil.csproj&quot; -- ^&#xD;&#xA;                       --viewModelFiles &quot;$(MSBuildProjectDirectory)\ViewModels\GameViewModel.cs&quot; ^&#xD;&#xA;                       --output &quot;$(MSBuildProjectDirectory)\Protos\GameService.proto&quot; ^&#xD;&#xA;                       --protoNamespace &quot;MonsterClicker.Protos.Game&quot; ^&#xD;&#xA;                       --serviceName &quot;GameService&quot;" Condition="Exists('$(MSBuildProjectDirectory)\..\ProtoGeneratorUtil\ProtoGeneratorUtil.csproj') AND Exists('$(MSBuildProjectDirectory)\ViewModels\GameViewModel.cs')" />
-		<Message Text="ProtoGeneratorUtil project or ViewModel file not found. Skipping .proto file generation via Exec task." Importance="warning" Condition="!Exists('$(MSBuildProjectDirectory)\..\ProtoGeneratorUtil\ProtoGeneratorUtil.csproj') OR !Exists('$(MSBuildProjectDirectory)\ViewModels\GameViewModel.cs')" />
-	</Target>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\RemoteAttribute\RemoteAttribute.csproj" />

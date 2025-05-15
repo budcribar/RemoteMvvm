@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "ProtoGeneratorUtil": {
+      "commandName": "Project",
+      "commandLineArgs": "-v GameViewModel.cs",
+      "workingDirectory": "C:\\Users\\budcr\\source\\repos\\RemoteMvvm\\src\\demo\\MonsterClicker"
+    }
+  }
+}

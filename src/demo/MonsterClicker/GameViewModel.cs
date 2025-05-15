@@ -8,7 +8,7 @@ using System.Windows.Threading; // For DispatcherTimer if used for game loop/coo
 namespace MonsterClicker.ViewModels
 {
     // Attribute to mark this ViewModel for gRPC remote generation
-    [GenerateGrpcRemote("MonsterClicker.Protos.Game", "GameService",
+    [GenerateGrpcRemoteAttribute("MonsterClicker.Protos.Game", "GameService",
         ServerImplNamespace = "MonsterClicker.GrpcServices",
         ClientProxyNamespace = "MonsterClicker.RemoteClients")]
     public partial class GameViewModel : ObservableObject
