@@ -449,11 +449,90 @@ namespace PeakSWC.MvvmSourceGenerator
         }
         private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol)
         {
-            // Basic mapping, needs to be more robust for real use.
-            if (typeSymbol.SpecialType == SpecialType.System_String) return "StringValue";
-            if (typeSymbol.SpecialType == SpecialType.System_Int32) return "Int32Value";
-            // ... add more mappings
-            return "Any"; // Fallback or handle complex types
+            // Handle Nullable<T> by getting the underlying type T
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
+                namedTypeSymbolNullable.IsGenericType &&
+                namedTypeSymbolNullable.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                typeSymbol = namedTypeSymbolNullable.TypeArguments[0]; // Get T
+            }
+
+            // Handle Enums - they are typically represented as int32 in gRPC/Protobuf by default
+            if (typeSymbol.TypeKind == TypeKind.Enum)
+            {
+                // You could refine this by checking typeSymbol.EnumUnderlyingType.SpecialType
+                // and mapping to Int32Value, Int64Value, etc., accordingly.
+                // For simplicity and common practice, mapping to Int32Value.
+                return "Int32Value";
+            }
+
+            switch (typeSymbol.SpecialType)
+            {
+                // String
+                case SpecialType.System_String: return "StringValue";
+
+                // Boolean
+                case SpecialType.System_Boolean: return "BoolValue";
+
+                // Floating point
+                case SpecialType.System_Single: return "FloatValue";  // C# float
+                case SpecialType.System_Double: return "DoubleValue"; // C# double
+
+                // Standard integral types
+                case SpecialType.System_Int32: return "Int32Value";  // C# int
+                case SpecialType.System_Int64: return "Int64Value";  // C# long
+                case SpecialType.System_UInt32: return "UInt32Value"; // C# uint
+                case SpecialType.System_UInt64: return "UInt64Value"; // C# ulong
+
+                // Smaller integral types (promoted to 32-bit WKT wrappers)
+                case SpecialType.System_SByte: return "Int32Value";  // C# sbyte
+                case SpecialType.System_Byte: return "UInt32Value"; // C# byte (unsigned, 0-255)
+                case SpecialType.System_Int16: return "Int32Value";  // C# short
+                case SpecialType.System_UInt16: return "UInt32Value"; // C# ushort
+
+                // Char
+                case SpecialType.System_Char: return "StringValue"; // Represent char as a single-character StringValue.
+                                                                    // Alternatively, could be UInt32Value for its numeric UTF-16 value.
+
+                // DateTime
+                case SpecialType.System_DateTime: return "Timestamp"; // Maps to google.protobuf.Timestamp
+
+                // Object (maps to Any)
+                case SpecialType.System_Object: return "Any";
+
+                    // Decimal has no direct WKT. Often represented as string or a custom message.
+                    // Allowing it to fall through to "Any" or explicitly map to "StringValue" if string serialization is a common fallback.
+                    // case SpecialType.System_Decimal: return "StringValue"; // Example if choosing string representation by default
+            }
+
+            // Handle byte[] (for sequence of bytes)
+            // Needs to be IArrayTypeSymbol with ElementType System.Byte and Rank 1
+            if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
+            {
+                if (arrayTypeSymbol.ElementType.SpecialType == SpecialType.System_Byte && arrayTypeSymbol.Rank == 1)
+                {
+                    return "BytesValue"; // Maps to google.protobuf.BytesValue
+                }
+            }
+
+            // Handle other specific System types by their full name
+            string fullTypeName = typeSymbol.ToDisplayString();
+
+            if (fullTypeName == "System.TimeSpan")
+            {
+                return "Duration"; // Maps to google.protobuf.Duration
+            }
+
+            if (fullTypeName == "System.Guid")
+            {
+                // GUIDs are commonly represented as strings in Protobuf.
+                return "StringValue";
+            }
+
+            // Fallback for types not explicitly mapped above.
+            // The original code used "Any", which is a reasonable default if the .proto
+            // field is designed to hold arbitrary types or if no specific WKT is suitable.
+            return "Any";
         }
         private string LowercaseFirst(string str) => string.IsNullOrEmpty(str) ? str : char.ToLowerInvariant(str[0]) + str.Substring(1);
 
