@@ -9,25 +9,30 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-	  <PackageReference Include="Grpc" Version="2.46.6" />
-	  <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Grpc" Version="2.46.6" />
+		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
 		<PackageReference Include="Google.Protobuf" Version="3.31.0" />
-	  <PackageReference Include="Grpc.Tools" Version="2.72.0">
-		 
-		  <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-      <Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
+		<PackageReference Include="Grpc.Tools" Version="2.72.0">
+
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\GrpcRemoteMvvmGenerator\GrpcRemoteMvvmGenerator.csproj" />
-	  <ProjectReference Include="..\..\RemoteAttribute\RemoteAttribute.csproj" />
+
+
+		<ProjectReference Include="..\..\GrpcRemoteMvvmGenerator\GrpcRemoteMvvmGenerator.csproj"
+						  OutputItemType="Analyzer"
+						  ReferenceOutputAssembly="false" />
+
+		<ProjectReference Include="..\..\RemoteAttribute\RemoteAttribute.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="protos\" />
+		<Folder Include="protos\" />
 	</ItemGroup>
 
 </Project>
