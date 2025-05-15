@@ -265,7 +265,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 {
                     sb.AppendLine($"                state.{protoMessageFieldName} = propValue;");
                 }
-                sb.AppendLine($"            }} catch (Exception ex) {{ Console.WriteLine($\"Error mapping property {csharpPropertyName} to state.{protoMessageFieldName}: {{ex.Message}}\"); }}");
+                sb.AppendLine($"            }} catch (Exception ex) {{ Console.WriteLine($\"Error mapping property {csharpPropertyName} to state.{protoMessageFieldName}: \" + ex.Message); }}"); // Corrected string concat
             }
             sb.AppendLine("            return Task.FromResult(state);");
             sb.AppendLine("        }");
@@ -518,7 +518,7 @@ namespace PeakSWC.MvvmSourceGenerator
                     sb.AppendLine($"                _ = _grpcClient.{cmd.MethodName}Async({requestCreation}, cancellationToken: _cts.Token);");
                 }
                 sb.AppendLine("            }");
-                sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error executing command {cmd.MethodName}: {{ex.Status.StatusCode}} - {{ex.Status.Detail}}\"); }}");
+                sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error executing command {cmd.MethodName}: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
                 sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Command {cmd.MethodName} cancelled.\"); }}");
                 sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unexpected error executing command {cmd.MethodName}: \" + ex.Message); }}");
                 if (cmd.IsAsync && !cmd.Parameters.Any()) sb.AppendLine("            // return Task.CompletedTask; // Not strictly needed for AsyncRelayCommand");
@@ -547,7 +547,8 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 string wkt = GetProtoWellKnownTypeFor(prop.FullTypeSymbol!, compilation);
                 string csharpPropName = prop.Name;
-                sb.AppendLine($"                                case nameof({csharpPropName}):");
+                // Use nameof on the client proxy's own property name for the case statement
+                sb.AppendLine($"                                case nameof(this.{csharpPropName}):");
                 if (wkt == "StringValue") sb.AppendLine($"                                    if (update.NewValue.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
                 else if (wkt == "Int32Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int32Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int32Value>().Value; break;");
                 else if (wkt == "BoolValue") sb.AppendLine($"                                    if (update.NewValue.Is(BoolValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<BoolValue>().Value; break;");
