@@ -1,8 +1,8 @@
 ﻿syntax = "proto3";
 
-package monsterclicker_viewmodels_protos;
+package monsterclicker_viewmodels_protos; // Derived from ProtoNamespace option
 
-option csharp_namespace = "MonsterClicker.ViewModels.Protos";
+option csharp_namespace = "MonsterClicker.ViewModels.Protos"; // Matches ProtoNamespace option
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
@@ -30,28 +30,53 @@ message UpdatePropertyValueRequest {
   google.protobuf.Any new_value = 2;
 }
 
-// Service definition
-service GameViewModelService {
-  rpc GetState (google.protobuf.Empty) returns (GameViewModelState);
-  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);
-  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
-  // Add RPCs for your commands here if they were generated
-  // Example:
-  // rpc AttackMonster (AttackMonsterRequest) returns (AttackMonsterResponse);
-  // rpc SpecialAttack (SpecialAttackRequest) returns (SpecialAttackResponse);
-  // rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
+// --- Command Request and Response Messages ---
+
+// Request message for AttackMonster command
+message AttackMonsterRequest {
+  // This command takes no parameters.
 }
 
-// You would also need message definitions for command requests/responses
-// if your ProtoGeneratorUtil is generating them. Based on your previous
-// proto output, these were missing, which is fine if the commands
-// don't take parameters or return specific structures other than Empty.
-// If your commands (AttackMonster, SpecialAttack, ResetGame) are supposed
-// to be in the service, their request/response messages also need to be defined.
-// For example:
-// message AttackMonsterRequest {}
-// message AttackMonsterResponse {}
-// message SpecialAttackRequest {} // Add fields if it takes parameters
-// message SpecialAttackResponse {}
-// message ResetGameRequest {}
-// message ResetGameResponse {}
+// Response message for AttackMonster command
+message AttackMonsterResponse {
+}
+
+// Request message for SpecialAttack command
+message SpecialAttackRequest {
+  int32 delay_milliseconds = 1; // Derived from 'int delayMilliseconds' parameter
+}
+
+// Response message for SpecialAttack command
+message SpecialAttackResponse {
+}
+
+// Request message for ResetGame command
+message ResetGameRequest {
+  // This command takes no parameters.
+}
+
+// Response message for ResetGame command
+message ResetGameResponse {
+}
+
+// Service definition
+service GameViewModelService { // Derived from GrpcServiceName option
+  // RPC for getting the initial state
+  rpc GetState (google.protobuf.Empty) returns (GameViewModelState);
+
+  // RPC for subscribing to property changes
+  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);
+
+  // RPC for a client to update a property value on the server
+  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
+
+  // --- RPCs for Commands ---
+  // RPC for AttackMonster command
+  rpc AttackMonster (AttackMonsterRequest) returns (AttackMonsterResponse);
+
+  // RPC for SpecialAttack command
+  rpc SpecialAttack (SpecialAttackRequest) returns (SpecialAttackResponse);
+
+  // RPC for ResetGame command
+  rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
+}
