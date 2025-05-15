@@ -9,7 +9,13 @@ option csharp_namespace = "MonsterClicker.ViewModels.Protos";
 
 // Message representing the full state of the GameViewModel
 message GameViewModelState {
-  // No observable properties found or mapped.
+  string monster_name = 1;
+  int32 monster_max_health = 2;
+  int32 monster_current_health = 3;
+  int32 player_damage = 4;
+  string game_message = 5;
+  bool is_monster_defeated = 6;
+  bool can_use_special_attack = 7;
 }
 
 // Message for property change notifications

@@ -19,15 +19,14 @@ namespace ProtoGeneratorUtil
         public IEnumerable<string> ViewModelFiles { get; set; } = Enumerable.Empty<string>();
 
         [Option('o', "output", Required = false, HelpText = "Output path for the generated .proto file. Default: Protos/{ServiceName}.proto")]
-        public string? OutputPath { get; set; } // Made optional, will be derived if not set
+        public string? OutputPath { get; set; }
 
         [Option('p', "protoNamespace", Required = false, HelpText = "The C# namespace for the generated proto types. Default: {ViewModelNamespace}.Protos")]
-        public string? ProtoNamespace { get; set; } // Made optional, will be derived
+        public string? ProtoNamespace { get; set; }
 
         [Option('s', "serviceName", Required = false, HelpText = "The gRPC service name. Default: {ViewModelName}Service")]
-        public string? GrpcServiceName { get; set; } // Made optional, will be derived
+        public string? GrpcServiceName { get; set; }
 
-        // Default is the fully qualified name, assuming successful assembly reference loading.
         [Option('a', "attributeFullName", Required = false, Default = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute", HelpText = "The full name of the GenerateGrpcRemoteAttribute.")]
         public string GenerateGrpcRemoteAttributeFullName { get; set; } = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute";
 
@@ -37,7 +36,6 @@ namespace ProtoGeneratorUtil
         [Option("relayCommandAttribute", Required = false, Default = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute", HelpText = "Full name of the RelayCommand attribute.")]
         public string RelayCommandAttributeFullName { get; set; } = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
-        // Added public parameterless constructor for CommandLineParser
         public Options() { }
     }
 
@@ -57,7 +55,6 @@ namespace ProtoGeneratorUtil
 
         static async Task RunOptionsAndReturnExitCode(Options opts)
         {
-            // Initial console output before defaults are applied
             Console.WriteLine($"Starting .proto file generation with initial options...");
             Console.WriteLine($"  ViewModel files: {string.Join(", ", opts.ViewModelFiles)}");
             Console.WriteLine($"  Output .proto (initial): {opts.OutputPath ?? "Not set, will derive"}");
@@ -66,7 +63,6 @@ namespace ProtoGeneratorUtil
             Console.WriteLine($"  GenerateAttribute: {opts.GenerateGrpcRemoteAttributeFullName}");
             Console.WriteLine($"  ObservablePropertyAttribute: {opts.ObservablePropertyAttributeFullName}");
             Console.WriteLine($"  RelayCommandAttribute: {opts.RelayCommandAttributeFullName}");
-
 
             if (!opts.ViewModelFiles.Any())
             {
@@ -100,18 +96,11 @@ namespace ProtoGeneratorUtil
                 MetadataReference.CreateFromFile(typeof(System.Collections.ObjectModel.ObservableCollection<>).Assembly.Location),
             };
 
-            // --- Attempt to locate and add CommunityToolkit.Mvvm.dll ---
             TryAddAssemblyReference(references, "CommunityToolkit.Mvvm.dll", opts.ViewModelFiles.FirstOrDefault());
 
-            // --- Attempt to locate and add the assembly containing GenerateGrpcRemoteAttribute ---
-            // Assuming the assembly might be named based on the attribute's namespace or a common project name.
-            // Example: If attribute is PeakSWC.Mvvm.Remote.Mvvm.GenerateGrpcRemoteAttribute,
-            // the DLL might be PeakSWC.Mvvm.Remote.Attributes.dll, PeakSWC.Mvvm.Remote.Mvvm.dll or similar.
-            // This is a heuristic. A more robust way is if the user can specify this DLL's name/path.
-            string remoteAttributeDllName = "RemoteAttribute.dll"; // Or a more generic name if possible, or make it an option
-            // You might also try variations like "PeakSWC.Mvvm.Remote.Attributes.dll"
-            TryAddAssemblyReference(references, remoteAttributeDllName, opts.ViewModelFiles.FirstOrDefault(), true);
-
+            // Use the DLL name as observed in the user's log output.
+            string remoteAttributeDllName = "RemoteAttribute.dll";
+            TryAddAssemblyReference(references, remoteAttributeDllName, opts.ViewModelFiles.FirstOrDefault(), false); // Make it non-optional if it's essential
 
             Compilation compilation = CSharpCompilation.Create("ViewModelAssembly",
                 syntaxTrees: syntaxTrees,
@@ -135,10 +124,9 @@ namespace ProtoGeneratorUtil
                 {
                     if (semanticModel.GetDeclaredSymbol(classSyntax) is INamedTypeSymbol classSymbol)
                     {
-                        // Check for the attribute using its fully qualified name
                         var generateAttributeData = classSymbol.GetAttributes().FirstOrDefault(ad =>
                             ad.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == opts.GenerateGrpcRemoteAttributeFullName ||
-                            ad.AttributeClass?.Name == opts.GenerateGrpcRemoteAttributeFullName // Fallback to short name if FQN fails
+                            ad.AttributeClass?.Name == opts.GenerateGrpcRemoteAttributeFullName
                             );
 
                         if (generateAttributeData != null)
@@ -157,7 +145,7 @@ namespace ProtoGeneratorUtil
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error: No ViewModel class found with the attribute matching '{opts.GenerateGrpcRemoteAttributeFullName}'.");
-                Console.WriteLine("Ensure the attribute name is correct and the defining assembly is referenced.");
+                Console.WriteLine("Ensure the attribute name is correct and the defining assembly ('" + remoteAttributeDllName + "') is referenced and found.");
                 Console.ResetColor();
                 Environment.ExitCode = 1;
                 return;
@@ -178,7 +166,7 @@ namespace ProtoGeneratorUtil
             if (string.IsNullOrWhiteSpace(opts.OutputPath))
             {
                 var baseDir = Path.GetDirectoryName(opts.ViewModelFiles.First());
-                if (string.IsNullOrEmpty(baseDir)) baseDir = "."; // Default to current directory if no path info
+                if (string.IsNullOrEmpty(baseDir)) baseDir = ".";
                 var protosDir = Path.Combine(baseDir, "Protos");
                 opts.OutputPath = Path.Combine(protosDir, $"{opts.GrpcServiceName}.proto");
                 Console.WriteLine($"Derived Output Path: {opts.OutputPath}");
@@ -205,10 +193,9 @@ namespace ProtoGeneratorUtil
             if (!properties.Any() && !commands.Any())
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Warning: No observable properties or relay commands were found in ViewModel '{originalVmName}'. The .proto file might be empty or incomplete. This could be due to missing assembly references for attribute resolution (e.g., CommunityToolkit.Mvvm.dll or the DLL defining GenerateGrpcRemoteAttribute).");
+                Console.WriteLine($"Warning: No observable properties or relay commands were found in ViewModel '{originalVmName}'. The .proto file might be empty or incomplete. This could be due to missing assembly references for attribute resolution (e.g., CommunityToolkit.Mvvm.dll or {remoteAttributeDllName}).");
                 Console.ResetColor();
             }
-
 
             string protoFileContent = GenerateProtoFileContent(
                 opts.ProtoNamespace!,
@@ -251,12 +238,9 @@ namespace ProtoGeneratorUtil
                 {
                     viewModelDir = Directory.GetCurrentDirectory();
                 }
-                // Search in ViewModel's directory and its parent directories (up to a few levels)
-                // This is a common pattern for finding DLLs in solution structures.
                 string? currentSearchDir = viewModelDir;
-                for (int i = 0; i < 4 && currentSearchDir != null; i++) // Search up to 3 parent levels
+                for (int i = 0; i < 4 && currentSearchDir != null; i++)
                 {
-                    // Look for bin/Debug or bin/Release subdirectories
                     string[] commonBuildDirs = { Path.Combine(currentSearchDir, "bin", "Debug"), Path.Combine(currentSearchDir, "bin", "Release") };
                     foreach (var buildDir in commonBuildDirs)
                     {
@@ -270,7 +254,6 @@ namespace ProtoGeneratorUtil
                     }
                     if (foundPath != null) break;
 
-                    // Also search directly in the current search directory and its subdirectories
                     foundPath = Directory.GetFiles(currentSearchDir, dllName, SearchOption.AllDirectories)
                                            .OrderBy(f => f.Length)
                                            .FirstOrDefault();
@@ -288,11 +271,11 @@ namespace ProtoGeneratorUtil
             {
                 if (!isOptional)
                 {
-                    Console.WriteLine($"Warning: Could not find '{dllName}'. Attribute resolution might fail if types from this assembly are used.");
+                    Console.WriteLine($"Warning: Could not find '{dllName}'. Attribute resolution and type analysis might be affected.");
                 }
                 else
                 {
-                    Console.WriteLine($"Info: Optional assembly '{dllName}' not found. This may be fine if not used directly.");
+                    Console.WriteLine($"Info: Optional assembly '{dllName}' not found. This may be fine if not used directly for attribute definitions.");
                 }
             }
         }
@@ -317,15 +300,9 @@ namespace ProtoGeneratorUtil
                         }
                         else continue;
 
-                        var actualPropertySymbol = classSymbol.GetMembers(propertyName).OfType<IPropertySymbol>().FirstOrDefault();
-                        if (actualPropertySymbol != null)
-                        {
-                            props.Add(new PropertyInfo { Name = actualPropertySymbol.Name, TypeString = actualPropertySymbol.Type.ToDisplayString(), FullTypeSymbol = actualPropertySymbol.Type });
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Warning: Field '{fieldSymbol.Name}' has [ObservableProperty] but corresponding property '{propertyName}' not found in '{classSymbol.Name}'.");
-                        }
+                        // We use the field's type directly, as the property type will match it.
+                        // We don't need to find the actual generated IPropertySymbol in this ad-hoc compilation.
+                        props.Add(new PropertyInfo { Name = propertyName, TypeString = fieldSymbol.Type.ToDisplayString(), FullTypeSymbol = fieldSymbol.Type });
                     }
                 }
             }
@@ -343,24 +320,19 @@ namespace ProtoGeneratorUtil
                     var relayCmdAttribute = methodSymbol.GetAttributes().FirstOrDefault(a =>
                         a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == relayCommandAttributeFullName ||
                         a.AttributeClass?.Name == relayCommandAttributeFullName);
+
                     if (relayCmdAttribute != null)
                     {
                         string commandPropertyName = methodSymbol.Name + "Command";
-                        var actualCommandPropertySymbol = classSymbol.GetMembers(commandPropertyName).OfType<IPropertySymbol>().FirstOrDefault();
-                        if (actualCommandPropertySymbol != null)
+                        // We don't need to find the actual IPropertySymbol for the command here.
+                        // We construct CommandInfo based on the method itself.
+                        cmds.Add(new CommandInfo
                         {
-                            cmds.Add(new CommandInfo
-                            {
-                                MethodName = methodSymbol.Name,
-                                CommandPropertyName = commandPropertyName,
-                                Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(), FullTypeSymbol = p.Type }).ToList(),
-                                IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
-                            });
-                        }
-                        else
-                        {
-                            Console.WriteLine($"Warning: Method '{methodSymbol.Name}' has [RelayCommand] but corresponding command property '{commandPropertyName}' not found in '{classSymbol.Name}'.");
-                        }
+                            MethodName = methodSymbol.Name,
+                            CommandPropertyName = commandPropertyName, // This is the derived name
+                            Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(), FullTypeSymbol = p.Type }).ToList(),
+                            IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
+                        });
                     }
                 }
             }
@@ -368,7 +340,6 @@ namespace ProtoGeneratorUtil
             return cmds;
         }
 
-        // --- .proto generation logic (remains the same as previous version) ---
         private static string ToSnakeCase(string pascalCaseName)
         {
             if (string.IsNullOrEmpty(pascalCaseName)) return pascalCaseName;
