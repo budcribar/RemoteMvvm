@@ -30,9 +30,36 @@ message UpdatePropertyValueRequest {
   google.protobuf.Any new_value = 2;
 }
 
+// Request message for AttackMonster command
+message AttackMonsterRequest {
+}
+
+// Response message for AttackMonster command
+message AttackMonsterResponse {
+}
+
+// Request message for SpecialAttackAsync command
+message SpecialAttackAsyncRequest {
+}
+
+// Response message for SpecialAttackAsync command
+message SpecialAttackAsyncResponse {
+}
+
+// Request message for ResetGame command
+message ResetGameRequest {
+}
+
+// Response message for ResetGame command
+message ResetGameResponse {
+}
+
 service GameViewModelService {
   rpc GetState (google.protobuf.Empty) returns (GameViewModelState);
   rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);
   rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
+  rpc AttackMonster (AttackMonsterRequest) returns (AttackMonsterResponse);
+  rpc SpecialAttackAsync (SpecialAttackAsyncRequest) returns (SpecialAttackAsyncResponse);
+  rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
 }
 

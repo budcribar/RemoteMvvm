@@ -9,6 +9,7 @@ using CommandLine;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Reflection; // For Assembly.Location
 
 namespace ProtoGeneratorUtil
 {
@@ -19,15 +20,14 @@ namespace ProtoGeneratorUtil
         public IEnumerable<string> ViewModelFiles { get; set; } = Enumerable.Empty<string>();
 
         [Option('o', "output", Required = false, HelpText = "Output path for the generated .proto file. Default: Protos/{ServiceName}.proto")]
-        public string? OutputPath { get; set; } // Made optional, will be derived if not set
+        public string? OutputPath { get; set; }
 
         [Option('p', "protoNamespace", Required = false, HelpText = "The C# namespace for the generated proto types. Default: {ViewModelNamespace}.Protos")]
-        public string? ProtoNamespace { get; set; } // Made optional, will be derived
+        public string? ProtoNamespace { get; set; }
 
         [Option('s', "serviceName", Required = false, HelpText = "The gRPC service name. Default: {ViewModelName}Service")]
-        public string? GrpcServiceName { get; set; } // Made optional, will be derived
+        public string? GrpcServiceName { get; set; }
 
-        // Default is the fully qualified name, assuming successful assembly reference loading.
         [Option('a', "attributeFullName", Required = false, Default = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute", HelpText = "The full name of the GenerateGrpcRemoteAttribute.")]
         public string GenerateGrpcRemoteAttributeFullName { get; set; } = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute";
 
@@ -37,7 +37,6 @@ namespace ProtoGeneratorUtil
         [Option("relayCommandAttribute", Required = false, Default = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute", HelpText = "Full name of the RelayCommand attribute.")]
         public string RelayCommandAttributeFullName { get; set; } = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
-        // Added public parameterless constructor for CommandLineParser
         public Options() { }
     }
 
@@ -90,17 +89,53 @@ namespace ProtoGeneratorUtil
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(fileContent, path: filePath));
             }
 
-            var references = new List<MetadataReference>
-            {
-                MetadataReference.CreateFromFile(typeof(object).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.ComponentModel.INotifyPropertyChanged).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.Linq.Enumerable).Assembly.Location),
-                MetadataReference.CreateFromFile(typeof(System.Collections.ObjectModel.ObservableCollection<>).Assembly.Location),
-            };
+            var references = new List<MetadataReference>();
 
+            // --- Load Trusted Platform Assemblies (more robust for core runtime) ---
+            string? trustedAssembliesPaths = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+            if (!string.IsNullOrEmpty(trustedAssembliesPaths))
+            {
+                var paths = trustedAssembliesPaths.Split(Path.PathSeparator);
+                foreach (var path in paths)
+                {
+                    if (File.Exists(path) && !references.Any(r => r.Display?.Equals(path, StringComparison.OrdinalIgnoreCase) == true))
+                    {
+                        // Load most essential ones first, or all if simple
+                        // For this tool, loading many TPAs is safer to ensure type resolution.
+                        try
+                        {
+                            references.Add(MetadataReference.CreateFromFile(path));
+                            // Console.WriteLine($"Added TPA reference: {path}"); // Can be very verbose
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Warning: Could not load TPA '{path}': {ex.Message}");
+                        }
+                    }
+                }
+                Console.WriteLine($"Loaded {references.Count} references from TRUSTED_PLATFORM_ASSEMBLIES.");
+            }
+            else
+            {
+                Console.WriteLine("Warning: TRUSTED_PLATFORM_ASSEMBLIES not available. Falling back to manual reference loading.");
+                // Fallback to individual loading if TPA not available (less likely for a .NET Core app)
+                references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location)); // System.Private.CoreLib
+                try { references.Add(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location)); } catch { Console.WriteLine("Warning: Could not load System.Runtime by Assembly.Load"); }
+                try { references.Add(MetadataReference.CreateFromFile(typeof(System.ComponentModel.INotifyPropertyChanged).Assembly.Location)); } catch { /* ... */ }
+                // Add other critical fallbacks if necessary
+            }
+
+            // --- Attempt to locate and add specific DLLs like CommunityToolkit and your attribute DLL ---
             TryAddAssemblyReference(references, "CommunityToolkit.Mvvm.dll", opts.ViewModelFiles.FirstOrDefault());
             string remoteAttributeDllName = "RemoteAttribute.dll";
             TryAddAssemblyReference(references, remoteAttributeDllName, opts.ViewModelFiles.FirstOrDefault(), false);
+
+            // WPF Assemblies (if needed by ViewModels, GameViewModel.cs is now clean of DispatcherTimer)
+            // string[] wpfAssemblies = { "WindowsBase.dll", "PresentationCore.dll", "PresentationFramework.dll" };
+            // foreach (var wpfAsmName in wpfAssemblies)
+            // {
+            //     TryAddAssemblyReference(references, wpfAsmName, opts.ViewModelFiles.FirstOrDefault(), isWpfFramework: true, isOptional: true);
+            // }
 
 
             Compilation compilation = CSharpCompilation.Create("ViewModelAssembly",
@@ -108,18 +143,34 @@ namespace ProtoGeneratorUtil
                 references: references,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
 
-            // Log all diagnostics from the compilation to help debug symbol resolution issues
             var allDiagnostics = compilation.GetDiagnostics();
-            if (allDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error || d.Severity == DiagnosticSeverity.Warning))
+            bool hasErrors = false;
+            var relevantDiagnostics = allDiagnostics
+                .Where(d => d.Severity == DiagnosticSeverity.Error || (d.Severity == DiagnosticSeverity.Warning && d.Id != "CS0169" && d.Id != "CS0414")) // Filter out specific benign warnings
+                .ToList();
+
+            if (relevantDiagnostics.Any())
             {
-                Console.WriteLine("--- Compilation Diagnostics ---");
-                foreach (var diag in allDiagnostics.Where(d => d.Severity == DiagnosticSeverity.Error || d.Severity == DiagnosticSeverity.Warning).OrderBy(d => d.Location.SourceTree?.FilePath ?? string.Empty).ThenBy(d => d.Location.SourceSpan.Start))
+                Console.WriteLine("--- Compilation Diagnostics (Errors/Relevant Warnings) ---");
+                foreach (var diag in relevantDiagnostics.OrderBy(d => d.Location.SourceTree?.FilePath ?? string.Empty).ThenBy(d => d.Location.SourceSpan.Start))
                 {
-                    Console.ForegroundColor = diag.Severity == DiagnosticSeverity.Error ? ConsoleColor.Red : ConsoleColor.Yellow;
+                    if (diag.Severity == DiagnosticSeverity.Error)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        hasErrors = true;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                    }
                     Console.WriteLine($"{diag.Id}: {diag.GetMessage()} (Location: {diag.Location})");
                     Console.ResetColor();
                 }
-                Console.WriteLine("-----------------------------");
+                Console.WriteLine("---------------------------------------------------------");
+                if (hasErrors)
+                {
+                    Console.WriteLine("Compilation has errors. Proto generation might be incomplete or incorrect.");
+                }
             }
 
 
@@ -141,7 +192,7 @@ namespace ProtoGeneratorUtil
                     if (semanticModel.GetDeclaredSymbol(classSyntax) is INamedTypeSymbol classSymbol)
                     {
                         Console.WriteLine($"Checking class: {classSymbol.ToDisplayString()} for GenerateGrpcRemoteAttribute.");
-                        foreach (var attr in classSymbol.GetAttributes()) // Log all attributes on the class
+                        foreach (var attr in classSymbol.GetAttributes())
                         {
                             Console.WriteLine($"  Class {classSymbol.Name} has attribute: {attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted))} (Short: {attr.AttributeClass?.Name})");
                         }
@@ -213,7 +264,7 @@ namespace ProtoGeneratorUtil
             List<CommandInfo> commands = GetRelayCommands(mainViewModelSymbol, opts.RelayCommandAttributeFullName);
 
             if (!properties.Any() && !commands.Any() && mainViewModelSymbol.GetMembers().OfType<IFieldSymbol>().Any(f => f.GetAttributes().Any(a => a.AttributeClass?.Name == "ObservablePropertyAttribute" || a.AttributeClass?.ToDisplayString().Contains("ObservablePropertyAttribute") == true)))
-            { // Added a more specific check if fields with the attribute exist but weren't processed
+            {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine($"Warning: No observable properties or relay commands were extracted from ViewModel '{originalVmName}', but fields/methods with corresponding attributes might exist.");
                 Console.WriteLine("This often indicates an issue with resolving attribute symbols from referenced assemblies (e.g., CommunityToolkit.Mvvm.dll or " + remoteAttributeDllName + "). Check compilation diagnostics above.");
@@ -251,10 +302,42 @@ namespace ProtoGeneratorUtil
             }
         }
 
-        private static void TryAddAssemblyReference(List<MetadataReference> references, string dllName, string? firstViewModelFilePath, bool isOptional = false)
+        private static void TryAddAssemblyReference(List<MetadataReference> references, string dllName, string? firstViewModelFilePath, bool isOptional = false, bool isWpfFramework = false)
         {
-            string? foundPath = Directory.GetFiles(AppContext.BaseDirectory, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
+            string? foundPath = null;
 
+            // 1. Try AppContext.BaseDirectory (where ProtoGeneratorUtil and its direct dependencies might be)
+            if (Directory.Exists(AppContext.BaseDirectory)) // Check if directory exists
+            {
+                foundPath = Directory.GetFiles(AppContext.BaseDirectory, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
+            }
+
+
+            // 2. If WPF framework assembly, try to find it in a more specific SDK path (heuristic)
+            if (foundPath == null && isWpfFramework)
+            {
+                string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+                string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
+                string[] dotnetSdkPackRoots = { Path.Combine(programFiles, "dotnet", "packs"), Path.Combine(programFilesX86, "dotnet", "packs") };
+
+                foreach (var root in dotnetSdkPackRoots)
+                {
+                    if (Directory.Exists(root))
+                    {
+                        try
+                        {
+                            foundPath = Directory.GetFiles(root, dllName, SearchOption.AllDirectories)
+                                               .Where(p => p.Contains(Path.DirectorySeparatorChar + "ref" + Path.DirectorySeparatorChar) && (p.Contains("net8.0") || p.Contains("net7.0") || p.Contains("net6.0")))
+                                               .OrderByDescending(p => p)
+                                               .FirstOrDefault();
+                            if (foundPath != null) break;
+                        }
+                        catch (Exception ex) { Console.WriteLine($"  Minor error searching SDK packs for {dllName}: {ex.Message.Split('\n')[0]}"); } // Keep error message brief
+                    }
+                }
+            }
+
+            // 3. If still not found, try relative to ViewModel file (for user project dependencies)
             if (foundPath == null && !string.IsNullOrEmpty(firstViewModelFilePath))
             {
                 var viewModelDir = Path.GetDirectoryName(firstViewModelFilePath);
@@ -263,9 +346,12 @@ namespace ProtoGeneratorUtil
                     viewModelDir = Directory.GetCurrentDirectory();
                 }
                 string? currentSearchDir = viewModelDir;
-                for (int i = 0; i < 4 && currentSearchDir != null; i++)
+                for (int i = 0; i < 4 && !string.IsNullOrEmpty(currentSearchDir); i++)
                 {
-                    string[] commonBuildDirs = { Path.Combine(currentSearchDir, "bin", "Debug"), Path.Combine(currentSearchDir, "bin", "Release") };
+                    string[] commonBuildDirs = {
+                        Path.Combine(currentSearchDir, "bin", "Debug"),
+                        Path.Combine(currentSearchDir, "bin", "Release"),
+                    };
                     foreach (var buildDir in commonBuildDirs)
                     {
                         if (Directory.Exists(buildDir))
@@ -278,24 +364,34 @@ namespace ProtoGeneratorUtil
                     }
                     if (foundPath != null) break;
 
-                    foundPath = Directory.GetFiles(currentSearchDir, dllName, SearchOption.AllDirectories)
-                                           .OrderBy(f => f.Length)
-                                           .FirstOrDefault();
-                    if (foundPath != null) break;
+                    if (Directory.Exists(currentSearchDir)) // Check before GetFiles
+                    {
+                        foundPath = Directory.GetFiles(currentSearchDir, dllName, SearchOption.AllDirectories)
+                                            .OrderBy(f => f.Length)
+                                            .FirstOrDefault();
+                        if (foundPath != null) break;
+                    }
                     currentSearchDir = Path.GetDirectoryName(currentSearchDir);
                 }
             }
 
-            if (foundPath != null)
+            if (foundPath != null && File.Exists(foundPath)) // Ensure file exists before adding
             {
-                if (references.Any(r => r.Display?.EndsWith(dllName, StringComparison.OrdinalIgnoreCase) == true))
+                if (references.Any(r => r.Display?.Equals(foundPath, StringComparison.OrdinalIgnoreCase) == true))
                 {
-                    Console.WriteLine($"Reference for '{dllName}' already added or path ambiguous. Skipping duplicate add for: {foundPath}");
+                    Console.WriteLine($"Reference for '{dllName}' already added: {foundPath}");
                 }
                 else
                 {
-                    references.Add(MetadataReference.CreateFromFile(foundPath));
-                    Console.WriteLine($"Added reference (heuristic): {foundPath}");
+                    try
+                    {
+                        references.Add(MetadataReference.CreateFromFile(foundPath));
+                        Console.WriteLine($"Added reference (heuristic): {foundPath}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not create MetadataReference for '{foundPath}': {ex.Message.Split('\n')[0]}");
+                    }
                 }
             }
             else
@@ -312,12 +408,12 @@ namespace ProtoGeneratorUtil
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
-                    Console.WriteLine($"  Checking field: {fieldSymbol.Name}");
+                    // Console.WriteLine($"  Checking field: {fieldSymbol.Name}"); // Can be too verbose
                     foreach (var attr in fieldSymbol.GetAttributes())
                     {
                         string attrClassFQN = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) ?? "null_FQN";
                         string attrClassName = attr.AttributeClass?.Name ?? "null_Name";
-                        Console.WriteLine($"    Field '{fieldSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
+                        // Console.WriteLine($"    Field '{fieldSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
 
                         if (attrClassFQN == observablePropertyAttributeFullName || attrClassName == observablePropertyAttributeFullName)
                         {
@@ -333,7 +429,7 @@ namespace ProtoGeneratorUtil
                                 continue;
                             }
                             props.Add(new PropertyInfo { Name = propertyName, TypeString = fieldSymbol.Type.ToDisplayString(), FullTypeSymbol = fieldSymbol.Type });
-                            break; // Found the attribute, no need to check other attributes on this field
+                            break;
                         }
                     }
                 }
@@ -350,12 +446,12 @@ namespace ProtoGeneratorUtil
             {
                 if (member is IMethodSymbol methodSymbol)
                 {
-                    Console.WriteLine($"  Checking method: {methodSymbol.Name}");
+                    // Console.WriteLine($"  Checking method: {methodSymbol.Name}"); // Can be too verbose
                     foreach (var attr in methodSymbol.GetAttributes())
                     {
                         string attrClassFQN = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) ?? "null_FQN";
                         string attrClassName = attr.AttributeClass?.Name ?? "null_Name";
-                        Console.WriteLine($"    Method '{methodSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
+                        // Console.WriteLine($"    Method '{methodSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
 
                         if (attrClassFQN == relayCommandAttributeFullName || attrClassName == relayCommandAttributeFullName)
                         {
@@ -368,7 +464,7 @@ namespace ProtoGeneratorUtil
                                 Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(), FullTypeSymbol = p.Type }).ToList(),
                                 IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
                             });
-                            break; // Found the attribute
+                            break;
                         }
                     }
                 }
@@ -377,7 +473,6 @@ namespace ProtoGeneratorUtil
             return cmds;
         }
 
-        // --- .proto generation logic (remains the same as previous version) ---
         private static string ToSnakeCase(string pascalCaseName)
         {
             if (string.IsNullOrEmpty(pascalCaseName)) return pascalCaseName;
@@ -453,6 +548,10 @@ namespace ProtoGeneratorUtil
                 case "System.Uri": return "string";
                 case "System.Version": return "string";
                 case "System.Numerics.BigInteger": return "string";
+                case "System.Windows.Threading.DispatcherTimer":
+                    Console.WriteLine($"Warning: DispatcherTimer type '{typeSymbol.ToDisplayString()}' cannot be directly mapped to a proto field. Mapping to Any.");
+                    requiredImports.Add("google/protobuf/any.proto");
+                    return "google.protobuf.Any";
             }
 
             if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arraySymbol)
@@ -566,7 +665,7 @@ namespace ProtoGeneratorUtil
             sb.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmStateMessageName});");
             sb.AppendLine($"  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);");
             sb.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
-            foreach (var cmd in cmds) // This loop will now add command RPCs if cmds list is populated
+            foreach (var cmd in cmds)
             {
                 sb.AppendLine($"  rpc {cmd.MethodName} ({cmd.MethodName}Request) returns ({cmd.MethodName}Response);");
             }
