@@ -1,11 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection; // Not directly used in this snippet but present in original
-using System.Text;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection; // Not directly used in this snippet but present in original
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace PeakSWC.MvvmSourceGenerator
 {
@@ -30,6 +31,340 @@ namespace PeakSWC.MvvmSourceGenerator
 
             context.RegisterSourceOutput(compilationAndClasses, (spc, source) =>
                 Execute(source.Item1, source.Item2, spc));
+        }
+        private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol)
+        {
+            // Handle Nullable<T> by getting the underlying type T
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
+                namedTypeSymbolNullable.IsGenericType &&
+                namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
+            {
+                typeSymbol = namedTypeSymbolNullable.TypeArguments[0]; // Get T
+            }
+
+            // Handle Enums - they are typically represented as int32 in gRPC/Protobuf by default
+            if (typeSymbol.TypeKind == TypeKind.Enum)
+            {
+                return "Int32Value"; // Represents proto enum, which is int32 on the wire
+            }
+
+            switch (typeSymbol.SpecialType)
+            {
+                // String
+                case SpecialType.System_String: return "StringValue";
+                // Boolean
+                case SpecialType.System_Boolean: return "BoolValue";
+                // Floating point
+                case SpecialType.System_Single: return "FloatValue";  // C# float (System.Single)
+                case SpecialType.System_Double: return "DoubleValue"; // C# double (System.Double)
+                // Standard integral types
+                case SpecialType.System_Int32: return "Int32Value";  // C# int (System.Int32)
+                case SpecialType.System_Int64: return "Int64Value";  // C# long (System.Int64)
+                case SpecialType.System_UInt32: return "UInt32Value"; // C# uint (System.UInt32)
+                case SpecialType.System_UInt64: return "UInt64Value"; // C# ulong (System.UInt64)
+                // Smaller integral types
+                case SpecialType.System_SByte: return "Int32Value";  // C# sbyte (System.SByte)
+                case SpecialType.System_Byte: return "UInt32Value"; // C# byte (System.Byte)
+                case SpecialType.System_Int16: return "Int32Value";  // C# short (System.Int16)
+                case SpecialType.System_UInt16: return "UInt32Value"; // C# ushort (System.UInt16)
+                // Char
+                case SpecialType.System_Char: return "StringValue";
+                // DateTime & DateTimeOffset
+                case SpecialType.System_DateTime: return "Timestamp"; // Maps to google.protobuf.Timestamp
+                // Object (maps to Any)
+                case SpecialType.System_Object: return "Any"; // google.protobuf.Any
+                // Decimal
+                case SpecialType.System_Decimal: return "StringValue";
+            }
+
+            // Handle byte[]
+            if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arrayTypeSymbolByteCheck)
+            {
+                if (arrayTypeSymbolByteCheck.ElementType.SpecialType == SpecialType.System_Byte && arrayTypeSymbolByteCheck.Rank == 1)
+                {
+                    return "BytesValue"; // Maps to google.protobuf.BytesValue
+                }
+            }
+
+            string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString();
+            switch (fullTypeName)
+            {
+                case "System.TimeSpan": return "Duration";
+                case "System.Guid": return "StringValue";
+                case "System.DateTimeOffset": return "Timestamp";
+                case "System.Uri": return "StringValue";
+                case "System.Version": return "StringValue";
+                case "System.Numerics.BigInteger": return "StringValue";
+            }
+            return "Any";
+        }
+
+        // New helper method to convert PascalCase to snake_case for .proto field names
+        private string ToSnakeCase(string pascalCaseName)
+        {
+            if (string.IsNullOrEmpty(pascalCaseName)) return pascalCaseName;
+            // Add underscore before uppercase letters (except the first one if it's already uppercase)
+            // Then convert to lowercase.
+            // Handles "MyProperty" -> "my_property", "URLValue" -> "url_value"
+            var result = Regex.Replace(pascalCaseName, "(?<=[a-z0-9])[A-Z]|(?<=[A-Z])[A-Z](?=[a-z])", "_$0").ToLower();
+            return result;
+        }
+
+        // New helper method to determine if a C# type can be a Protobuf map key
+        private bool IsProtoMapKeyType(ITypeSymbol typeSymbol)
+        {
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
+                namedTypeSymbolNullable.IsGenericType &&
+                namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
+            {
+                typeSymbol = namedTypeSymbolNullable.TypeArguments[0];
+            }
+
+            switch (typeSymbol.SpecialType)
+            {
+                case SpecialType.System_String:
+                case SpecialType.System_Boolean:
+                case SpecialType.System_Int32:
+                case SpecialType.System_Int64:
+                case SpecialType.System_UInt32:
+                case SpecialType.System_UInt64:
+                case SpecialType.System_SByte:
+                case SpecialType.System_Byte:
+                case SpecialType.System_Int16:
+                case SpecialType.System_UInt16:
+                    return true;
+            }
+            if (typeSymbol.TypeKind == TypeKind.Enum) return true;
+            return false;
+        }
+
+        // New helper method to get Protobuf field type string for .proto file
+        private string GetProtoFieldType(ITypeSymbol typeSymbol, Compilation compilation, HashSet<string> requiredImports)
+        {
+            if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
+                namedTypeSymbolNullable.IsGenericType &&
+                namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
+            {
+                typeSymbol = namedTypeSymbolNullable.TypeArguments[0];
+            }
+
+            if (typeSymbol.TypeKind == TypeKind.Enum) return "int32";
+
+            switch (typeSymbol.SpecialType)
+            {
+                case SpecialType.System_String: return "string";
+                case SpecialType.System_Boolean: return "bool";
+                case SpecialType.System_Single: return "float";
+                case SpecialType.System_Double: return "double";
+                case SpecialType.System_Int32: return "int32";
+                case SpecialType.System_Int64: return "int64";
+                case SpecialType.System_UInt32: return "uint32";
+                case SpecialType.System_UInt64: return "uint64";
+                case SpecialType.System_SByte: return "int32";
+                case SpecialType.System_Byte: return "uint32"; // Or "bytes" if it's a single byte field representing raw byte.
+                case SpecialType.System_Int16: return "int32";
+                case SpecialType.System_UInt16: return "uint32";
+                case SpecialType.System_Char: return "string";
+                case SpecialType.System_DateTime:
+                    requiredImports.Add("google/protobuf/timestamp.proto");
+                    return "google.protobuf.Timestamp";
+                case SpecialType.System_Decimal: return "string"; // Common practice for precision
+                case SpecialType.System_Object:
+                    requiredImports.Add("google/protobuf/any.proto");
+                    return "google.protobuf.Any";
+            }
+
+            string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString();
+            switch (fullTypeName)
+            {
+                case "System.TimeSpan":
+                    requiredImports.Add("google/protobuf/duration.proto");
+                    return "google.protobuf.Duration";
+                case "System.Guid": return "string";
+                case "System.DateTimeOffset":
+                    requiredImports.Add("google/protobuf/timestamp.proto");
+                    return "google.protobuf.Timestamp";
+                case "System.Uri": return "string";
+                case "System.Version": return "string";
+                case "System.Numerics.BigInteger": return "string";
+            }
+
+            if (typeSymbol.TypeKind == TypeKind.Array)
+            {
+                var arraySymbol = (IArrayTypeSymbol)typeSymbol;
+                if (arraySymbol.ElementType.SpecialType == SpecialType.System_Byte && arraySymbol.Rank == 1)
+                {
+                    return "bytes";
+                }
+                return $"repeated {GetProtoFieldType(arraySymbol.ElementType, compilation, requiredImports)}";
+            }
+
+            if (typeSymbol is INamedTypeSymbol namedType && namedType.IsGenericType)
+            {
+                var originalDef = namedType.OriginalDefinition.ToDisplayString();
+                if (originalDef == "System.Collections.Generic.List<T>" ||
+                    originalDef == "System.Collections.Generic.IList<T>" ||
+                    originalDef == "System.Collections.Generic.IReadOnlyList<T>" ||
+                    originalDef == "System.Collections.Generic.IEnumerable<T>" ||
+                    originalDef == "System.Collections.ObjectModel.ObservableCollection<T>")
+                {
+                    return $"repeated {GetProtoFieldType(namedType.TypeArguments[0], compilation, requiredImports)}";
+                }
+
+                if (originalDef == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
+                    originalDef == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
+                    originalDef == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                {
+                    if (IsProtoMapKeyType(namedType.TypeArguments[0]))
+                    {
+                        var keyType = GetProtoFieldType(namedType.TypeArguments[0], compilation, requiredImports);
+                        var valueType = GetProtoFieldType(namedType.TypeArguments[1], compilation, requiredImports);
+                        return $"map<{keyType}, {valueType}>";
+                    }
+                    else
+                    {
+                        // Fallback for non-standard map key types (e.g., complex object keys)
+                        // This would ideally generate a repeated message of key-value pairs or be an error.
+                        // For now, falling back to Any.
+                        requiredImports.Add("google/protobuf/any.proto");
+                        return "google.protobuf.Any"; // Or log a diagnostic
+                    }
+                }
+            }
+
+            // Default fallback for unmapped complex types
+            requiredImports.Add("google/protobuf/any.proto");
+            return "google.protobuf.Any";
+        }
+        // Helper record/class for storing extracted info
+        internal class PropertyInfo { public string Name; public string Type; public ITypeSymbol FullTypeSymbol; }
+        internal class CommandInfo { public string MethodName; public string CommandPropertyName; public List<ParameterInfo> Parameters; public bool IsAsync; }
+        internal class ParameterInfo { public string Name; public string Type; }
+        // New method to generate the .proto file content
+        private string GenerateProtoFileContent(
+            string protoNamespace,
+            string grpcServiceName,
+            string originalVmName,
+            List<PropertyInfo> props,
+            List<CommandInfo> cmds,
+            Compilation compilation)
+        {
+            var sb = new StringBuilder();
+            var requiredImports = new HashSet<string> { "google/protobuf/empty.proto" }; // Empty is almost always used
+
+            // Header
+            sb.AppendLine("syntax = \"proto3\";");
+            sb.AppendLine();
+            // Use a transformed version of protoNamespace for the package if it contains invalid characters.
+            // For simplicity, we use it directly here. A more robust solution would sanitize it.
+            sb.AppendLine($"package {protoNamespace.ToLowerInvariant().Replace(".", "_")};"); // Basic transformation for package name
+            sb.AppendLine();
+            sb.AppendLine($"option csharp_namespace = \"{protoNamespace}\";");
+            sb.AppendLine();
+
+            // Messages for Properties and State
+            string vmStateMessageName = $"{originalVmName}State";
+            sb.AppendLine($"// Message representing the full state of the {originalVmName}");
+            sb.AppendLine($"message {vmStateMessageName} {{");
+            int fieldNumber = 1;
+            foreach (var prop in props)
+            {
+                string protoFieldType = GetProtoFieldType(prop.FullTypeSymbol, compilation, requiredImports);
+                string protoFieldName = ToSnakeCase(prop.Name);
+                sb.AppendLine($"  {protoFieldType} {protoFieldName} = {fieldNumber++};");
+            }
+            sb.AppendLine("}");
+            sb.AppendLine();
+
+            // Common messages for property updates (using Any for simplicity with existing C# stubs)
+            requiredImports.Add("google/protobuf/any.proto");
+            sb.AppendLine("// Message for property change notifications");
+            sb.AppendLine("message PropertyChangeNotification {");
+            sb.AppendLine("  string property_name = 1;");
+            sb.AppendLine("  google.protobuf.Any new_value = 2;");
+            sb.AppendLine("}");
+            sb.AppendLine();
+
+            sb.AppendLine("// Request to update a property's value");
+            sb.AppendLine("message UpdatePropertyValueRequest {");
+            sb.AppendLine("  string property_name = 1;");
+            sb.AppendLine("  google.protobuf.Any new_value = 2;");
+            sb.AppendLine("}");
+            sb.AppendLine();
+
+            // Messages for Commands
+            foreach (var cmd in cmds)
+            {
+                string requestMessageName = $"{cmd.MethodName}Request";
+                string responseMessageName = $"{cmd.MethodName}Response";
+
+                sb.AppendLine($"// Request message for {cmd.MethodName} command");
+                sb.AppendLine($"message {requestMessageName} {{");
+                fieldNumber = 1;
+                foreach (var param in cmd.Parameters)
+                {
+                    // We need the ITypeSymbol for parameters. Assuming ParameterInfo can store it or we can look it up.
+                    // For this example, let's assume ParameterInfo.Type is just a string and we can't easily get ITypeSymbol back.
+                    // This part would need ParameterInfo to hold ITypeSymbol or look it up from methodSymbol.Parameters.
+                    // For now, defaulting to Any if type symbol isn't readily available.
+                    // A robust solution would pass IParameterSymbol or ITypeSymbol through CommandInfo/ParameterInfo.
+                    // Let's assume cmd.Parameters[i].FullTypeSymbol exists (needs modification to CommandInfo/ParameterInfo)
+                    // For now, we'll use a placeholder or make it Any.
+                    // To make this runnable, let's assume parameters are simple types for now or use Any.
+                    // We'll find the IParameterSymbol from the original method symbol for accurate typing.
+                    // This requires passing the original IMethodSymbol or its parameters' ITypeSymbols into CommandInfo.
+                    // For now, let's make command parameters 'Any' for simplicity in this step.
+                    // This is a simplification. Ideally, you'd resolve param.Type back to ITypeSymbol.
+                    // For demonstration, let's assume parameters are strings or use Any.
+                    // string paramProtoFieldType = GetProtoFieldType(param.FullTypeSymbol, compilation, requiredImports); // IDEAL
+                    string paramProtoFieldType = "google.protobuf.Any"; // Simplified for now
+                    requiredImports.Add("google/protobuf/any.proto");
+
+                    string paramProtoFieldName = ToSnakeCase(param.Name);
+                    sb.AppendLine($"  {paramProtoFieldType} {paramProtoFieldName} = {fieldNumber++};");
+                }
+                sb.AppendLine("}");
+                sb.AppendLine();
+
+                sb.AppendLine($"// Response message for {cmd.MethodName} command");
+                sb.AppendLine($"message {responseMessageName} {{");
+                // Typically empty, or could contain a result if the command returns something.
+                // For now, keeping it empty.
+                sb.AppendLine("}");
+                sb.AppendLine();
+            }
+
+            // Service Definition
+            sb.AppendLine($"service {grpcServiceName} {{");
+            sb.AppendLine($"  // RPC for getting the initial state");
+            sb.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmStateMessageName});");
+            sb.AppendLine();
+            sb.AppendLine($"  // RPC for subscribing to property changes");
+            sb.AppendLine($"  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);");
+            sb.AppendLine();
+            sb.AppendLine($"  // RPC for a client to update a property value on the server");
+            sb.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
+            sb.AppendLine();
+
+            foreach (var cmd in cmds)
+            {
+                string requestMessageName = $"{cmd.MethodName}Request";
+                string responseMessageName = $"{cmd.MethodName}Response";
+                sb.AppendLine($"  // RPC for {cmd.MethodName} command");
+                sb.AppendLine($"  rpc {cmd.MethodName} ({requestMessageName}) returns ({responseMessageName});");
+            }
+            sb.AppendLine("}}");
+            sb.AppendLine();
+
+            // Prepend imports
+            var importsBuilder = new StringBuilder();
+            foreach (var importPath in requiredImports.OrderBy(x => x)) // Sort for consistent output
+            {
+                importsBuilder.AppendLine($"import \"{importPath}\";");
+            }
+            importsBuilder.AppendLine();
+
+            return importsBuilder.ToString() + sb.ToString();
         }
 
         private void Execute(Compilation compilation, System.Collections.Immutable.ImmutableArray<ClassDeclarationSyntax> classes, SourceProductionContext context)
@@ -447,109 +782,106 @@ namespace PeakSWC.MvvmSourceGenerator
 
             return sb.ToString();
         }
-        private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol)
-        {
-            // Handle Nullable<T> by getting the underlying type T
-            if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
-                namedTypeSymbolNullable.IsGenericType &&
-                namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
-            {
-                typeSymbol = namedTypeSymbolNullable.TypeArguments[0]; // Get T
-            }
+        //private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol)
+        //{
+        //    // Handle Nullable<T> by getting the underlying type T
+        //    if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
+        //        namedTypeSymbolNullable.IsGenericType &&
+        //        namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
+        //    {
+        //        typeSymbol = namedTypeSymbolNullable.TypeArguments[0]; // Get T
+        //    }
 
-            // Handle Enums - they are typically represented as int32 in gRPC/Protobuf by default
-            if (typeSymbol.TypeKind == TypeKind.Enum)
-            {
-                // Could be refined by checking typeSymbol.EnumUnderlyingType.SpecialType
-                // and mapping to Int32Value, Int64Value, etc., accordingly.
-                // For simplicity and common practice, mapping to Int32Value.
-                return "Int32Value"; // Represents proto enum, which is int32 on the wire
-            }
+        //    // Handle Enums - they are typically represented as int32 in gRPC/Protobuf by default
+        //    if (typeSymbol.TypeKind == TypeKind.Enum)
+        //    {
+        //        // Could be refined by checking typeSymbol.EnumUnderlyingType.SpecialType
+        //        // and mapping to Int32Value, Int64Value, etc., accordingly.
+        //        // For simplicity and common practice, mapping to Int32Value.
+        //        return "Int32Value"; // Represents proto enum, which is int32 on the wire
+        //    }
 
-            switch (typeSymbol.SpecialType)
-            {
-                // String
-                case SpecialType.System_String: return "StringValue";
+        //    switch (typeSymbol.SpecialType)
+        //    {
+        //        // String
+        //        case SpecialType.System_String: return "StringValue";
 
-                // Boolean
-                case SpecialType.System_Boolean: return "BoolValue";
+        //        // Boolean
+        //        case SpecialType.System_Boolean: return "BoolValue";
 
-                // Floating point
-                case SpecialType.System_Single: return "FloatValue";  // C# float (System.Single)
-                case SpecialType.System_Double: return "DoubleValue"; // C# double (System.Double)
+        //        // Floating point
+        //        case SpecialType.System_Single: return "FloatValue";  // C# float (System.Single)
+        //        case SpecialType.System_Double: return "DoubleValue"; // C# double (System.Double)
 
-                // Standard integral types
-                case SpecialType.System_Int32: return "Int32Value";  // C# int (System.Int32)
-                case SpecialType.System_Int64: return "Int64Value";  // C# long (System.Int64)
-                case SpecialType.System_UInt32: return "UInt32Value"; // C# uint (System.UInt32)
-                case SpecialType.System_UInt64: return "UInt64Value"; // C# ulong (System.UInt64)
+        //        // Standard integral types
+        //        case SpecialType.System_Int32: return "Int32Value";  // C# int (System.Int32)
+        //        case SpecialType.System_Int64: return "Int64Value";  // C# long (System.Int64)
+        //        case SpecialType.System_UInt32: return "UInt32Value"; // C# uint (System.UInt32)
+        //        case SpecialType.System_UInt64: return "UInt64Value"; // C# ulong (System.UInt64)
 
-                // Smaller integral types (often promoted to 32-bit WKT wrappers or their direct proto types)
-                case SpecialType.System_SByte: return "Int32Value";  // C# sbyte (System.SByte)
-                case SpecialType.System_Byte: return "UInt32Value"; // C# byte (System.Byte), often mapped to uint32 or bytes
-                case SpecialType.System_Int16: return "Int32Value";  // C# short (System.Int16)
-                case SpecialType.System_UInt16: return "UInt32Value"; // C# ushort (System.UInt16)
+        //        // Smaller integral types (often promoted to 32-bit WKT wrappers or their direct proto types)
+        //        case SpecialType.System_SByte: return "Int32Value";  // C# sbyte (System.SByte)
+        //        case SpecialType.System_Byte: return "UInt32Value"; // C# byte (System.Byte), often mapped to uint32 or bytes
+        //        case SpecialType.System_Int16: return "Int32Value";  // C# short (System.Int16)
+        //        case SpecialType.System_UInt16: return "UInt32Value"; // C# ushort (System.UInt16)
 
-                // Char
-                case SpecialType.System_Char: return "StringValue"; // Represent char as a single-character StringValue.
-                                                                    // Alternatively, could be UInt32Value for its numeric UTF-16 value.
+        //        // Char
+        //        case SpecialType.System_Char: return "StringValue"; // Represent char as a single-character StringValue.
+        //                                                            // Alternatively, could be UInt32Value for its numeric UTF-16 value.
 
-                // DateTime & DateTimeOffset
-                // google.protobuf.Timestamp is always UTC.
-                case SpecialType.System_DateTime: return "Timestamp"; // Maps to google.protobuf.Timestamp (should be UTC)
+        //        // DateTime & DateTimeOffset
+        //        // google.protobuf.Timestamp is always UTC.
+        //        case SpecialType.System_DateTime: return "Timestamp"; // Maps to google.protobuf.Timestamp (should be UTC)
 
-                // Object (maps to Any)
-                case SpecialType.System_Object: return "Any"; // google.protobuf.Any
+        //        // Object (maps to Any)
+        //        case SpecialType.System_Object: return "Any"; // google.protobuf.Any
 
-                // Decimal: No direct WKT. Often represented as string or a custom message.
-                // For simplicity, mapping to StringValue or Any. StringValue is often preferred for precision.
-                case SpecialType.System_Decimal: return "StringValue"; // Or "google.type.Decimal" if using that extension, or a custom message.
-                                                                       // For WKT, StringValue is a common fallback.
-            }
+        //        // Decimal: No direct WKT. Often represented as string or a custom message.
+        //        // For simplicity, mapping to StringValue or Any. StringValue is often preferred for precision.
+        //        case SpecialType.System_Decimal: return "StringValue"; // Or "google.type.Decimal" if using that extension, or a custom message.
+        //                                                               // For WKT, StringValue is a common fallback.
+        //    }
 
-            // Handle byte[] (for sequence of bytes)
-            if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
-            {
-                if (arrayTypeSymbol.ElementType.SpecialType == SpecialType.System_Byte && arrayTypeSymbol.Rank == 1)
-                {
-                    return "BytesValue"; // Maps to google.protobuf.BytesValue
-                }
-            }
+        //    // Handle byte[] (for sequence of bytes)
+        //    if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arrayTypeSymbol)
+        //    {
+        //        if (arrayTypeSymbol.ElementType.SpecialType == SpecialType.System_Byte && arrayTypeSymbol.Rank == 1)
+        //        {
+        //            return "BytesValue"; // Maps to google.protobuf.BytesValue
+        //        }
+        //    }
 
-            // Handle other specific System types by their full name (ToDisplayString might include nullability markers, use OriginalDefinition for cleaner check if needed)
-            string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString(); // Use OriginalDefinition to get non-nullable base type name
+        //    // Handle other specific System types by their full name (ToDisplayString might include nullability markers, use OriginalDefinition for cleaner check if needed)
+        //    string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString(); // Use OriginalDefinition to get non-nullable base type name
 
-            switch (fullTypeName)
-            {
-                case "System.TimeSpan":
-                    return "Duration"; // Maps to google.protobuf.Duration
-                case "System.Guid":
-                    return "StringValue"; // GUIDs are commonly represented as strings in Protobuf.
-                case "System.DateTimeOffset":
-                    // DateTimeOffset includes an offset. google.protobuf.Timestamp is UTC.
-                    // Common practice: convert to UTC DateTime then to Timestamp, or use a string/custom message.
-                    // Mapping to Timestamp implies conversion to UTC.
-                    return "Timestamp";
-                case "System.Uri":
-                    return "StringValue"; // URIs are typically represented as strings.
-                case "System.Version":
-                    return "StringValue"; // Versions are typically represented as strings.
-                case "System.Numerics.BigInteger":
-                    return "StringValue"; // BigInteger often represented as string to maintain precision.
-                                          // Alternatively, BytesValue if a binary representation is preferred.
-            }
+        //    switch (fullTypeName)
+        //    {
+        //        case "System.TimeSpan":
+        //            return "Duration"; // Maps to google.protobuf.Duration
+        //        case "System.Guid":
+        //            return "StringValue"; // GUIDs are commonly represented as strings in Protobuf.
+        //        case "System.DateTimeOffset":
+        //            // DateTimeOffset includes an offset. google.protobuf.Timestamp is UTC.
+        //            // Common practice: convert to UTC DateTime then to Timestamp, or use a string/custom message.
+        //            // Mapping to Timestamp implies conversion to UTC.
+        //            return "Timestamp";
+        //        case "System.Uri":
+        //            return "StringValue"; // URIs are typically represented as strings.
+        //        case "System.Version":
+        //            return "StringValue"; // Versions are typically represented as strings.
+        //        case "System.Numerics.BigInteger":
+        //            return "StringValue"; // BigInteger often represented as string to maintain precision.
+        //                                  // Alternatively, BytesValue if a binary representation is preferred.
+        //    }
 
-            // Fallback for types not explicitly mapped above.
-            // "Any" is a reasonable default if the .proto field is designed to hold arbitrary types
-            // or if no specific WKT is suitable.
-            // Alternatively, you might want to throw an exception or log a warning for unmapped types.
-            return "Any"; // google.protobuf.Any
-        }
+        //    // Fallback for types not explicitly mapped above.
+        //    // "Any" is a reasonable default if the .proto field is designed to hold arbitrary types
+        //    // or if no specific WKT is suitable.
+        //    // Alternatively, you might want to throw an exception or log a warning for unmapped types.
+        //    return "Any"; // google.protobuf.Any
+        //}
         private string LowercaseFirst(string str) => string.IsNullOrEmpty(str) ? str : char.ToLowerInvariant(str[0]) + str.Substring(1);
 
-        // Helper record/class for storing extracted info
-        internal record PropertyInfo { public string Name; public string Type; public ITypeSymbol FullTypeSymbol; }
-        internal record CommandInfo { public string MethodName; public string CommandPropertyName; public List<ParameterInfo> Parameters; public bool IsAsync; }
-        internal record ParameterInfo { public string Name; public string Type; }
+        
     }
 }
