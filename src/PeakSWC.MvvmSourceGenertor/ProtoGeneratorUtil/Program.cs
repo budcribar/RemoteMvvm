@@ -19,14 +19,15 @@ namespace ProtoGeneratorUtil
         public IEnumerable<string> ViewModelFiles { get; set; } = Enumerable.Empty<string>();
 
         [Option('o', "output", Required = false, HelpText = "Output path for the generated .proto file. Default: Protos/{ServiceName}.proto")]
-        public string? OutputPath { get; set; }
+        public string? OutputPath { get; set; } // Made optional, will be derived if not set
 
         [Option('p', "protoNamespace", Required = false, HelpText = "The C# namespace for the generated proto types. Default: {ViewModelNamespace}.Protos")]
-        public string? ProtoNamespace { get; set; }
+        public string? ProtoNamespace { get; set; } // Made optional, will be derived
 
         [Option('s', "serviceName", Required = false, HelpText = "The gRPC service name. Default: {ViewModelName}Service")]
-        public string? GrpcServiceName { get; set; }
+        public string? GrpcServiceName { get; set; } // Made optional, will be derived
 
+        // Default is the fully qualified name, assuming successful assembly reference loading.
         [Option('a', "attributeFullName", Required = false, Default = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute", HelpText = "The full name of the GenerateGrpcRemoteAttribute.")]
         public string GenerateGrpcRemoteAttributeFullName { get; set; } = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute";
 
@@ -36,6 +37,7 @@ namespace ProtoGeneratorUtil
         [Option("relayCommandAttribute", Required = false, Default = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute", HelpText = "Full name of the RelayCommand attribute.")]
         public string RelayCommandAttributeFullName { get; set; } = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
+        // Added public parameterless constructor for CommandLineParser
         public Options() { }
     }
 
@@ -97,15 +99,29 @@ namespace ProtoGeneratorUtil
             };
 
             TryAddAssemblyReference(references, "CommunityToolkit.Mvvm.dll", opts.ViewModelFiles.FirstOrDefault());
-
-            // Use the DLL name as observed in the user's log output.
             string remoteAttributeDllName = "RemoteAttribute.dll";
-            TryAddAssemblyReference(references, remoteAttributeDllName, opts.ViewModelFiles.FirstOrDefault(), false); // Make it non-optional if it's essential
+            TryAddAssemblyReference(references, remoteAttributeDllName, opts.ViewModelFiles.FirstOrDefault(), false);
+
 
             Compilation compilation = CSharpCompilation.Create("ViewModelAssembly",
                 syntaxTrees: syntaxTrees,
                 references: references,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+
+            // Log all diagnostics from the compilation to help debug symbol resolution issues
+            var allDiagnostics = compilation.GetDiagnostics();
+            if (allDiagnostics.Any(d => d.Severity == DiagnosticSeverity.Error || d.Severity == DiagnosticSeverity.Warning))
+            {
+                Console.WriteLine("--- Compilation Diagnostics ---");
+                foreach (var diag in allDiagnostics.Where(d => d.Severity == DiagnosticSeverity.Error || d.Severity == DiagnosticSeverity.Warning).OrderBy(d => d.Location.SourceTree?.FilePath ?? string.Empty).ThenBy(d => d.Location.SourceSpan.Start))
+                {
+                    Console.ForegroundColor = diag.Severity == DiagnosticSeverity.Error ? ConsoleColor.Red : ConsoleColor.Yellow;
+                    Console.WriteLine($"{diag.Id}: {diag.GetMessage()} (Location: {diag.Location})");
+                    Console.ResetColor();
+                }
+                Console.WriteLine("-----------------------------");
+            }
+
 
             INamedTypeSymbol? mainViewModelSymbol = null;
             string originalVmName = "";
@@ -124,6 +140,12 @@ namespace ProtoGeneratorUtil
                 {
                     if (semanticModel.GetDeclaredSymbol(classSyntax) is INamedTypeSymbol classSymbol)
                     {
+                        Console.WriteLine($"Checking class: {classSymbol.ToDisplayString()} for GenerateGrpcRemoteAttribute.");
+                        foreach (var attr in classSymbol.GetAttributes()) // Log all attributes on the class
+                        {
+                            Console.WriteLine($"  Class {classSymbol.Name} has attribute: {attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted))} (Short: {attr.AttributeClass?.Name})");
+                        }
+
                         var generateAttributeData = classSymbol.GetAttributes().FirstOrDefault(ad =>
                             ad.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == opts.GenerateGrpcRemoteAttributeFullName ||
                             ad.AttributeClass?.Name == opts.GenerateGrpcRemoteAttributeFullName
@@ -145,7 +167,7 @@ namespace ProtoGeneratorUtil
             {
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"Error: No ViewModel class found with the attribute matching '{opts.GenerateGrpcRemoteAttributeFullName}'.");
-                Console.WriteLine("Ensure the attribute name is correct and the defining assembly ('" + remoteAttributeDllName + "') is referenced and found.");
+                Console.WriteLine($"Ensure the attribute name is correct and the defining assembly ('{remoteAttributeDllName}') is referenced and found.");
                 Console.ResetColor();
                 Environment.ExitCode = 1;
                 return;
@@ -190,12 +212,14 @@ namespace ProtoGeneratorUtil
             List<PropertyInfo> properties = GetObservableProperties(mainViewModelSymbol, opts.ObservablePropertyAttributeFullName);
             List<CommandInfo> commands = GetRelayCommands(mainViewModelSymbol, opts.RelayCommandAttributeFullName);
 
-            if (!properties.Any() && !commands.Any())
-            {
+            if (!properties.Any() && !commands.Any() && mainViewModelSymbol.GetMembers().OfType<IFieldSymbol>().Any(f => f.GetAttributes().Any(a => a.AttributeClass?.Name == "ObservablePropertyAttribute" || a.AttributeClass?.ToDisplayString().Contains("ObservablePropertyAttribute") == true)))
+            { // Added a more specific check if fields with the attribute exist but weren't processed
                 Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Warning: No observable properties or relay commands were found in ViewModel '{originalVmName}'. The .proto file might be empty or incomplete. This could be due to missing assembly references for attribute resolution (e.g., CommunityToolkit.Mvvm.dll or {remoteAttributeDllName}).");
+                Console.WriteLine($"Warning: No observable properties or relay commands were extracted from ViewModel '{originalVmName}', but fields/methods with corresponding attributes might exist.");
+                Console.WriteLine("This often indicates an issue with resolving attribute symbols from referenced assemblies (e.g., CommunityToolkit.Mvvm.dll or " + remoteAttributeDllName + "). Check compilation diagnostics above.");
                 Console.ResetColor();
             }
+
 
             string protoFileContent = GenerateProtoFileContent(
                 opts.ProtoNamespace!,
@@ -264,45 +288,53 @@ namespace ProtoGeneratorUtil
 
             if (foundPath != null)
             {
-                references.Add(MetadataReference.CreateFromFile(foundPath));
-                Console.WriteLine($"Added reference (heuristic): {foundPath}");
-            }
-            else
-            {
-                if (!isOptional)
+                if (references.Any(r => r.Display?.EndsWith(dllName, StringComparison.OrdinalIgnoreCase) == true))
                 {
-                    Console.WriteLine($"Warning: Could not find '{dllName}'. Attribute resolution and type analysis might be affected.");
+                    Console.WriteLine($"Reference for '{dllName}' already added or path ambiguous. Skipping duplicate add for: {foundPath}");
                 }
                 else
                 {
-                    Console.WriteLine($"Info: Optional assembly '{dllName}' not found. This may be fine if not used directly for attribute definitions.");
+                    references.Add(MetadataReference.CreateFromFile(foundPath));
+                    Console.WriteLine($"Added reference (heuristic): {foundPath}");
                 }
+            }
+            else
+            {
+                Console.WriteLine($"{(isOptional ? "Info: Optional assembly" : "Warning: Could not find")} '{dllName}'. Attribute resolution and type analysis might be affected.");
             }
         }
 
         private static List<PropertyInfo> GetObservableProperties(INamedTypeSymbol classSymbol, string observablePropertyAttributeFullName)
         {
             var props = new List<PropertyInfo>();
+            Console.WriteLine($"Scanning for ObservableProperties in {classSymbol.Name} using attribute name '{observablePropertyAttributeFullName}'...");
             foreach (var member in classSymbol.GetMembers())
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
-                    var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
-                        a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == observablePropertyAttributeFullName ||
-                        a.AttributeClass?.Name == observablePropertyAttributeFullName);
-
-                    if (obsPropAttribute != null)
+                    Console.WriteLine($"  Checking field: {fieldSymbol.Name}");
+                    foreach (var attr in fieldSymbol.GetAttributes())
                     {
-                        string propertyName = fieldSymbol.Name.TrimStart('_');
-                        if (propertyName.Length > 0)
-                        {
-                            propertyName = char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1);
-                        }
-                        else continue;
+                        string attrClassFQN = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) ?? "null_FQN";
+                        string attrClassName = attr.AttributeClass?.Name ?? "null_Name";
+                        Console.WriteLine($"    Field '{fieldSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
 
-                        // We use the field's type directly, as the property type will match it.
-                        // We don't need to find the actual generated IPropertySymbol in this ad-hoc compilation.
-                        props.Add(new PropertyInfo { Name = propertyName, TypeString = fieldSymbol.Type.ToDisplayString(), FullTypeSymbol = fieldSymbol.Type });
+                        if (attrClassFQN == observablePropertyAttributeFullName || attrClassName == observablePropertyAttributeFullName)
+                        {
+                            Console.WriteLine($"      MATCHED ObservablePropertyAttribute for field '{fieldSymbol.Name}'!");
+                            string propertyName = fieldSymbol.Name.TrimStart('_');
+                            if (propertyName.Length > 0)
+                            {
+                                propertyName = char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"        Skipping field '{fieldSymbol.Name}' due to invalid derived property name.");
+                                continue;
+                            }
+                            props.Add(new PropertyInfo { Name = propertyName, TypeString = fieldSymbol.Type.ToDisplayString(), FullTypeSymbol = fieldSymbol.Type });
+                            break; // Found the attribute, no need to check other attributes on this field
+                        }
                     }
                 }
             }
@@ -313,26 +345,31 @@ namespace ProtoGeneratorUtil
         private static List<CommandInfo> GetRelayCommands(INamedTypeSymbol classSymbol, string relayCommandAttributeFullName)
         {
             var cmds = new List<CommandInfo>();
+            Console.WriteLine($"Scanning for RelayCommands in {classSymbol.Name} using attribute name '{relayCommandAttributeFullName}'...");
             foreach (var member in classSymbol.GetMembers())
             {
                 if (member is IMethodSymbol methodSymbol)
                 {
-                    var relayCmdAttribute = methodSymbol.GetAttributes().FirstOrDefault(a =>
-                        a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == relayCommandAttributeFullName ||
-                        a.AttributeClass?.Name == relayCommandAttributeFullName);
-
-                    if (relayCmdAttribute != null)
+                    Console.WriteLine($"  Checking method: {methodSymbol.Name}");
+                    foreach (var attr in methodSymbol.GetAttributes())
                     {
-                        string commandPropertyName = methodSymbol.Name + "Command";
-                        // We don't need to find the actual IPropertySymbol for the command here.
-                        // We construct CommandInfo based on the method itself.
-                        cmds.Add(new CommandInfo
+                        string attrClassFQN = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) ?? "null_FQN";
+                        string attrClassName = attr.AttributeClass?.Name ?? "null_Name";
+                        Console.WriteLine($"    Method '{methodSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
+
+                        if (attrClassFQN == relayCommandAttributeFullName || attrClassName == relayCommandAttributeFullName)
                         {
-                            MethodName = methodSymbol.Name,
-                            CommandPropertyName = commandPropertyName, // This is the derived name
-                            Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(), FullTypeSymbol = p.Type }).ToList(),
-                            IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
-                        });
+                            Console.WriteLine($"      MATCHED RelayCommandAttribute for method '{methodSymbol.Name}'!");
+                            string commandPropertyName = methodSymbol.Name + "Command";
+                            cmds.Add(new CommandInfo
+                            {
+                                MethodName = methodSymbol.Name,
+                                CommandPropertyName = commandPropertyName,
+                                Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(), FullTypeSymbol = p.Type }).ToList(),
+                                IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
+                            });
+                            break; // Found the attribute
+                        }
                     }
                 }
             }
@@ -340,6 +377,7 @@ namespace ProtoGeneratorUtil
             return cmds;
         }
 
+        // --- .proto generation logic (remains the same as previous version) ---
         private static string ToSnakeCase(string pascalCaseName)
         {
             if (string.IsNullOrEmpty(pascalCaseName)) return pascalCaseName;
@@ -528,7 +566,7 @@ namespace ProtoGeneratorUtil
             sb.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmStateMessageName});");
             sb.AppendLine($"  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);");
             sb.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
-            foreach (var cmd in cmds)
+            foreach (var cmd in cmds) // This loop will now add command RPCs if cmds list is populated
             {
                 sb.AppendLine($"  rpc {cmd.MethodName} ({cmd.MethodName}Request) returns ({cmd.MethodName}Response);");
             }

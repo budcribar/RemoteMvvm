@@ -3,12 +3,12 @@ using CommunityToolkit.Mvvm.Input;
 using PeakSWC.Mvvm.Remote;
 using System;
 using System.Threading.Tasks;
-using System.Windows.Threading; // For DispatcherTimer if used for game loop/cooldowns
+// using System.Windows.Threading; // No longer needed for DispatcherTimer
 
 namespace MonsterClicker.ViewModels
 {
     // Attribute to mark this ViewModel for gRPC remote generation
-    [GenerateGrpcRemoteAttribute("MonsterClicker.Protos.Game", "GameService",
+    [GenerateGrpcRemote("MonsterClicker.Protos.Game", "GameService",
         ServerImplNamespace = "MonsterClicker.GrpcServices",
         ClientProxyNamespace = "MonsterClicker.RemoteClients")]
     public partial class GameViewModel : ObservableObject
@@ -32,10 +32,12 @@ namespace MonsterClicker.ViewModels
         private bool _isMonsterDefeated;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // Ensures CanExecute is re-evaluated when this changes
         private bool _canUseSpecialAttack = true;
 
-        private DispatcherTimer? _specialAttackCooldownTimer;
+        // private DispatcherTimer? _specialAttackCooldownTimer; // Removed
         private const int SpecialAttackCooldownSeconds = 5;
+        private bool _isSpecialAttackOnCooldown = false; // New flag to manage cooldown state internally
 
         public GameViewModel()
         {
@@ -53,6 +55,7 @@ namespace MonsterClicker.ViewModels
                 MonsterCurrentHealth = 0;
                 GameMessage = $"{MonsterName} defeated! Well done!";
                 IsMonsterDefeated = true;
+                // SpecialAttackCommand.NotifyCanExecuteChanged(); // CanUseSpecialAttack will trigger this
             }
             else
             {
@@ -60,12 +63,17 @@ namespace MonsterClicker.ViewModels
             }
         }
 
+        // Updated CanExecute condition for SpecialAttackCommand
+        private bool CanExecuteSpecialAttack() => CanUseSpecialAttack && !IsMonsterDefeated && !_isSpecialAttackOnCooldown;
+
         [RelayCommand(CanExecute = nameof(CanExecuteSpecialAttack))]
         private async Task SpecialAttackAsync()
         {
-            if (IsMonsterDefeated || !CanUseSpecialAttack) return;
+            // Redundant check, CanExecute should prevent this, but good for safety
+            if (IsMonsterDefeated || _isSpecialAttackOnCooldown) return;
 
-            CanUseSpecialAttack = false; // Disable button
+            _isSpecialAttackOnCooldown = true; // Set cooldown flag
+            // CanUseSpecialAttack remains true, but CanExecuteSpecialAttack will now be false due to _isSpecialAttackOnCooldown
             SpecialAttackCommand.NotifyCanExecuteChanged(); // Notify UI to update button state
 
             GameMessage = "Charging special attack...";
@@ -79,42 +87,38 @@ namespace MonsterClicker.ViewModels
                 MonsterCurrentHealth = 0;
                 GameMessage = $"Critical Hit! {MonsterName} obliterated for {specialDamage} damage!";
                 IsMonsterDefeated = true;
+                // SpecialAttackCommand.NotifyCanExecuteChanged(); // CanUseSpecialAttack will trigger this
             }
             else
             {
                 GameMessage = $"Special Attack hit {MonsterName} for {specialDamage} damage!";
             }
 
-            // Start cooldown
-            _specialAttackCooldownTimer = new DispatcherTimer
-            {
-                Interval = TimeSpan.FromSeconds(SpecialAttackCooldownSeconds)
-            };
-            _specialAttackCooldownTimer.Tick += (s, e) =>
-            {
-                CanUseSpecialAttack = true;
-                SpecialAttackCommand.NotifyCanExecuteChanged(); // Re-enable button
-                _specialAttackCooldownTimer?.Stop();
-                GameMessage = "Special Attack ready!";
-            };
-            _specialAttackCooldownTimer.Start();
+            // Start cooldown using Task.Delay
+            GameMessage = $"Special Attack on cooldown for {SpecialAttackCooldownSeconds} seconds..."; // Update message
+            await Task.Delay(TimeSpan.FromSeconds(SpecialAttackCooldownSeconds));
+
+            _isSpecialAttackOnCooldown = false; // Reset cooldown flag
+            // CanUseSpecialAttack is still true (unless changed by another mechanism)
+            SpecialAttackCommand.NotifyCanExecuteChanged(); // Re-enable button
+            GameMessage = "Special Attack ready!";
         }
 
-        private bool CanExecuteSpecialAttack() => CanUseSpecialAttack && !IsMonsterDefeated;
 
         [RelayCommand]
         private void ResetGame()
         {
-            MonsterName = "Grumpy Goblin"; // Or randomize
+            MonsterName = "Grumpy Goblin";
             MonsterMaxHealth = 100;
             MonsterCurrentHealth = MonsterMaxHealth;
             PlayerDamage = 10;
             GameMessage = "A new monster appears! Click it!";
             IsMonsterDefeated = false;
 
-            _specialAttackCooldownTimer?.Stop();
-            CanUseSpecialAttack = true;
-            SpecialAttackCommand?.NotifyCanExecuteChanged(); // Ensure command state is updated
+            // _specialAttackCooldownTimer?.Stop(); // Removed
+            _isSpecialAttackOnCooldown = false; // Reset cooldown state
+            CanUseSpecialAttack = true; // Ensure it's true on reset
+            // SpecialAttackCommand.NotifyCanExecuteChanged(); // CanUseSpecialAttack [NotifyCanExecuteChangedFor] handles this
         }
     }
 }

@@ -1,11 +1,11 @@
-﻿syntax = "proto3";
-
-package monsterclicker_viewmodels_protos; // Derived from ProtoNamespace option
-
-option csharp_namespace = "MonsterClicker.ViewModels.Protos"; // Matches ProtoNamespace option
-
-import "google/protobuf/any.proto";
+﻿import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
+
+syntax = "proto3";
+
+package monsterclicker_viewmodels_protos;
+
+option csharp_namespace = "MonsterClicker.ViewModels.Protos";
 
 // Message representing the full state of the GameViewModel
 message GameViewModelState {
@@ -30,53 +30,9 @@ message UpdatePropertyValueRequest {
   google.protobuf.Any new_value = 2;
 }
 
-// --- Command Request and Response Messages ---
-
-// Request message for AttackMonster command
-message AttackMonsterRequest {
-  // This command takes no parameters.
-}
-
-// Response message for AttackMonster command
-message AttackMonsterResponse {
-}
-
-// Request message for SpecialAttack command
-message SpecialAttackRequest {
-  int32 delay_milliseconds = 1; // Derived from 'int delayMilliseconds' parameter
-}
-
-// Response message for SpecialAttack command
-message SpecialAttackResponse {
-}
-
-// Request message for ResetGame command
-message ResetGameRequest {
-  // This command takes no parameters.
-}
-
-// Response message for ResetGame command
-message ResetGameResponse {
-}
-
-// Service definition
-service GameViewModelService { // Derived from GrpcServiceName option
-  // RPC for getting the initial state
+service GameViewModelService {
   rpc GetState (google.protobuf.Empty) returns (GameViewModelState);
-
-  // RPC for subscribing to property changes
   rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);
-
-  // RPC for a client to update a property value on the server
   rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
-
-  // --- RPCs for Commands ---
-  // RPC for AttackMonster command
-  rpc AttackMonster (AttackMonsterRequest) returns (AttackMonsterResponse);
-
-  // RPC for SpecialAttack command
-  rpc SpecialAttack (SpecialAttackRequest) returns (SpecialAttackResponse);
-
-  // RPC for ResetGame command
-  rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
 }
+
