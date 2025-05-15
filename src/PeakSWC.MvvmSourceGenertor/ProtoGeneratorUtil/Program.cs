@@ -91,7 +91,6 @@ namespace ProtoGeneratorUtil
 
             var references = new List<MetadataReference>();
 
-            // --- Load Trusted Platform Assemblies (more robust for core runtime) ---
             string? trustedAssembliesPaths = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
             if (!string.IsNullOrEmpty(trustedAssembliesPaths))
             {
@@ -100,12 +99,9 @@ namespace ProtoGeneratorUtil
                 {
                     if (File.Exists(path) && !references.Any(r => r.Display?.Equals(path, StringComparison.OrdinalIgnoreCase) == true))
                     {
-                        // Load most essential ones first, or all if simple
-                        // For this tool, loading many TPAs is safer to ensure type resolution.
                         try
                         {
                             references.Add(MetadataReference.CreateFromFile(path));
-                            // Console.WriteLine($"Added TPA reference: {path}"); // Can be very verbose
                         }
                         catch (Exception ex)
                         {
@@ -118,25 +114,14 @@ namespace ProtoGeneratorUtil
             else
             {
                 Console.WriteLine("Warning: TRUSTED_PLATFORM_ASSEMBLIES not available. Falling back to manual reference loading.");
-                // Fallback to individual loading if TPA not available (less likely for a .NET Core app)
-                references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location)); // System.Private.CoreLib
+                references.Add(MetadataReference.CreateFromFile(typeof(object).Assembly.Location));
                 try { references.Add(MetadataReference.CreateFromFile(Assembly.Load("System.Runtime").Location)); } catch { Console.WriteLine("Warning: Could not load System.Runtime by Assembly.Load"); }
                 try { references.Add(MetadataReference.CreateFromFile(typeof(System.ComponentModel.INotifyPropertyChanged).Assembly.Location)); } catch { /* ... */ }
-                // Add other critical fallbacks if necessary
             }
 
-            // --- Attempt to locate and add specific DLLs like CommunityToolkit and your attribute DLL ---
             TryAddAssemblyReference(references, "CommunityToolkit.Mvvm.dll", opts.ViewModelFiles.FirstOrDefault());
             string remoteAttributeDllName = "RemoteAttribute.dll";
             TryAddAssemblyReference(references, remoteAttributeDllName, opts.ViewModelFiles.FirstOrDefault(), false);
-
-            // WPF Assemblies (if needed by ViewModels, GameViewModel.cs is now clean of DispatcherTimer)
-            // string[] wpfAssemblies = { "WindowsBase.dll", "PresentationCore.dll", "PresentationFramework.dll" };
-            // foreach (var wpfAsmName in wpfAssemblies)
-            // {
-            //     TryAddAssemblyReference(references, wpfAsmName, opts.ViewModelFiles.FirstOrDefault(), isWpfFramework: true, isOptional: true);
-            // }
-
 
             Compilation compilation = CSharpCompilation.Create("ViewModelAssembly",
                 syntaxTrees: syntaxTrees,
@@ -146,7 +131,7 @@ namespace ProtoGeneratorUtil
             var allDiagnostics = compilation.GetDiagnostics();
             bool hasErrors = false;
             var relevantDiagnostics = allDiagnostics
-                .Where(d => d.Severity == DiagnosticSeverity.Error || (d.Severity == DiagnosticSeverity.Warning && d.Id != "CS0169" && d.Id != "CS0414")) // Filter out specific benign warnings
+                .Where(d => d.Severity == DiagnosticSeverity.Error || (d.Severity == DiagnosticSeverity.Warning && d.Id != "CS0169" && d.Id != "CS0414"))
                 .ToList();
 
             if (relevantDiagnostics.Any())
@@ -306,14 +291,11 @@ namespace ProtoGeneratorUtil
         {
             string? foundPath = null;
 
-            // 1. Try AppContext.BaseDirectory (where ProtoGeneratorUtil and its direct dependencies might be)
-            if (Directory.Exists(AppContext.BaseDirectory)) // Check if directory exists
+            if (Directory.Exists(AppContext.BaseDirectory))
             {
                 foundPath = Directory.GetFiles(AppContext.BaseDirectory, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
             }
 
-
-            // 2. If WPF framework assembly, try to find it in a more specific SDK path (heuristic)
             if (foundPath == null && isWpfFramework)
             {
                 string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -332,12 +314,11 @@ namespace ProtoGeneratorUtil
                                                .FirstOrDefault();
                             if (foundPath != null) break;
                         }
-                        catch (Exception ex) { Console.WriteLine($"  Minor error searching SDK packs for {dllName}: {ex.Message.Split('\n')[0]}"); } // Keep error message brief
+                        catch (Exception ex) { Console.WriteLine($"  Minor error searching SDK packs for {dllName}: {ex.Message.Split('\n')[0]}"); }
                     }
                 }
             }
 
-            // 3. If still not found, try relative to ViewModel file (for user project dependencies)
             if (foundPath == null && !string.IsNullOrEmpty(firstViewModelFilePath))
             {
                 var viewModelDir = Path.GetDirectoryName(firstViewModelFilePath);
@@ -364,7 +345,7 @@ namespace ProtoGeneratorUtil
                     }
                     if (foundPath != null) break;
 
-                    if (Directory.Exists(currentSearchDir)) // Check before GetFiles
+                    if (Directory.Exists(currentSearchDir))
                     {
                         foundPath = Directory.GetFiles(currentSearchDir, dllName, SearchOption.AllDirectories)
                                             .OrderBy(f => f.Length)
@@ -375,7 +356,7 @@ namespace ProtoGeneratorUtil
                 }
             }
 
-            if (foundPath != null && File.Exists(foundPath)) // Ensure file exists before adding
+            if (foundPath != null && File.Exists(foundPath))
             {
                 if (references.Any(r => r.Display?.Equals(foundPath, StringComparison.OrdinalIgnoreCase) == true))
                 {
@@ -408,16 +389,14 @@ namespace ProtoGeneratorUtil
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
-                    // Console.WriteLine($"  Checking field: {fieldSymbol.Name}"); // Can be too verbose
                     foreach (var attr in fieldSymbol.GetAttributes())
                     {
                         string attrClassFQN = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) ?? "null_FQN";
                         string attrClassName = attr.AttributeClass?.Name ?? "null_Name";
-                        // Console.WriteLine($"    Field '{fieldSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
 
                         if (attrClassFQN == observablePropertyAttributeFullName || attrClassName == observablePropertyAttributeFullName)
                         {
-                            Console.WriteLine($"      MATCHED ObservablePropertyAttribute for field '{fieldSymbol.Name}'!");
+                            Console.WriteLine($"      MATCHED ObservablePropertyAttribute for field '{fieldSymbol.Name}' (FQN='{attrClassFQN}', Short='{attrClassName}')!");
                             string propertyName = fieldSymbol.Name.TrimStart('_');
                             if (propertyName.Length > 0)
                             {
@@ -446,16 +425,14 @@ namespace ProtoGeneratorUtil
             {
                 if (member is IMethodSymbol methodSymbol)
                 {
-                    // Console.WriteLine($"  Checking method: {methodSymbol.Name}"); // Can be too verbose
                     foreach (var attr in methodSymbol.GetAttributes())
                     {
                         string attrClassFQN = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) ?? "null_FQN";
                         string attrClassName = attr.AttributeClass?.Name ?? "null_Name";
-                        // Console.WriteLine($"    Method '{methodSymbol.Name}' has attribute: FQN='{attrClassFQN}', Short='{attrClassName}'");
 
                         if (attrClassFQN == relayCommandAttributeFullName || attrClassName == relayCommandAttributeFullName)
                         {
-                            Console.WriteLine($"      MATCHED RelayCommandAttribute for method '{methodSymbol.Name}'!");
+                            Console.WriteLine($"      MATCHED RelayCommandAttribute for method '{methodSymbol.Name}' (FQN='{attrClassFQN}', Short='{attrClassName}')!");
                             string commandPropertyName = methodSymbol.Name + "Command";
                             cmds.Add(new CommandInfo
                             {
@@ -596,90 +573,113 @@ namespace ProtoGeneratorUtil
             string protoNamespaceOption, string grpcServiceName, string originalVmName,
             List<PropertyInfo> props, List<CommandInfo> cmds, Compilation compilation)
         {
-            var sb = new StringBuilder();
+            // --- MODIFICATION START: Ensure correct import order ---
+            var bodySb = new StringBuilder(); // For messages and service
             var requiredImports = new HashSet<string> { "google/protobuf/empty.proto" };
 
-            sb.AppendLine("syntax = \"proto3\";");
-            sb.AppendLine();
-            sb.AppendLine($"package {protoNamespaceOption.ToLowerInvariant().Replace(".", "_")};");
-            sb.AppendLine();
-            sb.AppendLine($"option csharp_namespace = \"{protoNamespaceOption}\";");
-            sb.AppendLine();
-
+            // Messages for Properties and State
             string vmStateMessageName = $"{originalVmName}State";
-            sb.AppendLine($"// Message representing the full state of the {originalVmName}");
-            sb.AppendLine($"message {vmStateMessageName} {{");
+            bodySb.AppendLine($"// Message representing the full state of the {originalVmName}");
+            bodySb.AppendLine($"message {vmStateMessageName} {{");
             int fieldNumber = 1;
             if (!props.Any())
             {
-                sb.AppendLine("  // No observable properties found or mapped.");
+                bodySb.AppendLine("  // No observable properties found or mapped.");
             }
             foreach (var prop in props)
             {
                 string protoFieldType = GetProtoFieldType(prop.FullTypeSymbol, compilation, requiredImports);
                 string protoFieldName = ToSnakeCase(prop.Name);
-                sb.AppendLine($"  {protoFieldType} {protoFieldName} = {fieldNumber++};");
+                bodySb.AppendLine($"  {protoFieldType} {protoFieldName} = {fieldNumber++};");
             }
-            sb.AppendLine("}");
-            sb.AppendLine();
+            bodySb.AppendLine("}");
+            bodySb.AppendLine();
 
-            requiredImports.Add("google/protobuf/any.proto");
-            sb.AppendLine("// Message for property change notifications");
-            sb.AppendLine("message PropertyChangeNotification {");
-            sb.AppendLine("  string property_name = 1;");
-            sb.AppendLine("  google.protobuf.Any new_value = 2;");
-            sb.AppendLine("}");
-            sb.AppendLine();
+            // Common messages for property updates
+            // Ensure Any is imported if used (GetProtoFieldType handles adding to requiredImports)
+            bodySb.AppendLine("// Message for property change notifications");
+            bodySb.AppendLine("message PropertyChangeNotification {");
+            bodySb.AppendLine("  string property_name = 1;");
+            bodySb.AppendLine("  google.protobuf.Any new_value = 2;"); // This will add "google/protobuf/any.proto" to requiredImports
+            bodySb.AppendLine("}");
+            bodySb.AppendLine();
 
-            sb.AppendLine("// Request to update a property's value");
-            sb.AppendLine("message UpdatePropertyValueRequest {");
-            sb.AppendLine("  string property_name = 1;");
-            sb.AppendLine("  google.protobuf.Any new_value = 2;");
-            sb.AppendLine("}");
-            sb.AppendLine();
+            bodySb.AppendLine("// Request to update a property's value");
+            bodySb.AppendLine("message UpdatePropertyValueRequest {");
+            bodySb.AppendLine("  string property_name = 1;");
+            bodySb.AppendLine("  google.protobuf.Any new_value = 2;"); // This will add "google/protobuf/any.proto"
+            bodySb.AppendLine("}");
+            bodySb.AppendLine();
 
+            // Messages for Commands
             foreach (var cmd in cmds)
             {
                 string requestMessageName = $"{cmd.MethodName}Request";
                 string responseMessageName = $"{cmd.MethodName}Response";
 
-                sb.AppendLine($"// Request message for {cmd.MethodName} command");
-                sb.AppendLine($"message {requestMessageName} {{");
+                bodySb.AppendLine($"// Request message for {cmd.MethodName} command");
+                bodySb.AppendLine($"message {requestMessageName} {{");
                 fieldNumber = 1;
                 foreach (var param in cmd.Parameters)
                 {
                     string paramProtoFieldType = GetProtoFieldType(param.FullTypeSymbol, compilation, requiredImports);
                     string paramProtoFieldName = ToSnakeCase(param.Name);
-                    sb.AppendLine($"  {paramProtoFieldType} {paramProtoFieldName} = {fieldNumber++};");
+                    bodySb.AppendLine($"  {paramProtoFieldType} {paramProtoFieldName} = {fieldNumber++};");
                 }
-                sb.AppendLine("}");
-                sb.AppendLine();
+                bodySb.AppendLine("}");
+                bodySb.AppendLine();
 
-                sb.AppendLine($"// Response message for {cmd.MethodName} command");
-                sb.AppendLine($"message {responseMessageName} {{");
-                sb.AppendLine("}");
-                sb.AppendLine();
+                bodySb.AppendLine($"// Response message for {cmd.MethodName} command");
+                bodySb.AppendLine($"message {responseMessageName} {{");
+                bodySb.AppendLine("}");
+                bodySb.AppendLine();
             }
 
-            sb.AppendLine($"service {grpcServiceName} {{");
-            sb.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmStateMessageName});");
-            sb.AppendLine($"  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);");
-            sb.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
+            // Service Definition
+            bodySb.AppendLine($"service {grpcServiceName} {{");
+            bodySb.AppendLine($"  // RPC for getting the initial state");
+            bodySb.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmStateMessageName});");
+            bodySb.AppendLine();
+            bodySb.AppendLine($"  // RPC for subscribing to property changes");
+            bodySb.AppendLine($"  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);");
+            bodySb.AppendLine();
+            bodySb.AppendLine($"  // RPC for a client to update a property value on the server");
+            bodySb.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
+            bodySb.AppendLine();
+
             foreach (var cmd in cmds)
             {
-                sb.AppendLine($"  rpc {cmd.MethodName} ({cmd.MethodName}Request) returns ({cmd.MethodName}Response);");
+                bodySb.AppendLine($"  // RPC for {cmd.MethodName} command"); // This was a typo, should be bodySb
+                bodySb.AppendLine($"  rpc {cmd.MethodName} ({cmd.MethodName}Request) returns ({cmd.MethodName}Response);");
             }
-            sb.AppendLine("}");
-            sb.AppendLine();
+            bodySb.AppendLine("}");
+            bodySb.AppendLine();
 
-            var importsBuilder = new StringBuilder();
+            // --- Build the final .proto content in the correct order ---
+            var finalProtoSb = new StringBuilder();
+            finalProtoSb.AppendLine("syntax = \"proto3\";");
+            finalProtoSb.AppendLine();
+            finalProtoSb.AppendLine($"package {protoNamespaceOption.ToLowerInvariant().Replace(".", "_")};");
+            finalProtoSb.AppendLine();
+            finalProtoSb.AppendLine($"option csharp_namespace = \"{protoNamespaceOption}\";");
+            finalProtoSb.AppendLine();
+
+            // Add imports AFTER syntax, package, and options
+            // Ensure "google/protobuf/any.proto" is in requiredImports if it was used by GetProtoFieldType
+            if (bodySb.ToString().Contains("google.protobuf.Any"))
+            { // Simple check
+                requiredImports.Add("google/protobuf/any.proto");
+            }
             foreach (var importPath in requiredImports.OrderBy(x => x))
             {
-                importsBuilder.AppendLine($"import \"{importPath}\";");
+                finalProtoSb.AppendLine($"import \"{importPath}\";");
             }
-            importsBuilder.AppendLine();
+            finalProtoSb.AppendLine();
 
-            return importsBuilder.ToString() + sb.ToString();
+            finalProtoSb.Append(bodySb.ToString()); // Append messages and service
+
+            return finalProtoSb.ToString();
+            // --- MODIFICATION END ---
         }
     }
 }

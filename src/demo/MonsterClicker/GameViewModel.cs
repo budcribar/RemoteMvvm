@@ -1,9 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using PeakSWC.Mvvm.Remote;
-using System;
-using System.Threading.Tasks;
-// using System.Windows.Threading; // No longer needed for DispatcherTimer
 
 namespace MonsterClicker.ViewModels
 {

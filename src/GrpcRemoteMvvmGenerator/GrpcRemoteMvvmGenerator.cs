@@ -4,7 +4,6 @@ using Microsoft.CodeAnalysis.Text;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection; // Not directly used in this snippet but present in original
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -13,7 +12,7 @@ namespace PeakSWC.MvvmSourceGenerator
     [Generator]
     public class GrpcRemoteMvvmGenerator : IIncrementalGenerator
     {
-        private const string GenerateGrpcRemoteAttributeFullName = "PeakSWC.Mvvm.Remote.Mvvm.GenerateGrpcRemoteAttribute";
+        private const string GenerateGrpcRemoteAttributeFullName = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute";
         private const string ObservablePropertyAttributeFullName = "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute";
         private const string RelayCommandAttributeFullName = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 

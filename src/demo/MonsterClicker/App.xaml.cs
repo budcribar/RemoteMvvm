@@ -1,16 +1,12 @@
 ﻿using MonsterClicker.ViewModels;
-using System;
-using System.Linq;
 using System.Windows;
 
-// These are illustrative using statements for where generated/gRPC code would live
-//using MonsterClicker.Protos.Game; // Assuming this is where GameService.GameServiceClient would be
-//using MonsterClicker.GrpcServices; // Assuming this is where your generated GameServiceGrpcImpl would be
-//using MonsterClicker.RemoteClients; // Assuming this is where your GameViewModelRemoteClient would be
-//using Grpc.Net.Client;
+using MonsterClicker.ViewModels.Protos; // Assuming this is where your generated gRPC code would live
+using MonsterClicker.GrpcServices; // Assuming this is where your generated GameServiceGrpcImpl would be
+using MonsterClicker.RemoteClients; // Assuming this is where your GameViewModelRemoteClient would be
+
 using Grpc.Core;
 using Grpc.Net.Client;
-//using Grpc.Net.Client; // For Server
 
 namespace MonsterClicker
 {
@@ -37,7 +33,7 @@ namespace MonsterClicker
 
                         Server server = new Server
                         {
-                            //Services = { GameService.BindService(new GameServiceGrpcImpl(gameViewModelForServer)) }, // GameServiceGrpcImpl would be your generated class
+                            Services = { GameViewModelService.BindService(new GameServiceGrpcImpl(gameViewModelForServer)) }, // GameServiceGrpcImpl would be your generated class
                             Ports = { new ServerPort("localhost", 50051, ServerCredentials.Insecure) }
                         };
                         server.Start();
@@ -51,13 +47,13 @@ namespace MonsterClicker
                     case "client":
                         Console.WriteLine("Starting in CLIENT mode...");
                         var channel = GrpcChannel.ForAddress(ServerAddress);
-                        //var grpcClient = new GameService.GameServiceClient(channel);
+                        var grpcClient = new GameViewModelService.GameViewModelServiceClient(channel);
 
                         //// GameViewModelRemoteClient would be your generated client-side proxy ViewModel
-                        //var remoteViewModel = new GameViewModelRemoteClient(grpcClient);
-                        //await remoteViewModel.InitializeRemoteAsync(); // Method to fetch initial state and subscribe
+                        var remoteViewModel = new GameViewModelRemoteClient(grpcClient);
+                        await remoteViewModel.InitializeRemoteAsync(); // Method to fetch initial state and subscribe
 
-                        //mainWindow.DataContext = remoteViewModel;
+                        mainWindow.DataContext = remoteViewModel;
                         mainWindow.Title += $" (Client Mode - Connected to {ServerAddress})";
                         break;
 

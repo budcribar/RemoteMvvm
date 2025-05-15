@@ -1,11 +1,11 @@
-﻿import "google/protobuf/any.proto";
-import "google/protobuf/empty.proto";
-
-syntax = "proto3";
+﻿syntax = "proto3";
 
 package monsterclicker_viewmodels_protos;
 
 option csharp_namespace = "MonsterClicker.ViewModels.Protos";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
 
 // Message representing the full state of the GameViewModel
 message GameViewModelState {
@@ -55,11 +55,20 @@ message ResetGameResponse {
 }
 
 service GameViewModelService {
+  // RPC for getting the initial state
   rpc GetState (google.protobuf.Empty) returns (GameViewModelState);
+
+  // RPC for subscribing to property changes
   rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);
+
+  // RPC for a client to update a property value on the server
   rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
+
+  // RPC for AttackMonster command
   rpc AttackMonster (AttackMonsterRequest) returns (AttackMonsterResponse);
+  // RPC for SpecialAttackAsync command
   rpc SpecialAttackAsync (SpecialAttackAsyncRequest) returns (SpecialAttackAsyncResponse);
+  // RPC for ResetGame command
   rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
 }
 
