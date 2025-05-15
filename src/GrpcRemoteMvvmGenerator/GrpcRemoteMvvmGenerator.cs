@@ -265,7 +265,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 {
                     sb.AppendLine($"                state.{protoMessageFieldName} = propValue;");
                 }
-                sb.AppendLine($"            }} catch (Exception ex) {{ Console.WriteLine($\"Error mapping property {csharpPropertyName} to state.{protoMessageFieldName}: \" + ex.Message); }}"); // Corrected string concat
+                sb.AppendLine($"            }} catch (Exception ex) {{ Console.WriteLine($\"Error mapping property {csharpPropertyName} to state.{protoMessageFieldName}: \" + ex.Message); }}");
             }
             sb.AppendLine("            return Task.FromResult(state);");
             sb.AppendLine("        }");
@@ -373,8 +373,8 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            }");
             sb.AppendLine("            try { await Task.WhenAll(writeTasks); } catch (Exception ex) { Console.WriteLine($\"[GrpcService:{vmName}] Error writing notifications: \" + ex.Message); }");
             sb.AppendLine("        }");
-            sb.AppendLine("    }");
-            sb.AppendLine("}");
+            sb.AppendLine("    }"); // End of class {vmName}GrpcServiceImpl
+            sb.AppendLine("}"); // End of namespace {serverImplNamespace}
             return sb.ToString();
         }
 
@@ -415,11 +415,12 @@ namespace PeakSWC.MvvmSourceGenerator
 
             foreach (var prop in props)
             {
-                sb.AppendLine($"        private {prop.Type} _{LowercaseFirst(prop.Name)};");
+                string backingFieldName = $"_{LowercaseFirst(prop.Name)}";
+                sb.AppendLine($"        private {prop.Type} {backingFieldName};");
                 sb.AppendLine($"        public {prop.Type} {prop.Name}");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            get => _{LowercaseFirst(prop.Name)};");
-                sb.AppendLine("            private set => SetProperty(ref _{LowercaseFirst(prop.Name)}, value);");
+                sb.AppendLine($"            get => {backingFieldName};");
+                sb.AppendLine($"            private set => SetProperty(ref {backingFieldName}, value);"); // Corrected
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }
@@ -469,24 +470,24 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        public async Task InitializeRemoteAsync(CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isInitialized || _isDisposed) return;");
-            sb.AppendLine("            Debug.WriteLine($\"[{originalVmName}RemoteClient] Initializing...\");");
+            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Initializing...\");");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine($"                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);");
             sb.AppendLine($"                var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);");
-            sb.AppendLine("                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initial state received.\");");
+            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initial state received.\");");
             foreach (var prop in props)
             {
                 string protoStateFieldName = ToPascalCase(prop.Name);
                 sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
             }
             sb.AppendLine("                _isInitialized = true;");
-            sb.AppendLine("                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initialized successfully.\");");
+            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initialized successfully.\");");
             sb.AppendLine("                StartListeningToPropertyChanges(_cts.Token);");
             sb.AppendLine("            }");
-            sb.AppendLine("            catch (RpcException ex) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Failed to initialize: {ex.Status.StatusCode} - {ex.Status.Detail}\"); }");
-            sb.AppendLine("            catch (OperationCanceledException) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Initialization cancelled.\"); }");
-            sb.AppendLine("            catch (Exception ex) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unexpected error during initialization: \" + ex.Message); }");
+            sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Failed to initialize: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
+            sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Initialization cancelled.\"); }}");
+            sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unexpected error during initialization: \" + ex.Message); }}");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -505,8 +506,8 @@ namespace PeakSWC.MvvmSourceGenerator
                                                      : $"private void RemoteExecute_{cmd.MethodName}({paramListWithType})";
                 sb.AppendLine($"        {methodSignature}");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine(\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {(cmd.IsAsync ? "return Task.CompletedTask;" : "return;")} }}");
-                sb.AppendLine("            Debug.WriteLine($\"[ClientProxy:{originalVmName}] Executing command {cmd.MethodName} remotely...\");");
+                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {(cmd.IsAsync ? "return Task.CompletedTask;" : "return;")} }}");
+                sb.AppendLine($"            Debug.WriteLine($\"[ClientProxy:{originalVmName}] Executing command {cmd.MethodName} remotely...\");");
                 sb.AppendLine("            try");
                 sb.AppendLine("            {");
                 if (cmd.IsAsync)
@@ -532,14 +533,14 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            _ = Task.Run(async () => ");
             sb.AppendLine("            {");
             sb.AppendLine("                if (_isDisposed) return;");
-            sb.AppendLine("                Debug.WriteLine($\"[{originalVmName}RemoteClient] Starting property change listener...\");");
+            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Starting property change listener...\");");
             sb.AppendLine("                try");
             sb.AppendLine("                {");
             sb.AppendLine($"                    using var call = _grpcClient.SubscribeToPropertyChanges(new Empty(), cancellationToken: cancellationToken);");
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
             sb.AppendLine("                        if (_isDisposed) break;");
-            sb.AppendLine("                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Received property update: {update.PropertyName}\");");
+            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Received property update: {{update.PropertyName}}\");");
             sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                            switch (update.PropertyName)");
             sb.AppendLine("                            {");
@@ -547,8 +548,7 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 string wkt = GetProtoWellKnownTypeFor(prop.FullTypeSymbol!, compilation);
                 string csharpPropName = prop.Name;
-                // Use nameof on the client proxy's own property name for the case statement
-                sb.AppendLine($"                                case nameof(this.{csharpPropName}):");
+                sb.AppendLine($"                                case nameof({csharpPropName}):");
                 if (wkt == "StringValue") sb.AppendLine($"                                    if (update.NewValue.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
                 else if (wkt == "Int32Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int32Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int32Value>().Value; break;");
                 else if (wkt == "BoolValue") sb.AppendLine($"                                    if (update.NewValue.Is(BoolValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<BoolValue>().Value; break;");
@@ -558,7 +558,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 else if (wkt == "Timestamp" && prop.Type == "DateTime") sb.AppendLine($"                                    if (update.NewValue.Is(Timestamp.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Timestamp>().ToDateTime(); break;");
                 else sb.AppendLine($"                                    Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
             }
-            sb.AppendLine("                                default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: {update.PropertyName}\"); break;");
+            sb.AppendLine($"                                default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: {{update.PropertyName}}\"); break;");
             sb.AppendLine("                            }");
             sb.AppendLine("                        };");
             sb.AppendLine("                        #if WPF_DISPATCHER");
@@ -568,9 +568,9 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                        #endif");
             sb.AppendLine("                    }");
             sb.AppendLine("                }");
-            sb.AppendLine("                catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription cancelled.\"); }");
-            sb.AppendLine("                catch (OperationCanceledException) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription task cancelled.\"); }");
-            sb.AppendLine("                catch (Exception ex) { if (!_isDisposed) Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error in property listener: \" + ex.GetType().Name + \" - \" + ex.Message); }");
+            sb.AppendLine($"                catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription cancelled.\"); }}");
+            sb.AppendLine($"                catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription task cancelled.\"); }}");
+            sb.AppendLine($"                catch (Exception ex) {{ if (!_isDisposed) Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error in property listener: \" + ex.GetType().Name + \" - \" + ex.Message); }}");
             sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Property change listener stopped.\");");
             sb.AppendLine("            }, cancellationToken);");
             sb.AppendLine("        }");
@@ -580,7 +580,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isDisposed) return;");
             sb.AppendLine("            _isDisposed = true;");
-            sb.AppendLine("            Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposing...\");");
+            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposing...\");");
             sb.AppendLine("            _cts.Cancel();");
             sb.AppendLine("            _cts.Dispose();");
             sb.AppendLine("        }");
@@ -594,7 +594,7 @@ namespace PeakSWC.MvvmSourceGenerator
         private string ToSnakeCase(string pascalCaseName)
         {
             if (string.IsNullOrEmpty(pascalCaseName)) return pascalCaseName;
-            return Regex.Replace(pascalCaseName, "(?<=.)([A-Z])", "_$1").ToLower();
+            return Regex.Replace(pascalCaseName, @"(?<=[a-z0-9])([A-Z])|(?<=[A-Z])([A-Z])(?=[a-z])", "_$1$2").ToLower();
         }
 
         private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol, Compilation compilation)
