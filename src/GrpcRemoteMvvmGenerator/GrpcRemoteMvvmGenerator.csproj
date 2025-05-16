@@ -1,15 +1,35 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-	  <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
-	  <LangVersion>latest</LangVersion>
-	  <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-    <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
-  </ItemGroup>
+		<IsPackable>true</IsPackable>
+		<PackageId>PeakSWC.MvvmSourceGenerator</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>Bud Cribar</Authors>
+		<Description>A C# Source Generator for creating gRPC remote MVVM proxies and server implementations.</Description>
+		<PackageTags>sourcegenerator;mvvm;grpc;roslyn;automation;PeakSWC</PackageTags>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<DevelopmentDependency>true</DevelopmentDependency>
+		<IsRoslynAnalyzer>true</IsRoslynAnalyzer>
+		<ProtoGeneratorUtilOutDir>..\PeakSWC.MvvmSourceGenertor\ProtoGeneratorUtil\publish\</ProtoGeneratorUtilOutDir>
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+		<PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+		<None Include="Attributes\GenerateGrpcRemoteAttribute.cs" Pack="true" PackagePath="contentFiles\cs\any\PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs" Link="Attributes\GenerateGrpcRemoteAttribute.cs" CopyToOutputDirectory="Never" Visible="false" />
+		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+		<Content Include="$(ProtoGeneratorUtilOutDir)ProtoGeneratorUtil.exe" Pack="true" PackagePath="tools\net8.0\" CopyToOutputDirectory="PreserveNewest" />
+		<Content Include="build\PeakSWC.MvvmSourceGenerator.targets" Pack="true" PackagePath="build\" />
+		<Content Include="build\PeakSWC.MvvmSourceGenerator.props" Pack="true" PackagePath="build\" />
+	</ItemGroup>
 
 </Project>

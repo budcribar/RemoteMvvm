@@ -1,0 +1,45 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <_PeakSWCProtoGeneratorToolExeName>ProtoGeneratorUtil.exe</_PeakSWCProtoGeneratorToolExeName>
+    <_PeakSWCProtoGeneratorToolDir Condition=" '$(TargetFramework)' == 'net8.0' Or '$(TargetFramework)' == 'net7.0' Or '$(TargetFramework)' == 'net6.0' Or '$(TargetFramework)' == 'net5.0' ">net8.0</_PeakSWCProtoGeneratorToolDir>
+    <_PeakSWCProtoGeneratorToolDir Condition=" '$(_PeakSWCProtoGeneratorToolDir)' == '' ">net8.0</_PeakSWCProtoGeneratorToolDir> <PeakSWCProtoGeneratorToolPath Condition="Exists('$(MSBuildThisFileDirectory)..\tools\$(_PeakSWCProtoGeneratorToolDir)\$(_PeakSWCProtoGeneratorToolExeName)')">$(MSBuildThisFileDirectory)..\tools\$(_PeakSWCProtoGeneratorToolDir)\$(_PeakSWCProtoGeneratorToolExeName)</PeakSWCProtoGeneratorToolPath>
+  </PropertyGroup>
+
+  <Target Name="PeakSWC_GenerateProtoFiles" 
+          BeforeTargets="ProtoCompile;CoreCompile"
+          Condition=" '$(PeakSWCProtoGeneratorToolPath)' != '' AND Exists('$(PeakSWCProtoGeneratorToolPath)') AND '@(MvvmViewModelProtoSource)' != '' ">
+    
+    <Message Text="PeakSWC.MvvmSourceGenerator: Found Proto Generation Tool at $(PeakSWCProtoGeneratorToolPath)" Importance="normal" />
+    <Message Text="PeakSWC.MvvmSourceGenerator: Processing MvvmViewModelProtoSource items..." Importance="normal" />
+
+    <Exec Command="&quot;$(PeakSWCProtoGeneratorToolPath)&quot; ^
+                          --viewModelFiles &quot;%(MvvmViewModelProtoSource.Identity)&quot; ^
+                          --output &quot;%(MvvmViewModelProtoSource.OutputPath)&quot; ^
+                          --protoNamespace &quot;%(MvvmViewModelProtoSource.ProtoNamespace)&quot; ^
+                          --serviceName &quot;%(MvvmViewModelProtoSource.ServiceName)&quot; ^
+                          --attributeFullName &quot;%(MvvmViewModelProtoSource.AttributeFullName)&quot; ^
+                          --observablePropertyAttribute &quot;%(MvvmViewModelProtoSource.ObservablePropertyAttribute)&quot; ^
+                          --relayCommandAttribute &quot;%(MvvmViewModelProtoSource.RelayCommandAttribute)&quot;"
+            ContinueOnError="false"
+            WorkingDirectory="$(MSBuildProjectDirectory)" 
+            ConsoleToMSBuild="true">
+        <Output TaskParameter="ConsoleOutput" PropertyName="ProtoGeneratorOutput" />
+    </Exec>
+            
+    <Message Text="PeakSWC.MvvmSourceGenerator: Finished processing MvvmViewModelProtoSource items." Importance="normal" />
+  </Target>
+
+  <Target Name="PeakSWC_CheckProtoGeneratorTool" 
+          BeforeTargets="PeakSWC_GenerateProtoFiles" 
+          Condition=" ('$(PeakSWCProtoGeneratorToolPath)' == '' OR !Exists('$(PeakSWCProtoGeneratorToolPath)')) AND '@(MvvmViewModelProtoSource)' != '' ">
+    <Warning Text="PeakSWC.MvvmSourceGenerator: ProtoGeneratorUtil.exe was not found at expected path '$(PeakSWCProtoGeneratorToolPath)'. .proto file generation will be skipped. Ensure the NuGet package is correctly installed and contains the tool." />
+  </Target>
+
+  <Target Name="PeakSWC_NoProtoSources"
+          BeforeTargets="PeakSWC_GenerateProtoFiles"
+          Condition="'@(MvvmViewModelProtoSource)' == ''">
+    <Message Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found in the project. Skipping .proto file generation." Importance="normal" />
+  </Target>
+
+</Project>

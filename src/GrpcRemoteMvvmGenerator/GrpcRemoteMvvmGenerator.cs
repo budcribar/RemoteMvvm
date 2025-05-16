@@ -9,6 +9,8 @@ using System.Text.RegularExpressions;
 // Required for Channel<T>
 using System.Threading.Channels;
 using System.Collections.Concurrent;
+using Microsoft.CodeAnalysis.Diagnostics;
+using System.Collections.Immutable;
 
 
 namespace PeakSWC.MvvmSourceGenerator
@@ -22,15 +24,15 @@ namespace PeakSWC.MvvmSourceGenerator
 
         // Diagnostic Descriptors
         private static readonly DiagnosticDescriptor SGINFO001_GeneratorStarted = new DiagnosticDescriptor(
-            id: "SGINFO001", title: "Generator Execution", messageFormat: "GrpcRemoteMvvmGenerator Execute method started.",
+            id: "SGINFO001", title: "Generator Execution", messageFormat: "GrpcRemoteMvvmGenerator Execute method started",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGINFO002_NoClassesFound = new DiagnosticDescriptor(
-            id: "SGINFO002", title: "Generator Execution", messageFormat: "No classes found with the GenerateGrpcRemoteAttribute.",
+            id: "SGINFO002", title: "Generator Execution", messageFormat: "No classes found with the GenerateGrpcRemoteAttribute",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGINFO003_ProcessingClass = new DiagnosticDescriptor(
-            id: "SGINFO003", title: "Generator Execution", messageFormat: "Processing class: {0}.",
+            id: "SGINFO003", title: "Generator Execution", messageFormat: "Processing class: {0}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGWARN001_AttributeNotFound = new DiagnosticDescriptor(
@@ -38,23 +40,23 @@ namespace PeakSWC.MvvmSourceGenerator
             category: "SourceGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGINFO004_AttributeFound = new DiagnosticDescriptor(
-            id: "SGINFO004", title: "Attribute Resolution", messageFormat: "Found GenerateGrpcRemoteAttribute on {0}.",
+            id: "SGINFO004", title: "Attribute Resolution", messageFormat: "Found GenerateGrpcRemoteAttribute on {0}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGERR001_MissingAttributeArgs = new DiagnosticDescriptor(
-            id: "SGERR001", title: "Attribute Usage", messageFormat: "Class '{0}' is missing required constructor arguments (protoCsNamespace, grpcServiceName) for [GenerateGrpcRemoteAttribute].",
+            id: "SGERR001", title: "Attribute Usage", messageFormat: "Class '{0}' is missing required constructor arguments (protoCsNamespace, grpcServiceName) for [GenerateGrpcRemoteAttribute]",
             category: "SourceGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGINFO005_ExtractedMembers = new DiagnosticDescriptor(
-            id: "SGINFO005", title: "Generator Execution", messageFormat: "Extracted {0} properties and {1} commands for {2}.",
+            id: "SGINFO005", title: "Generator Execution", messageFormat: "Extracted {0} properties and {1} commands for {2}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGINFO006_GeneratedServerImpl = new DiagnosticDescriptor(
-            id: "SGINFO006", title: "Code Generation", messageFormat: "Generated server implementation for {0} in namespace {1}.",
+            id: "SGINFO006", title: "Code Generation", messageFormat: "Generated server implementation for {0} in namespace {1}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
         private static readonly DiagnosticDescriptor SGINFO007_GeneratedClientProxy = new DiagnosticDescriptor(
-            id: "SGINFO007", title: "Code Generation", messageFormat: "Generated client proxy for {0} in namespace {1}.",
+            id: "SGINFO007", title: "Code Generation", messageFormat: "Generated client proxy for {0} in namespace {1}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
 
@@ -76,7 +78,21 @@ namespace PeakSWC.MvvmSourceGenerator
         internal class PropertyInfoData { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public ITypeSymbol? FullTypeSymbol { get; set; } }
         internal class CommandInfoData { public string MethodName { get; set; } = ""; public string CommandPropertyName { get; set; } = ""; public List<ParameterInfoData> Parameters { get; set; } = new List<ParameterInfoData>(); public bool IsAsync { get; set; } }
         internal class ParameterInfoData { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public ITypeSymbol? FullTypeSymbol { get; set; } }
+        // Add the following attribute to enable analyzer release tracking for the diagnostic descriptor SGWARN001.
+        // This attribute is required to comply with RS2008.
 
+        [DiagnosticAnalyzer(LanguageNames.CSharp)]
+        public class GrpcRemoteMvvmGeneratorAnalyzer : DiagnosticAnalyzer
+        {
+
+            public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics =>
+                ImmutableArray.Create(SGWARN001_AttributeNotFound);
+
+            public override void Initialize(AnalysisContext context)
+            {
+                // Analyzer initialization logic (if needed)
+            }
+        }
 
         private void Execute(Compilation compilation, System.Collections.Immutable.ImmutableArray<ClassDeclarationSyntax> classes, SourceProductionContext context)
         {
