@@ -255,10 +255,10 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"        private readonly ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>>();");
             sb.AppendLine("        private readonly Dispatcher _dispatcher; // For UI thread marshalling");
             sb.AppendLine();
-            sb.AppendLine($"        public {vmName}GrpcServiceImpl({vmFullName} viewModel, Dispatcher dispatcher)"); // Added dispatcher
+            sb.AppendLine($"        public {vmName}GrpcServiceImpl({vmFullName} viewModel, Dispatcher dispatcher)");
             sb.AppendLine("        {");
             sb.AppendLine("            _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));");
-            sb.AppendLine("            _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));"); // Store dispatcher
+            sb.AppendLine("            _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));");
             sb.AppendLine("            if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -316,7 +316,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"        public override Task<Empty> UpdatePropertyValue({protoCsNamespace}.UpdatePropertyValueRequest request, ServerCallContext context)");
             sb.AppendLine("        {");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue called for '\" + request.PropertyName + \"'.\");");
-            sb.AppendLine("            _dispatcher.Invoke(() => { // Dispatch to UI thread");
+            sb.AppendLine("            _dispatcher.Invoke(() => {");
             sb.AppendLine("                var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
             sb.AppendLine("                if (propertyInfo != null && propertyInfo.CanWrite)");
             sb.AppendLine("                {");
@@ -340,7 +340,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine("        {");
                 sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + $"] Executing command {cmd.MethodName}.\");");
                 sb.AppendLine("            try {");
-                sb.AppendLine("                await _dispatcher.InvokeAsync(async () => { // Dispatch command execution to UI thread");
+                sb.AppendLine("                await _dispatcher.InvokeAsync(async () => {");
                 string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
                 if (cmd.IsAsync)
                 {
@@ -378,7 +378,7 @@ namespace PeakSWC.MvvmSourceGenerator
                     sb.AppendLine("                    }");
                     sb.AppendLine("                    else { Debug.WriteLine(\"[GrpcService:" + vmName + $"] Command {cmd.CommandPropertyName} not found or not IRelayCommand.\"); }}");
                 }
-                sb.AppendLine("                });"); // End of dispatcher invoke
+                sb.AppendLine("                });");
                 sb.AppendLine("            } catch (Exception ex) {");
                 sb.AppendLine("                Debug.WriteLine(\"[GrpcService:" + vmName + $"] Exception during command execution for {cmd.MethodName}: \" + ex.ToString());");
                 sb.AppendLine("                throw new RpcException(new Status(StatusCode.Internal, \"Error executing command on server: \" + ex.Message));");
@@ -599,6 +599,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 if (wkt == "StringValue") sb.AppendLine($"                                       if (update.NewValue.Is(StringValue.Descriptor)) {{ var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} from \\\"{{this.{csharpPropName}}}\\\" to '\\\"{{val}}\\\".\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is '\\\"{{this.{csharpPropName}}}\\\".\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected StringValue.\"); }} break;");
                 else if (wkt == "Int32Value") sb.AppendLine($"                                       if (update.NewValue.Is(Int32Value.Descriptor)) {{ var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to {{val}}.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is {{this.{csharpPropName}}}.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected Int32Value.\"); }} break;");
                 else if (wkt == "BoolValue") sb.AppendLine($"                                       if (update.NewValue.Is(BoolValue.Descriptor)) {{ var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to {{val}}.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is {{this.{csharpPropName}}}.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected BoolValue.\"); }} break;");
+                // Add more specific unpackers with similar detailed logging
                 else sb.AppendLine($"                                       Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
             }
             sb.AppendLine($"                                   default: Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Unknown property in notification: \\\"{{update.PropertyName}}\\\"\"); break;");
