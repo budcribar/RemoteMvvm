@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using PeakSWC.Mvvm.Remote; // Your custom attribute's namespace
 using System;
 using System.Threading.Tasks;
+// using System.Windows; // No longer directly using WPF dispatcher here
 
 namespace MonsterClicker.ViewModels
 {
@@ -18,6 +19,8 @@ namespace MonsterClicker.ViewModels
         private int _monsterMaxHealth = 100;
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AttackMonsterCommand))] // Re-evaluate AttackMonster when health changes
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // Re-evaluate SpecialAttack when health changes
         private int _monsterCurrentHealth = 100;
 
         [ObservableProperty]
@@ -27,35 +30,40 @@ namespace MonsterClicker.ViewModels
         private string _gameMessage = "Click the monster to attack!";
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // For CanExecuteSpecialAttack
+        [NotifyCanExecuteChangedFor(nameof(AttackMonsterCommand))] // Re-evaluate AttackMonster
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // Re-evaluate SpecialAttack
         private bool _isMonsterDefeated;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // For CanExecuteSpecialAttack
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))]
         private bool _canUseSpecialAttack = true;
 
         private const int SpecialAttackCooldownSeconds = 5;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // For CanExecuteSpecialAttack
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))]
         private bool _isSpecialAttackOnCooldown = false;
 
         public GameViewModel()
         {
+            // ResetGame will set initial values and trigger notifications
             ResetGame();
         }
 
-        [RelayCommand]
+        private bool CanAttackMonster() => !IsMonsterDefeated;
+
+        [RelayCommand(CanExecute = nameof(CanAttackMonster))]
         private void AttackMonster()
         {
-            if (IsMonsterDefeated) return;
+            // CanExecute guard is usually sufficient
+            // if (IsMonsterDefeated) return; 
 
-            MonsterCurrentHealth -= PlayerDamage;
+            MonsterCurrentHealth -= PlayerDamage; // Setter will trigger PropertyChanged & CanExecuteChanged
             if (MonsterCurrentHealth <= 0)
             {
                 MonsterCurrentHealth = 0;
                 GameMessage = $"{MonsterName} defeated! Well done!";
-                IsMonsterDefeated = true;
+                IsMonsterDefeated = true; // Setter will trigger PropertyChanged & CanExecuteChanged
             }
             else
             {
@@ -68,22 +76,21 @@ namespace MonsterClicker.ViewModels
         [RelayCommand(CanExecute = nameof(CanExecuteSpecialAttack))]
         private async Task SpecialAttackAsync()
         {
-            if (!CanExecuteSpecialAttack()) return; // Guard clause
+            // if (!CanExecuteSpecialAttack()) return; // Guarded by CanExecute
 
-            IsSpecialAttackOnCooldown = true;
-            // No need to call SpecialAttackCommand.NotifyCanExecuteChanged(); explicitly due to [NotifyCanExecuteChangedFor]
+            IsSpecialAttackOnCooldown = true; // Setter will trigger PropertyChanged & CanExecuteChanged
 
             GameMessage = "Charging special attack...";
             await Task.Delay(750);
 
             int specialDamage = PlayerDamage * 3;
-            MonsterCurrentHealth -= specialDamage;
+            MonsterCurrentHealth -= specialDamage; // Setter will trigger PropertyChanged & CanExecuteChanged
 
             if (MonsterCurrentHealth <= 0)
             {
                 MonsterCurrentHealth = 0;
                 GameMessage = $"Critical Hit! {MonsterName} obliterated for {specialDamage} damage!";
-                IsMonsterDefeated = true;
+                IsMonsterDefeated = true; // Setter will trigger PropertyChanged & CanExecuteChanged
             }
             else
             {
@@ -93,7 +100,7 @@ namespace MonsterClicker.ViewModels
             GameMessage = $"Special Attack on cooldown for {SpecialAttackCooldownSeconds} seconds...";
             await Task.Delay(TimeSpan.FromSeconds(SpecialAttackCooldownSeconds));
 
-            IsSpecialAttackOnCooldown = false;
+            IsSpecialAttackOnCooldown = false; // Setter will trigger PropertyChanged & CanExecuteChanged
             GameMessage = "Special Attack ready!";
         }
 
@@ -103,13 +110,13 @@ namespace MonsterClicker.ViewModels
         {
             MonsterName = "Grumpy Goblin";
             MonsterMaxHealth = 100;
+            // Set properties which will trigger notifications and CanExecute updates
             MonsterCurrentHealth = MonsterMaxHealth;
             PlayerDamage = 10;
             GameMessage = "A new monster appears! Click it!";
-            IsMonsterDefeated = false; // This will trigger CanExecute update for SpecialAttackCommand
-
-            IsSpecialAttackOnCooldown = false; // This will also trigger CanExecute update
-            CanUseSpecialAttack = true;      // This will also trigger CanExecute update
+            IsMonsterDefeated = false;
+            IsSpecialAttackOnCooldown = false;
+            CanUseSpecialAttack = true;
         }
     }
 }
