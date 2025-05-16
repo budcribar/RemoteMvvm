@@ -281,7 +281,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            lock(_subscriberLock) { _subscribers.Add(responseStream); }");
             sb.AppendLine("            try { await Task.Delay(System.Threading.Timeout.Infinite, context.CancellationToken); }");
             sb.AppendLine("            catch (OperationCanceledException) { /* Expected when client disconnects or token is cancelled */ }");
-            sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine(\"[GrpcService:" + vmName + "] Error in Subscribe: \" + ex.Message); }}");
+            sb.AppendLine("            catch (Exception ex) { Console.WriteLine(\"[GrpcService:" + vmName + "] Error in Subscribe: \" + ex.Message); }");
             sb.AppendLine("            finally { lock(_subscriberLock) { _subscribers.Remove(responseStream); } }");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -295,10 +295,10 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"                   else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
             sb.AppendLine($"                   else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
             sb.AppendLine("                    // TODO: Add more type checks and unpacking logic here (double, float, long, DateTime/Timestamp etc.)");
-            sb.AppendLine($"                    else {{ Console.WriteLine(\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Unpacking not implemented for property \\\"\" + request.PropertyName + \"\\\" and type \\\"\" + request.NewValue.TypeUrl + \"\\\".\"); }}");
-            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine($\"[GrpcService:" + vmName + $"] Error setting property \\\"\" + request.PropertyName + \"\\\": \" + ex.Message); }}");
+            sb.AppendLine("                    else { Console.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \\\"\" + request.PropertyName + \"\\\" and type \\\"\" + request.NewValue.TypeUrl + \"\\\".\"); }");
+            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \\\"\" + request.PropertyName + \"\\\": \" + ex.Message); }");
             sb.AppendLine("            }");
-            sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Property \\\"\" + request.PropertyName + \"\\\" not found or not writable.\"); }}");
+            sb.AppendLine("            else { Console.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \\\"\" + request.PropertyName + \"\\\" not found or not writable.\"); }");
             sb.AppendLine("            return Task.FromResult(new Empty());");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -353,7 +353,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            if (string.IsNullOrEmpty(e.PropertyName)) return;");
             sb.AppendLine("            object? newValue = null;");
             sb.AppendLine($"            try {{ newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }}");
-            sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] Error getting property value for \\\"\" + e.PropertyName + \"\\\": \" + ex.Message); return; }}");
+            sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine(\"[GrpcService:" + vmName + $"] Error getting property value for \\\"\" + e.PropertyName + \"\\\": \" + ex.Message); return; }}");
             sb.AppendLine();
             sb.AppendLine($"            var notification = new {protoCsNamespace}.PropertyChangeNotification {{ PropertyName = e.PropertyName }};");
             sb.AppendLine("            if (newValue == null) notification.NewValue = Any.Pack(new Empty());");
@@ -364,7 +364,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });");
             sb.AppendLine("            else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });");
             sb.AppendLine("            else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
-            sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] PropertyChanged: Packing not implemented for type {{newValue.GetType().FullName}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}");
+            sb.AppendLine($"            else {{ Console.WriteLine(\"[GrpcService:" + vmName + $"] PropertyChanged: Packing not implemented for type {{newValue.GetType().FullName}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}");
             sb.AppendLine();
             sb.AppendLine($"            List<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>> currentSubscribers;");
             sb.AppendLine("            lock(_subscriberLock) { currentSubscribers = _subscribers.ToList(); }");
@@ -377,7 +377,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                   catch { lock(_subscriberLock) { _subscribers.Remove(sub); } }");
             sb.AppendLine("                }));");
             sb.AppendLine("            }");
-            sb.AppendLine($"            try {{ await Task.WhenAll(writeTasks); }} catch (Exception ex) {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] Error writing notifications: \" + ex.Message); }}");
+            sb.AppendLine($"            try {{ await Task.WhenAll(writeTasks); }} catch (Exception ex) {{ Console.WriteLine(\"[GrpcService:" + vmName + $"] Error writing notifications: \" + ex.Message); }}");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
             sb.AppendLine("}");
