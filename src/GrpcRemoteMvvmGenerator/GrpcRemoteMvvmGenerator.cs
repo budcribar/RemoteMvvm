@@ -476,24 +476,24 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        public async Task InitializeRemoteAsync(CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isInitialized || _isDisposed) return;");
-            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Initializing...\");");
+            sb.AppendLine($"            Debug.WriteLine(\"[{originalVmName}RemoteClient] Initializing...\");"); // Corrected: Use variable value
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine($"                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);");
             sb.AppendLine($"                var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);");
-            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initial state received.\");");
+            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initial state received.\");"); // Corrected
             foreach (var prop in props)
             {
                 string protoStateFieldName = ToPascalCase(prop.Name);
                 sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
             }
             sb.AppendLine("                _isInitialized = true;");
-            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initialized successfully.\");");
+            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initialized successfully.\");"); // Corrected
             sb.AppendLine("                StartListeningToPropertyChanges(_cts.Token);");
             sb.AppendLine("            }");
-            sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Failed to initialize: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
-            sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Initialization cancelled.\"); }}");
-            sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Unexpected error during initialization: \" + ex.Message); }}");
+            sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Failed to initialize: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
+            sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Initialization cancelled.\"); }}");
+            sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Unexpected error during initialization: \" + ex.Message); }}");
             sb.AppendLine("        }");
             sb.AppendLine();
 
@@ -513,8 +513,8 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"        {methodSignature}");
                 sb.AppendLine("        {");
                 string earlyExit = cmd.IsAsync ? "return;" : "return;";
-                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {earlyExit} }}");
-                sb.AppendLine($"            Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Executing command {cmd.MethodName} remotely...\");");
+                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {earlyExit} }}");
+                sb.AppendLine($"            Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Executing command {cmd.MethodName} remotely...\");");
                 sb.AppendLine("            try");
                 sb.AppendLine("            {");
                 if (cmd.IsAsync)
@@ -526,9 +526,9 @@ namespace PeakSWC.MvvmSourceGenerator
                     sb.AppendLine($"                _ = _grpcClient.{cmd.MethodName}Async({requestCreation}, cancellationToken: _cts.Token);");
                 }
                 sb.AppendLine("            }");
-                sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Error executing command {cmd.MethodName}: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
-                sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Command {cmd.MethodName} cancelled.\"); }}");
-                sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Unexpected error executing command {cmd.MethodName}: \" + ex.Message); }}");
+                sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Error executing command {cmd.MethodName}: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
+                sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Command {cmd.MethodName} cancelled.\"); }}");
+                sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Unexpected error executing command {cmd.MethodName}: \" + ex.Message); }}");
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }
@@ -538,18 +538,18 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            _ = Task.Run(async () => ");
             sb.AppendLine("            {");
             sb.AppendLine("                if (_isDisposed) return;");
-            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Starting property change listener...\");");
+            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Starting property change listener...\");"); // Corrected
             sb.AppendLine("                try");
             sb.AppendLine("                {");
             sb.AppendLine($"                    using var call = _grpcClient.SubscribeToPropertyChanges(new Empty(), cancellationToken: cancellationToken);");
-            sb.AppendLine($"                    Debug.WriteLine($\"[{originalVmName}RemoteClient] Subscribed to property changes. Waiting for updates...\");");
+            sb.AppendLine($"                    Debug.WriteLine(\"[{originalVmName}RemoteClient] Subscribed to property changes. Waiting for updates...\");"); // Corrected
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
-            sb.AppendLine("                        if (_isDisposed) { Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }"); // Corrected: Use string value
-            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"{{update.PropertyName}}\\\", ValueTypeUrl=\\\"{{update.NewValue?.TypeUrl}}\\\"\");");
+            sb.AppendLine($"                        if (_isDisposed) {{ Debug.WriteLine(\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }}"); // Corrected
+            sb.AppendLine($"                        Debug.WriteLine(\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"{{update.PropertyName}}\\\", ValueTypeUrl=\\\"{{update.NewValue?.TypeUrl}}\\\"\");"); // Corrected
             sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                           try {");
-            sb.AppendLine($"                               Debug.WriteLine($\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"{{update.PropertyName}}\\\".\");");
+            sb.AppendLine($"                               Debug.WriteLine(\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"{{update.PropertyName}}\\\".\");"); // Corrected
             sb.AppendLine("                               switch (update.PropertyName)");
             sb.AppendLine("                               {");
             foreach (var prop in props)
@@ -587,7 +587,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isDisposed) return;");
             sb.AppendLine("            _isDisposed = true;");
-            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposing...\");");
+            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposing...\");"); // Corrected
             sb.AppendLine("            _cts.Cancel();");
             sb.AppendLine("            _cts.Dispose();");
             sb.AppendLine("        }");
