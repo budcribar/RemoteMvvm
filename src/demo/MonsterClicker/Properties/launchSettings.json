@@ -1,6 +1,10 @@
 {
   "profiles": {
-    "MonsterClicker": {
+    "Server": {
+      "commandName": "Project",
+      "commandLineArgs": "server"
+    },
+    "Client": {
       "commandName": "Project",
       "commandLineArgs": "client"
     }
