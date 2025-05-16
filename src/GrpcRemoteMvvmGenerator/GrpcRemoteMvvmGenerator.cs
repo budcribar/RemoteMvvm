@@ -295,10 +295,10 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"                   else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
             sb.AppendLine($"                   else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
             sb.AppendLine("                    // TODO: Add more type checks and unpacking logic here (double, float, long, DateTime/Timestamp etc.)");
-            sb.AppendLine($"                    else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Unpacking not implemented for property {{request.PropertyName}} and type {{request.NewValue.TypeUrl}}\"); }}");
-            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine($\"[GrpcService:" + vmName + $"] Error setting property {{request.PropertyName}}: \" + ex.Message); }}");
+            sb.AppendLine($"                    else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Unpacking not implemented for property \\\"{{request.PropertyName}}\\\" and type \\\"{{request.NewValue.TypeUrl}}\\\"\"); }}"); // Escaped curly braces
+            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine($\"[GrpcService:" + vmName + $"] Error setting property \\\"{{request.PropertyName}}\\\": \" + ex.Message); }}"); // Escaped curly braces
             sb.AppendLine("            }");
-            sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Property {{request.PropertyName}} not found or not writable.\"); }}");
+            sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Property \\\"{{request.PropertyName}}\\\" not found or not writable.\"); }}"); // Escaped curly braces
             sb.AppendLine("            return Task.FromResult(new Empty());");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -353,7 +353,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            if (string.IsNullOrEmpty(e.PropertyName)) return;");
             sb.AppendLine("            object? newValue = null;");
             sb.AppendLine($"            try {{ newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }}");
-            sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] Error getting property value for {{e.PropertyName}}: \" + ex.Message); return; }}");
+            sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] Error getting property value for \\\"{{e.PropertyName}}\\\": \" + ex.Message); return; }}"); // Escaped curly braces
             sb.AppendLine();
             sb.AppendLine($"            var notification = new {protoCsNamespace}.PropertyChangeNotification {{ PropertyName = e.PropertyName }};");
             sb.AppendLine("            if (newValue == null) notification.NewValue = Any.Pack(new Empty());");
@@ -364,7 +364,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });");
             sb.AppendLine("            else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });");
             sb.AppendLine("            else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
-            sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] PropertyChanged: Packing not implemented for type {{newValue.GetType().FullName}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}");
+            sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] PropertyChanged: Packing not implemented for type {{newValue.GetType().FullName}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}"); // Escaped
             sb.AppendLine();
             sb.AppendLine($"            List<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>> currentSubscribers;");
             sb.AppendLine("            lock(_subscriberLock) { currentSubscribers = _subscribers.ToList(); }");
@@ -476,19 +476,19 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        public async Task InitializeRemoteAsync(CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isInitialized || _isDisposed) return;");
-            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Initializing...\");");
+            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Initializing...\");"); // This should be fine
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine($"                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);");
             sb.AppendLine($"                var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);");
-            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initial state received.\");");
+            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initial state received.\");"); // Fine
             foreach (var prop in props)
             {
                 string protoStateFieldName = ToPascalCase(prop.Name);
                 sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
             }
             sb.AppendLine("                _isInitialized = true;");
-            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initialized successfully.\");");
+            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Initialized successfully.\");"); // Fine
             sb.AppendLine("                StartListeningToPropertyChanges(_cts.Token);");
             sb.AppendLine("            }");
             sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Failed to initialize: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
@@ -513,8 +513,8 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"        {methodSignature}");
                 sb.AppendLine("        {");
                 string earlyExit = cmd.IsAsync ? "return;" : "return;";
-                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {earlyExit} }}");
-                sb.AppendLine($"            Debug.WriteLine($\"[ClientProxy:{originalVmName}] Executing command {cmd.MethodName} remotely...\");");
+                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {earlyExit} }}");
+                sb.AppendLine($"            Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Executing command {cmd.MethodName} remotely...\");");
                 sb.AppendLine("            try");
                 sb.AppendLine("            {");
                 if (cmd.IsAsync)
@@ -526,9 +526,9 @@ namespace PeakSWC.MvvmSourceGenerator
                     sb.AppendLine($"                _ = _grpcClient.{cmd.MethodName}Async({requestCreation}, cancellationToken: _cts.Token);");
                 }
                 sb.AppendLine("            }");
-                sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error executing command {cmd.MethodName}: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
-                sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Command {cmd.MethodName} cancelled.\"); }}");
-                sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unexpected error executing command {cmd.MethodName}: \" + ex.Message); }}");
+                sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Error executing command {cmd.MethodName}: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
+                sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Command {cmd.MethodName} cancelled.\"); }}");
+                sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] Unexpected error executing command {cmd.MethodName}: \" + ex.Message); }}");
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }
@@ -546,10 +546,10 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
             sb.AppendLine("                        if (_isDisposed) { Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }");
-            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName={{update.PropertyName}}, ValueTypeUrl={{update.NewValue?.TypeUrl}}\");");
+            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"{{update.PropertyName}}\\\", ValueTypeUrl=\\\"{{update.NewValue?.TypeUrl}}\\\"\");");
             sb.AppendLine("                        Action updateAction = () => {");
-            sb.AppendLine("                           try {"); // Inner try for action
-            sb.AppendLine($"                               Debug.WriteLine($\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update {{update.PropertyName}}.\");");
+            sb.AppendLine("                           try {");
+            sb.AppendLine($"                               Debug.WriteLine($\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"{{update.PropertyName}}\\\".\");");
             sb.AppendLine("                               switch (update.PropertyName)");
             sb.AppendLine("                               {");
             foreach (var prop in props)
@@ -557,22 +557,21 @@ namespace PeakSWC.MvvmSourceGenerator
                 string wkt = GetProtoWellKnownTypeFor(prop.FullTypeSymbol!, compilation);
                 string csharpPropName = prop.Name;
                 sb.AppendLine($"                                   case nameof({csharpPropName}):");
-                if (wkt == "StringValue") sb.AppendLine($"                                       if (update.NewValue.Is(StringValue.Descriptor)) {{ var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to '{{val}}'.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is '{{this.{csharpPropName}}}'.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected StringValue.\"); }} break;");
+                if (wkt == "StringValue") sb.AppendLine($"                                       if (update.NewValue.Is(StringValue.Descriptor)) {{ var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} from \\\"{{this.{csharpPropName}}}\\\" to '\\\"{{val}}\\\".\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is '\\\"{{this.{csharpPropName}}}\\\".\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected StringValue.\"); }} break;");
                 else if (wkt == "Int32Value") sb.AppendLine($"                                       if (update.NewValue.Is(Int32Value.Descriptor)) {{ var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to {{val}}.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is {{this.{csharpPropName}}}.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected Int32Value.\"); }} break;");
                 else if (wkt == "BoolValue") sb.AppendLine($"                                       if (update.NewValue.Is(BoolValue.Descriptor)) {{ var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to {{val}}.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is {{this.{csharpPropName}}}.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected BoolValue.\"); }} break;");
-                // Add other WKT unpackers with similar detailed logging
                 else sb.AppendLine($"                                       Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
             }
-            sb.AppendLine($"                                   default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: {{update.PropertyName}}\"); break;");
+            sb.AppendLine($"                                   default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: \\\"{{update.PropertyName}}\\\"\"); break;");
             sb.AppendLine("                               }");
-            sb.AppendLine("                           } catch (Exception exInAction) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] EXCEPTION INSIDE updateAction for {{update.PropertyName}}: \" + exInAction.ToString()); }");
+            sb.AppendLine("                           } catch (Exception exInAction) { Debug.WriteLine($\"[ClientProxy:" + originalVmName + $"] EXCEPTION INSIDE updateAction for \\\"{{update.PropertyName}}\\\": \" + exInAction.ToString()); }}");
             sb.AppendLine("                        };");
             sb.AppendLine("                        #if WPF_DISPATCHER");
             sb.AppendLine("                        Application.Current?.Dispatcher.Invoke(updateAction);");
             sb.AppendLine("                        #else");
             sb.AppendLine("                        updateAction();");
             sb.AppendLine("                        #endif");
-            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Processed update for {{update.PropertyName}}. Still listening...\");");
+            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Processed update for \\\"{{update.PropertyName}}\\\". Still listening...\");");
             sb.AppendLine("                    }");
             sb.AppendLine($"                    Debug.WriteLine($\"[{originalVmName}RemoteClient] ReadAllAsync completed or cancelled.\");");
             sb.AppendLine("                }");
