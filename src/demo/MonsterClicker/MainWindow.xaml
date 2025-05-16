@@ -8,11 +8,12 @@
         mc:Ignorable="d"
         Title="Monster Clicker Adventure" Height="450" Width="600"
         FontFamily="Segoe UI">
-    <Window.DataContext>
+    <!--<Window.DataContext>
         <d:DataContext>
-            <viewmodels:GameViewModel/>
+            <local:DesignTimeTestData />
         </d:DataContext>
-    </Window.DataContext>
+       
+    </Window.DataContext>-->
     <Window.Resources>
         <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>

@@ -42,7 +42,7 @@ namespace MonsterClicker.ViewModels
 
         public GameViewModel()
         {
-            ResetGame();
+            //ResetGame();
         }
 
         [RelayCommand]
