@@ -199,7 +199,6 @@ namespace PeakSWC.MvvmSourceGenerator
 
                     if (relayCmdAttribute != null)
                     {
-                        // Correctly derive command property name: Remove "Async" suffix if present, then add "Command"
                         string baseMethodName = methodSymbol.Name;
                         if (baseMethodName.EndsWith("Async", StringComparison.Ordinal))
                         {
@@ -209,8 +208,8 @@ namespace PeakSWC.MvvmSourceGenerator
 
                         cmds.Add(new CommandInfoData
                         {
-                            MethodName = methodSymbol.Name, // Keep original method name for RPC
-                            CommandPropertyName = commandPropertyName, // Use derived name for C# property
+                            MethodName = methodSymbol.Name,
+                            CommandPropertyName = commandPropertyName,
                             Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoData { Name = p.Name, Type = p.Type.ToDisplayString(), FullTypeSymbol = p.Type }).ToList(),
                             IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.ConstructedFrom?.ToDisplayString() == "System.Threading.Tasks.Task")))
                         });
@@ -280,7 +279,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"        public override async Task SubscribeToPropertyChanges(Empty request, IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification> responseStream, ServerCallContext context)");
             sb.AppendLine("        {");
             sb.AppendLine("            lock(_subscriberLock) { _subscribers.Add(responseStream); }");
-            sb.AppendLine("            try { await Task.Delay(System.Threading.Timeout.Infinite, context.CancellationToken); }"); // Corrected
+            sb.AppendLine("            try { await Task.Delay(System.Threading.Timeout.Infinite, context.CancellationToken); }");
             sb.AppendLine("            catch (OperationCanceledException) { /* Expected when client disconnects or token is cancelled */ }");
             sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine(\"[GrpcService:" + vmName + $"] Error in Subscribe: \" + ex.Message); }}");
             sb.AppendLine("            finally { lock(_subscriberLock) { _subscribers.Remove(responseStream); } }");
@@ -308,7 +307,7 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 sb.AppendLine($"        public override async Task<{protoCsNamespace}.{cmd.MethodName}Response> {cmd.MethodName}({protoCsNamespace}.{cmd.MethodName}Request request, ServerCallContext context)");
                 sb.AppendLine("        {");
-                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
+                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}"; // Using corrected CommandPropertyName
 
                 if (cmd.IsAsync)
                 {
@@ -513,8 +512,9 @@ namespace PeakSWC.MvvmSourceGenerator
                                                      : $"private void RemoteExecute_{cmd.MethodName}({paramListWithType})";
                 sb.AppendLine($"        {methodSignature}");
                 sb.AppendLine("        {");
-                string earlyExitReturn = cmd.IsAsync ? "return Task.CompletedTask;" : "return;";
-                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {earlyExitReturn} }}");
+                // Corrected early exit for async Task methods
+                string earlyExit = cmd.IsAsync ? "return;" : "return;";
+                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {earlyExit} }}");
                 sb.AppendLine($"            Debug.WriteLine($\"[ClientProxy:{originalVmName}] Executing command {cmd.MethodName} remotely...\");");
                 sb.AppendLine("            try");
                 sb.AppendLine("            {");

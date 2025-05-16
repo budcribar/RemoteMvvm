@@ -33,7 +33,7 @@ namespace MonsterClicker
 
                         Server server = new Server
                         {
-                            Services = { GameViewModelService.BindService(new GameServiceGrpcImpl(gameViewModelForServer)) }, // GameServiceGrpcImpl would be your generated class
+                            Services = { GameViewModelService.BindService(new GameViewModelGrpcServiceImpl(gameViewModelForServer)) }, // GameServiceGrpcImpl would be your generated class
                             Ports = { new ServerPort("localhost", 50051, ServerCredentials.Insecure) }
                         };
                         server.Start();
