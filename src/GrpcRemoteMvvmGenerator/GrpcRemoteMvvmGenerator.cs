@@ -296,7 +296,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"                   else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
             sb.AppendLine("                    // TODO: Add more type checks and unpacking logic here (double, float, long, DateTime/Timestamp etc.)");
             sb.AppendLine("                    else { Console.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \\\"\" + request.PropertyName + \"\\\" and type \\\"\" + request.NewValue.TypeUrl + \"\\\".\"); }");
-            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \\\"\" + request.PropertyName + \"\\\": \" + ex.Message); }}");
+            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \\\"\" + request.PropertyName + \"\\\": \" + ex.Message); }"); // Corrected: Removed extra brace
             sb.AppendLine("            }");
             sb.AppendLine("            else { Console.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \\\"\" + request.PropertyName + \"\\\" not found or not writable.\"); }");
             sb.AppendLine("            return Task.FromResult(new Empty());");
@@ -307,7 +307,7 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 sb.AppendLine($"        public override async Task<{protoCsNamespace}.{cmd.MethodName}Response> {cmd.MethodName}({protoCsNamespace}.{cmd.MethodName}Request request, ServerCallContext context)");
                 sb.AppendLine("        {");
-                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
+                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}"; // Use the derived CommandPropertyName
 
                 if (cmd.IsAsync)
                 {
@@ -318,12 +318,12 @@ namespace PeakSWC.MvvmSourceGenerator
                     {
                         sb.AppendLine($"                var typedCommand = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{cmd.Parameters[0].Type}>;");
                         sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{ToPascalCase(cmd.Parameters[0].Name)});");
-                        sb.AppendLine($"                else await command.ExecuteAsync(request);");
+                        sb.AppendLine($"                else await command.ExecuteAsync(request); // Fallback for non-generic or mismatched generic");
                     }
                     else if (cmd.Parameters.Count == 0)
                         sb.AppendLine("                await command.ExecuteAsync(null);");
                     else
-                        sb.AppendLine("                await command.ExecuteAsync(request);");
+                        sb.AppendLine("                await command.ExecuteAsync(request);"); // Assumes command can take the whole request if multi-param
                     sb.AppendLine("            }");
                 }
                 else
@@ -335,7 +335,7 @@ namespace PeakSWC.MvvmSourceGenerator
                     {
                         sb.AppendLine($"               var typedCommand = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand<{cmd.Parameters[0].Type}>;");
                         sb.AppendLine($"               if (typedCommand != null) typedCommand.Execute(request.{ToPascalCase(cmd.Parameters[0].Name)});");
-                        sb.AppendLine($"               else command.Execute(request);");
+                        sb.AppendLine($"               else command.Execute(request); // Fallback");
                     }
                     else if (cmd.Parameters.Count == 0)
                         sb.AppendLine("                command.Execute(null);");
@@ -546,8 +546,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
             sb.AppendLine($"                        if (_isDisposed) {{ Debug.WriteLine(\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }}");
-            // Corrected Debug.WriteLine for runtime interpolation
-            sb.AppendLine("                        Debug.WriteLine($\"[" + originalVmName + "RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"\" + update.PropertyName + \"\\\", ValueTypeUrl=\\\"\" + (update.NewValue?.TypeUrl ?? \"null_type_url\") + \"\\\"\");");
+            sb.AppendLine("                        Debug.WriteLine(\"[" + originalVmName + "RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"\" + update.PropertyName + \"\\\", ValueTypeUrl=\\\"\" + (update.NewValue?.TypeUrl ?? \"null_type_url\") + \"\\\"\");");
             sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                           try {");
             sb.AppendLine($"                               Debug.WriteLine(\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"\" + update.PropertyName + \"\\\".\");");
