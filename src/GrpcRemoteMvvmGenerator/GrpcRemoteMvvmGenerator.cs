@@ -281,7 +281,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            lock(_subscriberLock) { _subscribers.Add(responseStream); }");
             sb.AppendLine("            try { await Task.Delay(System.Threading.Timeout.Infinite, context.CancellationToken); }");
             sb.AppendLine("            catch (OperationCanceledException) { /* Expected when client disconnects or token is cancelled */ }");
-            sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine(\"[GrpcService:" + vmName + $"] Error in Subscribe: \" + ex.Message); }}");
+            sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine(\"[GrpcService:" + vmName + "] Error in Subscribe: \" + ex.Message); }}");
             sb.AppendLine("            finally { lock(_subscriberLock) { _subscribers.Remove(responseStream); } }");
             sb.AppendLine("        }");
             sb.AppendLine();
@@ -295,7 +295,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"                   else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
             sb.AppendLine($"                   else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
             sb.AppendLine("                    // TODO: Add more type checks and unpacking logic here (double, float, long, DateTime/Timestamp etc.)");
-            sb.AppendLine($"                    else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Unpacking not implemented for property \\\"{{request.PropertyName}}\\\" and type \\\"{{request.NewValue.TypeUrl}}\\\"\"); }}");
+            sb.AppendLine($"                    else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Unpacking not implemented for property \\\"{{request.PropertyName}}\\\" and type \\\"{{request.NewValue.TypeUrl}}\\\".\"); }}");
             sb.AppendLine("                } catch (Exception ex) { Console.WriteLine($\"[GrpcService:" + vmName + $"] Error setting property \\\"{{request.PropertyName}}\\\": \" + ex.Message); }}");
             sb.AppendLine("            }");
             sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:" + vmName + $"] UpdatePropertyValue: Property \\\"{{request.PropertyName}}\\\" not found or not writable.\"); }}");
@@ -546,10 +546,10 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
             sb.AppendLine($"                        if (_isDisposed) {{ Debug.WriteLine(\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }}");
-            sb.AppendLine("                        Debug.WriteLine($\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"\" + update.PropertyName + \"\\\", ValueTypeUrl=\\\"\" + (update.NewValue?.TypeUrl ?? \"null_type_url\") + \"\\\"\");"); // Corrected
+            sb.AppendLine("                        Debug.WriteLine(\"[" + originalVmName + "RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"\" + update.PropertyName + \"\\\", ValueTypeUrl=\\\"\" + (update.NewValue?.TypeUrl ?? \"null_type_url\") + \"\\\"\");");
             sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                           try {");
-            sb.AppendLine($"                               Debug.WriteLine(\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"\" + update.PropertyName + \"\\\".\");"); // Corrected
+            sb.AppendLine($"                               Debug.WriteLine(\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"\" + update.PropertyName + \"\\\".\");");
             sb.AppendLine("                               switch (update.PropertyName)");
             sb.AppendLine("                               {");
             foreach (var prop in props)
@@ -571,14 +571,14 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                        #else");
             sb.AppendLine("                        updateAction();");
             sb.AppendLine("                        #endif");
-            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Processed update for \\\"{{update.PropertyName}}\\\". Still listening...\");");
+            sb.AppendLine($"                        Debug.WriteLine(\"[{originalVmName}RemoteClient] Processed update for \\\"\" + update.PropertyName + \"\\\". Still listening...\");");
             sb.AppendLine("                    }");
-            sb.AppendLine($"                    Debug.WriteLine($\"[{originalVmName}RemoteClient] ReadAllAsync completed or cancelled.\");");
+            sb.AppendLine($"                    Debug.WriteLine(\"[{originalVmName}RemoteClient] ReadAllAsync completed or cancelled.\");");
             sb.AppendLine("                }");
             sb.AppendLine($"                catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription cancelled.\"); }}");
             sb.AppendLine($"                catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription task cancelled.\"); }}");
             sb.AppendLine($"                catch (Exception ex) {{ if (!_isDisposed) Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error in property listener: \" + ex.GetType().Name + \" - \" + ex.Message + \"\\nStackTrace: \" + ex.StackTrace); }}");
-            sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Property change listener stopped.\");");
+            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Property change listener stopped.\");");
             sb.AppendLine("            }, cancellationToken);");
             sb.AppendLine("        }");
             sb.AppendLine();
