@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:MonsterClicker"
-        xmlns:viewmodels="clr-namespace:MonsterClicker.ViewModels" d:DataContext="{d:DesignInstance Type=viewmodels:GameViewModel}"
+        xmlns:local="clr-namespace:MonsterClicker" 
+        xmlns:viewmodels="clr-namespace:MonsterClicker.ViewModels"
         mc:Ignorable="d"
         Title="Monster Clicker Adventure" Height="450" Width="600"
         FontFamily="Segoe UI">
@@ -13,6 +13,10 @@
             <viewmodels:GameViewModel/>
         </d:DataContext>
     </Window.DataContext>
+    <Window.Resources>
+        <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
+        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    </Window.Resources>
     <Grid Margin="15">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
@@ -99,7 +103,7 @@
             </Button.Style>
             <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
                 <TextBlock Text="ATTACK!" FontSize="24" HorizontalAlignment="Center"/>
-                <Image Source="/Resources/sword.png" Width="80" Height="80" Stretch="Uniform" Margin="0,10,0,0" HorizontalAlignment="Center" VerticalAlignment="Center" d:Source="placeholder_sword.png"/>
+                <Image Source="/Resources/sword.png" Width="80" Height="80" Stretch="Uniform" Margin="0,10,0,0" HorizontalAlignment="Center" VerticalAlignment="Center"/>
             </StackPanel>
         </Button>
 
@@ -166,9 +170,4 @@
             </Button>
         </StackPanel>
     </Grid>
-
-    <Window.Resources>
-        <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
-        <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
-    </Window.Resources>
 </Window>
