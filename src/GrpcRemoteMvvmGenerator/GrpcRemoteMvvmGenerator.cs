@@ -476,19 +476,19 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        public async Task InitializeRemoteAsync(CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isInitialized || _isDisposed) return;");
-            sb.AppendLine($"            Debug.WriteLine(\"[{originalVmName}RemoteClient] Initializing...\");"); // Corrected: Use variable value
+            sb.AppendLine("            Debug.WriteLine(\"[" + originalVmName + "RemoteClient] Initializing...\");");
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine($"                using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);");
             sb.AppendLine($"                var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);");
-            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initial state received.\");"); // Corrected
+            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initial state received.\");");
             foreach (var prop in props)
             {
                 string protoStateFieldName = ToPascalCase(prop.Name);
                 sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
             }
             sb.AppendLine("                _isInitialized = true;");
-            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initialized successfully.\");"); // Corrected
+            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initialized successfully.\");");
             sb.AppendLine("                StartListeningToPropertyChanges(_cts.Token);");
             sb.AppendLine("            }");
             sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Failed to initialize: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
@@ -538,18 +538,18 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            _ = Task.Run(async () => ");
             sb.AppendLine("            {");
             sb.AppendLine("                if (_isDisposed) return;");
-            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Starting property change listener...\");"); // Corrected
+            sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Starting property change listener...\");");
             sb.AppendLine("                try");
             sb.AppendLine("                {");
             sb.AppendLine($"                    using var call = _grpcClient.SubscribeToPropertyChanges(new Empty(), cancellationToken: cancellationToken);");
-            sb.AppendLine($"                    Debug.WriteLine(\"[{originalVmName}RemoteClient] Subscribed to property changes. Waiting for updates...\");"); // Corrected
+            sb.AppendLine($"                    Debug.WriteLine(\"[{originalVmName}RemoteClient] Subscribed to property changes. Waiting for updates...\");");
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
-            sb.AppendLine($"                        if (_isDisposed) {{ Debug.WriteLine(\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }}"); // Corrected
-            sb.AppendLine($"                        Debug.WriteLine(\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"{{update.PropertyName}}\\\", ValueTypeUrl=\\\"{{update.NewValue?.TypeUrl}}\\\"\");"); // Corrected
+            sb.AppendLine($"                        if (_isDisposed) {{ Debug.WriteLine(\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }}");
+            sb.AppendLine("                        Debug.WriteLine($\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"\" + update.PropertyName + \"\\\", ValueTypeUrl=\\\"\" + (update.NewValue?.TypeUrl ?? \"null_type_url\") + \"\\\"\");"); // Corrected
             sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                           try {");
-            sb.AppendLine($"                               Debug.WriteLine(\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"{{update.PropertyName}}\\\".\");"); // Corrected
+            sb.AppendLine($"                               Debug.WriteLine(\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"\" + update.PropertyName + \"\\\".\");"); // Corrected
             sb.AppendLine("                               switch (update.PropertyName)");
             sb.AppendLine("                               {");
             foreach (var prop in props)
@@ -587,7 +587,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isDisposed) return;");
             sb.AppendLine("            _isDisposed = true;");
-            sb.AppendLine($"            Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposing...\");"); // Corrected
+            sb.AppendLine($"            Debug.WriteLine(\"[{originalVmName}RemoteClient] Disposing...\");");
             sb.AppendLine("            _cts.Cancel();");
             sb.AppendLine("            _cts.Dispose();");
             sb.AppendLine("        }");
