@@ -4,10 +4,8 @@
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
-
 		<IsPackable>true</IsPackable>
 		<PackageId>PeakSWC.MvvmSourceGenerator</PackageId>
-		<Version>1.0.0</Version>
 		<Authors>Bud Cribar</Authors>
 		<Description>A C# Source Generator for creating gRPC remote MVVM proxies and server implementations.</Description>
 		<PackageTags>sourcegenerator;mvvm;grpc;roslyn;automation;PeakSWC</PackageTags>
@@ -23,6 +21,10 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+		<PackageReference Include="Nerdbank.GitVersioning" Version="3.7.115">
+		  <PrivateAssets>all</PrivateAssets>
+		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
 		<PackageReference Include="System.Threading.Channels" Version="8.0.0" />
 		<None Include="Attributes\GenerateGrpcRemoteAttribute.cs" Pack="true" PackagePath="contentFiles\cs\any\PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs" Link="Attributes\GenerateGrpcRemoteAttribute.cs" CopyToOutputDirectory="Never" Visible="false" />
 		<None Include="README.md" Pack="true" PackagePath="\" />

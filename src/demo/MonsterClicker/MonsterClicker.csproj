@@ -31,11 +31,20 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<Folder Include="protos\" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<MvvmViewModelProtoSource Include="ViewModels\GameViewModel.cs">
+			<ProtoNamespace>MonsterClicker.ViewModels.Protos</ProtoNamespace>
+			<ServiceName>GameViewModelService</ServiceName>
+
+			<OutputPath>Protos\GameViewModelService.proto</OutputPath>
+
+		</MvvmViewModelProtoSource>
 	</ItemGroup>
 
 </Project>
