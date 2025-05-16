@@ -241,18 +241,17 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("using System.Linq;");
             sb.AppendLine("using System.Threading.Tasks;");
             sb.AppendLine("using System.Collections.Generic;");
-            sb.AppendLine("using System.Collections.Concurrent;"); // For ConcurrentDictionary
+            sb.AppendLine("using System.Collections.Concurrent;");
             sb.AppendLine("using System.ComponentModel;");
             sb.AppendLine("using System.Diagnostics;");
-            sb.AppendLine("using System.Threading.Channels;"); // For Channel<T>
+            sb.AppendLine("using System.Threading.Channels;");
             sb.AppendLine();
             sb.AppendLine($"namespace {serverImplNamespace}");
             sb.AppendLine("{");
             sb.AppendLine($"    public partial class {vmName}GrpcServiceImpl : {protoCsNamespace}.{grpcServiceName}.{grpcServiceName}Base");
             sb.AppendLine("    {");
             sb.AppendLine($"        private readonly {vmFullName} _viewModel;");
-            // Changed to ConcurrentDictionary to manage channels per subscriber
-            sb.AppendLine($"        private readonly ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, Channel<{protoCsNamespace}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, Channel<{protoCsNamespace}.PropertyChangeNotification>>();");
+            sb.AppendLine($"        private readonly ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>>();");
             sb.AppendLine();
             sb.AppendLine($"        public {vmName}GrpcServiceImpl({vmFullName} viewModel)");
             sb.AppendLine("        {");
@@ -288,15 +287,13 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"        public override async Task SubscribeToPropertyChanges(Empty request, IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification> responseStream, ServerCallContext context)");
             sb.AppendLine("        {");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Client subscribed to property changes.\");");
-            sb.AppendLine($"            var channel = Channel.CreateUnbounded<{protoCsNamespace}.PropertyChangeNotification>(new UnboundedChannelOptions {{ SingleReader = true, SingleWriter = false }});");
+            // Corrected: Use fully qualified name for System.Threading.Channels.Channel
+            sb.AppendLine($"            var channel = System.Threading.Channels.Channel.CreateUnbounded<{protoCsNamespace}.PropertyChangeNotification>(new UnboundedChannelOptions {{ SingleReader = true, SingleWriter = false }});");
             sb.AppendLine("            _subscriberChannels.TryAdd(responseStream, channel);");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Channel created and added for subscriber.\");");
             sb.AppendLine();
             sb.AppendLine("            try");
             sb.AppendLine("            {");
-            sb.AppendLine("                // Send initial state snapshot as individual property changes (optional, but good for immediate UI sync)");
-            sb.AppendLine("                // foreach (var prop in props) { /* ... create and write notification ... */ }");
-            sb.AppendLine();
             sb.AppendLine("                await foreach (var notification in channel.Reader.ReadAllAsync(context.CancellationToken))");
             sb.AppendLine("                {");
             sb.AppendLine("                    Debug.WriteLine(\"[GrpcService:" + vmName + "] Sending notification for '\" + notification.PropertyName + \"' to a subscriber.\");");
@@ -398,12 +395,11 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
             sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:" + vmName + $"] PropertyChanged: Packing not implemented for type {{newValue.GetType().FullName}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}");
             sb.AppendLine();
-            sb.AppendLine("            // Write to all subscriber channels");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Queuing notification for '\" + e.PropertyName + \"' to \" + _subscriberChannels.Count + \" subscribers.\");");
-            sb.AppendLine("            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))");
+            sb.AppendLine("            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))"); // Iterate over channel writers
             sb.AppendLine("            {");
-            sb.AppendLine("                try { await channelWriter.WriteAsync(notification); }"); // Consider TryWrite if channel might be full and don't want to block PropertyChanged
-            sb.AppendLine("                catch (ChannelClosedException) { /* Channel was closed, subscriber likely disconnected */ }");
+            sb.AppendLine("                try { await channelWriter.WriteAsync(notification); }");
+            sb.AppendLine("                catch (ChannelClosedException) { /* Channel was closed, subscriber likely disconnected, handled by finally in Subscribe */ }");
             sb.AppendLine("                catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error writing to subscriber channel: \" + ex.Message); }");
             sb.AppendLine("            }");
             sb.AppendLine("        }");
@@ -604,7 +600,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                        #endif");
             sb.AppendLine($"                        Debug.WriteLine(\"[{originalVmName}RemoteClient] Processed update #\" + updateCount + \" for \\\"\" + update.PropertyName + \"\\\". Still listening...\");");
             sb.AppendLine("                    }");
-            sb.AppendLine($"                    Debug.WriteLine(\"[{originalVmName}RemoteClient] ReadAllAsync completed or cancelled after \" + updateCount + \" updates.\");");
+            sb.AppendLine("                    Debug.WriteLine(\"[" + originalVmName + "RemoteClient] ReadAllAsync completed or cancelled after \" + updateCount + \" updates.\");");
             sb.AppendLine("                }");
             sb.AppendLine($"                catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) {{ Debug.WriteLine(\"[ClientProxy:{originalVmName}] Property subscription RpcException Cancelled.\"); }}");
             sb.AppendLine($"                catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription OperationCanceledException.\"); }}");
