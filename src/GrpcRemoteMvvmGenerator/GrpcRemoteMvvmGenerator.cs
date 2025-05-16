@@ -134,7 +134,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 string clientProxyNamespace = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "ClientProxyNamespace").Value.Value?.ToString()
                                                ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.RemoteClients";
 
-                var originalViewModelName = classSymbol.Name; // This is the 'vmName' equivalent
+                var originalViewModelName = classSymbol.Name;
                 var originalViewModelFullName = classSymbol.ToDisplayString();
 
                 List<PropertyInfoData> properties = GetObservableProperties(classSymbol);
@@ -214,7 +214,7 @@ namespace PeakSWC.MvvmSourceGenerator
         }
 
         private string GenerateServerImplementation(
-            string serverImplNamespace, string vmName, string vmFullName, // vmName is originalViewModelName
+            string serverImplNamespace, string vmName, string vmFullName,
             string protoCsNamespace, string grpcServiceName,
             List<PropertyInfoData> props, List<CommandInfoData> cmds, Compilation compilation)
         {
@@ -265,7 +265,6 @@ namespace PeakSWC.MvvmSourceGenerator
                 {
                     sb.AppendLine($"                state.{protoMessageFieldName} = propValue;");
                 }
-                // Corrected: Use the string value of vmName
                 sb.AppendLine($"            }} catch (Exception ex) {{ Console.WriteLine($\"Error mapping property {csharpPropertyName} to state.{protoMessageFieldName} in {vmName} service: \" + ex.Message); }}");
             }
             sb.AppendLine("            return Task.FromResult(state);");
@@ -274,9 +273,8 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"        public override async Task SubscribeToPropertyChanges(Empty request, IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification> responseStream, ServerCallContext context)");
             sb.AppendLine("        {");
             sb.AppendLine("            lock(_subscriberLock) { _subscribers.Add(responseStream); }");
-            sb.AppendLine("            try { await context.CancellationToken.WhenCancelled(); }");
-            sb.AppendLine("            catch (OperationCanceledException) { /* Expected */ }");
-            // Corrected: Use the string value of vmName
+            sb.AppendLine("            try { await Task.Delay(System.Threading.Timeout.Infinite, context.CancellationToken); } // Corrected way to await cancellation");
+            sb.AppendLine("            catch (OperationCanceledException) { /* Expected when client disconnects or token is cancelled */ }");
             sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine($\"[GrpcService:{vmName}] Error in Subscribe: \" + ex.Message); }}");
             sb.AppendLine("            finally { lock(_subscriberLock) { _subscribers.Remove(responseStream); } }");
             sb.AppendLine("        }");
@@ -291,11 +289,9 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"                   else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
             sb.AppendLine($"                   else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
             sb.AppendLine("                    // TODO: Add more type checks and unpacking logic here (double, float, long, DateTime/Timestamp etc.)");
-            // Corrected: Use the string value of vmName
             sb.AppendLine($"                    else {{ Console.WriteLine($\"[GrpcService:{vmName}] UpdatePropertyValue: Unpacking not implemented for property {{request.PropertyName}} and type {{request.NewValue.TypeUrl}}\"); }}");
             sb.AppendLine("                } catch (Exception ex) { Console.WriteLine($\"[GrpcService:{vmName}] Error setting property {request.PropertyName}: \" + ex.Message); }");
             sb.AppendLine("            }");
-            // Corrected: Use the string value of vmName
             sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:{vmName}] UpdatePropertyValue: Property {{request.PropertyName}} not found or not writable.\"); }}");
             sb.AppendLine("            return Task.FromResult(new Empty());");
             sb.AppendLine("        }");
@@ -305,7 +301,7 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 sb.AppendLine($"        public override async Task<{protoCsNamespace}.{cmd.MethodName}Response> {cmd.MethodName}({protoCsNamespace}.{cmd.MethodName}Request request, ServerCallContext context)");
                 sb.AppendLine("        {");
-                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
+                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}"; // Corrected: Use CommandPropertyName
 
                 if (cmd.IsAsync)
                 {
@@ -314,14 +310,15 @@ namespace PeakSWC.MvvmSourceGenerator
                     sb.AppendLine("            {");
                     if (cmd.Parameters.Count == 1 && cmd.Parameters[0].FullTypeSymbol != null)
                     {
+                        // This assumes the command is IAsyncRelayCommand<T>
                         sb.AppendLine($"                var typedCommand = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{cmd.Parameters[0].Type}>;");
                         sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{ToPascalCase(cmd.Parameters[0].Name)});");
-                        sb.AppendLine($"                else await command.ExecuteAsync(request);");
+                        sb.AppendLine($"                else await command.ExecuteAsync(request); // Fallback: pass the whole request if specific type cast fails");
                     }
                     else if (cmd.Parameters.Count == 0)
                         sb.AppendLine("                await command.ExecuteAsync(null);");
                     else
-                        sb.AppendLine("                await command.ExecuteAsync(request);");
+                        sb.AppendLine("                await command.ExecuteAsync(request);"); // Pass request object for multi-param or if command expects it
                     sb.AppendLine("            }");
                 }
                 else
@@ -350,7 +347,6 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        {");
             sb.AppendLine("            if (string.IsNullOrEmpty(e.PropertyName)) return;");
             sb.AppendLine("            object? newValue = null;");
-            // Corrected: Use the string value of vmName
             sb.AppendLine($"            try {{ newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }}");
             sb.AppendLine($"            catch (Exception ex) {{ Console.WriteLine($\"[GrpcService:{vmName}] Error getting property value for {{e.PropertyName}}: \" + ex.Message); return; }}");
             sb.AppendLine();
@@ -363,7 +359,6 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });");
             sb.AppendLine("            else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });");
             sb.AppendLine("            else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
-            // Corrected: Use the string value of vmName
             sb.AppendLine($"            else {{ Console.WriteLine($\"[GrpcService:{vmName}] PropertyChanged: Packing not implemented for type {{newValue.GetType().FullName}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}");
             sb.AppendLine();
             sb.AppendLine($"            List<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>> currentSubscribers;");
@@ -377,7 +372,6 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                   catch { lock(_subscriberLock) { _subscribers.Remove(sub); } }");
             sb.AppendLine("                }));");
             sb.AppendLine("            }");
-            // Corrected: Use the string value of vmName
             sb.AppendLine($"            try {{ await Task.WhenAll(writeTasks); }} catch (Exception ex) {{ Console.WriteLine($\"[GrpcService:{vmName}] Error writing notifications: \" + ex.Message); }}");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
@@ -513,7 +507,8 @@ namespace PeakSWC.MvvmSourceGenerator
                                                      : $"private void RemoteExecute_{cmd.MethodName}({paramListWithType})";
                 sb.AppendLine($"        {methodSignature}");
                 sb.AppendLine("        {");
-                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {(cmd.IsAsync ? "return Task.CompletedTask;" : "return;")} }}");
+                // Corrected: Use the string value of originalVmName and cmd.MethodName
+                sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {(cmd.IsAsync ? "/*return Task.CompletedTask;*/" : "return;")} }}"); // Commented out Task.CompletedTask for async void/Task
                 sb.AppendLine($"            Debug.WriteLine($\"[ClientProxy:{originalVmName}] Executing command {cmd.MethodName} remotely...\");");
                 sb.AppendLine("            try");
                 sb.AppendLine("            {");
@@ -529,8 +524,6 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error executing command {cmd.MethodName}: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
                 sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Command {cmd.MethodName} cancelled.\"); }}");
                 sb.AppendLine($"            catch (Exception ex) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unexpected error executing command {cmd.MethodName}: \" + ex.Message); }}");
-                if (cmd.IsAsync && !cmd.Parameters.Any()) sb.AppendLine("            // return Task.CompletedTask; // Not strictly needed for AsyncRelayCommand");
-                else if (cmd.IsAsync && cmd.Parameters.Any()) sb.AppendLine("            // return Task.CompletedTask; // Not strictly needed for AsyncRelayCommand<T>");
                 sb.AppendLine("        }");
                 sb.AppendLine();
             }
