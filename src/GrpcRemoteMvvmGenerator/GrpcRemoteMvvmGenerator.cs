@@ -296,7 +296,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"                   else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
             sb.AppendLine("                    // TODO: Add more type checks and unpacking logic here (double, float, long, DateTime/Timestamp etc.)");
             sb.AppendLine("                    else { Console.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \\\"\" + request.PropertyName + \"\\\" and type \\\"\" + request.NewValue.TypeUrl + \"\\\".\"); }");
-            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \\\"\" + request.PropertyName + \"\\\": \" + ex.Message); }");
+            sb.AppendLine("                } catch (Exception ex) { Console.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \\\"\" + request.PropertyName + \"\\\": \" + ex.Message); }}");
             sb.AppendLine("            }");
             sb.AppendLine("            else { Console.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \\\"\" + request.PropertyName + \"\\\" not found or not writable.\"); }");
             sb.AppendLine("            return Task.FromResult(new Empty());");
@@ -546,7 +546,8 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
             sb.AppendLine($"                        if (_isDisposed) {{ Debug.WriteLine(\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }}");
-            sb.AppendLine("                        Debug.WriteLine(\"[" + originalVmName + "RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"\" + update.PropertyName + \"\\\", ValueTypeUrl=\\\"\" + (update.NewValue?.TypeUrl ?? \"null_type_url\") + \"\\\"\");");
+            // Corrected Debug.WriteLine for runtime interpolation
+            sb.AppendLine("                        Debug.WriteLine($\"[" + originalVmName + "RemoteClient] RAW UPDATE RECEIVED: PropertyName=\\\"\" + update.PropertyName + \"\\\", ValueTypeUrl=\\\"\" + (update.NewValue?.TypeUrl ?? \"null_type_url\") + \"\\\"\");");
             sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                           try {");
             sb.AppendLine($"                               Debug.WriteLine(\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update \\\"\" + update.PropertyName + \"\\\".\");");
