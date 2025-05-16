@@ -18,9 +18,7 @@
                           --output &quot;%(MvvmViewModelProtoSource.OutputPath)&quot; ^
                           --protoNamespace &quot;%(MvvmViewModelProtoSource.ProtoNamespace)&quot; ^
                           --serviceName &quot;%(MvvmViewModelProtoSource.ServiceName)&quot; ^
-                          --attributeFullName &quot;%(MvvmViewModelProtoSource.AttributeFullName)&quot; ^
-                          --observablePropertyAttribute &quot;%(MvvmViewModelProtoSource.ObservablePropertyAttribute)&quot; ^
-                          --relayCommandAttribute &quot;%(MvvmViewModelProtoSource.RelayCommandAttribute)&quot; "
+                          "
             ContinueOnError="false"
             WorkingDirectory="$(MSBuildProjectDirectory)" 
             ConsoleToMSBuild="true">
