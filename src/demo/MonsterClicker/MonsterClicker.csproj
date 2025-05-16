@@ -9,6 +9,14 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <None Remove="Resources\sword.png" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <EmbeddedResource Include="Resources\sword.png" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Grpc" Version="2.46.6" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
@@ -24,9 +32,7 @@
 	<ItemGroup>
 
 
-		<ProjectReference Include="..\..\GrpcRemoteMvvmGenerator\GrpcRemoteMvvmGenerator.csproj"
-						  OutputItemType="Analyzer"
-						  ReferenceOutputAssembly="false" />
+		<ProjectReference Include="..\..\GrpcRemoteMvvmGenerator\GrpcRemoteMvvmGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 
 		<ProjectReference Include="..\..\RemoteAttribute\RemoteAttribute.csproj" />
 	</ItemGroup>
