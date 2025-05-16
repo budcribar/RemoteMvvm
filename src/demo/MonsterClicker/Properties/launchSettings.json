@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MonsterClicker": {
+      "commandName": "Project",
+      "commandLineArgs": "client"
+    }
+  }
+}

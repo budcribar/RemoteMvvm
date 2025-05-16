@@ -307,7 +307,7 @@ namespace PeakSWC.MvvmSourceGenerator
             {
                 sb.AppendLine($"        public override async Task<{protoCsNamespace}.{cmd.MethodName}Response> {cmd.MethodName}({protoCsNamespace}.{cmd.MethodName}Request request, ServerCallContext context)");
                 sb.AppendLine("        {");
-                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}"; // Using corrected CommandPropertyName
+                string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
 
                 if (cmd.IsAsync)
                 {
@@ -512,7 +512,6 @@ namespace PeakSWC.MvvmSourceGenerator
                                                      : $"private void RemoteExecute_{cmd.MethodName}({paramListWithType})";
                 sb.AppendLine($"        {methodSignature}");
                 sb.AppendLine("        {");
-                // Corrected early exit for async Task methods
                 string earlyExit = cmd.IsAsync ? "return;" : "return;";
                 sb.AppendLine($"            if (!_isInitialized || _isDisposed) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Not initialized or disposed, command {cmd.MethodName} skipped.\"); {earlyExit} }}");
                 sb.AppendLine($"            Debug.WriteLine($\"[ClientProxy:{originalVmName}] Executing command {cmd.MethodName} remotely...\");");
@@ -546,7 +545,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
             sb.AppendLine("                        if (_isDisposed) break;");
-            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Received property update: {{update.PropertyName}}\");");
+            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Received property update for '{{update.PropertyName}}'. Current value: {{this.GetType().GetProperty(update.PropertyName)?.GetValue(this) ?? \"null\"}}. New value type URL: {{update.NewValue?.TypeUrl}}\");");
             sb.AppendLine("                        Action updateAction = () => {");
             sb.AppendLine("                            switch (update.PropertyName)");
             sb.AppendLine("                            {");
@@ -555,13 +554,13 @@ namespace PeakSWC.MvvmSourceGenerator
                 string wkt = GetProtoWellKnownTypeFor(prop.FullTypeSymbol!, compilation);
                 string csharpPropName = prop.Name;
                 sb.AppendLine($"                                case nameof({csharpPropName}):");
-                if (wkt == "StringValue") sb.AppendLine($"                                    if (update.NewValue.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
-                else if (wkt == "Int32Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int32Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int32Value>().Value; break;");
-                else if (wkt == "BoolValue") sb.AppendLine($"                                    if (update.NewValue.Is(BoolValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<BoolValue>().Value; break;");
-                else if (wkt == "DoubleValue") sb.AppendLine($"                                    if (update.NewValue.Is(DoubleValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<DoubleValue>().Value; break;");
-                else if (wkt == "FloatValue") sb.AppendLine($"                                    if (update.NewValue.Is(FloatValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<FloatValue>().Value; break;");
-                else if (wkt == "Int64Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int64Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int64Value>().Value; break;");
-                else if (wkt == "Timestamp" && prop.Type == "DateTime") sb.AppendLine($"                                    if (update.NewValue.Is(Timestamp.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Timestamp>().ToDateTime(); break;");
+                if (wkt == "StringValue") sb.AppendLine($"                                    if (update.NewValue.Is(StringValue.Descriptor)) {{ var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
+                else if (wkt == "Int32Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int32Value.Descriptor)) {{ var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
+                else if (wkt == "BoolValue") sb.AppendLine($"                                    if (update.NewValue.Is(BoolValue.Descriptor)) {{ var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
+                else if (wkt == "DoubleValue") sb.AppendLine($"                                    if (update.NewValue.Is(DoubleValue.Descriptor)) {{ var val = update.NewValue.Unpack<DoubleValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
+                else if (wkt == "FloatValue") sb.AppendLine($"                                    if (update.NewValue.Is(FloatValue.Descriptor)) {{ var val = update.NewValue.Unpack<FloatValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
+                else if (wkt == "Int64Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int64Value.Descriptor)) {{ var val = update.NewValue.Unpack<Int64Value>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
+                else if (wkt == "Timestamp" && prop.Type == "DateTime") sb.AppendLine($"                                    if (update.NewValue.Is(Timestamp.Descriptor)) {{ var val = update.NewValue.Unpack<Timestamp>().ToDateTime(); Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
                 else sb.AppendLine($"                                    Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
             }
             sb.AppendLine($"                                default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: {{update.PropertyName}}\"); break;");
@@ -576,7 +575,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                }");
             sb.AppendLine($"                catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription cancelled.\"); }}");
             sb.AppendLine($"                catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription task cancelled.\"); }}");
-            sb.AppendLine($"                catch (Exception ex) {{ if (!_isDisposed) Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error in property listener: \" + ex.GetType().Name + \" - \" + ex.Message); }}");
+            sb.AppendLine($"                catch (Exception ex) {{ if (!_isDisposed) Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error in property listener: \" + ex.GetType().Name + \" - \" + ex.Message + \"\\nStackTrace: \" + ex.StackTrace); }}");
             sb.AppendLine($"                Debug.WriteLine($\"[{originalVmName}RemoteClient] Property change listener stopped.\");");
             sb.AppendLine("            }, cancellationToken);");
             sb.AppendLine("        }");
