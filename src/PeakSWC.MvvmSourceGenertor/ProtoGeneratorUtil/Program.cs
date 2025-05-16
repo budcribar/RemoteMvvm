@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
+﻿using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -17,7 +12,7 @@ namespace ProtoGeneratorUtil
     public class Options
     {
         [Option('v', "viewModelFiles", Required = true, HelpText = "Paths to the C# ViewModel files to process (comma-separated).", Separator = ',')]
-        public IEnumerable<string> ViewModelFiles { get; set; } = Enumerable.Empty<string>();
+        public IEnumerable<string> ViewModelFiles { get; set; }
 
         [Option('o', "output", Required = false, HelpText = "Output path for the generated .proto file. Default: Protos/{ServiceName}.proto")]
         public string? OutputPath { get; set; }
@@ -28,22 +23,26 @@ namespace ProtoGeneratorUtil
         [Option('s', "serviceName", Required = false, HelpText = "The gRPC service name. Default: {ViewModelName}Service")]
         public string? GrpcServiceName { get; set; }
 
-        [Option('a', "attributeFullName", Required = false, Default = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute", HelpText = "The full name of the GenerateGrpcRemoteAttribute.")]
+        [Option('a', "attributeFullName", Required = false, HelpText = "The full name of the GenerateGrpcRemoteAttribute.")]
         public string GenerateGrpcRemoteAttributeFullName { get; set; } = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute";
 
-        [Option("observablePropertyAttribute", Required = false, Default = "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute", HelpText = "Full name of the ObservableProperty attribute.")]
+        [Option("observablePropertyAttribute", Required = false, HelpText = "Full name of the ObservableProperty attribute.")]
         public string ObservablePropertyAttributeFullName { get; set; } = "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute";
 
-        [Option("relayCommandAttribute", Required = false, Default = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute", HelpText = "Full name of the RelayCommand attribute.")]
+        [Option("relayCommandAttribute", Required = false, HelpText = "Full name of the RelayCommand attribute.")]
         public string RelayCommandAttributeFullName { get; set; } = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
-        public Options() { }
+        // Default constructor
+        public Options()
+        {
+            ViewModelFiles = new List<string>();
+        }
     }
 
     // Helper records
-    internal record PropertyInfo { public string Name; public string TypeString; public ITypeSymbol FullTypeSymbol; }
-    internal record CommandInfo { public string MethodName; public string CommandPropertyName; public List<ParameterInfoForProto> Parameters; public bool IsAsync; }
-    internal record ParameterInfoForProto { public string Name; public string TypeString; public ITypeSymbol FullTypeSymbol; }
+    internal record PropertyInfo { public string Name = ""; public string TypeString = ""; public required ITypeSymbol FullTypeSymbol; }
+    internal record CommandInfo { public string MethodName = ""; public string CommandPropertyName = ""; public List<ParameterInfoForProto> Parameters = []; public bool IsAsync; }
+    internal record ParameterInfoForProto { public string Name = ""; public string TypeString = ""; public required ITypeSymbol FullTypeSymbol; }
 
 
     class Program
