@@ -542,36 +542,39 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                try");
             sb.AppendLine("                {");
             sb.AppendLine($"                    using var call = _grpcClient.SubscribeToPropertyChanges(new Empty(), cancellationToken: cancellationToken);");
+            sb.AppendLine($"                    Debug.WriteLine($\"[{originalVmName}RemoteClient] Subscribed to property changes. Waiting for updates...\");");
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
             sb.AppendLine("                    {");
-            sb.AppendLine("                        if (_isDisposed) break;");
-            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Received property update for '{{update.PropertyName}}'. Current value: {{this.GetType().GetProperty(update.PropertyName)?.GetValue(this) ?? \"null\"}}. New value type URL: {{update.NewValue?.TypeUrl}}\");");
+            sb.AppendLine("                        if (_isDisposed) { Debug.WriteLine($\"[{originalVmName}RemoteClient] Disposed, exiting property update loop.\"); break; }");
+            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] RAW UPDATE RECEIVED: PropertyName={{update.PropertyName}}, ValueTypeUrl={{update.NewValue?.TypeUrl}}\");");
             sb.AppendLine("                        Action updateAction = () => {");
-            sb.AppendLine("                            switch (update.PropertyName)");
-            sb.AppendLine("                            {");
+            sb.AppendLine("                           try {"); // Inner try for action
+            sb.AppendLine($"                               Debug.WriteLine($\"[{originalVmName}RemoteClient] Dispatcher: Attempting to update {{update.PropertyName}}.\");");
+            sb.AppendLine("                               switch (update.PropertyName)");
+            sb.AppendLine("                               {");
             foreach (var prop in props)
             {
                 string wkt = GetProtoWellKnownTypeFor(prop.FullTypeSymbol!, compilation);
                 string csharpPropName = prop.Name;
-                sb.AppendLine($"                                case nameof({csharpPropName}):");
-                if (wkt == "StringValue") sb.AppendLine($"                                    if (update.NewValue.Is(StringValue.Descriptor)) {{ var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
-                else if (wkt == "Int32Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int32Value.Descriptor)) {{ var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
-                else if (wkt == "BoolValue") sb.AppendLine($"                                    if (update.NewValue.Is(BoolValue.Descriptor)) {{ var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
-                else if (wkt == "DoubleValue") sb.AppendLine($"                                    if (update.NewValue.Is(DoubleValue.Descriptor)) {{ var val = update.NewValue.Unpack<DoubleValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
-                else if (wkt == "FloatValue") sb.AppendLine($"                                    if (update.NewValue.Is(FloatValue.Descriptor)) {{ var val = update.NewValue.Unpack<FloatValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
-                else if (wkt == "Int64Value") sb.AppendLine($"                                    if (update.NewValue.Is(Int64Value.Descriptor)) {{ var val = update.NewValue.Unpack<Int64Value>().Value; Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
-                else if (wkt == "Timestamp" && prop.Type == "DateTime") sb.AppendLine($"                                    if (update.NewValue.Is(Timestamp.Descriptor)) {{ var val = update.NewValue.Unpack<Timestamp>().ToDateTime(); Debug.WriteLine($\"Updating {csharpPropName} to: {{val}}\"); this.{csharpPropName} = val; }} break;");
-                else sb.AppendLine($"                                    Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
+                sb.AppendLine($"                                   case nameof({csharpPropName}):");
+                if (wkt == "StringValue") sb.AppendLine($"                                       if (update.NewValue.Is(StringValue.Descriptor)) {{ var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to '{{val}}'.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is '{{this.{csharpPropName}}}'.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected StringValue.\"); }} break;");
+                else if (wkt == "Int32Value") sb.AppendLine($"                                       if (update.NewValue.Is(Int32Value.Descriptor)) {{ var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to {{val}}.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is {{this.{csharpPropName}}}.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected Int32Value.\"); }} break;");
+                else if (wkt == "BoolValue") sb.AppendLine($"                                       if (update.NewValue.Is(BoolValue.Descriptor)) {{ var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($\"Updating {csharpPropName} from {{this.{csharpPropName}}} to {{val}}.\"); this.{csharpPropName} = val; Debug.WriteLine($\"After update, {csharpPropName} is {{this.{csharpPropName}}}.\"); }} else {{ Debug.WriteLine($\"Mismatched descriptor for {csharpPropName}, expected BoolValue.\"); }} break;");
+                // Add other WKT unpackers with similar detailed logging
+                else sb.AppendLine($"                                       Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
             }
-            sb.AppendLine($"                                default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: {{update.PropertyName}}\"); break;");
-            sb.AppendLine("                            }");
+            sb.AppendLine($"                                   default: Debug.WriteLine($\"[ClientProxy:{originalVmName}] Unknown property in notification: {{update.PropertyName}}\"); break;");
+            sb.AppendLine("                               }");
+            sb.AppendLine("                           } catch (Exception exInAction) { Debug.WriteLine($\"[ClientProxy:{originalVmName}] EXCEPTION INSIDE updateAction for {{update.PropertyName}}: \" + exInAction.ToString()); }");
             sb.AppendLine("                        };");
             sb.AppendLine("                        #if WPF_DISPATCHER");
             sb.AppendLine("                        Application.Current?.Dispatcher.Invoke(updateAction);");
             sb.AppendLine("                        #else");
             sb.AppendLine("                        updateAction();");
             sb.AppendLine("                        #endif");
+            sb.AppendLine($"                        Debug.WriteLine($\"[{originalVmName}RemoteClient] Processed update for {{update.PropertyName}}. Still listening...\");");
             sb.AppendLine("                    }");
+            sb.AppendLine($"                    Debug.WriteLine($\"[{originalVmName}RemoteClient] ReadAllAsync completed or cancelled.\");");
             sb.AppendLine("                }");
             sb.AppendLine($"                catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription cancelled.\"); }}");
             sb.AppendLine($"                catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription task cancelled.\"); }}");
