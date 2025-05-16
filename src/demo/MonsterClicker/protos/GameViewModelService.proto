@@ -16,6 +16,7 @@ message GameViewModelState {
   string game_message = 5;
   bool is_monster_defeated = 6;
   bool can_use_special_attack = 7;
+  bool is_special_attack_on_cooldown = 8;
 }
 
 // Message for property change notifications

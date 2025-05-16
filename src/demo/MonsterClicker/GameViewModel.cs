@@ -1,15 +1,11 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PeakSWC.Mvvm.Remote;
+using PeakSWC.Mvvm.Remote; // Your custom attribute's namespace
 using System;
 using System.Threading.Tasks;
 
 namespace MonsterClicker.ViewModels
 {
-    // Attribute to mark this ViewModel for gRPC remote generation
-    // CORRECTED ARGUMENTS:
-    // 1st: The C# namespace where Grpc.Tools will place generated types (from proto's csharp_namespace option)
-    // 2nd: The service name as defined in the .proto file
     [GenerateGrpcRemote("MonsterClicker.ViewModels.Protos", "GameViewModelService",
         ServerImplNamespace = "MonsterClicker.GrpcServices",
         ClientProxyNamespace = "MonsterClicker.RemoteClients")]
@@ -31,18 +27,22 @@ namespace MonsterClicker.ViewModels
         private string _gameMessage = "Click the monster to attack!";
 
         [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // For CanExecuteSpecialAttack
         private bool _isMonsterDefeated;
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))]
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // For CanExecuteSpecialAttack
         private bool _canUseSpecialAttack = true;
 
         private const int SpecialAttackCooldownSeconds = 5;
+
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(SpecialAttackCommand))] // For CanExecuteSpecialAttack
         private bool _isSpecialAttackOnCooldown = false;
 
         public GameViewModel()
         {
-            //ResetGame();
+            ResetGame();
         }
 
         [RelayCommand]
@@ -63,15 +63,15 @@ namespace MonsterClicker.ViewModels
             }
         }
 
-        private bool CanExecuteSpecialAttack() => CanUseSpecialAttack && !IsMonsterDefeated && !_isSpecialAttackOnCooldown;
+        private bool CanExecuteSpecialAttack() => CanUseSpecialAttack && !IsMonsterDefeated && !IsSpecialAttackOnCooldown;
 
         [RelayCommand(CanExecute = nameof(CanExecuteSpecialAttack))]
-        private async Task SpecialAttackAsync() // Parameter removed in previous step
+        private async Task SpecialAttackAsync()
         {
-            if (IsMonsterDefeated || _isSpecialAttackOnCooldown) return;
+            if (!CanExecuteSpecialAttack()) return; // Guard clause
 
-            _isSpecialAttackOnCooldown = true;
-            SpecialAttackCommand.NotifyCanExecuteChanged();
+            IsSpecialAttackOnCooldown = true;
+            // No need to call SpecialAttackCommand.NotifyCanExecuteChanged(); explicitly due to [NotifyCanExecuteChangedFor]
 
             GameMessage = "Charging special attack...";
             await Task.Delay(750);
@@ -93,8 +93,7 @@ namespace MonsterClicker.ViewModels
             GameMessage = $"Special Attack on cooldown for {SpecialAttackCooldownSeconds} seconds...";
             await Task.Delay(TimeSpan.FromSeconds(SpecialAttackCooldownSeconds));
 
-            _isSpecialAttackOnCooldown = false;
-            SpecialAttackCommand.NotifyCanExecuteChanged();
+            IsSpecialAttackOnCooldown = false;
             GameMessage = "Special Attack ready!";
         }
 
@@ -107,10 +106,10 @@ namespace MonsterClicker.ViewModels
             MonsterCurrentHealth = MonsterMaxHealth;
             PlayerDamage = 10;
             GameMessage = "A new monster appears! Click it!";
-            IsMonsterDefeated = false;
+            IsMonsterDefeated = false; // This will trigger CanExecute update for SpecialAttackCommand
 
-            _isSpecialAttackOnCooldown = false;
-            CanUseSpecialAttack = true;
+            IsSpecialAttackOnCooldown = false; // This will also trigger CanExecute update
+            CanUseSpecialAttack = true;      // This will also trigger CanExecute update
         }
     }
 }

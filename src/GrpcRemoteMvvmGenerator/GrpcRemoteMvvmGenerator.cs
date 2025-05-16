@@ -270,7 +270,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"            // Mapping property: {csharpPropertyName} to state.{protoMessageFieldName}");
                 sb.AppendLine($"            try {{");
                 sb.AppendLine($"                var propValue = _viewModel.{csharpPropertyName};");
-                sb.AppendLine($"                Debug.WriteLine(\"[GrpcService:" + vmName + $"] GetState: Property '{csharpPropertyName}' has value '{{propValue}}'.\");");
+                sb.AppendLine("                Debug.WriteLine(\"[GrpcService:" + vmName + "] GetState: Property '\" + \"" + csharpPropertyName + "\" + \"' has value '\" + propValue + \"'.\");");
                 if (prop.FullTypeSymbol?.IsReferenceType == true || prop.FullTypeSymbol?.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
                 {
                     sb.AppendLine($"                if (propValue != null) state.{protoMessageFieldName} = propValue;");
@@ -287,7 +287,6 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine($"        public override async Task SubscribeToPropertyChanges(Empty request, IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification> responseStream, ServerCallContext context)");
             sb.AppendLine("        {");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Client subscribed to property changes.\");");
-            // Corrected: Use fully qualified name for System.Threading.Channels.Channel
             sb.AppendLine($"            var channel = System.Threading.Channels.Channel.CreateUnbounded<{protoCsNamespace}.PropertyChangeNotification>(new UnboundedChannelOptions {{ SingleReader = true, SingleWriter = false }});");
             sb.AppendLine("            _subscriberChannels.TryAdd(responseStream, channel);");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Channel created and added for subscriber.\");");
@@ -336,41 +335,47 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine("        {");
                 sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + $"] Executing command {cmd.MethodName}.\");");
                 string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
-
+                sb.AppendLine("            try {");
                 if (cmd.IsAsync)
                 {
-                    sb.AppendLine($"            var command = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;");
-                    sb.AppendLine($"            if (command != null)");
-                    sb.AppendLine("            {");
+                    sb.AppendLine($"                var command = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;");
+                    sb.AppendLine($"                if (command != null)");
+                    sb.AppendLine("                {");
                     if (cmd.Parameters.Count == 1 && cmd.Parameters[0].FullTypeSymbol != null)
                     {
-                        sb.AppendLine($"                var typedCommand = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{cmd.Parameters[0].Type}>;");
-                        sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{ToPascalCase(cmd.Parameters[0].Name)});");
-                        sb.AppendLine($"                else await command.ExecuteAsync(request);");
+                        sb.AppendLine($"                    var typedCommand = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{cmd.Parameters[0].Type}>;");
+                        sb.AppendLine($"                    if (typedCommand != null) await typedCommand.ExecuteAsync(request.{ToPascalCase(cmd.Parameters[0].Name)});");
+                        sb.AppendLine($"                    else await command.ExecuteAsync(request);");
                     }
                     else if (cmd.Parameters.Count == 0)
-                        sb.AppendLine("                await command.ExecuteAsync(null);");
+                        sb.AppendLine("                    await command.ExecuteAsync(null);");
                     else
-                        sb.AppendLine("                await command.ExecuteAsync(request);");
-                    sb.AppendLine("            }");
+                        sb.AppendLine("                    await command.ExecuteAsync(request);");
+                    sb.AppendLine("                }");
+                    sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + $"] Command {cmd.CommandPropertyName} not found or not IAsyncRelayCommand.\"); }}");
                 }
                 else
                 {
-                    sb.AppendLine($"            var command = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand;");
-                    sb.AppendLine($"            if (command != null)");
-                    sb.AppendLine("            {");
+                    sb.AppendLine($"                var command = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand;");
+                    sb.AppendLine($"                if (command != null)");
+                    sb.AppendLine("                {");
                     if (cmd.Parameters.Count == 1 && cmd.Parameters[0].FullTypeSymbol != null)
                     {
-                        sb.AppendLine($"               var typedCommand = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand<{cmd.Parameters[0].Type}>;");
-                        sb.AppendLine($"               if (typedCommand != null) typedCommand.Execute(request.{ToPascalCase(cmd.Parameters[0].Name)});");
-                        sb.AppendLine($"               else command.Execute(request);");
+                        sb.AppendLine($"                   var typedCommand = {commandPropertyAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand<{cmd.Parameters[0].Type}>;");
+                        sb.AppendLine($"                   if (typedCommand != null) typedCommand.Execute(request.{ToPascalCase(cmd.Parameters[0].Name)});");
+                        sb.AppendLine($"                   else command.Execute(request);");
                     }
                     else if (cmd.Parameters.Count == 0)
-                        sb.AppendLine("                command.Execute(null);");
+                        sb.AppendLine("                    command.Execute(null);");
                     else
-                        sb.AppendLine("                command.Execute(request);");
-                    sb.AppendLine("            }");
+                        sb.AppendLine("                    command.Execute(request);");
+                    sb.AppendLine("                }");
+                    sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + $"] Command {cmd.CommandPropertyName} not found or not IRelayCommand.\"); }}");
                 }
+                sb.AppendLine("            } catch (Exception ex) {");
+                sb.AppendLine("                Debug.WriteLine(\"[GrpcService:" + vmName + $"] Exception during command execution for {cmd.MethodName}: \" + ex.ToString());");
+                sb.AppendLine("                throw new RpcException(new Status(StatusCode.Internal, \"Error executing command on server: \" + ex.Message));");
+                sb.AppendLine("            }");
                 sb.AppendLine($"            return new {protoCsNamespace}.{cmd.MethodName}Response();");
                 sb.AppendLine("        }");
                 sb.AppendLine();
@@ -393,14 +398,14 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });");
             sb.AppendLine("            else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });");
             sb.AppendLine("            else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
-            sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:" + vmName + $"] PropertyChanged: Packing not implemented for type {{newValue.GetType().FullName}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}");
+            //sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:" + vmName + $"] PropertyChanged: Packing not implemented for type {{newValue?.GetType().FullName ?? \"null\"}} of property {{e.PropertyName}}\"); notification.NewValue = Any.Pack(new StringValue {{ Value = newValue.ToString() }}); }}");
             sb.AppendLine();
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Queuing notification for '\" + e.PropertyName + \"' to \" + _subscriberChannels.Count + \" subscribers.\");");
-            sb.AppendLine("            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))"); // Iterate over channel writers
+            sb.AppendLine("            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))");
             sb.AppendLine("            {");
             sb.AppendLine("                try { await channelWriter.WriteAsync(notification); }");
-            sb.AppendLine("                catch (ChannelClosedException) { /* Channel was closed, subscriber likely disconnected, handled by finally in Subscribe */ }");
-            sb.AppendLine("                catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error writing to subscriber channel: \" + ex.Message); }");
+            sb.AppendLine("                catch (ChannelClosedException) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Channel closed for a subscriber, cannot write notification for '\" + e.PropertyName + \"'. Subscriber likely disconnected.\"); /* Handled by finally in SubscribeToPropertyChanges */ }");
+            sb.AppendLine("                catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error writing to subscriber channel for '\" + e.PropertyName + \"': \" + ex.Message); }");
             sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine("    }");
@@ -604,7 +609,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                }");
             sb.AppendLine($"                catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) {{ Debug.WriteLine(\"[ClientProxy:{originalVmName}] Property subscription RpcException Cancelled.\"); }}");
             sb.AppendLine($"                catch (OperationCanceledException) {{ Debug.WriteLine($\"[ClientProxy:{originalVmName}] Property subscription OperationCanceledException.\"); }}");
-            sb.AppendLine($"                catch (Exception ex) {{ if (!_isDisposed) Debug.WriteLine(\"[ClientProxy:{originalVmName}] Error in property listener: \" + ex.GetType().Name + \" - \" + ex.Message + \"\\nStackTrace: \" + ex.StackTrace); }}");
+            sb.AppendLine($"                catch (Exception ex) {{ if (!_isDisposed) Debug.WriteLine($\"[ClientProxy:{originalVmName}] Error in property listener: \" + ex.GetType().Name + \" - \" + ex.Message + \"\\nStackTrace: \" + ex.StackTrace); }}");
             sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Property change listener task finished.\");");
             sb.AppendLine("            }, cancellationToken);");
             sb.AppendLine("        }");
