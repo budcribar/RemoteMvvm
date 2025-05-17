@@ -66,20 +66,20 @@
 				<UserProtoRootIn>%(MvvmViewModelProtoSource.ProtoRoot)</UserProtoRootIn>
 				<UserAccessIn>%(MvvmViewModelProtoSource.Access)</UserAccessIn>
 
-				<IntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(MvvmViewModelProtoSource.Filename)Namespace.Protos</IntermediateProtoNamespace>
-				<IntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</IntermediateProtoNamespace>
+				<IntermediateProtoNamespace Condition="'%(UserProtoNamespaceIn)' == ''">%(UserViewModelFilename)Namespace.Protos</IntermediateProtoNamespace>
+				<IntermediateProtoNamespace Condition="'%(UserProtoNamespaceIn)' != ''">%(UserProtoNamespaceIn)</IntermediateProtoNamespace>
 
-				<IntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(MvvmViewModelProtoSource.Filename)Service</IntermediateServiceName>
-				<IntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</IntermediateServiceName>
+				<IntermediateServiceName Condition="'%(UserServiceNameIn)' == ''">%(UserViewModelFilename)Service</IntermediateServiceName>
+				<IntermediateServiceName Condition="'%(UserServiceNameIn)' != ''">%(UserServiceNameIn)</IntermediateServiceName>
 			</_MvvmViewModelProtoSource_Pass1>
 		</ItemGroup>
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_Pass1)">
+			<_MvvmViewModelProtoSource_Pass2 Include="@(_MvvmViewModelProtoSource_Pass1)">
 				<UserViewModelFile>%(UserViewModelFile)</UserViewModelFile>
-				<FinalProtoNamespace>%(IntermediateProtoNamespace)</FinalProtoNamespace>
-				<FinalServiceName>%(IntermediateServiceName)</FinalServiceName>
-
+				<UserViewModelFilename>%(UserViewModelFilename)</UserViewModelFilename>
+				<IntermediateProtoNamespace>%(IntermediateProtoNamespace)</IntermediateProtoNamespace>
+				<IntermediateServiceName>%(IntermediateServiceName)</IntermediateServiceName>
 				<UserOutputPathIn>%(UserOutputPathIn)</UserOutputPathIn>
 				<UserAttributeFullNameIn>%(UserAttributeFullNameIn)</UserAttributeFullNameIn>
 				<UserObservablePropertyAttributeIn>%(UserObservablePropertyAttributeIn)</UserObservablePropertyAttributeIn>
@@ -90,6 +90,21 @@
 
 				<TempOutputPath Condition="'%(UserOutputPathIn)' == ''">Protos\%(IntermediateServiceName).proto</TempOutputPath>
 				<TempOutputPath Condition="'%(UserOutputPathIn)' != ''">%(UserOutputPathIn)</TempOutputPath>
+			</_MvvmViewModelProtoSource_Pass2>
+		</ItemGroup>
+
+		<ItemGroup>
+			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_Pass2)">
+				<UserViewModelFile>%(UserViewModelFile)</UserViewModelFile>
+				<FinalProtoNamespace>%(IntermediateProtoNamespace)</FinalProtoNamespace>
+				<FinalServiceName>%(IntermediateServiceName)</FinalServiceName>
+				<TempOutputPath>%(TempOutputPath)</TempOutputPath>
+				<UserAttributeFullNameIn>%(UserAttributeFullNameIn)</UserAttributeFullNameIn>
+				<UserObservablePropertyAttributeIn>%(UserObservablePropertyAttributeIn)</UserObservablePropertyAttributeIn>
+				<UserRelayCommandAttributeIn>%(UserRelayCommandAttributeIn)</UserRelayCommandAttributeIn>
+				<UserGrpcServicesIn>%(UserGrpcServicesIn)</UserGrpcServicesIn>
+				<UserProtoRootIn>%(UserProtoRootIn)</UserProtoRootIn>
+				<UserAccessIn>%(UserAccessIn)</UserAccessIn>
 
 				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</FinalOutputPath>
 				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)'))</FinalOutputPath>
@@ -117,6 +132,7 @@
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_Pass1 Remove="@(_MvvmViewModelProtoSource_Pass1)" />
+			<_MvvmViewModelProtoSource_Pass2 Remove="@(_MvvmViewModelProtoSource_Pass2)" />
 		</ItemGroup>
 	</Target>
 
