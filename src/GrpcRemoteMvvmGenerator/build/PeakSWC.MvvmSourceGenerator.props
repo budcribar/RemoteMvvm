@@ -1,5 +1,5 @@
 ﻿<Project>
-  <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)..\contentFiles\cs\any\PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs" Link="Properties\Generated\PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute.cs" Visible="false" />
-  </ItemGroup>
+	<ItemGroup>
+		<AvailableItemName Include="MvvmViewModelProtoSource" />
+	</ItemGroup>
 </Project>
