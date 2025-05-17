@@ -62,22 +62,29 @@
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S1_Base Include="@(_MvvmViewModelProtoSource_WithInputs)">
+				<Message Importance="high" Text="DEBUG Stage 1 (%(Identity)): UserOutputPath_Input='%(UserOutputPath_Input)', CalculatedIntermediateServiceName='%(CalculatedIntermediateServiceName)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
 				<FinalProtoNamespace>%(CalculatedIntermediateProtoNamespace)</FinalProtoNamespace>
 				<FinalServiceName>%(CalculatedIntermediateServiceName)</FinalServiceName>
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' == ''">Protos\%(CalculatedIntermediateServiceName).proto</TempOutputPath>
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' != ''">%(UserOutputPath_Input)</TempOutputPath>
+				<Message Importance="high" Text="DEBUG Stage 1 (%(Identity)): TempOutputPath='%(TempOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
 			</_MvvmViewModelProtoSource_S1_Base>
 		</ItemGroup>
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S2_RelPath Include="@(_MvvmViewModelProtoSource_S1_Base)">
+				<Message Importance="high" Text="DEBUG Stage 2 (%(Identity)): MSBuildProjectDirectory='$(MSBuildProjectDirectory)', TempOutputPath='%(TempOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
 				<IntermediateRelativeFinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</IntermediateRelativeFinalOutputPath>
+				<Message Importance="high" Text="DEBUG Stage 2 (%(Identity)): IntermediateRelativeFinalOutputPath='%(IntermediateRelativeFinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
 			</_MvvmViewModelProtoSource_S2_RelPath>
 		</ItemGroup>
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S3_AbsPath Include="@(_MvvmViewModelProtoSource_S2_RelPath)">
-				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(IntermediateRelativeFinalOutputPath)'))</FinalOutputPath>
+				<Message Importance="high" Text="DEBUG Stage 3 (%(Identity)): IntermediateRelativeFinalOutputPath='%(IntermediateRelativeFinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<FinalOutputPath Condition="'%(IntermediateRelativeFinalOutputPath)' != ''">$([System.IO.Path]::GetFullPath('%(IntermediateRelativeFinalOutputPath)'))</FinalOutputPath>
+				<FinalOutputPath Condition="'%(IntermediateRelativeFinalOutputPath)' == ''">_ERROR_IRFO_WAS_EMPTY_FOR_%(Identity)</FinalOutputPath>
+				<Message Importance="high" Text="DEBUG Stage 3 (%(Identity)): FinalOutputPath='%(FinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
 			</_MvvmViewModelProtoSource_S3_AbsPath>
 		</ItemGroup>
 
@@ -110,8 +117,11 @@
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_S7_CombinedArgs)">
-				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == ''">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
+				<Message Importance="high" Text="DEBUG Stage 8 (%(Identity)): UserProtoRoot_Input='%(UserProtoRoot_Input)', FinalOutputPath='%(FinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == '' AND '%(FinalOutputPath)' != '' AND '$([System.String]::Copy('%(FinalOutputPath)').StartsWith('_ERROR_'))' == 'false'">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
+				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == '' AND ('%(FinalOutputPath)' == '' OR '$([System.String]::Copy('%(FinalOutputPath)').StartsWith('_ERROR_'))' == 'true')">_ERROR_FINALOUTPUTPATH_INVALID_FOR_PROTO_ROOT_FOR_%(Identity)</FinalProtoRoot>
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' != ''">%(UserProtoRoot_Input)</FinalProtoRoot>
+				<Message Importance="high" Text="DEBUG Stage 8 (%(Identity)): FinalProtoRoot='%(FinalProtoRoot)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
 
 				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' == ''">Both</FinalGrpcServices>
 				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' != ''">%(UserGrpcServices_Input)</FinalGrpcServices>
