@@ -101,10 +101,15 @@
 				<FinalAccess Condition="'%(UserAccess_Input)' == ''">Public</FinalAccess>
 				<FinalAccess Condition="'%(UserAccess_Input)' != ''">%(UserAccess_Input)</FinalAccess>
 
-				<AdditionalArgs></AdditionalArgs>
-				<AdditionalArgs Condition="'%(UserAttributeFullName_Input)' != ''">%(AdditionalArgs) --attributeFullName &quot;%(UserAttributeFullName_Input)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(UserObservablePropertyAttribute_Input)' != ''">%(AdditionalArgs) --observablePropertyAttribute &quot;%(UserObservablePropertyAttribute_Input)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(UserRelayCommandAttribute_Input)' != ''">%(AdditionalArgs) --relayCommandAttribute &quot;%(UserRelayCommandAttribute_Input)&quot;</AdditionalArgs>
+				<_ArgPartForFullName></_ArgPartForFullName>
+				<_ArgPartForObservableProperty></_ArgPartForObservableProperty>
+				<_ArgPartForRelayCommand></_ArgPartForRelayCommand>
+
+				<_ArgPartForFullName Condition="'%(UserAttributeFullName_Input)' != ''"> --attributeFullName "%(UserAttributeFullName_Input)"</_ArgPartForFullName>
+				<_ArgPartForObservableProperty Condition="'%(UserObservablePropertyAttribute_Input)' != ''"> --observablePropertyAttribute "%(UserObservablePropertyAttribute_Input)"</_ArgPartForObservableProperty>
+				<_ArgPartForRelayCommand Condition="'%(UserRelayCommandAttribute_Input)' != ''"> --relayCommandAttribute "%(UserRelayCommandAttribute_Input)"</_ArgPartForRelayCommand>
+
+				<AdditionalArgs>%(_ArgPartForFullName)%(_ArgPartForObservableProperty)%(_ArgPartForRelayCommand)</AdditionalArgs>
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
 
