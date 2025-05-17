@@ -14,29 +14,36 @@
 		<Message Text="PeakSWC.MvvmSourceGenerator: ProtoGeneratorUtil.exe path: $(_ProtoGeneratorUtilExePath)" Importance="normal" />
 
 		<PropertyGroup>
-			<_ProtoUtil_ReferencePaths Condition="'@(ReferencePathWithRefAssemblies)' != ''">@(ReferencePathWithRefAssemblies->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')</_ProtoUtil_ReferencePaths>
-			<_ProtoUtil_ReferencePaths Condition="'@(ReferencePathWithRefAssemblies)' == '' AND '@(ReferencePath)' != ''">@(ReferencePath->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')</_ProtoUtil_ReferencePaths>
+			<_ProtoUtil_ReferencePaths Condition="'@(ReferencePathWithRefAssemblies)' != ''">
+				@(ReferencePathWithRefAssemblies->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')
+			</_ProtoUtil_ReferencePaths>
+			<_ProtoUtil_ReferencePaths Condition="'@(ReferencePathWithRefAssemblies)' == '' AND '@(ReferencePath)' != ''">
+				@(ReferencePath->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')
+			</_ProtoUtil_ReferencePaths>
 		</PropertyGroup>
-		<Message Text="PeakSWC.MvvmSourceGenerator: Reference paths being passed: $(_ProtoUtil_ReferencePaths)" Importance="normal" Condition="'$(_ProtoUtil_ReferencePaths)' != ''"/>
 
-		<Exec Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; ^
-					  --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; ^
-					  --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
-					  --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
-					  --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
-					  %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
-					  --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
-			  WorkingDirectory="$(MSBuildProjectDirectory)"
-			  ContinueOnError="false" />
+		<Message
+		  Text="PeakSWC.MvvmSourceGenerator: Reference paths being passed: $(_ProtoUtil_ReferencePaths)"
+		  Importance="normal"
+		  Condition="'$(_ProtoUtil_ReferencePaths)' != ''" />
+
+		<Exec
+		  Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
+		  WorkingDirectory="$(MSBuildProjectDirectory)"
+		  ContinueOnError="false" />
 
 		<ItemGroup>
 			<Protobuf Include="@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')">
-				<GrpcServices>%(_MvvmViewModelProtoSourceProcessed.FinalGrpcServices)</GrpcServices>
-				<ProtoRoot>%(_MvvmViewModelProtoSourceProcessed.FinalProtoRoot)</ProtoRoot>
-				<Access>%(_MvvmViewModelProtoSourceProcessed.FinalAccess)</Access>
+				<GrpcServices>%(FinalGrpcServices)</GrpcServices>
+				<ProtoRoot>%(FinalProtoRoot)</ProtoRoot>
+				<Access>%(FinalAccess)</Access>
 			</Protobuf>
 		</ItemGroup>
-		<Message Text="PeakSWC.MvvmSourceGenerator: Added '@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')' to Protobuf items." Importance="normal" Condition="'@(_MvvmViewModelProtoSourceProcessed)' != ''"/>
+
+		<Message
+		  Text="PeakSWC.MvvmSourceGenerator: Added '@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')' to Protobuf items."
+		  Importance="normal"
+		  Condition="'@(_MvvmViewModelProtoSourceProcessed)' != ''" />
 
 		<Message Text="PeakSWC.MvvmSourceGenerator: .proto file generation complete." Importance="high" />
 	</Target>
@@ -62,29 +69,41 @@
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S1_Base Include="@(_MvvmViewModelProtoSource_WithInputs)">
-				<Message  Text="DEBUG Stage 1 (%(Identity)): UserOutputPath_Input='%(UserOutputPath_Input)', CalculatedIntermediateServiceName='%(CalculatedIntermediateServiceName)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 1 (%(Identity)): UserOutputPath_Input='%(UserOutputPath_Input)', CalculatedIntermediateServiceName='%(CalculatedIntermediateServiceName)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 				<FinalProtoNamespace>%(CalculatedIntermediateProtoNamespace)</FinalProtoNamespace>
 				<FinalServiceName>%(CalculatedIntermediateServiceName)</FinalServiceName>
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' == ''">Protos\%(CalculatedIntermediateServiceName).proto</TempOutputPath>
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' != ''">%(UserOutputPath_Input)</TempOutputPath>
-				<Message  Text="DEBUG Stage 1 (%(Identity)): TempOutputPath='%(TempOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 1 (%(Identity)): TempOutputPath='%(TempOutputPath)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 			</_MvvmViewModelProtoSource_S1_Base>
 		</ItemGroup>
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S2_RelPath Include="@(_MvvmViewModelProtoSource_S1_Base)">
-				<Message  Text="DEBUG Stage 2 (%(Identity)): MSBuildProjectDirectory='$(MSBuildProjectDirectory)', TempOutputPath='%(TempOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 2 (%(Identity)): MSBuildProjectDirectory='$(MSBuildProjectDirectory)', TempOutputPath='%(TempOutputPath)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 				<IntermediateRelativeFinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</IntermediateRelativeFinalOutputPath>
-				<Message  Text="DEBUG Stage 2 (%(Identity)): IntermediateRelativeFinalOutputPath='%(IntermediateRelativeFinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 2 (%(Identity)): IntermediateRelativeFinalOutputPath='%(IntermediateRelativeFinalOutputPath)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 			</_MvvmViewModelProtoSource_S2_RelPath>
 		</ItemGroup>
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S3_AbsPath Include="@(_MvvmViewModelProtoSource_S2_RelPath)">
-				<Message Text="DEBUG Stage 3 (%(Identity)): IntermediateRelativeFinalOutputPath='%(IntermediateRelativeFinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 3 (%(Identity)): IntermediateRelativeFinalOutputPath='%(IntermediateRelativeFinalOutputPath)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 				<FinalOutputPath Condition="'%(IntermediateRelativeFinalOutputPath)' != ''">$([System.IO.Path]::GetFullPath('%(IntermediateRelativeFinalOutputPath)'))</FinalOutputPath>
 				<FinalOutputPath Condition="'%(IntermediateRelativeFinalOutputPath)' == ''">_ERROR_IRFO_WAS_EMPTY_FOR_%(Identity)</FinalOutputPath>
-				<Message Text="DEBUG Stage 3 (%(Identity)): FinalOutputPath='%(FinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 3 (%(Identity)): FinalOutputPath='%(FinalOutputPath)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 			</_MvvmViewModelProtoSource_S3_AbsPath>
 		</ItemGroup>
 
@@ -117,11 +136,15 @@
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_S7_CombinedArgs)">
-				<Message  Text="DEBUG Stage 8 (%(Identity)): UserProtoRoot_Input='%(UserProtoRoot_Input)', FinalOutputPath='%(FinalOutputPath)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 8 (%(Identity)): UserProtoRoot_Input='%(UserProtoRoot_Input)', FinalOutputPath='%(FinalOutputPath)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == '' AND '%(FinalOutputPath)' != '' AND '$([System.String]::Copy('%(FinalOutputPath)').StartsWith('_ERROR_'))' == 'false'">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == '' AND ('%(FinalOutputPath)' == '' OR '$([System.String]::Copy('%(FinalOutputPath)').StartsWith('_ERROR_'))' == 'true')">_ERROR_FINALOUTPUTPATH_INVALID_FOR_PROTO_ROOT_FOR_%(Identity)</FinalProtoRoot>
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' != ''">%(UserProtoRoot_Input)</FinalProtoRoot>
-				<Message  Text="DEBUG Stage 8 (%(Identity)): FinalProtoRoot='%(FinalProtoRoot)'" Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'"/>
+				<Message
+				  Text="DEBUG Stage 8 (%(Identity)): FinalProtoRoot='%(FinalProtoRoot)'"
+				  Condition="'%(Identity)' == 'ViewModels\GameViewModel.cs'" />
 
 				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' == ''">Both</FinalGrpcServices>
 				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' != ''">%(UserGrpcServices_Input)</FinalGrpcServices>
@@ -134,7 +157,10 @@
 		<PropertyGroup Condition="'@(_MvvmViewModelProtoSourceProcessed)' == ''">
 			<PeakSWC_NoViewModelsToProcess>true</PeakSWC_NoViewModelsToProcess>
 		</PropertyGroup>
-		<Message Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found to process." Importance="normal" Condition="'$(PeakSWC_NoViewModelsToProcess)' == 'true'" />
+		<Message
+		  Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found to process."
+		  Importance="normal"
+		  Condition="'$(PeakSWC_NoViewModelsToProcess)' == 'true'" />
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_WithInputs Remove="@(_MvvmViewModelProtoSource_WithInputs)" />
@@ -146,7 +172,9 @@
 			<_MvvmViewModelProtoSource_S6_Arg3 Remove="@(_MvvmViewModelProtoSource_S6_Arg3)" />
 			<_MvvmViewModelProtoSource_S7_CombinedArgs Remove="@(_MvvmViewModelProtoSource_S7_CombinedArgs)" />
 		</ItemGroup>
+
 	</Target>
 
-	<Import Project="PeakSWC.MvvmSourceGenerator.props" Condition="Exists('PeakSWC.MvvmSourceGenerator.props')"/>
+	<Import Project="PeakSWC.MvvmSourceGenerator.props" Condition="Exists('PeakSWC.MvvmSourceGenerator.props')" />
+
 </Project>
