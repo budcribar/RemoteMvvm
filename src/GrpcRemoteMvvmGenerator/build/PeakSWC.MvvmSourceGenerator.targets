@@ -53,63 +53,60 @@
 	<Target Name="PeakSWC_PrepareProtoGenerationItems" BeforeTargets="PeakSWC_GenerateProtoFiles">
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSource_Pass1 Include="@(MvvmViewModelProtoSource)">
+			<_MvvmViewModelProtoSource_WithCalculatedNames Include="@(MvvmViewModelProtoSource)">
 				<UserViewModelFile>%(MvvmViewModelProtoSource.FullPath)</UserViewModelFile>
-				<UserViewModelFilename>%(MvvmViewModelProtoSource.Filename)</UserViewModelFilename>
-				<UserProtoNamespaceIn>%(MvvmViewModelProtoSource.ProtoNamespace)</UserProtoNamespaceIn>
-				<UserServiceNameIn>%(MvvmViewModelProtoSource.ServiceName)</UserServiceNameIn>
-				<UserOutputPathIn>%(MvvmViewModelProtoSource.OutputPath)</UserOutputPathIn>
-				<UserAttributeFullNameIn>%(MvvmViewModelProtoSource.AttributeFullName)</UserAttributeFullNameIn>
-				<UserObservablePropertyAttributeIn>%(MvvmViewModelProtoSource.ObservablePropertyAttribute)</UserObservablePropertyAttributeIn>
-				<UserRelayCommandAttributeIn>%(MvvmViewModelProtoSource.RelayCommandAttribute)</UserRelayCommandAttributeIn>
-				<UserGrpcServicesIn>%(MvvmViewModelProtoSource.GrpcServices)</UserGrpcServicesIn>
-				<UserProtoRootIn>%(MvvmViewModelProtoSource.ProtoRoot)</UserProtoRootIn>
-				<UserAccessIn>%(MvvmViewModelProtoSource.Access)</UserAccessIn>
+
+				<UserProtoNamespace_In>%(MvvmViewModelProtoSource.ProtoNamespace)</UserProtoNamespace_In>
+				<UserServiceName_In>%(MvvmViewModelProtoSource.ServiceName)</UserServiceName_In>
+				<UserOutputPath_In>%(MvvmViewModelProtoSource.OutputPath)</UserOutputPath_In>
+				<UserAttributeFullName_In>%(MvvmViewModelProtoSource.AttributeFullName)</UserAttributeFullName_In>
+				<UserObservablePropertyAttribute_In>%(MvvmViewModelProtoSource.ObservablePropertyAttribute)</UserObservablePropertyAttribute_In>
+				<UserRelayCommandAttribute_In>%(MvvmViewModelProtoSource.RelayCommandAttribute)</UserRelayCommandAttribute_In>
+				<UserGrpcServices_In>%(MvvmViewModelProtoSource.GrpcServices)</UserGrpcServices_In>
+				<UserProtoRoot_In>%(MvvmViewModelProtoSource.ProtoRoot)</UserProtoRoot_In>
+				<UserAccess_In>%(MvvmViewModelProtoSource.Access)</UserAccess_In>
 
 				<IntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(MvvmViewModelProtoSource.Filename)Namespace.Protos</IntermediateProtoNamespace>
 				<IntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</IntermediateProtoNamespace>
 
 				<IntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(MvvmViewModelProtoSource.Filename)Service</IntermediateServiceName>
 				<IntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</IntermediateServiceName>
-
-				<TempOutputPathUser Condition="'%(UserOutputPathIn)' != ''">%(UserOutputPathIn)</TempOutputPathUser>
-				<TempOutputPathDefault Condition="'%(UserOutputPathIn)' == '' AND '%(UserServiceNameIn)' != ''">Protos\%(UserServiceNameIn).proto</TempOutputPathDefault>
-				<TempOutputPathDefault Condition="'%(UserOutputPathIn)' == '' AND '%(UserServiceNameIn)' == ''">Protos\%(MvvmViewModelProtoSource.Filename)Service.proto</TempOutputPathDefault>
-				<TempOutputPath Condition="'%(TempOutputPathUser)' != ''">%(TempOutputPathUser)</TempOutputPath>
-				<TempOutputPath Condition="'%(TempOutputPathUser)' == ''">%(TempOutputPathDefault)</TempOutputPath>
-
-			</_MvvmViewModelProtoSource_Pass1>
+			</_MvvmViewModelProtoSource_WithCalculatedNames>
 		</ItemGroup>
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_Pass1)">
+			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_WithCalculatedNames)">
 				<UserViewModelFile>%(UserViewModelFile)</UserViewModelFile>
 				<FinalProtoNamespace>%(IntermediateProtoNamespace)</FinalProtoNamespace>
 				<FinalServiceName>%(IntermediateServiceName)</FinalServiceName>
-				<TempOutputPath>%(TempOutputPath)</TempOutputPath>
-				<UserAttributeFullNameIn>%(UserAttributeFullNameIn)</UserAttributeFullNameIn>
-				<UserObservablePropertyAttributeIn>%(UserObservablePropertyAttributeIn)</UserObservablePropertyAttributeIn>
-				<UserRelayCommandAttributeIn>%(UserRelayCommandAttributeIn)</UserRelayCommandAttributeIn>
-				<UserGrpcServicesIn>%(UserGrpcServicesIn)</UserGrpcServicesIn>
-				<UserProtoRootIn>%(UserProtoRootIn)</UserProtoRootIn>
-				<UserAccessIn>%(UserAccessIn)</UserAccessIn>
+
+				<UserOutputPath_In>%(UserOutputPath_In)</UserOutputPath_In>
+				<UserAttributeFullName_In>%(UserAttributeFullName_In)</UserAttributeFullName_In>
+				<UserObservablePropertyAttribute_In>%(UserObservablePropertyAttribute_In)</UserObservablePropertyAttribute_In>
+				<UserRelayCommandAttribute_In>%(UserRelayCommandAttribute_In)</UserRelayCommandAttribute_In>
+				<UserGrpcServices_In>%(UserGrpcServices_In)</UserGrpcServices_In>
+				<UserProtoRoot_In>%(UserProtoRoot_In)</UserProtoRoot_In>
+				<UserAccess_In>%(UserAccess_In)</UserAccess_In>
+
+				<TempOutputPath Condition="'%(UserOutputPath_In)' == ''">Protos\%(IntermediateServiceName).proto</TempOutputPath>
+				<TempOutputPath Condition="'%(UserOutputPath_In)' != ''">%(UserOutputPath_In)</TempOutputPath>
 
 				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</FinalOutputPath>
 				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)'))</FinalOutputPath>
 
-				<FinalGrpcServices Condition="'%(UserGrpcServicesIn)' == ''">Both</FinalGrpcServices>
-				<FinalGrpcServices Condition="'%(UserGrpcServicesIn)' != ''">%(UserGrpcServicesIn)</FinalGrpcServices>
+				<FinalGrpcServices Condition="'%(UserGrpcServices_In)' == ''">Both</FinalGrpcServices>
+				<FinalGrpcServices Condition="'%(UserGrpcServices_In)' != ''">%(UserGrpcServices_In)</FinalGrpcServices>
 
-				<FinalProtoRoot Condition="'%(UserProtoRootIn)' == ''">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
-				<FinalProtoRoot Condition="'%(UserProtoRootIn)' != ''">%(UserProtoRootIn)</FinalProtoRoot>
+				<FinalProtoRoot Condition="'%(UserProtoRoot_In)' == ''">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
+				<FinalProtoRoot Condition="'%(UserProtoRoot_In)' != ''">%(UserProtoRoot_In)</FinalProtoRoot>
 
-				<FinalAccess Condition="'%(UserAccessIn)' == ''">Public</FinalAccess>
-				<FinalAccess Condition="'%(UserAccessIn)' != ''">%(UserAccessIn)</FinalAccess>
+				<FinalAccess Condition="'%(UserAccess_In)' == ''">Public</FinalAccess>
+				<FinalAccess Condition="'%(UserAccess_In)' != ''">%(UserAccess_In)</FinalAccess>
 
 				<AdditionalArgs></AdditionalArgs>
-				<AdditionalArgs Condition="'%(UserAttributeFullNameIn)' != ''">%(AdditionalArgs) --attributeFullName &quot;%(UserAttributeFullNameIn)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(UserObservablePropertyAttributeIn)' != ''">%(AdditionalArgs) --observablePropertyAttribute &quot;%(UserObservablePropertyAttributeIn)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(UserRelayCommandAttributeIn)' != ''">%(AdditionalArgs) --relayCommandAttribute &quot;%(UserRelayCommandAttributeIn)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(UserAttributeFullName_In)' != ''">%(AdditionalArgs) --attributeFullName &quot;%(UserAttributeFullName_In)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(UserObservablePropertyAttribute_In)' != ''">%(AdditionalArgs) --observablePropertyAttribute &quot;%(UserObservablePropertyAttribute_In)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(UserRelayCommandAttribute_In)' != ''">%(AdditionalArgs) --relayCommandAttribute &quot;%(UserRelayCommandAttribute_In)&quot;</AdditionalArgs>
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
 
@@ -119,7 +116,7 @@
 		<Message Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found to process." Importance="normal" Condition="'$(PeakSWC_NoViewModelsToProcess)' == 'true'" />
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSource_Pass1 Remove="@(_MvvmViewModelProtoSource_Pass1)" />
+			<_MvvmViewModelProtoSource_WithCalculatedNames Remove="@(_MvvmViewModelProtoSource_WithCalculatedNames)" />
 		</ItemGroup>
 	</Target>
 
