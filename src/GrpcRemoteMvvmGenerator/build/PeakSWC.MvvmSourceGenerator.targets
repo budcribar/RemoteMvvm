@@ -53,72 +53,60 @@
 	<Target Name="PeakSWC_PrepareProtoGenerationItems" BeforeTargets="PeakSWC_GenerateProtoFiles">
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSource_WithCalculatedNames Include="@(MvvmViewModelProtoSource)">
+			<_MvvmViewModelProtoSource_WithInputs Include="@(MvvmViewModelProtoSource)">
 				<UserViewModelFile>%(MvvmViewModelProtoSource.FullPath)</UserViewModelFile>
 
-				<UserProtoNamespace_In>%(MvvmViewModelProtoSource.ProtoNamespace)</UserProtoNamespace_In>
-				<UserServiceName_In>%(MvvmViewModelProtoSource.ServiceName)</UserServiceName_In>
-				<UserOutputPath_In>%(MvvmViewModelProtoSource.OutputPath)</UserOutputPath_In>
-				<UserAttributeFullName_In>%(MvvmViewModelProtoSource.AttributeFullName)</UserAttributeFullName_In>
-				<UserObservablePropertyAttribute_In>%(MvvmViewModelProtoSource.ObservablePropertyAttribute)</UserObservablePropertyAttribute_In>
-				<UserRelayCommandAttribute_In>%(MvvmViewModelProtoSource.RelayCommandAttribute)</UserRelayCommandAttribute_In>
-				<UserGrpcServices_In>%(MvvmViewModelProtoSource.GrpcServices)</UserGrpcServices_In>
-				<UserProtoRoot_In>%(MvvmViewModelProtoSource.ProtoRoot)</UserProtoRoot_In>
-				<UserAccess_In>%(MvvmViewModelProtoSource.Access)</UserAccess_In>
+				<CalculatedIntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(MvvmViewModelProtoSource.Filename)Namespace.Protos</CalculatedIntermediateProtoNamespace>
+				<CalculatedIntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</CalculatedIntermediateProtoNamespace>
 
-				<IntermediateProtoNamespace Condition="'$(ProtoNamespace)' == ''">$(Filename)Namespace.Protos</IntermediateProtoNamespace>
-				<IntermediateProtoNamespace Condition="'$(ProtoNamespace)' != ''">$(ProtoNamespace)</IntermediateProtoNamespace>
+				<CalculatedIntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(MvvmViewModelProtoSource.Filename)Service</CalculatedIntermediateServiceName>
+				<CalculatedIntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</CalculatedIntermediateServiceName>
 
-				<IntermediateServiceName Condition="'$(ServiceName)' == ''">$(Filename)Service</IntermediateServiceName>
-				<IntermediateServiceName Condition="'$(ServiceName)' != ''">$(ServiceName)</IntermediateServiceName>
-			</_MvvmViewModelProtoSource_WithCalculatedNames>
+				<UserOutputPath_Input>%(MvvmViewModelProtoSource.OutputPath)</UserOutputPath_Input>
+				<UserAttributeFullName_Input>%(MvvmViewModelProtoSource.AttributeFullName)</UserAttributeFullName_Input>
+				<UserObservablePropertyAttribute_Input>%(MvvmViewModelProtoSource.ObservablePropertyAttribute)</UserObservablePropertyAttribute_Input>
+				<UserRelayCommandAttribute_Input>%(MvvmViewModelProtoSource.RelayCommandAttribute)</UserRelayCommandAttribute_Input>
+				<UserGrpcServices_Input>%(MvvmViewModelProtoSource.GrpcServices)</UserGrpcServices_Input>
+				<UserProtoRoot_Input>%(MvvmViewModelProtoSource.ProtoRoot)</UserProtoRoot_Input>
+				<UserAccess_Input>%(MvvmViewModelProtoSource.Access)</UserAccess_Input>
+			</_MvvmViewModelProtoSource_WithInputs>
 		</ItemGroup>
-
-		<!-- Debug output to check metadata values -->
-		<Message Text="PeakSWC.MvvmSourceGenerator: Processing ViewModel: %(_MvvmViewModelProtoSource_WithCalculatedNames.Identity)" Importance="high" />
-		<Message Text="PeakSWC.MvvmSourceGenerator: UserOutputPath_In: %(_MvvmViewModelProtoSource_WithCalculatedNames.UserOutputPath_In)" Importance="high" />
-		<Message Text="PeakSWC.MvvmSourceGenerator: IntermediateServiceName: %(_MvvmViewModelProtoSource_WithCalculatedNames.IntermediateServiceName)" Importance="high" />
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_WithCalculatedNames)">
-				<UserViewModelFile>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserViewModelFile)</UserViewModelFile>
-				<FinalProtoNamespace>%(_MvvmViewModelProtoSource_WithCalculatedNames.IntermediateProtoNamespace)</FinalProtoNamespace>
-				<FinalServiceName>%(_MvvmViewModelProtoSource_WithCalculatedNames.IntermediateServiceName)</FinalServiceName>
+			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_WithInputs)">
+				<UserViewModelFile>%(UserViewModelFile)</UserViewModelFile>
+				<FinalProtoNamespace>%(CalculatedIntermediateProtoNamespace)</FinalProtoNamespace>
+				<FinalServiceName>%(CalculatedIntermediateServiceName)</FinalServiceName>
 
-				<UserOutputPath_In>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserOutputPath_In)</UserOutputPath_In>
-				<UserAttributeFullName_In>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserAttributeFullName_In)</UserAttributeFullName_In>
-				<UserObservablePropertyAttribute_In>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserObservablePropertyAttribute_In)</UserObservablePropertyAttribute_In>
-				<UserRelayCommandAttribute_In>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserRelayCommandAttribute_In)</UserRelayCommandAttribute_In>
-				<UserGrpcServices_In>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserGrpcServices_In)</UserGrpcServices_In>
-				<UserProtoRoot_In>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserProtoRoot_In)</UserProtoRoot_In>
-				<UserAccess_In>%(_MvvmViewModelProtoSource_WithCalculatedNames.UserAccess_In)</UserAccess_In>
+				<UserOutputPath_Input>%(UserOutputPath_Input)</UserOutputPath_Input>
+				<UserAttributeFullName_Input>%(UserAttributeFullName_Input)</UserAttributeFullName_Input>
+				<UserObservablePropertyAttribute_Input>%(UserObservablePropertyAttribute_Input)</UserObservablePropertyAttribute_Input>
+				<UserRelayCommandAttribute_Input>%(UserRelayCommandAttribute_Input)</UserRelayCommandAttribute_Input>
+				<UserGrpcServices_Input>%(UserGrpcServices_Input)</UserGrpcServices_Input>
+				<UserProtoRoot_Input>%(UserProtoRoot_Input)</UserProtoRoot_Input>
+				<UserAccess_Input>%(UserAccess_Input)</UserAccess_Input>
 
-				<TempOutputPath>Protos\%(_MvvmViewModelProtoSource_WithCalculatedNames.IntermediateServiceName).proto</TempOutputPath>
-				<TempOutputPath Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserOutputPath_In)' != ''">%(_MvvmViewModelProtoSource_WithCalculatedNames.UserOutputPath_In)</TempOutputPath>
+				<TempOutputPath Condition="'%(UserOutputPath_Input)' == ''">Protos\%(CalculatedIntermediateServiceName).proto</TempOutputPath>
+				<TempOutputPath Condition="'%(UserOutputPath_Input)' != ''">%(UserOutputPath_Input)</TempOutputPath>
 
-				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))</FinalOutputPath>
-				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)%(TempOutputPath)'))</FinalOutputPath>
+				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</FinalOutputPath>
+				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)'))</FinalOutputPath>
 
-				<FinalGrpcServices Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserGrpcServices_In)' == ''">Both</FinalGrpcServices>
-				<FinalGrpcServices Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserGrpcServices_In)' != ''">%(_MvvmViewModelProtoSource_WithCalculatedNames.UserGrpcServices_In)</FinalGrpcServices>
+				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' == ''">Both</FinalGrpcServices>
+				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' != ''">%(UserGrpcServices_Input)</FinalGrpcServices>
 
-				<FinalProtoRoot>$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
-				<FinalProtoRoot Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserProtoRoot_In)' != ''">%(_MvvmViewModelProtoSource_WithCalculatedNames.UserProtoRoot_In)</FinalProtoRoot>
+				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == ''">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
+				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' != ''">%(UserProtoRoot_Input)</FinalProtoRoot>
 
-				<FinalAccess Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserAccess_In)' == ''">Public</FinalAccess>
-				<FinalAccess Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserAccess_In)' != ''">%(_MvvmViewModelProtoSource_WithCalculatedNames.UserAccess_In)</FinalAccess>
+				<FinalAccess Condition="'%(UserAccess_Input)' == ''">Public</FinalAccess>
+				<FinalAccess Condition="'%(UserAccess_Input)' != ''">%(UserAccess_Input)</FinalAccess>
 
 				<AdditionalArgs></AdditionalArgs>
-				<AdditionalArgs Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserAttributeFullName_In)' != ''">%(AdditionalArgs) --attributeFullName &quot;%(_MvvmViewModelProtoSource_WithCalculatedNames.UserAttributeFullName_In)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserObservablePropertyAttribute_In)' != ''">%(AdditionalArgs) --observablePropertyAttribute &quot;%(_MvvmViewModelProtoSource_WithCalculatedNames.UserObservablePropertyAttribute_In)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(_MvvmViewModelProtoSource_WithCalculatedNames.UserRelayCommandAttribute_In)' != ''">%(AdditionalArgs) --relayCommandAttribute &quot;%(_MvvmViewModelProtoSource_WithCalculatedNames.UserRelayCommandAttribute_In)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(UserAttributeFullName_Input)' != ''">%(AdditionalArgs) --attributeFullName &quot;%(UserAttributeFullName_Input)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(UserObservablePropertyAttribute_Input)' != ''">%(AdditionalArgs) --observablePropertyAttribute &quot;%(UserObservablePropertyAttribute_Input)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(UserRelayCommandAttribute_Input)' != ''">%(AdditionalArgs) --relayCommandAttribute &quot;%(UserRelayCommandAttribute_Input)&quot;</AdditionalArgs>
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
-
-		<!-- Debug output for processed items -->
-		<Message Text="PeakSWC.MvvmSourceGenerator: Processed output: %(_MvvmViewModelProtoSourceProcessed.Identity)" Importance="high" />
-		<Message Text="PeakSWC.MvvmSourceGenerator: TempOutputPath: %(_MvvmViewModelProtoSourceProcessed.TempOutputPath)" Importance="high" />
-		<Message Text="PeakSWC.MvvmSourceGenerator: FinalOutputPath: %(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)" Importance="high" />
 
 		<PropertyGroup Condition="'@(_MvvmViewModelProtoSourceProcessed)' == ''">
 			<PeakSWC_NoViewModelsToProcess>true</PeakSWC_NoViewModelsToProcess>
@@ -126,7 +114,7 @@
 		<Message Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found to process." Importance="normal" Condition="'$(PeakSWC_NoViewModelsToProcess)' == 'true'" />
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSource_WithCalculatedNames Remove="@(_MvvmViewModelProtoSource_WithCalculatedNames)" />
+			<_MvvmViewModelProtoSource_WithInputs Remove="@(_MvvmViewModelProtoSource_WithInputs)" />
 		</ItemGroup>
 	</Target>
 
