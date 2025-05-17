@@ -9,13 +9,8 @@
 		<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>
 	</PropertyGroup>
 
-	<ItemGroup>
-		<None Remove="C:\Users\budcr\.nuget\packages\peakswc.mvvmsourcegenerator\1.0.29-gc0fbfaf05c\contentFiles\cs\any\PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs" />
-		<None Remove="Resources\sword.png" />
-	</ItemGroup>
-
 	<!--<ItemGroup>
-	  <Compile Include="C:\Users\budcr\.nuget\packages\peakswc.mvvmsourcegenerator\1.0.29-gc0fbfaf05c\contentFiles\cs\any\PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs" />
+	  <AdditionalFiles Include="C:\Users\budcr\.nuget\packages\peakswc.mvvmsourcegenerator\1.0.29-gc0fbfaf05c\contentFiles\cs\any\PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs" />
 	</ItemGroup>-->
 
 	<ItemGroup>
@@ -36,7 +31,6 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
 
 	<ItemGroup>

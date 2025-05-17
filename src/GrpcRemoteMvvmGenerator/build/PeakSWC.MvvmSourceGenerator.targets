@@ -9,7 +9,7 @@
 	</PropertyGroup>
 
 	<Target Name="PeakSWC_MinimalTestTarget">
-		<Message Text="Minimal PeakSWC.MvvmSourceGenerator.targets loaded. _ProtoGeneratorUtilExePath = '$(_ProtoGeneratorUtilExePath)'" Importance="high" />
+		<Message Text=" PeakSWC.MvvmSourceGenerator.targets loaded. _ProtoGeneratorUtilExePath = '$(_ProtoGeneratorUtilExePath)'" Importance="high" />
 	</Target>
 
 </Project>
