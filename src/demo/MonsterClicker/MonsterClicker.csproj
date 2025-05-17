@@ -27,7 +27,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.26-g67ed00537c">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.27-g098e65a6a8">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -36,5 +36,6 @@
 	<ItemGroup>
 		<Folder Include="protos\" />
 	</ItemGroup>
+
 
 </Project>
