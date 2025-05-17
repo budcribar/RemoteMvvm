@@ -9,23 +9,23 @@
 	<Target Name="PeakSWC_GenerateProtoFiles"
 			BeforeTargets="CoreCompile;BeforeResGen;ProtoCompile"
 			DependsOnTargets="ResolveAssemblyReferences;PeakSWC_PrepareProtoGenerationItems"
-			Condition="'@(_MvvmViewModelProtoSourceProcessed)' != '' AND '$(_ProtoGeneratorUtilExePath)' != ''">
+			Condition="'@(_MvvmViewModelProtoSourceProcessed)' != '' AND '$(_ProtoGeneratorUtilExePath)' != '' AND Exists('$(_ProtoGeneratorUtilExePath)')">
 
 		<Message Text="PeakSWC.MvvmSourceGenerator: Starting .proto file generation..." Importance="high" />
 		<Message Text="PeakSWC.MvvmSourceGenerator: ProtoGeneratorUtil.exe path: $(_ProtoGeneratorUtilExePath)" Importance="normal" />
 
 		<PropertyGroup>
-			<_ProtoUtil_ReferencePaths>@(ReferencePathWithRefAssemblies->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')</_ProtoUtil_ReferencePaths>
-			<_ProtoUtil_ReferencePaths Condition="'$(_ProtoUtil_ReferencePaths)' == ''">@(ReferencePath->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')</_ProtoUtil_ReferencePaths>
+			<_ProtoUtil_ReferencePaths Condition="'@(ReferencePathWithRefAssemblies)' != ''">@(ReferencePathWithRefAssemblies->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')</_ProtoUtil_ReferencePaths>
+			<_ProtoUtil_ReferencePaths Condition="'@(ReferencePathWithRefAssemblies)' == '' AND '@(ReferencePath)' != ''">@(ReferencePath->WithMetadataValue('Extension', '.dll')->'%(FullPath)', ';')</_ProtoUtil_ReferencePaths>
 		</PropertyGroup>
-		<Message Text="PeakSWC.MvvmSourceGenerator: Reference paths to consider: $(_ProtoUtil_ReferencePaths)" Importance="normal" Condition="'$(_ProtoUtil_ReferencePaths)' != ''"/>
+		<Message Text="PeakSWC.MvvmSourceGenerator: Reference paths being passed: $(_ProtoUtil_ReferencePaths)" Importance="normal" Condition="'$(_ProtoUtil_ReferencePaths)' != ''"/>
 
 		<PropertyGroup>
-			<_AttributeDefinitionSourceFileFullPath Condition="Exists('$(MSBuildProjectDirectory)\$(_DefaultAttributeDefinitionSourceFileRelativePath)')">$(MSBuildProjectDirectory)\$(_DefaultAttributeDefinitionSourceFileRelativePath)</_AttributeDefinitionSourceFileFullPath>
+			<_AttributeDefinitionSourceFileFullPath>$(MSBuildProjectDirectory)\$(_DefaultAttributeDefinitionSourceFileRelativePath)</_AttributeDefinitionSourceFileFullPath>
 		</PropertyGroup>
 		<Message Text="PeakSWC.MvvmSourceGenerator: GenerateGrpcRemoteAttribute.cs expected at: $(_AttributeDefinitionSourceFileFullPath)" Importance="normal" />
 		<Error Condition="!Exists('$(_AttributeDefinitionSourceFileFullPath)')"
-			   Text="PeakSWC.MvvmSourceGenerator: Critical Error: GenerateGrpcRemoteAttribute.cs not found at '$(_AttributeDefinitionSourceFileFullPath)'. This file is required by ProtoGeneratorUtil.exe and should be included by this NuGet package." />
+			   Text="PeakSWC.MvvmSourceGenerator: Critical Error: GenerateGrpcRemoteAttribute.cs not found at '$(_AttributeDefinitionSourceFileFullPath)'. This file is required by ProtoGeneratorUtil.exe, should be included by this NuGet package, and present in the project at the expected path." />
 
 		<Exec Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; ^
                    --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; ^
@@ -36,16 +36,16 @@
                    %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
                    --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
 			  WorkingDirectory="$(MSBuildProjectDirectory)"
-			  ContinueOnError="false"
-			  Condition="Exists('$(_ProtoGeneratorUtilExePath)') AND Exists('$(_AttributeDefinitionSourceFileFullPath)')" />
+			  ContinueOnError="false" />
 
 		<ItemGroup>
-			<Protobuf Include="@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')" Condition="'@(_MvvmViewModelProtoSourceProcessed)' != ''">
+			<Protobuf Include="@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')">
 				<GrpcServices>%(_MvvmViewModelProtoSourceProcessed.FinalGrpcServices)</GrpcServices>
 				<ProtoRoot>%(_MvvmViewModelProtoSourceProcessed.FinalProtoRoot)</ProtoRoot>
 				<Access>%(_MvvmViewModelProtoSourceProcessed.FinalAccess)</Access>
 			</Protobuf>
 		</ItemGroup>
+		<Message Text="PeakSWC.MvvmSourceGenerator: Added '@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')' to Protobuf items." Importance="normal" Condition="'@(_MvvmViewModelProtoSourceProcessed)' != ''"/>
 
 		<Message Text="PeakSWC.MvvmSourceGenerator: .proto file generation complete." Importance="high" />
 	</Target>
@@ -53,9 +53,11 @@
 	<Target Name="PeakSWC_PrepareProtoGenerationItems" BeforeTargets="PeakSWC_GenerateProtoFiles">
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSource_WithDefaults Include="@(MvvmViewModelProtoSource)">
+			<_MvvmViewModelProtoSource_Pass1 Include="@(MvvmViewModelProtoSource)">
 				<UserViewModelFile>%(MvvmViewModelProtoSource.FullPath)</UserViewModelFile>
 				<UserViewModelFilename>%(MvvmViewModelProtoSource.Filename)</UserViewModelFilename>
+				<UserProtoNamespaceIn>%(MvvmViewModelProtoSource.ProtoNamespace)</UserProtoNamespaceIn>
+				<UserServiceNameIn>%(MvvmViewModelProtoSource.ServiceName)</UserServiceNameIn>
 				<UserOutputPathIn>%(MvvmViewModelProtoSource.OutputPath)</UserOutputPathIn>
 				<UserAttributeFullNameIn>%(MvvmViewModelProtoSource.AttributeFullName)</UserAttributeFullNameIn>
 				<UserObservablePropertyAttributeIn>%(MvvmViewModelProtoSource.ObservablePropertyAttribute)</UserObservablePropertyAttributeIn>
@@ -64,19 +66,20 @@
 				<UserProtoRootIn>%(MvvmViewModelProtoSource.ProtoRoot)</UserProtoRootIn>
 				<UserAccessIn>%(MvvmViewModelProtoSource.Access)</UserAccessIn>
 
-				<FinalProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(MvvmViewModelProtoSource.Filename)Namespace.Protos</FinalProtoNamespace>
-				<FinalProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</FinalProtoNamespace>
+				<IntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(MvvmViewModelProtoSource.Filename)Namespace.Protos</IntermediateProtoNamespace>
+				<IntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</IntermediateProtoNamespace>
 
-				<FinalServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(MvvmViewModelProtoSource.Filename)Service</FinalServiceName>
-				<FinalServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</FinalServiceName>
-			</_MvvmViewModelProtoSource_WithDefaults>
+				<IntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(MvvmViewModelProtoSource.Filename)Service</IntermediateServiceName>
+				<IntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</IntermediateServiceName>
+			</_MvvmViewModelProtoSource_Pass1>
 		</ItemGroup>
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_WithDefaults)">
+			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_Pass1)">
 				<UserViewModelFile>%(UserViewModelFile)</UserViewModelFile>
-				<FinalProtoNamespace>%(FinalProtoNamespace)</FinalProtoNamespace>
-				<FinalServiceName>%(FinalServiceName)</FinalServiceName>
+				<FinalProtoNamespace>%(IntermediateProtoNamespace)</FinalProtoNamespace>
+				<FinalServiceName>%(IntermediateServiceName)</FinalServiceName>
+
 				<UserOutputPathIn>%(UserOutputPathIn)</UserOutputPathIn>
 				<UserAttributeFullNameIn>%(UserAttributeFullNameIn)</UserAttributeFullNameIn>
 				<UserObservablePropertyAttributeIn>%(UserObservablePropertyAttributeIn)</UserObservablePropertyAttributeIn>
@@ -85,8 +88,9 @@
 				<UserProtoRootIn>%(UserProtoRootIn)</UserProtoRootIn>
 				<UserAccessIn>%(UserAccessIn)</UserAccessIn>
 
-				<TempOutputPath Condition="'%(UserOutputPathIn)' == ''">Protos\%(FinalServiceName).proto</TempOutputPath>
+				<TempOutputPath Condition="'%(UserOutputPathIn)' == ''">Protos\%(IntermediateServiceName).proto</TempOutputPath>
 				<TempOutputPath Condition="'%(UserOutputPathIn)' != ''">%(UserOutputPathIn)</TempOutputPath>
+
 				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</FinalOutputPath>
 				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)'))</FinalOutputPath>
 
@@ -112,7 +116,7 @@
 		<Message Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found to process." Importance="normal" Condition="'$(PeakSWC_NoViewModelsToProcess)' == 'true'" />
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSource_WithDefaults Remove="@(_MvvmViewModelProtoSource_WithDefaults)" />
+			<_MvvmViewModelProtoSource_Pass1 Remove="@(_MvvmViewModelProtoSource_Pass1)" />
 		</ItemGroup>
 	</Target>
 
