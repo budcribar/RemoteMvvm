@@ -3,7 +3,6 @@
 	<PropertyGroup>
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe')">$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
-		<_DefaultAttributeDefinitionSourceFileRelativePath>PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs</_DefaultAttributeDefinitionSourceFileRelativePath>
 	</PropertyGroup>
 
 	<Target Name="PeakSWC_GenerateProtoFiles"
@@ -20,16 +19,8 @@
 		</PropertyGroup>
 		<Message Text="PeakSWC.MvvmSourceGenerator: Reference paths being passed: $(_ProtoUtil_ReferencePaths)" Importance="normal" Condition="'$(_ProtoUtil_ReferencePaths)' != ''"/>
 
-		<PropertyGroup>
-			<_AttributeDefinitionSourceFileFullPath>$(MSBuildProjectDirectory)\$(_DefaultAttributeDefinitionSourceFileRelativePath)</_AttributeDefinitionSourceFileFullPath>
-		</PropertyGroup>
-		<Message Text="PeakSWC.MvvmSourceGenerator: GenerateGrpcRemoteAttribute.cs expected at: $(_AttributeDefinitionSourceFileFullPath)" Importance="normal" />
-		<Error Condition="!Exists('$(_AttributeDefinitionSourceFileFullPath)')"
-			   Text="PeakSWC.MvvmSourceGenerator: Critical Error: GenerateGrpcRemoteAttribute.cs not found at '$(_AttributeDefinitionSourceFileFullPath)'. This file is required by ProtoGeneratorUtil.exe, should be included by this NuGet package, and present in the project at the expected path." />
-
 		<Exec Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; ^
 					  --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; ^
-					  --attributeDefinitionSourceFile &quot;$(_AttributeDefinitionSourceFileFullPath)&quot; ^
 					  --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
 					  --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
 					  --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
@@ -109,7 +100,7 @@
 				<_ArgPartForObservableProperty Condition="'%(UserObservablePropertyAttribute_Input)' != ''"> --observablePropertyAttribute "%(UserObservablePropertyAttribute_Input)"</_ArgPartForObservableProperty>
 				<_ArgPartForRelayCommand Condition="'%(UserRelayCommandAttribute_Input)' != ''"> --relayCommandAttribute "%(UserRelayCommandAttribute_Input)"</_ArgPartForRelayCommand>
 
-				<AdditionalArgs>%(_ArgPartForFullName)%(_ArgPartForObservableProperty)%(_ArgPartForRelayCommand)</AdditionalArgs>
+				<AdditionalArgs>%(_ArgPartForFullName)%(_ArgPartForObservableProperty)%(_ArgpartForRelayCommand)</AdditionalArgs>
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
 
