@@ -1,15 +1,8 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-	<PropertyGroup>
-		<_ProtoGeneratorUtilExePath Condition="Exists('$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe')">$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
-		<_ProtoGeneratorUtilExePath Condition="Exists('$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
-		<_DefaultAttributeDefinitionSourceFileRelativePath>PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs</_DefaultAttributeDefinitionSourceFileRelativePath>
-	</PropertyGroup>
-
 	<Target Name="PeakSWC_GenerateProtoFiles"
 			BeforeTargets="CoreCompile;BeforeResGen;ProtoCompile"
-			DependsOnTargets="ResolveAssemblyReferences"
-			Condition="'@(_MvvmViewModelProtoSourceProcessed)' != '' AND '$(_ProtoGeneratorUtilExePath)' != ''">
+			DependsOnTargets="ResolveAssemblyReferences;PeakSWC_PrepareProtoGenerationItems" Condition="'@(_MvvmViewModelProtoSourceProcessed)' != '' AND '$(_ProtoGeneratorUtilExePath)' != ''">
 
 		<Message Text="PeakSWC.MvvmSourceGenerator: Starting .proto file generation..." Importance="high" />
 		<Message Text="PeakSWC.MvvmSourceGenerator: ProtoGeneratorUtil.exe path: $(_ProtoGeneratorUtilExePath)" Importance="normal" />
@@ -21,37 +14,29 @@
 		<Message Text="PeakSWC.MvvmSourceGenerator: Reference paths to consider: $(_ProtoUtil_ReferencePaths)" Importance="normal" Condition="'$(_ProtoUtil_ReferencePaths)' != ''"/>
 
 		<PropertyGroup>
-			<_AttributeDefinitionSourceFileFullPath>$(MSBuildProjectDirectory)\$(_DefaultAttributeDefinitionSourceFileRelativePath)</_AttributeDefinitionSourceFileFullPath>
+			<_AttributeDefinitionSourceFileFullPath Condition="Exists('$(MSBuildProjectDirectory)\$(_DefaultAttributeDefinitionSourceFileRelativePath)')">$(MSBuildProjectDirectory)\$(_DefaultAttributeDefinitionSourceFileRelativePath)</_AttributeDefinitionSourceFileFullPath>
 		</PropertyGroup>
 		<Message Text="PeakSWC.MvvmSourceGenerator: GenerateGrpcRemoteAttribute.cs expected at: $(_AttributeDefinitionSourceFileFullPath)" Importance="normal" />
 		<Error Condition="!Exists('$(_AttributeDefinitionSourceFileFullPath)')"
 			   Text="PeakSWC.MvvmSourceGenerator: Critical Error: GenerateGrpcRemoteAttribute.cs not found at '$(_AttributeDefinitionSourceFileFullPath)'. This file is required by ProtoGeneratorUtil.exe and should be included by this NuGet package." />
 
-		<ItemGroup>
-			<_GeneratedProtoFiles Include="@(_MvvmViewModelProtoSourceProcessed->'%(OutputPath)')" />
-		</ItemGroup>
-
 		<Exec Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; ^
-                   --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.Identity)&quot; ^
+                   --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.FullPath)&quot; ^
                    --attributeDefinitionSourceFile &quot;$(_AttributeDefinitionSourceFileFullPath)&quot; ^
-                   --output &quot;%(_MvvmViewModelProtoSourceProcessed.OutputPath)&quot; ^
-                   --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.ProtoNamespace)&quot; ^
-                   --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.ServiceName)&quot; ^
-                   %(AdditionalArgs) ^
+                   --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
+                   --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
+                   --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
+                   %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
                    --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
 			  WorkingDirectory="$(MSBuildProjectDirectory)"
 			  ContinueOnError="false"
 			  Condition="Exists('$(_ProtoGeneratorUtilExePath)') AND Exists('$(_AttributeDefinitionSourceFileFullPath)')" />
-		<Message Text="PeakSWC.MvvmSourceGenerator: Adding generated file '@(_GeneratedProtoFiles)' to Protobuf items for Grpc.Tools compilation." Importance="high" Condition="'@(_GeneratedProtoFiles)' != ''" />
 
 		<ItemGroup>
-			<Protobuf Include="@(_GeneratedProtoFiles)" Condition="'@(_GeneratedProtoFiles)' != ''">
-				<GrpcServices Condition="'%(GrpcServices)'==''">Both</GrpcServices>
-				<GrpcServices Condition="'%(GrpcServices)'!=''">%(GrpcServices)</GrpcServices>
-				<ProtoRoot Condition="'%(ProtoRoot)'==''">%(RelativeDir)</ProtoRoot>
-				<ProtoRoot Condition="'%(ProtoRoot)'!=''">%(ProtoRoot)</ProtoRoot>
-				<Access Condition="'%(Access)'==''">Public</Access>
-				<Access Condition="'%(Access)'!=''">%(Access)</Access>
+			<Protobuf Include="@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')" Condition="'@(_MvvmViewModelProtoSourceProcessed)' != ''">
+				<GrpcServices>%(_MvvmViewModelProtoSourceProcessed.FinalGrpcServices)</GrpcServices>
+				<ProtoRoot>%(_MvvmViewModelProtoSourceProcessed.FinalProtoRoot)</ProtoRoot>
+				<Access>%(_MvvmViewModelProtoSourceProcessed.FinalAccess)</Access>
 			</Protobuf>
 		</ItemGroup>
 
@@ -61,25 +46,33 @@
 	<Target Name="PeakSWC_PrepareProtoGenerationItems" BeforeTargets="PeakSWC_GenerateProtoFiles">
 		<ItemGroup>
 			<_MvvmViewModelProtoSourceProcessed Include="@(MvvmViewModelProtoSource)">
-				<Identity>$([System.IO.Path]::GetFullPath('%(Identity)'))</Identity>
+				<OriginalIdentity>%(Identity)</OriginalIdentity>
 
-				<ProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(Filename)Namespace.Protos</ProtoNamespace>
-				<ProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</ProtoNamespace>
+				<FinalProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(Filename)Namespace.Protos</FinalProtoNamespace>
+				<FinalProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</FinalProtoNamespace>
 
-				<ServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(Filename)Service</ServiceName>
-				<ServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</ServiceName>
+				<FinalServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(Filename)Service</FinalServiceName>
+				<FinalServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</FinalServiceName>
 
-				<OutputPath Condition="'%(MvvmViewModelProtoSource.OutputPath)' == ''">Protos\%(ServiceName).proto</OutputPath>
-				<OutputPath Condition="'%(MvvmViewModelProtoSource.OutputPath)' != ''">%(MvvmViewModelProtoSource.OutputPath)</OutputPath>
-				<OutputPath>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)\%(OutputPath)'))</OutputPath>
+				<UserOutputPath Condition="'%(MvvmViewModelProtoSource.OutputPath)' == ''">Protos\%(FinalServiceName).proto</UserOutputPath>
+				<UserOutputPath Condition="'%(MvvmViewModelProtoSource.OutputPath)' != ''">%(MvvmViewModelProtoSource.OutputPath)</UserOutputPath>
+				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(UserOutputPath)</FinalOutputPath>
+				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)'))</FinalOutputPath>
 
-				<AttributeFullName Condition="'%(MvvmViewModelProtoSource.AttributeFullName)' != ''">%(MvvmViewModelProtoSource.AttributeFullName)</AttributeFullName>
-				<ObservablePropertyAttribute Condition="'%(MvvmViewModelProtoSource.ObservablePropertyAttribute)' != ''">%(MvvmViewModelProtoSource.ObservablePropertyAttribute)</ObservablePropertyAttribute>
-				<RelayCommandAttribute Condition="'%(MvvmViewModelProtoSource.RelayCommandAttribute)' != ''">%(MvvmViewModelProtoSource.RelayCommandAttribute)</RelayCommandAttribute>
 
-				<GrpcServices Condition="'%(MvvmViewModelProtoSource.GrpcServices)' == ''">Both</GrpcServices>
-				<ProtoRoot Condition="'%(MvvmViewModelProtoSource.ProtoRoot)' == ''"></ProtoRoot>
-				<Access Condition="'%(MvvmViewModelProtoSource.Access)' == ''">Public</Access>
+				<AdditionalArgs></AdditionalArgs>
+				<AdditionalArgs Condition="'%(MvvmViewModelProtoSource.AttributeFullName)' != ''">%(AdditionalArgs) --attributeFullName &quot;%(MvvmViewModelProtoSource.AttributeFullName)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(MvvmViewModelProtoSource.ObservablePropertyAttribute)' != ''">%(AdditionalArgs) --observablePropertyAttribute &quot;%(MvvmViewModelProtoSource.ObservablePropertyAttribute)&quot;</AdditionalArgs>
+				<AdditionalArgs Condition="'%(MvvmViewModelProtoSource.RelayCommandAttribute)' != ''">%(AdditionalArgs) --relayCommandAttribute &quot;%(MvvmViewModelProtoSource.RelayCommandAttribute)&quot;</AdditionalArgs>
+
+				<FinalGrpcServices Condition="'%(MvvmViewModelProtoSource.GrpcServices)' == ''">Both</FinalGrpcServices>
+				<FinalGrpcServices Condition="'%(MvvmViewModelProtoSource.GrpcServices)' != ''">%(MvvmViewModelProtoSource.GrpcServices)</FinalGrpcServices>
+
+				<FinalProtoRoot Condition="'%(MvvmViewModelProtoSource.ProtoRoot)' == ''">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
+				<FinalProtoRoot Condition="'%(MvvmViewModelProtoSource.ProtoRoot)' != ''">%(MvvmViewModelProtoSource.ProtoRoot)</FinalProtoRoot>
+
+				<FinalAccess Condition="'%(MvvmViewModelProtoSource.Access)' == ''">Public</FinalAccess>
+				<FinalAccess Condition="'%(MvvmViewModelProtoSource.Access)' != ''">%(MvvmViewModelProtoSource.Access)</FinalAccess>
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
 
@@ -87,15 +80,6 @@
 			<PeakSWC_NoViewModelsToProcess>true</PeakSWC_NoViewModelsToProcess>
 		</PropertyGroup>
 		<Message Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found to process." Importance="normal" Condition="'$(PeakSWC_NoViewModelsToProcess)' == 'true'" />
-
-		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed>
-				<AdditionalArgs Condition="'%(AttributeFullName)' != ''">%(AdditionalArgs) --attributeFullName &quot;%(AttributeFullName)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(ObservablePropertyAttribute)' != ''">%(AdditionalArgs) --observablePropertyAttribute &quot;%(ObservablePropertyAttribute)&quot;</AdditionalArgs>
-				<AdditionalArgs Condition="'%(RelayCommandAttribute)' != ''">%(AdditionalArgs) --relayCommandAttribute &quot;%(RelayCommandAttribute)&quot;</AdditionalArgs>
-			</_MvvmViewModelProtoSourceProcessed>
-		</ItemGroup>
-
 	</Target>
 
 </Project>
