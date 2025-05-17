@@ -1,14 +1,18 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
-using CommandLine;
+﻿using CommandLine;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection; // For Assembly.Location
+using System.Text;
+using System.Text.RegularExpressions;
+
+using System.Diagnostics.CodeAnalysis;    // <-- add this
+
 
 namespace ProtoGeneratorUtil
 {
-    // Define command-line options
+   
     public class Options
     {
         [Option('v', "viewModelFiles", Required = true, HelpText = "Paths to the C# ViewModel files to process (comma-separated).", Separator = ',')]
@@ -32,6 +36,7 @@ namespace ProtoGeneratorUtil
         [Option("relayCommandAttribute", Required = false, HelpText = "Full name of the RelayCommand attribute.")]
         public string RelayCommandAttributeFullName { get; set; } = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
+        [DynamicDependency(DynamicallyAccessedMemberTypes.PublicConstructors, typeof(ProtoGeneratorUtil.Options))] 
         // Default constructor
         public Options()
         {
