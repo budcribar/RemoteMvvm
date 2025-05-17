@@ -70,23 +70,33 @@
 		</ItemGroup>
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed_Stage1 Include="@(_MvvmViewModelProtoSource_WithInputs)">
+			<_MvvmViewModelProtoSource_S1_Base Include="@(_MvvmViewModelProtoSource_WithInputs)">
 				<FinalProtoNamespace>%(CalculatedIntermediateProtoNamespace)</FinalProtoNamespace>
 				<FinalServiceName>%(CalculatedIntermediateServiceName)</FinalServiceName>
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' == ''">Protos\%(CalculatedIntermediateServiceName).proto</TempOutputPath>
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' != ''">%(UserOutputPath_Input)</TempOutputPath>
-			</_MvvmViewModelProtoSourceProcessed_Stage1>
+			</_MvvmViewModelProtoSource_S1_Base>
 		</ItemGroup>
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSourceProcessed_Stage1)">
-				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</FinalOutputPath>
-				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)'))</FinalOutputPath>
-				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' == ''">Both</FinalGrpcServices>
-				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' != ''">%(UserGrpcServices_Input)</FinalGrpcServices>
+			<_MvvmViewModelProtoSource_S2_RelPath Include="@(_MvvmViewModelProtoSource_S1_Base)">
+				<IntermediateRelativeFinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</IntermediateRelativeFinalOutputPath>
+			</_MvvmViewModelProtoSource_S2_RelPath>
+		</ItemGroup>
 
+		<ItemGroup>
+			<_MvvmViewModelProtoSource_S3_AbsPath Include="@(_MvvmViewModelProtoSource_S2_RelPath)">
+				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(IntermediateRelativeFinalOutputPath)'))</FinalOutputPath>
+			</_MvvmViewModelProtoSource_S3_AbsPath>
+		</ItemGroup>
+
+		<ItemGroup>
+			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_S3_AbsPath)">
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == ''">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' != ''">%(UserProtoRoot_Input)</FinalProtoRoot>
+
+				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' == ''">Both</FinalGrpcServices>
+				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' != ''">%(UserGrpcServices_Input)</FinalGrpcServices>
 
 				<FinalAccess Condition="'%(UserAccess_Input)' == ''">Public</FinalAccess>
 				<FinalAccess Condition="'%(UserAccess_Input)' != ''">%(UserAccess_Input)</FinalAccess>
@@ -105,7 +115,9 @@
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_WithInputs Remove="@(_MvvmViewModelProtoSource_WithInputs)" />
-			<_MvvmViewModelProtoSourceProcessed_Stage1 Remove="@(_MvvmViewModelProtoSourceProcessed_Stage1)" />
+			<_MvvmViewModelProtoSource_S1_Base Remove="@(_MvvmViewModelProtoSource_S1_Base)" />
+			<_MvvmViewModelProtoSource_S2_RelPath Remove="@(_MvvmViewModelProtoSource_S2_RelPath)" />
+			<_MvvmViewModelProtoSource_S3_AbsPath Remove="@(_MvvmViewModelProtoSource_S3_AbsPath)" />
 		</ItemGroup>
 	</Target>
 
