@@ -381,12 +381,12 @@ namespace ProtoGeneratorUtil
             List<PropertyInfo> properties = GetObservableProperties(mainViewModelSymbol, opts.ObservablePropertyAttributeFullName, compilation);
             List<CommandInfo> commands = GetRelayCommands(mainViewModelSymbol, opts.RelayCommandAttributeFullName, compilation);
 
-            bool hasObservableFields = mainViewModelSymbol.GetMembersIncludingBaseTypes().OfType<IFieldSymbol>().Any(f =>
+            bool hasObservableFields = Helpers.GetAllMembers( mainViewModelSymbol).OfType<IFieldSymbol>().Any(f =>
                 f.GetAttributes().Any(a => (a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == opts.ObservablePropertyAttributeFullName ||
                                             a.AttributeClass?.Name == opts.ObservablePropertyAttributeFullName ||
                                             a.AttributeClass?.Name == Path.GetFileNameWithoutExtension(opts.ObservablePropertyAttributeFullName))));
 
-            bool hasCommandMethods = mainViewModelSymbol.GetMembersIncludingBaseTypes().OfType<IMethodSymbol>().Any(m =>
+            bool hasCommandMethods = Helpers.GetAllMembers(mainViewModelSymbol).OfType<IMethodSymbol>().Any(m =>
                 m.GetAttributes().Any(a => (a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == opts.RelayCommandAttributeFullName ||
                                             a.AttributeClass?.Name == opts.RelayCommandAttributeFullName ||
                                             a.AttributeClass?.Name == Path.GetFileNameWithoutExtension(opts.RelayCommandAttributeFullName))));
@@ -621,10 +621,14 @@ namespace ProtoGeneratorUtil
         private static List<PropertyInfo> GetObservableProperties(INamedTypeSymbol classSymbol, string observablePropertyAttributeFullName, Compilation compilation)
         {
             var props = new List<PropertyInfo>();
+            // Use a HashSet to keep track of property names to avoid duplicates from overridden members if not careful,
+            // though CommunityToolkit.Mvvm usually generates distinct backing fields.
+            var processedPropertyNames = new HashSet<string>(StringComparer.Ordinal);
+
             string shortObservableName = Path.GetFileNameWithoutExtension(observablePropertyAttributeFullName);
             Console.WriteLine($"ProtoGeneratorUtil: Scanning for ObservableProperties in {classSymbol.Name} (and base types) using attribute '{observablePropertyAttributeFullName}' (or short name '{shortObservableName}')...");
 
-            foreach (var member in classSymbol.GetMembersIncludingBaseTypes())
+            foreach (var member in Helpers.GetAllMembers(classSymbol)) // Use the helper method here
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
@@ -637,41 +641,49 @@ namespace ProtoGeneratorUtil
                             attrClassName == observablePropertyAttributeFullName ||
                             (attrClassName != null && attrClassName == shortObservableName))
                         {
-                            Console.WriteLine($"    -> MATCHED ObservablePropertyAttribute for field '{fieldSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}' (Type: {fieldSymbol.Type.Name})!");
+                            //Console.WriteLine($"    -> Potential ObservablePropertyAttribute match for field '{fieldSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}' (Type: {fieldSymbol.Type.Name})!");
                             string propertyName = fieldSymbol.Name.TrimStart('_');
                             if (propertyName.Length > 0 && char.IsLower(propertyName[0]))
                             {
                                 propertyName = char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1);
                             }
-                            else if (propertyName.Length == 0 || !char.IsLetter(propertyName[0]))
+                            else if (propertyName.Length == 0 || (propertyName.Length > 0 && !char.IsLetter(propertyName[0]))) // Ensure first char is letter after trimming
                             {
-                                Console.WriteLine($"      Skipping field '{fieldSymbol.Name}' due to invalid derived property name ('{propertyName}').");
+                                //Console.WriteLine($"      Skipping field '{fieldSymbol.Name}' due to invalid derived property name ('{propertyName}').");
                                 continue;
                             }
-                            if (props.Any(p => p.Name.Equals(propertyName, StringComparison.Ordinal)))
+
+                            if (processedPropertyNames.Add(propertyName)) // Add returns true if the item was new
                             {
-                                Console.WriteLine($"      Warning: Property name '{propertyName}' derived from field '{fieldSymbol.Name}' conflicts with an existing property. Skipping.");
-                                continue;
+                                Console.WriteLine($"    -> MATCHED ObservablePropertyAttribute for field '{fieldSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}', generating property '{propertyName}' (Type: {fieldSymbol.Type.ToDisplayString()}).");
+                                props.Add(new PropertyInfo { Name = propertyName, TypeString = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), FullTypeSymbol = fieldSymbol.Type });
                             }
-                            props.Add(new PropertyInfo { Name = propertyName, TypeString = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), FullTypeSymbol = fieldSymbol.Type });
-                            break;
+                            // else
+                            // {
+                            //     Console.WriteLine($"      Skipping already processed property name '{propertyName}' derived from field '{fieldSymbol.Name}'.");
+                            // }
+                            break; // Found the attribute on this field, no need to check other attributes on the same field
                         }
                     }
                 }
             }
-            Console.WriteLine($"ProtoGeneratorUtil: Extracted {props.Count} observable properties from '{classSymbol.Name}'.");
+            Console.WriteLine($"ProtoGeneratorUtil: Extracted {props.Count} observable properties from '{classSymbol.Name}' and its base types.");
             return props;
         }
 
         private static List<CommandInfo> GetRelayCommands(INamedTypeSymbol classSymbol, string relayCommandAttributeFullName, Compilation compilation)
         {
             var cmds = new List<CommandInfo>();
+            // Use a HashSet to keep track of command property names to avoid duplicates if methods are overridden
+            // and both might be picked up by GetAllMembers depending on how overrides are handled by Roslyn's GetMembers().
+            var processedCommandPropertyNames = new HashSet<string>(StringComparer.Ordinal);
+
             string shortRelayName = Path.GetFileNameWithoutExtension(relayCommandAttributeFullName);
             Console.WriteLine($"ProtoGeneratorUtil: Scanning for RelayCommands in {classSymbol.Name} (and base types) using attribute '{relayCommandAttributeFullName}' (or short name '{shortRelayName}')...");
 
-            foreach (var member in classSymbol.GetMembersIncludingBaseTypes())
+            foreach (var member in Helpers.GetAllMembers(classSymbol)) // Use the helper method here
             {
-                if (member is IMethodSymbol methodSymbol && methodSymbol.MethodKind == MethodKind.Ordinary)
+                if (member is IMethodSymbol methodSymbol && methodSymbol.MethodKind == MethodKind.Ordinary && !methodSymbol.IsOverride) // Consider only non-override methods to avoid duplicates if base also has attribute
                 {
                     foreach (var attr in methodSymbol.GetAttributes())
                     {
@@ -682,7 +694,7 @@ namespace ProtoGeneratorUtil
                             attrClassName == relayCommandAttributeFullName ||
                             (attrClassName != null && attrClassName == shortRelayName))
                         {
-                            Console.WriteLine($"    -> MATCHED RelayCommandAttribute for method '{methodSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}'!");
+                            // Console.WriteLine($"    -> Potential RelayCommandAttribute match for method '{methodSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}'!");
                             string commandPropertyName = methodSymbol.Name;
                             if (commandPropertyName.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
                             {
@@ -692,32 +704,34 @@ namespace ProtoGeneratorUtil
                             {
                                 commandPropertyName = char.ToUpperInvariant(commandPropertyName[0]) + commandPropertyName.Substring(1);
                             }
-                            else if (commandPropertyName.Length == 0)
+                            else if (commandPropertyName.Length == 0 || (commandPropertyName.Length > 0 && !char.IsLetter(commandPropertyName[0])))
                             {
-                                Console.WriteLine($"      Skipping method '{methodSymbol.Name}' due to invalid derived command property name.");
+                                //Console.WriteLine($"      Skipping method '{methodSymbol.Name}' due to invalid derived command property name.");
                                 continue;
                             }
                             commandPropertyName += "Command";
 
-                            if (cmds.Any(c => c.CommandPropertyName.Equals(commandPropertyName, StringComparison.Ordinal)))
+                            if (processedCommandPropertyNames.Add(commandPropertyName)) // Add returns true if the item was new
                             {
-                                Console.WriteLine($"      Warning: Command property name '{commandPropertyName}' derived from method '{methodSymbol.Name}' conflicts with an existing command. Skipping.");
-                                continue;
+                                Console.WriteLine($"    -> MATCHED RelayCommandAttribute for method '{methodSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}', generating command property '{commandPropertyName}'.");
+                                cmds.Add(new CommandInfo
+                                {
+                                    MethodName = methodSymbol.Name, // This is the name for the RPC method
+                                    CommandPropertyName = commandPropertyName,
+                                    Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), FullTypeSymbol = p.Type }).ToList(),
+                                    IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.ToDisplayString() == "System.Threading.Tasks.Task" || (rtSym.IsGenericType && rtSym.ConstructedFrom.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
+                                });
                             }
-
-                            cmds.Add(new CommandInfo
-                            {
-                                MethodName = methodSymbol.Name,
-                                CommandPropertyName = commandPropertyName,
-                                Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), FullTypeSymbol = p.Type }).ToList(),
-                                IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.ToDisplayString() == "System.Threading.Tasks.Task" || (rtSym.IsGenericType && rtSym.ConstructedFrom.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
-                            });
-                            break;
+                            // else
+                            // {
+                            //    Console.WriteLine($"      Skipping already processed command property name '{commandPropertyName}' derived from method '{methodSymbol.Name}'.");
+                            // }
+                            break; // Found the attribute on this method
                         }
                     }
                 }
             }
-            Console.WriteLine($"ProtoGeneratorUtil: Extracted {cmds.Count} relay commands from '{classSymbol.Name}'.");
+            Console.WriteLine($"ProtoGeneratorUtil: Extracted {cmds.Count} relay commands from '{classSymbol.Name}' and its base types.");
             return cmds;
         }
 
