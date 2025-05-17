@@ -28,13 +28,13 @@
 			   Text="PeakSWC.MvvmSourceGenerator: Critical Error: GenerateGrpcRemoteAttribute.cs not found at '$(_AttributeDefinitionSourceFileFullPath)'. This file is required by ProtoGeneratorUtil.exe, should be included by this NuGet package, and present in the project at the expected path." />
 
 		<Exec Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; ^
-                   --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; ^
-                   --attributeDefinitionSourceFile &quot;$(_AttributeDefinitionSourceFileFullPath)&quot; ^
-                   --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
-                   --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
-                   --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
-                   %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
-                   --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
+					  --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; ^
+					  --attributeDefinitionSourceFile &quot;$(_AttributeDefinitionSourceFileFullPath)&quot; ^
+					  --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
+					  --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
+					  --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
+					  %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
+					  --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
 			  WorkingDirectory="$(MSBuildProjectDirectory)"
 			  ContinueOnError="false" />
 
@@ -55,13 +55,10 @@
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_WithInputs Include="@(MvvmViewModelProtoSource)">
 				<UserViewModelFile>%(MvvmViewModelProtoSource.FullPath)</UserViewModelFile>
-
 				<CalculatedIntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' == ''">%(MvvmViewModelProtoSource.Filename)Namespace.Protos</CalculatedIntermediateProtoNamespace>
 				<CalculatedIntermediateProtoNamespace Condition="'%(MvvmViewModelProtoSource.ProtoNamespace)' != ''">%(MvvmViewModelProtoSource.ProtoNamespace)</CalculatedIntermediateProtoNamespace>
-
 				<CalculatedIntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' == ''">%(MvvmViewModelProtoSource.Filename)Service</CalculatedIntermediateServiceName>
 				<CalculatedIntermediateServiceName Condition="'%(MvvmViewModelProtoSource.ServiceName)' != ''">%(MvvmViewModelProtoSource.ServiceName)</CalculatedIntermediateServiceName>
-
 				<UserOutputPath_Input>%(MvvmViewModelProtoSource.OutputPath)</UserOutputPath_Input>
 				<UserAttributeFullName_Input>%(MvvmViewModelProtoSource.AttributeFullName)</UserAttributeFullName_Input>
 				<UserObservablePropertyAttribute_Input>%(MvvmViewModelProtoSource.ObservablePropertyAttribute)</UserObservablePropertyAttribute_Input>
@@ -73,25 +70,18 @@
 		</ItemGroup>
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_WithInputs)">
-				<UserViewModelFile>%(UserViewModelFile)</UserViewModelFile>
+			<_MvvmViewModelProtoSourceProcessed_Stage1 Include="@(_MvvmViewModelProtoSource_WithInputs)">
 				<FinalProtoNamespace>%(CalculatedIntermediateProtoNamespace)</FinalProtoNamespace>
 				<FinalServiceName>%(CalculatedIntermediateServiceName)</FinalServiceName>
-
-				<UserOutputPath_Input>%(UserOutputPath_Input)</UserOutputPath_Input>
-				<UserAttributeFullName_Input>%(UserAttributeFullName_Input)</UserAttributeFullName_Input>
-				<UserObservablePropertyAttribute_Input>%(UserObservablePropertyAttribute_Input)</UserObservablePropertyAttribute_Input>
-				<UserRelayCommandAttribute_Input>%(UserRelayCommandAttribute_Input)</UserRelayCommandAttribute_Input>
-				<UserGrpcServices_Input>%(UserGrpcServices_Input)</UserGrpcServices_Input>
-				<UserProtoRoot_Input>%(UserProtoRoot_Input)</UserProtoRoot_Input>
-				<UserAccess_Input>%(UserAccess_Input)</UserAccess_Input>
-
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' == ''">Protos\%(CalculatedIntermediateServiceName).proto</TempOutputPath>
 				<TempOutputPath Condition="'%(UserOutputPath_Input)' != ''">%(UserOutputPath_Input)</TempOutputPath>
+			</_MvvmViewModelProtoSourceProcessed_Stage1>
+		</ItemGroup>
 
+		<ItemGroup>
+			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSourceProcessed_Stage1)">
 				<FinalOutputPath>$([MSBuild]::EnsureTrailingSlash('$(MSBuildProjectDirectory)'))%(TempOutputPath)</FinalOutputPath>
 				<FinalOutputPath>$([System.IO.Path]::GetFullPath('%(FinalOutputPath)'))</FinalOutputPath>
-
 				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' == ''">Both</FinalGrpcServices>
 				<FinalGrpcServices Condition="'%(UserGrpcServices_Input)' != ''">%(UserGrpcServices_Input)</FinalGrpcServices>
 
@@ -115,6 +105,7 @@
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_WithInputs Remove="@(_MvvmViewModelProtoSource_WithInputs)" />
+			<_MvvmViewModelProtoSourceProcessed_Stage1 Remove="@(_MvvmViewModelProtoSourceProcessed_Stage1)" />
 		</ItemGroup>
 	</Target>
 

@@ -27,7 +27,7 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.17-ge486070516">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.18-g7393b8c143">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
@@ -43,6 +43,7 @@
 			<ServiceName>GameViewModelService</ServiceName>
 
 			<OutputPath>Protos\GameViewModelService.proto</OutputPath>
+			
 
 		</MvvmViewModelProtoSource>
 	</ItemGroup>
