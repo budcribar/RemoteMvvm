@@ -7,9 +7,9 @@ using System.Threading.Tasks;
 
 namespace MonsterClicker.ViewModels
 {
-    [GenerateGrpcRemote("MonsterClicker.ViewModels.Protos", "GameViewModelService",
-        ServerImplNamespace = "MonsterClicker.GrpcServices",
-        ClientProxyNamespace = "MonsterClicker.RemoteClients")]
+    [GenerateGrpcRemote("MonsterClicker.ViewModels.Protos","GameViewModelService",
+            ServerImplNamespace = "MonsterClicker.GrpcServices",
+            ClientProxyNamespace = "MonsterClicker.RemoteClients")]
     public partial class GameViewModel : ObservableObject
     {
         [ObservableProperty]
