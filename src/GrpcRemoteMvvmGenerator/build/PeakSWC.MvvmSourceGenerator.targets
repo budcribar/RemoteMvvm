@@ -82,7 +82,34 @@
 		</ItemGroup>
 
 		<ItemGroup>
-			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_S3_AbsPath)">
+			<_MvvmViewModelProtoSource_S4_Arg1 Include="@(_MvvmViewModelProtoSource_S3_AbsPath)">
+				<_ArgPartForFullName></_ArgPartForFullName>
+				<_ArgPartForFullName Condition="'%(UserAttributeFullName_Input)' != ''"> --attributeFullName "%(UserAttributeFullName_Input)"</_ArgPartForFullName>
+			</_MvvmViewModelProtoSource_S4_Arg1>
+		</ItemGroup>
+
+		<ItemGroup>
+			<_MvvmViewModelProtoSource_S5_Arg2 Include="@(_MvvmViewModelProtoSource_S4_Arg1)">
+				<_ArgPartForObservableProperty></_ArgPartForObservableProperty>
+				<_ArgPartForObservableProperty Condition="'%(UserObservablePropertyAttribute_Input)' != ''"> --observablePropertyAttribute "%(UserObservablePropertyAttribute_Input)"</_ArgPartForObservableProperty>
+			</_MvvmViewModelProtoSource_S5_Arg2>
+		</ItemGroup>
+
+		<ItemGroup>
+			<_MvvmViewModelProtoSource_S6_Arg3 Include="@(_MvvmViewModelProtoSource_S5_Arg2)">
+				<_ArgPartForRelayCommand></_ArgPartForRelayCommand>
+				<_ArgPartForRelayCommand Condition="'%(UserRelayCommandAttribute_Input)' != ''"> --relayCommandAttribute "%(UserRelayCommandAttribute_Input)"</_ArgPartForRelayCommand>
+			</_MvvmViewModelProtoSource_S6_Arg3>
+		</ItemGroup>
+
+		<ItemGroup>
+			<_MvvmViewModelProtoSource_S7_CombinedArgs Include="@(_MvvmViewModelProtoSource_S6_Arg3)">
+				<AdditionalArgs>%(_ArgPartForFullName)%(_ArgPartForObservableProperty)%(_ArgPartForRelayCommand)</AdditionalArgs>
+			</_MvvmViewModelProtoSource_S7_CombinedArgs>
+		</ItemGroup>
+
+		<ItemGroup>
+			<_MvvmViewModelProtoSourceProcessed Include="@(_MvvmViewModelProtoSource_S7_CombinedArgs)">
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' == ''">$([System.IO.Path]::GetDirectoryName('%(FinalOutputPath)'))</FinalProtoRoot>
 				<FinalProtoRoot Condition="'%(UserProtoRoot_Input)' != ''">%(UserProtoRoot_Input)</FinalProtoRoot>
 
@@ -91,16 +118,6 @@
 
 				<FinalAccess Condition="'%(UserAccess_Input)' == ''">Public</FinalAccess>
 				<FinalAccess Condition="'%(UserAccess_Input)' != ''">%(UserAccess_Input)</FinalAccess>
-
-				<_ArgPartForFullName></_ArgPartForFullName>
-				<_ArgPartForObservableProperty></_ArgPartForObservableProperty>
-				<_ArgPartForRelayCommand></_ArgPartForRelayCommand>
-
-				<_ArgPartForFullName Condition="'%(UserAttributeFullName_Input)' != ''"> --attributeFullName "%(UserAttributeFullName_Input)"</_ArgPartForFullName>
-				<_ArgPartForObservableProperty Condition="'%(UserObservablePropertyAttribute_Input)' != ''"> --observablePropertyAttribute "%(UserObservablePropertyAttribute_Input)"</_ArgPartForObservableProperty>
-				<_ArgPartForRelayCommand Condition="'%(UserRelayCommandAttribute_Input)' != ''"> --relayCommandAttribute "%(UserRelayCommandAttribute_Input)"</_ArgPartForRelayCommand>
-
-				<AdditionalArgs>%(_ArgPartForFullName)%(_ArgPartForObservableProperty)%(_ArgpartForRelayCommand)</AdditionalArgs>
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
 
@@ -114,6 +131,10 @@
 			<_MvvmViewModelProtoSource_S1_Base Remove="@(_MvvmViewModelProtoSource_S1_Base)" />
 			<_MvvmViewModelProtoSource_S2_RelPath Remove="@(_MvvmViewModelProtoSource_S2_RelPath)" />
 			<_MvvmViewModelProtoSource_S3_AbsPath Remove="@(_MvvmViewModelProtoSource_S3_AbsPath)" />
+			<_MvvmViewModelProtoSource_S4_Arg1 Remove="@(_MvvmViewModelProtoSource_S4_Arg1)" />
+			<_MvvmViewModelProtoSource_S5_Arg2 Remove="@(_MvvmViewModelProtoSource_S5_Arg2)" />
+			<_MvvmViewModelProtoSource_S6_Arg3 Remove="@(_MvvmViewModelProtoSource_S6_Arg3)" />
+			<_MvvmViewModelProtoSource_S7_CombinedArgs Remove="@(_MvvmViewModelProtoSource_S7_CombinedArgs)" />
 		</ItemGroup>
 	</Target>
 
