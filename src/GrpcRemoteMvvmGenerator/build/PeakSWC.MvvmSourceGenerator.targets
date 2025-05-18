@@ -1,6 +1,5 @@
 ﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-	<!-- ... existing PropertyGroup for _ProtoGeneratorUtilExePath ... -->
 	<PropertyGroup>
 		<_Net8ToolPathForExists>$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe</_Net8ToolPathForExists>
 		<_Net6ToolPathForExists>$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_Net6ToolPathForExists>
@@ -23,16 +22,20 @@
 		</PropertyGroup>
 		<Message Importance="normal" Text="PeakSWC.MvvmSourceGenerator: Reference paths being passed: $(_ProtoUtil_ReferencePaths)" Condition="'$(_ProtoUtil_ReferencePaths)' != ''"/>
 
-		<Exec Command=""$(_ProtoGeneratorUtilExePath=""
-                      --viewModelFiles "%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile=""
-                      --attributeDefinitionSourceFile "%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile=""
-                      --output "%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath=""
-                      --protoNamespace "%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace=""
-                      --serviceName "%(_MvvmViewModelProtoSourceProcessed.FinalServiceName=""
-                      %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
-                      --referencePaths "$(_ProtoUtil_ReferencePaths=""
-              WorkingDirectory="$(MSBuildProjectDirectory)"
-              ContinueOnError="false" />
+		<Error Condition="!Exists('%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile)')"
+               Text="The attribute definition source file '%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile)' required by ProtoGeneratorUtil.exe was not found. ViewModel: %(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)" />
+
+
+		<Exec Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; ^
+					  --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; ^
+					  --attributeDefinitionSourceFile &quot;%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile)&quot; ^
+					  --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
+					  --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
+					  --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
+					  %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
+					  --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
+			  WorkingDirectory="$(MSBuildProjectDirectory)"
+			  ContinueOnError="false" />
 
 		<ItemGroup>
 			<Protobuf Include="@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')">
@@ -49,7 +52,6 @@
 	<Target Name="PeakSWC_PrepareProtoGenerationItems" BeforeTargets="PeakSWC_GenerateProtoFiles">
 
 		<PropertyGroup>
-			<!-- Define the default path here -->
 			<DefaultAttributeDefinitionSourceFile>PeakSWC/Mvvm/Remote/GenerateGrpcRemoteAttribute.cs</DefaultAttributeDefinitionSourceFile>
 		</PropertyGroup>
 
@@ -71,7 +73,6 @@
 			</_MvvmViewModelProtoSource_WithInputs>
 		</ItemGroup>
 
-		<!-- ... existing _S1_Base, _S2_RelPath, _S3_AbsPath ... -->
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S1_Base Include="@(_MvvmViewModelProtoSource_WithInputs)">
 				<FinalProtoNamespace>%(CalculatedIntermediateProtoNamespace)</FinalProtoNamespace>
@@ -94,7 +95,6 @@
 			</_MvvmViewModelProtoSource_S3_AbsPath>
 		</ItemGroup>
 
-		<!-- Optional arguments construction (S4, S5, S6, S7) remains the same -->
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_S4_Arg1 Include="@(_MvvmViewModelProtoSource_S3_AbsPath)">
 				<_ArgPartForFullName></_ArgPartForFullName>
@@ -134,21 +134,10 @@
 				<FinalAccess Condition="'%(UserAccess_Input)' == ''">Public</FinalAccess>
 				<FinalAccess Condition="'%(UserAccess_Input)' != ''">%(UserAccess_Input)</FinalAccess>
 
-				<!-- MODIFIED: Set default if user input is empty -->
-				<FinalAttributeDefinitionSourceFile Condition="'%(UserAttributeDefinitionSourceFile_Input)' != ''">%(UserAttributeDefinitionSourceFile_Input)</FinalAttributeDefinitionSourceFile>
-				<FinalAttributeDefinitionSourceFile Condition="'%(UserAttributeDefinitionSourceFile_Input)' == ''">$(DefaultAttributeDefinitionSourceFile)</FinalAttributeDefinitionSourceFile>
+				<FinalAttributeDefinitionSourceFile Condition="'%(UserAttributeDefinitionSourceFile_Input)' != ''">$([System.IO.Path]::GetFullPath('%(UserAttributeDefinitionSourceFile_Input)'))</FinalAttributeDefinitionSourceFile>
+				<FinalAttributeDefinitionSourceFile Condition="'%(UserAttributeDefinitionSourceFile_Input)' == ''">$([System.IO.Path]::GetFullPath('$(DefaultAttributeDefinitionSourceFile)'))</FinalAttributeDefinitionSourceFile>
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
-
-		<!-- Optional: You might want to verify the default file exists if it's used.
-             Or, ensure your ProtoGeneratorUtil.exe can handle a non-existent file if it's a default that the user might not have yet.
-             For now, the previous error for a *missing* user-provided path is removed, as we now always provide a path.
-        -->
-		<!-- REMOVED Error Task for missing required metadata, as we now provide a default -->
-		<!--
-        <Error Condition="'@(_MvvmViewModelProtoSourceProcessed)' != '' AND '%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile)' == ''"
-               Text="MvvmViewModelProtoSource item '%(_MvvmViewModelProtoSourceProcessed.Identity)' is missing the required 'AttributeDefinitionSourceFile' metadata. Please specify the path to the C# file containing the GenerateGrpcRemoteAttribute definition." />
-        -->
 
 		<PropertyGroup Condition="'@(_MvvmViewModelProtoSourceProcessed)' == ''">
 			<PeakSWC_NoViewModelsToProcess>true</PeakSWC_NoViewModelsToProcess>
@@ -156,7 +145,6 @@
 		<Message Importance="normal" Text="PeakSWC.MvvmSourceGenerator: No MvvmViewModelProtoSource items found to process." Condition="'$(PeakSWC_NoViewModelsToProcess)' == 'true'" />
 
 		<ItemGroup>
-			<!-- ... existing cleanup of intermediate ItemGroups ... -->
 			<_MvvmViewModelProtoSource_WithInputs Remove="@(_MvvmViewModelProtoSource_WithInputs)" />
 			<_MvvmViewModelProtoSource_S1_Base Remove="@(_MvvmViewModelProtoSource_S1_Base)" />
 			<_MvvmViewModelProtoSource_S2_RelPath Remove="@(_MvvmViewModelProtoSource_S2_RelPath)" />
