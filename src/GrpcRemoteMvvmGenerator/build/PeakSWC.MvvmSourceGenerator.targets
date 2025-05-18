@@ -142,6 +142,4 @@
 			<_MvvmViewModelProtoSource_S7_CombinedArgs Remove="@(_MvvmViewModelProtoSource_S7_CombinedArgs)" />
 		</ItemGroup>
 	</Target>
-
-	<Import Project="PeakSWC.MvvmSourceGenerator.props" Condition="Exists('PeakSWC.MvvmSourceGenerator.props')"/>
 </Project>

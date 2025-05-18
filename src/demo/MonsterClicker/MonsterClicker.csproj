@@ -9,10 +9,6 @@
 		<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>
 	</PropertyGroup>
 
-	<!--<ItemGroup>
-	  <AdditionalFiles Include="C:\Users\budcr\.nuget\packages\peakswc.mvvmsourcegenerator\1.0.29-gc0fbfaf05c\contentFiles\cs\any\PeakSWC\Mvvm\Remote\GenerateGrpcRemoteAttribute.cs" />
-	</ItemGroup>-->
-
 	<ItemGroup>
 	  <EmbeddedResource Include="Resources\sword.png" />
 	</ItemGroup>
@@ -23,11 +19,11 @@
 		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
 		<PackageReference Include="Google.Protobuf" Version="3.31.0" />
 		<PackageReference Include="Grpc.Tools" Version="2.72.0">
-
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.34-gb86090f736">
+		
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.35-g6281bf8a03">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
