@@ -23,10 +23,12 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.35-g6281bf8a03">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.36-g9f84d950cd">
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
+
+		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
 
 	<ItemGroup>
