@@ -3,11 +3,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Diagnostics.CodeAnalysis;
-using System.Reflection; // For Assembly.Location
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-
-// Note: The duplicate 'using System.Diagnostics.CodeAnalysis;' was removed if present.
 
 namespace ProtoGeneratorUtil
 {
@@ -15,9 +13,6 @@ namespace ProtoGeneratorUtil
     {
         [Option('v', "viewModelFiles", Required = true, HelpText = "Paths to the C# ViewModel files to process (comma-separated).", Separator = ',')]
         public IEnumerable<string> ViewModelFiles { get; set; }
-
-        [Option("attributeDefinitionSourceFile", Required = true, HelpText = "Path to the C# source file defining the GenerateGrpcRemoteAttribute.")]
-        public string AttributeDefinitionSourceFile { get; set; }
 
         [Option('o', "output", Required = false, HelpText = "Output path for the generated .proto file. Default: Protos/{ServiceName}.proto")]
         public string? OutputPath { get; set; }
@@ -28,8 +23,8 @@ namespace ProtoGeneratorUtil
         [Option('s', "serviceName", Required = false, HelpText = "The gRPC service name. Default: {ViewModelName}Service")]
         public string? GrpcServiceName { get; set; }
 
-        [Option('a', "attributeFullName", Required = false, HelpText = "The full name of the GenerateGrpcRemoteAttribute (must match definition in attributeDefinitionSourceFile).")]
-        public string GenerateGrpcRemoteAttributeFullName { get; set; } = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute";
+        [Option('a', "attributeFullName", Required = false, HelpText = "The full name of the GenerateGrpcRemoteAttribute (must match definition in the embedded attribute source).")]
+        public string GenerateGrpcRemoteAttributeFullName { get; set; } = "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute"; // This must match your attribute's actual FQN
 
         [Option("observablePropertyAttribute", Required = false, HelpText = "Full name of the ObservableProperty attribute.")]
         public string ObservablePropertyAttributeFullName { get; set; } = "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute";
@@ -45,19 +40,21 @@ namespace ProtoGeneratorUtil
         public Options()
         {
             ViewModelFiles = new List<string>();
-            AttributeDefinitionSourceFile = string.Empty; // Will be validated for existence
             ReferencePaths = new List<string>();
         }
     }
 
-    // Helper records
     internal record PropertyInfo { public string Name = ""; public string TypeString = ""; public required ITypeSymbol FullTypeSymbol; }
     internal record CommandInfo { public string MethodName = ""; public string CommandPropertyName = ""; public List<ParameterInfoForProto> Parameters = []; public bool IsAsync; }
     internal record ParameterInfoForProto { public string Name = ""; public string TypeString = ""; public required ITypeSymbol FullTypeSymbol; }
 
-
     class Program
     {
+        // Based on <EmbeddedResource Include="..." Link="Resources\GenerateGrpcRemoteAttribute.cs" />
+        // and assuming default project namespace "ProtoGeneratorUtil"
+        const string AttributeDefinitionResourceName = "ProtoGeneratorUtil.Resources.GenerateGrpcRemoteAttribute.cs";
+        const string AttributeDefinitionPlaceholderPath = "embedded://PeakSWC/Mvvm/Remote/GenerateGrpcRemoteAttribute.cs"; // Keep a distinct path for Roslyn
+
         static async Task Main(string[] args)
         {
             Console.WriteLine($"ProtoGeneratorUtil: Executing from AppContext.BaseDirectory: {AppContext.BaseDirectory}");
@@ -84,7 +81,6 @@ namespace ProtoGeneratorUtil
         {
             Console.WriteLine($"ProtoGeneratorUtil: Starting .proto file generation...");
             Console.WriteLine($"  ViewModel files: {string.Join(", ", opts.ViewModelFiles)}");
-            Console.WriteLine($"  Attribute Definition Source File: {opts.AttributeDefinitionSourceFile}");
             Console.WriteLine($"  Explicit Reference DLLs: {(opts.ReferencePaths.Any() ? string.Join(", ", opts.ReferencePaths) : "None")}");
             Console.WriteLine($"  Output .proto (initial): {opts.OutputPath ?? "Not set, will derive"}");
             Console.WriteLine($"  Proto Namespace (initial): {opts.ProtoNamespace ?? "Not set, will derive"}");
@@ -105,7 +101,6 @@ namespace ProtoGeneratorUtil
 
             var syntaxTrees = new List<SyntaxTree>();
 
-            // Load actual ViewModel files
             foreach (var filePath in opts.ViewModelFiles)
             {
                 if (!File.Exists(filePath))
@@ -121,22 +116,55 @@ namespace ProtoGeneratorUtil
                 Console.WriteLine($"ProtoGeneratorUtil: Added syntax tree for ViewModel: {filePath}");
             }
 
-            // Load the attribute definition source file (required)
-            if (!string.IsNullOrEmpty(opts.AttributeDefinitionSourceFile) && File.Exists(opts.AttributeDefinitionSourceFile))
+            string? attributeSourceContent = null;
+            try
             {
-                var attrFileContent = await File.ReadAllTextAsync(opts.AttributeDefinitionSourceFile);
-                syntaxTrees.Add(CSharpSyntaxTree.ParseText(attrFileContent, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest), path: opts.AttributeDefinitionSourceFile));
-                Console.WriteLine($"ProtoGeneratorUtil: Added syntax tree for attribute definition: {opts.AttributeDefinitionSourceFile}");
+                var assembly = Assembly.GetExecutingAssembly();
+                Console.WriteLine($"ProtoGeneratorUtil: Attempting to load embedded resource: {AttributeDefinitionResourceName}");
+                using (Stream? stream = assembly.GetManifestResourceStream(AttributeDefinitionResourceName))
+                {
+                    if (stream == null)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine($"ProtoGeneratorUtil: Error: Embedded resource '{AttributeDefinitionResourceName}' not found.");
+                        Console.WriteLine("  Ensure the .cs file is marked as EmbeddedResource in ProtoGeneratorUtil.csproj and the name matches.");
+                        Console.WriteLine("  Available manifest resource names in this assembly (ProtoGeneratorUtil.exe):");
+                        foreach (var resName in assembly.GetManifestResourceNames())
+                        {
+                            Console.WriteLine($"    - {resName}");
+                        }
+                        Console.ResetColor();
+                        Environment.ExitCode = 1;
+                        return;
+                    }
+                    using (StreamReader reader = new StreamReader(stream))
+                    {
+                        attributeSourceContent = await reader.ReadToEndAsync();
+                    }
+                }
+
+                if (!string.IsNullOrEmpty(attributeSourceContent))
+                {
+                    syntaxTrees.Add(CSharpSyntaxTree.ParseText(attributeSourceContent, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest), path: AttributeDefinitionPlaceholderPath));
+                    Console.WriteLine($"ProtoGeneratorUtil: Added syntax tree for embedded attribute definition ('{AttributeDefinitionResourceName}' identified by path '{AttributeDefinitionPlaceholderPath}').");
+                }
+                else
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"ProtoGeneratorUtil: Error: Embedded resource '{AttributeDefinitionResourceName}' was found but is empty.");
+                    Console.ResetColor();
+                    Environment.ExitCode = 1;
+                    return;
+                }
             }
-            else
+            catch (Exception ex)
             {
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"ProtoGeneratorUtil: Error: GenerateGrpcRemoteAttribute source file not found or not specified. Path: '{opts.AttributeDefinitionSourceFile}'. This file is required and must be passed via --attributeDefinitionSourceFile.");
+                Console.WriteLine($"ProtoGeneratorUtil: Error loading embedded attribute definition resource '{AttributeDefinitionResourceName}': {ex.GetType().FullName} - {ex.Message}");
                 Console.ResetColor();
                 Environment.ExitCode = 1;
                 return;
             }
-
 
             var references = new List<MetadataReference>();
             bool tpaLoadedSuccessfully = false;
@@ -157,7 +185,7 @@ namespace ProtoGeneratorUtil
                         }
                         catch (Exception ex)
                         {
-                            Console.WriteLine($"ProtoGeneratorUtil: Warning: Could not load TPA reference '{path}': {ex.GetType().Name} - {ex.Message.Split('\n')[0]}");
+                            Console.WriteLine($"ProtoGeneratorUtil: Warning: Could not load TPA reference '{path}': {ex.GetType().Name} - {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}");
                         }
                     }
                 }
@@ -186,7 +214,7 @@ namespace ProtoGeneratorUtil
                 TryAddAssemblyReferenceByName(references, "netstandard");
             }
 
-            if (opts.ReferencePaths.Any())
+            if (opts.ReferencePaths != null && opts.ReferencePaths.Any())
             {
                 Console.WriteLine("ProtoGeneratorUtil: Attempting to load explicitly provided reference DLLs via --referencePaths...");
                 foreach (var refPath in opts.ReferencePaths)
@@ -202,7 +230,7 @@ namespace ProtoGeneratorUtil
                             }
                             catch (Exception ex)
                             {
-                                Console.WriteLine($"  Warning: Could not load explicit reference '{refPath}': {ex.Message.Split('\n')[0]}");
+                                Console.WriteLine($"  Warning: Could not load explicit reference '{refPath}': {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}");
                             }
                         }
                         else
@@ -216,7 +244,6 @@ namespace ProtoGeneratorUtil
                     }
                 }
             }
-
             if (!references.Any(r => r.Display?.Contains("CommunityToolkit.Mvvm.dll", StringComparison.OrdinalIgnoreCase) == true))
             {
                 TryAddAssemblyReference(references, "CommunityToolkit.Mvvm.dll", opts.ViewModelFiles.FirstOrDefault(), isOptional: false);
@@ -225,11 +252,11 @@ namespace ProtoGeneratorUtil
             {
                 Console.WriteLine("ProtoGeneratorUtil: CommunityToolkit.Mvvm.dll likely already added via explicit reference or TPA.");
             }
-
             Console.WriteLine($"ProtoGeneratorUtil: Total {references.Count} metadata references collected for compilation.");
 
+
             Compilation compilation = CSharpCompilation.Create("ViewModelAssembly",
-                syntaxTrees: syntaxTrees, // Includes user ViewModels AND GenerateGrpcRemoteAttribute.cs
+                syntaxTrees: syntaxTrees,
                 references: references,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable)
                     .WithSpecificDiagnosticOptions(new Dictionary<string, ReportDiagnostic>
@@ -281,8 +308,7 @@ namespace ProtoGeneratorUtil
             INamedTypeSymbol? mainViewModelSymbol = null;
             string originalVmName = "";
 
-            // Iterate through syntax trees that are NOT the attribute definition file to find the main ViewModel
-            foreach (var tree in syntaxTrees.Where(st => !st.FilePath.Equals(opts.AttributeDefinitionSourceFile, StringComparison.OrdinalIgnoreCase)))
+            foreach (var tree in syntaxTrees.Where(st => st.FilePath != AttributeDefinitionPlaceholderPath))
             {
                 var semanticModel = compilation.GetSemanticModel(tree);
                 if (semanticModel == null)
@@ -303,8 +329,8 @@ namespace ProtoGeneratorUtil
                             string? attrShortName = attr.AttributeClass?.Name;
 
                             if (attrFqn == opts.GenerateGrpcRemoteAttributeFullName ||
-                                (attrFqn == null && attrShortName == opts.GenerateGrpcRemoteAttributeFullName) ||
-                                attrShortName == Path.GetFileNameWithoutExtension(opts.GenerateGrpcRemoteAttributeFullName)
+                                (attrFqn == null && attrShortName == opts.GenerateGrpcRemoteAttributeFullName) || // Fallback for unresolved attribute
+                                attrShortName == Path.GetFileNameWithoutExtension(opts.GenerateGrpcRemoteAttributeFullName) // More robust fallback
                                 )
                             {
                                 mainViewModelSymbol = classSymbol;
@@ -326,8 +352,8 @@ namespace ProtoGeneratorUtil
                 Console.WriteLine($"ProtoGeneratorUtil: Error: No ViewModel class found with an attribute matching '{opts.GenerateGrpcRemoteAttributeFullName}'.");
                 Console.WriteLine($"  Ensure that:");
                 Console.WriteLine($"  1. The ViewModel class is present in one of the '--viewModelFiles'.");
-                Console.WriteLine($"  2. The attribute '{opts.GenerateGrpcRemoteAttributeFullName}' is correctly applied to the ViewModel class.");
-                Console.WriteLine($"  3. The '--attributeDefinitionSourceFile \"{opts.AttributeDefinitionSourceFile}\"' correctly points to the attribute's C# source and was parsed without errors.");
+                Console.WriteLine($"  2. The attribute '{opts.GenerateGrpcRemoteAttributeFullName}' (namespace: PeakSWC.Mvvm.Remote) is correctly applied to the ViewModel class.");
+                Console.WriteLine($"  3. The embedded attribute definition '{AttributeDefinitionResourceName}' was parsed without errors and defines the attribute with the FQN above.");
                 Console.WriteLine($"  4. There are no compilation errors (see diagnostics above) preventing the attribute from being recognized.");
                 Console.ResetColor();
                 Environment.ExitCode = 1;
@@ -349,15 +375,16 @@ namespace ProtoGeneratorUtil
             if (string.IsNullOrWhiteSpace(opts.OutputPath))
             {
                 var firstVmFileForPathDerivation = opts.ViewModelFiles.FirstOrDefault(f =>
-                                        mainViewModelSymbol.Locations.Any(loc => loc.SourceTree?.FilePath.Equals(f, StringComparison.OrdinalIgnoreCase) == true));
+                   mainViewModelSymbol.Locations.Any(loc => loc.SourceTree?.FilePath.Equals(f, StringComparison.OrdinalIgnoreCase) == true));
+
                 if (firstVmFileForPathDerivation == null && opts.ViewModelFiles.Any())
                 {
-                    firstVmFileForPathDerivation = opts.ViewModelFiles.First(); // Fallback if symbol location doesn't match file list directly
+                    firstVmFileForPathDerivation = opts.ViewModelFiles.First();
                 }
 
-
-                var baseDir = Path.GetDirectoryName(firstVmFileForPathDerivation ?? opts.AttributeDefinitionSourceFile); // Fallback further if still null
+                var baseDir = Path.GetDirectoryName(firstVmFileForPathDerivation ?? ".");
                 if (string.IsNullOrEmpty(baseDir)) baseDir = ".";
+
                 var protosDir = Path.Combine(baseDir, "Protos");
                 opts.OutputPath = Path.Combine(protosDir, $"{opts.GrpcServiceName}.proto");
                 Console.WriteLine($"ProtoGeneratorUtil: Derived Output Path: {opts.OutputPath}");
@@ -378,10 +405,11 @@ namespace ProtoGeneratorUtil
             Console.WriteLine($"  gRPC Service Name: {opts.GrpcServiceName}");
             Console.WriteLine($"-------------------------------------------------");
 
+
             List<PropertyInfo> properties = GetObservableProperties(mainViewModelSymbol, opts.ObservablePropertyAttributeFullName, compilation);
             List<CommandInfo> commands = GetRelayCommands(mainViewModelSymbol, opts.RelayCommandAttributeFullName, compilation);
 
-            bool hasObservableFields = Helpers.GetAllMembers( mainViewModelSymbol).OfType<IFieldSymbol>().Any(f =>
+            bool hasObservableFields = Helpers.GetAllMembers(mainViewModelSymbol).OfType<IFieldSymbol>().Any(f =>
                 f.GetAttributes().Any(a => (a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == opts.ObservablePropertyAttributeFullName ||
                                             a.AttributeClass?.Name == opts.ObservablePropertyAttributeFullName ||
                                             a.AttributeClass?.Name == Path.GetFileNameWithoutExtension(opts.ObservablePropertyAttributeFullName))));
@@ -454,9 +482,10 @@ namespace ProtoGeneratorUtil
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"  Warning: Could not load core reference for assembly of type '{typeInAssembly?.FullName ?? "Unknown"}': {ex.Message.Split('\n')[0]}");
+                Console.WriteLine($"  Warning: Could not load core reference for assembly of type '{typeInAssembly?.FullName ?? "Unknown"}': {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}");
             }
         }
+
         private static void TryAddAssemblyReferenceByName(List<MetadataReference> references, string assemblyName)
         {
             try
@@ -482,7 +511,7 @@ namespace ProtoGeneratorUtil
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"  Warning: Could not load core reference for assembly '{assemblyName}' by name: {ex.Message.Split('\n')[0]}");
+                Console.WriteLine($"  Warning: Could not load core reference for assembly '{assemblyName}' by name: {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}");
             }
         }
 
@@ -491,7 +520,6 @@ namespace ProtoGeneratorUtil
             string? foundPath = null;
             var searchPathsAttempted = new List<string>();
 
-            // 1. ProtoGeneratorUtil.exe's directory
             if (Directory.Exists(AppContext.BaseDirectory))
             {
                 foundPath = Directory.GetFiles(AppContext.BaseDirectory, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
@@ -499,7 +527,6 @@ namespace ProtoGeneratorUtil
                 else searchPathsAttempted.Add($"ProtoUtil BaseDir: {AppContext.BaseDirectory} (not found for {dllName})");
             }
 
-            // 2. Relative to hintFilePath (e.g., a ViewModel file)
             if (foundPath == null && !string.IsNullOrEmpty(hintFilePath))
             {
                 var hintDir = Path.GetDirectoryName(hintFilePath);
@@ -509,11 +536,10 @@ namespace ProtoGeneratorUtil
                 {
                     searchPathsAttempted.Add($"Searching near: {hintDir} for {dllName}");
                     string[] configurations = { "Debug", "Release" };
-                    string[] tfms = { "net8.0", "net7.0", "net6.0", "net5.0", "netstandard2.1", "netstandard2.0", "" }; // Empty string for non-tfm specific paths
+                    string[] tfms = { "net8.0", "net7.0", "net6.0", "net5.0", "netstandard2.1", "netstandard2.0", "" };
                     foreach (var config in configurations)
                     {
                         var configBinPath = Path.Combine(hintDir, "bin", config);
-                        // Check directly in bin/config too before TFMs
                         if (Directory.Exists(configBinPath))
                         {
                             foundPath = Directory.GetFiles(configBinPath, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
@@ -540,7 +566,6 @@ namespace ProtoGeneratorUtil
                 }
             }
 
-            // 3. NuGet global packages folder
             if (foundPath == null)
             {
                 string nugetPackagesPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
@@ -552,16 +577,15 @@ namespace ProtoGeneratorUtil
                     if (Directory.Exists(packageDir))
                     {
                         foundPath = Directory.GetFiles(packageDir, dllName, SearchOption.AllDirectories)
-                                           .Where(p => p.Contains(Path.DirectorySeparatorChar + "lib" + Path.DirectorySeparatorChar) || p.Contains(Path.DirectorySeparatorChar + "ref" + Path.DirectorySeparatorChar))
-                                           .OrderByDescending(f => f.ToLowerInvariant().Contains("net8.0") ? 30 : f.ToLowerInvariant().Contains("net7.0") ? 20 : f.ToLowerInvariant().Contains("net6.0") ? 10 : f.ToLowerInvariant().Contains("netstandard2.0") ? 5 : 0)
-                                           .ThenByDescending(f => f)
-                                           .FirstOrDefault();
+                                          .Where(p => p.Contains(Path.DirectorySeparatorChar + "lib" + Path.DirectorySeparatorChar) || p.Contains(Path.DirectorySeparatorChar + "ref" + Path.DirectorySeparatorChar))
+                                          .OrderByDescending(f => f.ToLowerInvariant().Contains("net8.0") ? 30 : f.ToLowerInvariant().Contains("net7.0") ? 20 : f.ToLowerInvariant().Contains("net6.0") ? 10 : f.ToLowerInvariant().Contains("netstandard2.0") ? 5 : 0)
+                                          .ThenByDescending(f => f)
+                                          .FirstOrDefault();
                         if (foundPath != null) searchPathsAttempted.Add($"  NuGet Cache: {foundPath} (FOUND)");
                     }
                 }
             }
 
-            // 4. .NET SDK Packs / Shared
             if (foundPath == null)
             {
                 string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
@@ -581,12 +605,12 @@ namespace ProtoGeneratorUtil
                     try
                     {
                         foundPath = Directory.GetFiles(root, dllName, SearchOption.AllDirectories)
-                                           .OrderByDescending(f => f.ToLowerInvariant().Contains("net8.0") ? 30 : f.ToLowerInvariant().Contains("net7.0") ? 20 : f.ToLowerInvariant().Contains("net6.0") ? 10 : 0)
-                                           .ThenByDescending(f => f)
-                                           .FirstOrDefault();
+                                          .OrderByDescending(f => f.ToLowerInvariant().Contains("net8.0") ? 30 : f.ToLowerInvariant().Contains("net7.0") ? 20 : f.ToLowerInvariant().Contains("net6.0") ? 10 : 0)
+                                          .ThenByDescending(f => f)
+                                          .FirstOrDefault();
                         if (foundPath != null) { searchPathsAttempted.Add($"  SDK Path: {foundPath} (FOUND)"); break; }
                     }
-                    catch (Exception ex) { searchPathsAttempted.Add($"  Error searching SDK root '{root}' for {dllName}: {ex.Message.Split('\n')[0]}"); }
+                    catch (Exception ex) { searchPathsAttempted.Add($"  Error searching SDK root '{root}' for {dllName}: {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}"); }
                 }
             }
 
@@ -601,7 +625,7 @@ namespace ProtoGeneratorUtil
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"ProtoGeneratorUtil: Warning: Could not create MetadataReference for found file '{foundPath}': {ex.Message.Split('\n')[0]}");
+                        Console.WriteLine($"ProtoGeneratorUtil: Warning: Could not create MetadataReference for found file '{foundPath}': {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}");
                     }
                 }
                 else
@@ -612,57 +636,44 @@ namespace ProtoGeneratorUtil
             else
             {
                 Console.WriteLine($"ProtoGeneratorUtil: {(isOptional ? "Info: Optional assembly" : "Warning: Could not find")} '{dllName}'. Attribute resolution and type analysis might be affected.");
-                // Uncomment for detailed debugging of search paths:
-                // Console.WriteLine($"  Search paths attempted for {dllName}:");
-                // foreach(var sPath in searchPathsAttempted) { Console.WriteLine($"    {sPath}"); }
             }
         }
 
         private static List<PropertyInfo> GetObservableProperties(INamedTypeSymbol classSymbol, string observablePropertyAttributeFullName, Compilation compilation)
         {
             var props = new List<PropertyInfo>();
-            // Use a HashSet to keep track of property names to avoid duplicates from overridden members if not careful,
-            // though CommunityToolkit.Mvvm usually generates distinct backing fields.
             var processedPropertyNames = new HashSet<string>(StringComparer.Ordinal);
-
-            string shortObservableName = Path.GetFileNameWithoutExtension(observablePropertyAttributeFullName);
+            string shortObservableName = Path.GetFileNameWithoutExtension(observablePropertyAttributeFullName); // e.g., "ObservablePropertyAttribute" -> "ObservableProperty"
             Console.WriteLine($"ProtoGeneratorUtil: Scanning for ObservableProperties in {classSymbol.Name} (and base types) using attribute '{observablePropertyAttributeFullName}' (or short name '{shortObservableName}')...");
 
-            foreach (var member in Helpers.GetAllMembers(classSymbol)) // Use the helper method here
+            foreach (var member in Helpers.GetAllMembers(classSymbol))
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
                     foreach (var attr in fieldSymbol.GetAttributes())
                     {
                         string? attrClassFQN = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                        string? attrClassName = attr.AttributeClass?.Name;
+                        string? attrClassName = attr.AttributeClass?.Name; // e.g., "ObservablePropertyAttribute"
 
                         if (attrClassFQN == observablePropertyAttributeFullName ||
-                            attrClassName == observablePropertyAttributeFullName ||
-                            (attrClassName != null && attrClassName == shortObservableName))
+                            (attrClassName != null && (attrClassName == observablePropertyAttributeFullName || attrClassName == shortObservableName)))
                         {
-                            //Console.WriteLine($"    -> Potential ObservablePropertyAttribute match for field '{fieldSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}' (Type: {fieldSymbol.Type.Name})!");
                             string propertyName = fieldSymbol.Name.TrimStart('_');
                             if (propertyName.Length > 0 && char.IsLower(propertyName[0]))
                             {
                                 propertyName = char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1);
                             }
-                            else if (propertyName.Length == 0 || (propertyName.Length > 0 && !char.IsLetter(propertyName[0]))) // Ensure first char is letter after trimming
+                            else if (propertyName.Length == 0 || (propertyName.Length > 0 && !char.IsLetter(propertyName[0])))
                             {
-                                //Console.WriteLine($"      Skipping field '{fieldSymbol.Name}' due to invalid derived property name ('{propertyName}').");
                                 continue;
                             }
 
-                            if (processedPropertyNames.Add(propertyName)) // Add returns true if the item was new
+                            if (processedPropertyNames.Add(propertyName))
                             {
                                 Console.WriteLine($"    -> MATCHED ObservablePropertyAttribute for field '{fieldSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}', generating property '{propertyName}' (Type: {fieldSymbol.Type.ToDisplayString()}).");
                                 props.Add(new PropertyInfo { Name = propertyName, TypeString = fieldSymbol.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), FullTypeSymbol = fieldSymbol.Type });
                             }
-                            // else
-                            // {
-                            //     Console.WriteLine($"      Skipping already processed property name '{propertyName}' derived from field '{fieldSymbol.Name}'.");
-                            // }
-                            break; // Found the attribute on this field, no need to check other attributes on the same field
+                            break;
                         }
                     }
                 }
@@ -674,16 +685,14 @@ namespace ProtoGeneratorUtil
         private static List<CommandInfo> GetRelayCommands(INamedTypeSymbol classSymbol, string relayCommandAttributeFullName, Compilation compilation)
         {
             var cmds = new List<CommandInfo>();
-            // Use a HashSet to keep track of command property names to avoid duplicates if methods are overridden
-            // and both might be picked up by GetAllMembers depending on how overrides are handled by Roslyn's GetMembers().
             var processedCommandPropertyNames = new HashSet<string>(StringComparer.Ordinal);
 
             string shortRelayName = Path.GetFileNameWithoutExtension(relayCommandAttributeFullName);
             Console.WriteLine($"ProtoGeneratorUtil: Scanning for RelayCommands in {classSymbol.Name} (and base types) using attribute '{relayCommandAttributeFullName}' (or short name '{shortRelayName}')...");
 
-            foreach (var member in Helpers.GetAllMembers(classSymbol)) // Use the helper method here
+            foreach (var member in Helpers.GetAllMembers(classSymbol))
             {
-                if (member is IMethodSymbol methodSymbol && methodSymbol.MethodKind == MethodKind.Ordinary && !methodSymbol.IsOverride) // Consider only non-override methods to avoid duplicates if base also has attribute
+                if (member is IMethodSymbol methodSymbol && methodSymbol.MethodKind == MethodKind.Ordinary && !methodSymbol.IsStatic && !methodSymbol.IsOverride) // Usually instance methods for commands
                 {
                     foreach (var attr in methodSymbol.GetAttributes())
                     {
@@ -691,10 +700,8 @@ namespace ProtoGeneratorUtil
                         string? attrClassName = attr.AttributeClass?.Name;
 
                         if (attrClassFQN == relayCommandAttributeFullName ||
-                            attrClassName == relayCommandAttributeFullName ||
-                            (attrClassName != null && attrClassName == shortRelayName))
+                            (attrClassName != null && (attrClassName == relayCommandAttributeFullName || attrClassName == shortRelayName)))
                         {
-                            // Console.WriteLine($"    -> Potential RelayCommandAttribute match for method '{methodSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}'!");
                             string commandPropertyName = methodSymbol.Name;
                             if (commandPropertyName.EndsWith("Async", StringComparison.OrdinalIgnoreCase))
                             {
@@ -706,27 +713,22 @@ namespace ProtoGeneratorUtil
                             }
                             else if (commandPropertyName.Length == 0 || (commandPropertyName.Length > 0 && !char.IsLetter(commandPropertyName[0])))
                             {
-                                //Console.WriteLine($"      Skipping method '{methodSymbol.Name}' due to invalid derived command property name.");
                                 continue;
                             }
                             commandPropertyName += "Command";
 
-                            if (processedCommandPropertyNames.Add(commandPropertyName)) // Add returns true if the item was new
+                            if (processedCommandPropertyNames.Add(commandPropertyName))
                             {
                                 Console.WriteLine($"    -> MATCHED RelayCommandAttribute for method '{methodSymbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat)}', generating command property '{commandPropertyName}'.");
                                 cmds.Add(new CommandInfo
                                 {
-                                    MethodName = methodSymbol.Name, // This is the name for the RPC method
+                                    MethodName = methodSymbol.Name,
                                     CommandPropertyName = commandPropertyName,
                                     Parameters = methodSymbol.Parameters.Select(p => new ParameterInfoForProto { Name = p.Name, TypeString = p.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat), FullTypeSymbol = p.Type }).ToList(),
-                                    IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.ToDisplayString() == "System.Threading.Tasks.Task" || (rtSym.IsGenericType && rtSym.ConstructedFrom.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
+                                    IsAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.ToDisplayString() == "System.Threading.Tasks.Task" || (rtSym.IsGenericType && rtSym.OriginalDefinition.ToDisplayString() == "System.Threading.Tasks.Task<TResult>")))
                                 });
                             }
-                            // else
-                            // {
-                            //    Console.WriteLine($"      Skipping already processed command property name '{commandPropertyName}' derived from method '{methodSymbol.Name}'.");
-                            // }
-                            break; // Found the attribute on this method
+                            break;
                         }
                     }
                 }
@@ -744,8 +746,8 @@ namespace ProtoGeneratorUtil
         private static bool IsProtoMapKeyType(ITypeSymbol typeSymbol)
         {
             if (typeSymbol is INamedTypeSymbol namedTypeSymbolNullable &&
-                namedTypeSymbolNullable.IsGenericType &&
-                namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
+               namedTypeSymbolNullable.IsGenericType &&
+               namedTypeSymbolNullable.OriginalDefinition?.SpecialType == SpecialType.System_Nullable_T)
             {
                 typeSymbol = namedTypeSymbolNullable.TypeArguments[0];
             }
@@ -784,7 +786,7 @@ namespace ProtoGeneratorUtil
                 case SpecialType.System_UInt32: return "uint32";
                 case SpecialType.System_UInt64: return "uint64";
                 case SpecialType.System_SByte: return "int32";
-                case SpecialType.System_Byte: return "uint32"; // For single byte properties; byte[] is "bytes"
+                case SpecialType.System_Byte: return "uint32";
                 case SpecialType.System_Int16: return "int32";
                 case SpecialType.System_UInt16: return "uint32";
                 case SpecialType.System_Char: return "string";
@@ -812,7 +814,7 @@ namespace ProtoGeneratorUtil
                 case "System.Uri": return "string";
                 case "System.Version": return "string";
                 case "System.Numerics.BigInteger": return "string";
-                case "System.Windows.Threading.DispatcherTimer": // From original user code
+                case "System.Windows.Threading.DispatcherTimer":
                     Console.WriteLine($"ProtoGeneratorUtil: Warning: Type '{typeSymbol.ToDisplayString()}' (DispatcherTimer) cannot be directly mapped. Mapping to 'google.protobuf.Any'.");
                     requiredImports.Add("google/protobuf/any.proto");
                     return "google.protobuf.Any";
@@ -949,11 +951,6 @@ namespace ProtoGeneratorUtil
             bodySb.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
             foreach (var cmd in cmds.OrderBy(c => c.MethodName))
             {
-                string requestType = cmd.Parameters.Any() ? $"{cmd.MethodName}Request" : "google.protobuf.Empty";
-                // If a command has no parameters, its actual request message will be empty.
-                // For consistency in generation, we use the generated {CmdName}Request which might be empty.
-                // Alternatively, if the request message is truly empty, gRPC tooling often optimizes to google.protobuf.Empty.
-                // We will use the generated request message type for now.
                 bodySb.AppendLine($"  rpc {cmd.MethodName} ({cmd.MethodName}Request) returns ({cmd.MethodName}Response);");
             }
             bodySb.AppendLine("}");
@@ -962,15 +959,13 @@ namespace ProtoGeneratorUtil
             var finalProtoSb = new StringBuilder();
             finalProtoSb.AppendLine("syntax = \"proto3\";");
             finalProtoSb.AppendLine();
-            string protoPackageName = protoNamespaceOption.ToLowerInvariant();
+            string protoPackageName = protoNamespaceOption.ToLowerInvariant().Replace(".", "_");
             finalProtoSb.AppendLine($"package {protoPackageName};");
             finalProtoSb.AppendLine();
             finalProtoSb.AppendLine($"option csharp_namespace = \"{protoNamespaceOption}\";");
             finalProtoSb.AppendLine();
 
             if (bodySb.ToString().Contains("google.protobuf.Any")) requiredImports.Add("google/protobuf/any.proto");
-            if (bodySb.ToString().Contains("google.protobuf.Timestamp")) requiredImports.Add("google/protobuf/timestamp.proto");
-            if (bodySb.ToString().Contains("google.protobuf.Duration")) requiredImports.Add("google/protobuf/duration.proto");
 
             foreach (var importPath in requiredImports.OrderBy(x => x))
             {

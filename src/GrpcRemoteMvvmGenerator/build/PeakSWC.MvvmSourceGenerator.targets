@@ -22,20 +22,20 @@
 		</PropertyGroup>
 		<Message Importance="normal" Text="PeakSWC.MvvmSourceGenerator: Reference paths being passed: $(_ProtoUtil_ReferencePaths)" Condition="'$(_ProtoUtil_ReferencePaths)' != ''"/>
 
-		<Error Condition="!Exists('%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile)')"
-               Text="The attribute definition source file '%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile)' required by ProtoGeneratorUtil.exe was not found. ViewModel: %(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)" />
-
+		<!--
+            Removed the Error task that checked for FinalAttributeDefinitionSourceFile existence,
+            as the tool now manages this internally via embedded resources.
+        -->
 
 		<Exec Command="&quot;$(_ProtoGeneratorUtilExePath)&quot; ^
 					  --viewModelFiles &quot;%(_MvvmViewModelProtoSourceProcessed.UserViewModelFile)&quot; ^
-					  --attributeDefinitionSourceFile &quot;%(_MvvmViewModelProtoSourceProcessed.FinalAttributeDefinitionSourceFile)&quot; ^
 					  --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
 					  --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
 					  --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
 					  %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
 					  --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
-			  WorkingDirectory="$(MSBuildProjectDirectory)"
-			  ContinueOnError="false" />
+              WorkingDirectory="$(MSBuildProjectDirectory)"
+              ContinueOnError="false" />
 
 		<ItemGroup>
 			<Protobuf Include="@(_MvvmViewModelProtoSourceProcessed->'%(FinalOutputPath)')">
@@ -51,9 +51,7 @@
 
 	<Target Name="PeakSWC_PrepareProtoGenerationItems" BeforeTargets="PeakSWC_GenerateProtoFiles">
 
-		<PropertyGroup>
-			<DefaultAttributeDefinitionSourceFile>PeakSWC/Mvvm/Remote/GenerateGrpcRemoteAttribute.cs</DefaultAttributeDefinitionSourceFile>
-		</PropertyGroup>
+		<!-- REMOVED DefaultAttributeDefinitionSourceFile PropertyGroup -->
 
 		<ItemGroup>
 			<_MvvmViewModelProtoSource_WithInputs Include="@(MvvmViewModelProtoSource)">
@@ -69,7 +67,7 @@
 				<UserGrpcServices_Input>%(MvvmViewModelProtoSource.GrpcServices)</UserGrpcServices_Input>
 				<UserProtoRoot_Input>%(MvvmViewModelProtoSource.ProtoRoot)</UserProtoRoot_Input>
 				<UserAccess_Input>%(MvvmViewModelProtoSource.Access)</UserAccess_Input>
-				<UserAttributeDefinitionSourceFile_Input>%(MvvmViewModelProtoSource.AttributeDefinitionSourceFile)</UserAttributeDefinitionSourceFile_Input>
+				<!-- REMOVED UserAttributeDefinitionSourceFile_Input -->
 			</_MvvmViewModelProtoSource_WithInputs>
 		</ItemGroup>
 
@@ -134,8 +132,7 @@
 				<FinalAccess Condition="'%(UserAccess_Input)' == ''">Public</FinalAccess>
 				<FinalAccess Condition="'%(UserAccess_Input)' != ''">%(UserAccess_Input)</FinalAccess>
 
-				<FinalAttributeDefinitionSourceFile Condition="'%(UserAttributeDefinitionSourceFile_Input)' != ''">$([System.IO.Path]::GetFullPath('%(UserAttributeDefinitionSourceFile_Input)'))</FinalAttributeDefinitionSourceFile>
-				<FinalAttributeDefinitionSourceFile Condition="'%(UserAttributeDefinitionSourceFile_Input)' == ''">$([System.IO.Path]::GetFullPath('$(DefaultAttributeDefinitionSourceFile)'))</FinalAttributeDefinitionSourceFile>
+				<!-- REMOVED FinalAttributeDefinitionSourceFile metadata -->
 			</_MvvmViewModelProtoSourceProcessed>
 		</ItemGroup>
 
