@@ -380,8 +380,10 @@ namespace ProtoGeneratorUtil
                     string locationString = lineSpan.IsValid ? $"{Path.GetFileName(lineSpan.Path)}({lineSpan.StartLinePosition.Line + 1},{lineSpan.StartLinePosition.Character + 1})" : "(No location)";
                     Console.ForegroundColor = currentDisplaySeverity switch { DiagnosticSeverity.Error => ConsoleColor.Red, DiagnosticSeverity.Warning => ConsoleColor.Yellow, DiagnosticSeverity.Info => ConsoleColor.Cyan, _ => originalColor };
                     string severityText = originalDiagnostic.Severity.ToString();
-                    if (originalDiagnostic.Severity == DiagnosticSeverity.Error && currentDisplaySeverity == DiagnosticSeverity.Info) severityText = $"Error (demoted to Info by tool due to expected source gen timing)";
-                    Console.WriteLine($"{originalDiagnostic.Id} ({severityText}): {originalDiagnostic.GetMessage()} {locationString}");
+                    if (originalDiagnostic.Severity == DiagnosticSeverity.Error && currentDisplaySeverity == DiagnosticSeverity.Info) 
+                        severityText = $"Error (demoted to Info by tool due to expected source gen timing)";
+                    else 
+                        Console.WriteLine($"{originalDiagnostic.Id} ({severityText}): {originalDiagnostic.GetMessage()} {locationString}");
                     Console.ForegroundColor = originalColor;
                 }
                 Console.WriteLine("---------------------------------------------------");
