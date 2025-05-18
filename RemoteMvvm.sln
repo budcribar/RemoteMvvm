@@ -5,8 +5,6 @@ VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcRemoteMvvmGenerator", "src\GrpcRemoteMvvmGenerator\GrpcRemoteMvvmGenerator.csproj", "{BB2260C9-F7EE-79F5-CE89-E839C2BA6A20}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteAttribute", "src\RemoteAttribute\RemoteAttribute.csproj", "{B6AEFB09-0D4E-36F8-79D7-1C6E918A7917}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleViewModel", "src\tests\MvvmClass\SampleViewModel.csproj", "{CBE4D35F-1F0C-484D-B22B-5A241CEFC172}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "src\TestProject\TestProject.csproj", "{D2BA9BEC-70C9-478C-B19C-F050EBF24FDF}"
@@ -25,10 +23,6 @@ Global
 		{BB2260C9-F7EE-79F5-CE89-E839C2BA6A20}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BB2260C9-F7EE-79F5-CE89-E839C2BA6A20}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BB2260C9-F7EE-79F5-CE89-E839C2BA6A20}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B6AEFB09-0D4E-36F8-79D7-1C6E918A7917}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B6AEFB09-0D4E-36F8-79D7-1C6E918A7917}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B6AEFB09-0D4E-36F8-79D7-1C6E918A7917}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B6AEFB09-0D4E-36F8-79D7-1C6E918A7917}.Release|Any CPU.Build.0 = Release|Any CPU
 		{CBE4D35F-1F0C-484D-B22B-5A241CEFC172}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{CBE4D35F-1F0C-484D-B22B-5A241CEFC172}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CBE4D35F-1F0C-484D-B22B-5A241CEFC172}.Release|Any CPU.ActiveCfg = Release|Any CPU
