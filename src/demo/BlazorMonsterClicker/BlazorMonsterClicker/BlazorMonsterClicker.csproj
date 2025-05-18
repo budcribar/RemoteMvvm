@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<Compile Include="..\..\MonsterClicker\ViewModels\GameViewModel.cs" Link="GameViewModel.cs" />
+	
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.16" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.16" PrivateAssets="all" />
+
+		<PackageReference Include="Grpc.Net.Client" Version="2.57.0" />
+		<PackageReference Include="Grpc.Net.Client.Web" Version="2.57.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.25.0" />
+
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+
+		<PackageReference Include="Grpc.Tools" Version="2.72.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.45-g00487ca7b3">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		
+		<!--<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="Protos\" Access="Public" />-->
+
+
+	</ItemGroup>
+	
+	<ItemGroup>
+		<MvvmViewModelProtoSource Include="$(ProjectDir)/GameViewModel.cs">
+			<ProtoNamespace>MonsterClicker.ViewModels.Protos</ProtoNamespace>
+			<ServiceName>GameViewModelService</ServiceName>
+
+			<OutputPath>Protos\GameViewModelService.proto</OutputPath>
+
+		</MvvmViewModelProtoSource>
+	</ItemGroup>
+	
+	<ItemGroup>
+		<Folder Include="protos\" />
+	</ItemGroup>
+
+</Project>
