@@ -1,9 +1,4 @@
 ﻿<Project>
-	<PropertyGroup>
-		<GrpcServices Condition="'$(GrpcServices)' == ''">
-			%(PackageReference.GrpcServices)
-		</GrpcServices>
-	</PropertyGroup>
 	<ItemGroup>
 		<AvailableItemName Include="MvvmViewModelProtoSource" />
 	</ItemGroup>

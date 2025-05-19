@@ -7,7 +7,14 @@
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net8ToolPathForExists)')">$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net6ToolPathForExists)') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 	</PropertyGroup>
-
+	<Target Name="PeakSWC_SetGrpcServices"
+		 BeforeTargets="CoreCompile">
+		<PropertyGroup>
+			<GrpcServices Condition="'$(GrpcServices)' == ''">
+				%(PackageReference.GrpcServices)
+			</GrpcServices>
+		</PropertyGroup>
+	</Target>
 	<Target Name="PeakSWC_GenerateProtoFiles"
             BeforeTargets="CoreCompile;BeforeResGen;ProtoCompile"
             DependsOnTargets="ResolveAssemblyReferences;PeakSWC_PrepareProtoGenerationItems"

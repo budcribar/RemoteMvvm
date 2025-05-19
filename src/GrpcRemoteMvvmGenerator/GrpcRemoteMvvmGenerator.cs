@@ -201,8 +201,7 @@ namespace PeakSWC.MvvmSourceGenerator
                     properties.Count, commands.Count, originalViewModelName));
 
                 // CONDITIONAL: generate server stub?
-                if (grpcServices is not null) 
-                if( grpcServices.Equals("Server", StringComparison.OrdinalIgnoreCase) || grpcServices.Equals("Both", StringComparison.OrdinalIgnoreCase))
+                if (grpcServices is not null && ( grpcServices.Equals("Server", StringComparison.OrdinalIgnoreCase) || grpcServices.Equals("Both", StringComparison.OrdinalIgnoreCase)))
                 {
                     string serverImplCode = GenerateServerImplementation(
                         serverImplNamespace, originalViewModelName, originalViewModelFullName,
@@ -213,9 +212,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 }
 
                 // CONDITIONAL: generate client proxy?
-                if (grpcServices is not null)
-                if (grpcServices.Equals("Client", StringComparison.OrdinalIgnoreCase)
-                 || grpcServices.Equals("Both", StringComparison.OrdinalIgnoreCase))
+                if (grpcServices is not null && (grpcServices.Equals("Client", StringComparison.OrdinalIgnoreCase) || grpcServices.Equals("Both", StringComparison.OrdinalIgnoreCase)))
                 {
                     string clientProxyCode = GenerateClientProxyViewModel(
                         clientProxyNamespace, originalViewModelName,
