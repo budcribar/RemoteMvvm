@@ -1,36 +1,57 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project>
-	<!-- 1) Make the custom item known -->
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!-- 1) Capture every PackageReference into our own item -->
+	<ItemGroup>
+		<_PeakSWCSourceGenPkg
+		  Include="@(PackageReference)">
+			<PkgIdentity>%(PackageReference.Identity)</PkgIdentity>
+			<PkgGrpcServices>%(PackageReference.GrpcServices)</PkgGrpcServices>
+		</_PeakSWCSourceGenPkg>
+	</ItemGroup>
+
+	<!-- 2) Make MvvmViewModelProtoSource available -->
 	<ItemGroup>
 		<AvailableItemName Include="MvvmViewModelProtoSource" />
 	</ItemGroup>
 
-	<!-- 2) Pick out the single PackageReference whose Identity matches our generator -->
-	<ItemGroup>
-		<_FilteredSourceGenPkg
-		  Include="@(PackageReference)"
-		  Condition=" '%(Identity)' == 'PeakSWC.MvvmSourceGenerator' " />
-	</ItemGroup>
+	<!-- 3) The target that reads/transforms GrpcServices -->
+	<Target Name="PeakSWC_SetGrpcServices" BeforeTargets="CoreCompile">
 
-	<!-- 3) Snap its GrpcServices metadata into a temporary property -->
-	<PropertyGroup>
-		<!-- this will be empty if no matching PackageReference was found -->
-		<_RawGrpcServices>%(FilteredSourceGenPkg.GrpcServices)</_RawGrpcServices>
-	</PropertyGroup>
+		<!-- 3a) Filter down to *our* package -->
+		<ItemGroup>
+			<_FilteredPkg
+			  Include="@(_PeakSWCSourceGenPkg)"
+			  Condition="'%(PkgIdentity)' == 'PeakSWC.MvvmSourceGenerator'" />
+		</ItemGroup>
 
-	<!-- 4) Only now assign the real $(GrpcServices) if not already set -->
-	<PropertyGroup Condition="
-      '$(GrpcServices)' == '' and
-      '$(_RawGrpcServices)' != '' ">
-		<!-- strip any stray whitespace -->
-		<GrpcServices>
-			$([System.Text.RegularExpressions.Regex]::Replace('$(_RawGrpcServices)', '\s+', ''))
-		</GrpcServices>
-	</PropertyGroup>
+		<!-- 3b) If the user hasn’t set GrpcServices, grab & clean ours -->
+		<PropertyGroup>
+			<!-- raw (may contain whitespace/newlines) -->
+			<_RawGrpcServices
+			  Condition="
+          '$(GrpcServices)' == ''
+          and '@(_FilteredPkg)' != ''
+        ">
+				%(_FilteredPkg.PkgGrpcServices)
+			</_RawGrpcServices>
 
-	<!-- 5) (optional) debug message -->
-	<Message
-	  Condition="'$(GrpcServices)' != ''"
-	  Importance="High"
-	  Text="GrpcServices is now: '$(GrpcServices)'" />
+			<!-- strip ALL whitespace -->
+			<GrpcServices
+			  Condition="
+          '$(GrpcServices)' == ''
+          and '$(_RawGrpcServices)' != ''
+        ">
+				$([System.Text.RegularExpressions.Regex]::Replace('$(_RawGrpcServices)', '\s+', ''))
+			</GrpcServices>
+		</PropertyGroup>
+
+		<!-- 3c) (Optional) Debug message *inside* the target -->
+		<Message
+		  Importance="high"
+		  Condition="'$(GrpcServices)' != ''"
+		  Text="GrpcServices is now: '$(GrpcServices)'" />
+	</Target>
+
 </Project>
+
