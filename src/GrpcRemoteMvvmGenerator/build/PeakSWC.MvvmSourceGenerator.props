@@ -1,26 +1,18 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
 
-	<!-- 1) Early, top-level props (imported before the SDK binds up AnalyzerConfigOptions) -->
 	<PropertyGroup>
-		<!--
-      If the project hasn’t explicitly set GrpcServices, and
-      we have a PeakSWC.MvvmSourceGenerator reference, pull its metadata:
-    -->
 		<GrpcServices
-		  Condition="
-        '$(GrpcServices)' == '' and
-        '%(PackageReference.Identity)' == 'PeakSWC.MvvmSourceGenerator'
-      ">
-			%(PackageReference.GrpcServices)
+		  Condition="'$(GrpcServices)' == '' and '@(_MvvmSourceGenPkg)' != ''">
+			%(_MvvmSourceGenPkg.GrpcServices)
 		</GrpcServices>
-
-		<!-- Optional: trim out any stray whitespace (shouldn’t be needed if your P.R. metadata is clean) -->
+		<!-- optional trim -->
 		<GrpcServices
 		  Condition="'$(GrpcServices)' != ''">
 			$([System.Text.RegularExpressions.Regex]::Replace($(GrpcServices), '\s+', ''))
 		</GrpcServices>
 	</PropertyGroup>
+
 
 	<!-- your existing item declaration -->
 	<ItemGroup>
