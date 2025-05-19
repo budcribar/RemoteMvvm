@@ -26,7 +26,7 @@
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="System.Threading.Channels" Version="8.0.0" />
-		<Content Include="attributes\GenerateGrpcRemoteAttribute.cs" Pack="true" PackagePath="attributes\" />
+		<EmbeddedResource Include="attributes\GenerateGrpcRemoteAttribute.cs" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 		<Content Include="$(ProtoGeneratorUtilOutDir)ProtoGeneratorUtil.exe" Pack="true" PackagePath="tools\net8.0\" CopyToOutputDirectory="PreserveNewest" />

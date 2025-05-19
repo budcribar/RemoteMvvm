@@ -1,16 +1,17 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 // Required for Channel<T>
 using System.Threading.Channels;
-using System.Collections.Concurrent;
-using Microsoft.CodeAnalysis.Diagnostics;
-using System.Collections.Immutable;
 
 
 namespace PeakSWC.MvvmSourceGenerator
@@ -59,9 +60,31 @@ namespace PeakSWC.MvvmSourceGenerator
             id: "SGINFO007", title: "Code Generation", messageFormat: "Generated client proxy for {0} in namespace {1}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
-
+                /// <summary>
+        /// Load the attribute definition from the embedded .cs file.
+        /// </summary>
+        private static string GetAttributeSource()
+        {
+            var assembly = typeof(GrpcRemoteMvvmGenerator).Assembly;
+            using var stream = assembly.GetManifestResourceStream("PeakSWC.MvvmSourceGenerator.attributes.GenerateGrpcRemoteAttribute.cs" );
+            if (stream == null)
+                throw new InvalidOperationException(
+                    "Unable to find embedded resource " +
+                    "'PeakSWC.MvvmSourceGenerator.attributes.GenerateGrpcRemoteAttribute.cs'"
+                );
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
         public void Initialize(IncrementalGeneratorInitializationContext context)
         {
+            context.RegisterPostInitializationOutput(piContext =>
+            {
+                string attributeSource = GetAttributeSource();
+                piContext.AddSource(
+                "GenerateGrpcRemoteAttribute.g.cs",
+                SourceText.From(attributeSource, Encoding.UTF8)
+                                );
+                            });
             IncrementalValuesProvider<ClassDeclarationSyntax> classDeclarations = context.SyntaxProvider
                 .ForAttributeWithMetadataName(
                     GenerateGrpcRemoteAttributeFullName,
