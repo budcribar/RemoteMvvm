@@ -7,6 +7,10 @@
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net8ToolPathForExists)')">$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net6ToolPathForExists)') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 	</PropertyGroup>
+	<!-- 0) Grab every PackageReference up front -->
+	<ItemGroup>
+		<_MvvmSourceGenPkg Include="@(PackageReference)" />
+	</ItemGroup>
 	<Target Name="PeakSWC_SetGrpcServices"
 		BeforeTargets="CoreCompile">
 		<!-- 1) filter the package refs -->
