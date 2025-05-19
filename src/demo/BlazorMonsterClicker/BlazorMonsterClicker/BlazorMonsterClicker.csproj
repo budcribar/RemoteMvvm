@@ -4,7 +4,6 @@
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<GrpcServices>Client</GrpcServices>
 		<!--<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>-->
 	</PropertyGroup>
 
@@ -24,7 +23,8 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.72-ga7df65bff0">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator"  Version="1.0.75-ga81c7c1a5a">
+		
 			<GrpcServices>Client</GrpcServices>
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
