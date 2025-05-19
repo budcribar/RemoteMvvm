@@ -8,13 +8,17 @@
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net6ToolPathForExists)') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 	</PropertyGroup>
 	<Target Name="PeakSWC_SetGrpcServices"
-		 BeforeTargets="CoreCompile">
+        BeforeTargets="CoreCompile">
 		<PropertyGroup>
+			<!-- if the property isn't already set, pick up the metadata -->
 			<GrpcServices Condition="'$(GrpcServices)' == ''">
-				%(PackageReference.GrpcServices)
+				@(PackageReference->'%(GrpcServices)')
 			</GrpcServices>
 		</PropertyGroup>
+		<!-- DEBUG: you can temporarily emit this to make sure it worked -->
+		<Message Importance="high" Text="GrpcServices is now: '$(GrpcServices)'" />
 	</Target>
+
 	<Target Name="PeakSWC_GenerateProtoFiles"
             BeforeTargets="CoreCompile;BeforeResGen;ProtoCompile"
             DependsOnTargets="ResolveAssemblyReferences;PeakSWC_PrepareProtoGenerationItems"
