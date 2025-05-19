@@ -5,7 +5,7 @@ using Grpc.Net.Client;
 using Grpc.Net.Client.Web; // For GrpcWebHandler
 // Assuming your generated gRPC client and RemoteClient are in these namespaces
 using MonsterClicker.ViewModels.Protos;
-using BlazorMonsterClicker.RemoteClients;
+using MonsterClicker.RemoteClients;
 
 namespace BlazorMonsterClicker
 {
