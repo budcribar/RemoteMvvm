@@ -8,30 +8,6 @@
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net6ToolPathForExists)') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 	</PropertyGroup>
 
-	<!-- 0) Globally grab every PackageReference -->
-	<ItemGroup>
-		<_MvvmSourceGenPkg Include="@(PackageReference)" />
-	</ItemGroup>
-
-	<Target Name="PeakSWC_SetGrpcServices" BeforeTargets="CoreCompile">
-		<!-- 1) Filter to only the PeakSWC.MvvmSourceGenerator package -->
-		<ItemGroup>
-			<_Filtered Include="@(_MvvmSourceGenPkg)"
-					  Condition=" '%(Identity)' == 'PeakSWC.MvvmSourceGenerator' " />
-		</ItemGroup>
-
-		<PropertyGroup>
-			<!-- 2) In *one line*, pull the metadata into a String.Copy+Trim call -->
-			<GrpcServices Condition="'$(GrpcServices)' == '' and '@(_Filtered)' != ''">$([System.String]::Copy('%(_Filtered.GrpcServices)').Trim())</GrpcServices>
-		</PropertyGroup>
-
-		<!-- DEBUG -->
-		<Message Importance="high" Condition="'$(GrpcServices)' != ''"
-				 Text="GrpcServices is now: '$(GrpcServices)'" />
-	</Target>
-
-
-
 	<Target Name="PeakSWC_GenerateProtoFiles"
             BeforeTargets="CoreCompile;BeforeResGen;ProtoCompile"
             DependsOnTargets="ResolveAssemblyReferences;PeakSWC_PrepareProtoGenerationItems"
