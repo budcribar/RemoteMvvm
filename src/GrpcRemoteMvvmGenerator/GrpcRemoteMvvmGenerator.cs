@@ -117,7 +117,7 @@ namespace PeakSWC.MvvmSourceGenerator
             }
         }
 
-        private void Execute(Compilation compilation, System.Collections.Immutable.ImmutableArray<ClassDeclarationSyntax> classes, SourceProductionContext context)
+        private void Execute(Compilation compilation, System.Collections.Immutable.ImmutableArray<ClassDeclarationSyntax> classes, SourceProductionContext context, AnalyzerConfigOptionsProvider optionsProvider)
         {
             context.ReportDiagnostic(Diagnostic.Create(SGINFO001_GeneratorStarted, Location.None));
 
@@ -126,6 +126,12 @@ namespace PeakSWC.MvvmSourceGenerator
                 context.ReportDiagnostic(Diagnostic.Create(SGINFO002_NoClassesFound, Location.None));
                 return;
             }
+
+            // Read project-level <GrpcServices> (default to "Both")
+            optionsProvider.GlobalOptions.TryGetValue("build_property.GrpcServices", out var rawGrpcServices);
+            var grpcServices = string.IsNullOrWhiteSpace(rawGrpcServices)
+                ? "Both"
+                : rawGrpcServices?.Trim();
 
             foreach (var classSyntax in classes)
             {
@@ -173,9 +179,9 @@ namespace PeakSWC.MvvmSourceGenerator
                 }
 
                 string serverImplNamespace = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "ServerImplNamespace").Value.Value?.ToString()
-                                             ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.GrpcServices";
+                    ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.GrpcServices";
                 string clientProxyNamespace = attributeData.NamedArguments.FirstOrDefault(na => na.Key == "ClientProxyNamespace").Value.Value?.ToString()
-                                               ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.RemoteClients";
+                    ?? $"{classSymbol.ContainingNamespace.ToDisplayString()}.RemoteClients";
 
                 var originalViewModelName = classSymbol.Name;
                 var originalViewModelFullName = classSymbol.ToDisplayString();
@@ -183,23 +189,33 @@ namespace PeakSWC.MvvmSourceGenerator
                 List<PropertyInfoData> properties = GetObservableProperties(classSymbol);
                 List<CommandInfoData> commands = GetRelayCommands(classSymbol);
 
-                context.ReportDiagnostic(Diagnostic.Create(SGINFO005_ExtractedMembers, Location.None, properties.Count, commands.Count, originalViewModelName));
+                context.ReportDiagnostic(Diagnostic.Create(SGINFO005_ExtractedMembers,Location.None,
+                    properties.Count, commands.Count, originalViewModelName));
 
+                // CONDITIONAL: generate server stub?
+                if (grpcServices is not null) 
+                if( grpcServices.Equals("Server", StringComparison.OrdinalIgnoreCase) || grpcServices.Equals("Both", StringComparison.OrdinalIgnoreCase))
+                {
+                    string serverImplCode = GenerateServerImplementation(
+                        serverImplNamespace, originalViewModelName, originalViewModelFullName,
+                        protoCsNamespace, grpcServiceNameFromAttribute,
+                        properties, commands, compilation);
+                    context.AddSource($"{originalViewModelName}GrpcServiceImpl.g.cs", SourceText.From(serverImplCode, Encoding.UTF8));
+                    context.ReportDiagnostic(Diagnostic.Create(SGINFO006_GeneratedServerImpl, Location.None, originalViewModelName, serverImplNamespace));
+                }
 
-                string serverImplCode = GenerateServerImplementation(
-                    serverImplNamespace, originalViewModelName, originalViewModelFullName,
-                    protoCsNamespace, grpcServiceNameFromAttribute,
-                    properties, commands, compilation);
-                context.AddSource($"{originalViewModelName}GrpcServiceImpl.g.cs", SourceText.From(serverImplCode, Encoding.UTF8));
-                context.ReportDiagnostic(Diagnostic.Create(SGINFO006_GeneratedServerImpl, Location.None, originalViewModelName, serverImplNamespace));
-
-
-                string clientProxyCode = GenerateClientProxyViewModel(
-                    clientProxyNamespace, originalViewModelName,
-                    protoCsNamespace, grpcServiceNameFromAttribute,
-                    properties, commands, compilation);
-                context.AddSource($"{originalViewModelName}RemoteClient.g.cs", SourceText.From(clientProxyCode, Encoding.UTF8));
-                context.ReportDiagnostic(Diagnostic.Create(SGINFO007_GeneratedClientProxy, Location.None, originalViewModelName, clientProxyNamespace));
+                // CONDITIONAL: generate client proxy?
+                if (grpcServices is not null)
+                if (grpcServices.Equals("Client", StringComparison.OrdinalIgnoreCase)
+                 || grpcServices.Equals("Both", StringComparison.OrdinalIgnoreCase))
+                {
+                    string clientProxyCode = GenerateClientProxyViewModel(
+                        clientProxyNamespace, originalViewModelName,
+                        protoCsNamespace, grpcServiceNameFromAttribute,
+                        properties, commands, compilation);
+                    context.AddSource($"{originalViewModelName}RemoteClient.g.cs", SourceText.From(clientProxyCode, Encoding.UTF8));
+                    context.ReportDiagnostic(Diagnostic.Create(SGINFO007_GeneratedClientProxy, Location.None, originalViewModelName, clientProxyNamespace));
+                }
             }
         }
 

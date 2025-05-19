@@ -1,0 +1,59 @@
+﻿--- before/GrpcRemoteMvvmGenerator.cs
++++ after/GrpcRemoteMvvmGenerator.cs
+@@
+-    private void Execute(Compilation compilation,
+-                         ImmutableArray<ClassDeclarationSyntax> classes,
+-                         SourceProductionContext context)
++    // <-- added optionsProvider parameter
++    private void Execute(Compilation compilation,
++                         ImmutableArray<ClassDeclarationSyntax> classes,
++                         SourceProductionContext context,
++                         AnalyzerConfigOptionsProvider optionsProvider)
+@@
+-        // 3) Read global <GrpcServices> setting (Both, Server or Client)
+-        // (this line did not exist)
++        // 3) Read project-level <GrpcServices> (default to "Both")
++        optionsProvider.GlobalOptions
++                       .TryGetValue("build_property.GrpcServices", out var rawGrpcServices);
++        var grpcServices = string.IsNullOrWhiteSpace(rawGrpcServices)
++            ? "Both"
++            : rawGrpcServices.Trim();
+@@
+         foreach (var classSyntax in classes)
+         {
+             // … existing symbol + attribute logic …
+ 
+-            // 5) Always emit server stub
+-            var serverCode = GenerateServerImplementation(…);
+-            context.AddSource(
+-                $"{originalName}GrpcServiceImpl.g.cs",
+-                SourceText.From(serverCode, Encoding.UTF8));
+-            context.ReportDiagnostic(SGINFO006_…);
++            // 5) CONDITIONAL: Server stub?
++            if (grpcServices.Equals("Server", StringComparison.OrdinalIgnoreCase)
++             || grpcServices.Equals("Both",   StringComparison.OrdinalIgnoreCase))
++            {
++                var serverCode = GenerateServerImplementation(…);
++                context.AddSource(
++                    $"{originalName}GrpcServiceImpl.g.cs",
++                    SourceText.From(serverCode, Encoding.UTF8));
++                context.ReportDiagnostic(SGINFO006_…);
++            }
+@@
+-            // 6) Always emit client proxy
+-            var clientCode = GenerateClientProxyViewModel(…);
+-            context.AddSource(
+-                $"{originalName}RemoteClient.g.cs",
+-                SourceText.From(clientCode, Encoding.UTF8));
+-            context.ReportDiagnostic(SGINFO007_…);
++            // 6) CONDITIONAL: Client proxy?
++            if (grpcServices.Equals("Client", StringComparison.OrdinalIgnoreCase)
++             || grpcServices.Equals("Both",   StringComparison.OrdinalIgnoreCase))
++            {
++                var clientCode = GenerateClientProxyViewModel(…);
++                context.AddSource(
++                    $"{originalName}RemoteClient.g.cs",
++                    SourceText.From(clientCode, Encoding.UTF8));
++                context.ReportDiagnostic(SGINFO007_…);
++            }
+         }
