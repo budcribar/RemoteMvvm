@@ -1,0 +1,94 @@
+﻿@page "/monster-clicker"
+@inject MonsterClicker.RemoteClients.GameViewModelRemoteClient Vm
+@implements IAsyncDisposable
+
+<h3>Monster Clicker (Blazor WASM Client)</h3>
+
+@if (!Vm.IsInitialized)
+{
+    <p><em>Initializing game state from server...</em></p>
+    if (!string.IsNullOrEmpty(initializationError))
+    {
+        <p style="color: red;">Error: @initializationError</p>
+    }
+}
+else
+{
+    <div class="game-container" style="padding: 20px; border: 1px solid #ccc; border-radius: 8px; max-width: 500px; margin: auto;">
+
+        <h4 style="text-align:center; margin-bottom: 10px;">@Vm.MonsterName</h4>
+
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 20px;">
+            <span>Health: </span>
+            <progress value="@Vm.MonsterCurrentHealth" max="@Vm.MonsterMaxHealth" style="width: 200px; margin: 0 10px;"></progress>
+            <span>@Vm.MonsterCurrentHealth / @Vm.MonsterMaxHealth</span>
+        </div>
+
+        <div style="text-align:center; margin-bottom: 20px;">
+            <button class="btn btn-success btn-lg" @onclick="Vm.AttackMonsterCommand.ExecuteAsync" disabled="@(!Vm.AttackMonsterCommand.CanExecute(null))">
+                ATTACK!
+                <br />
+                <img src="/Resources/sword.png" alt="Attack" style="width:50px; height:50px;" />
+            </button>
+        </div>
+
+        <p style="text-align:center; font-style:italic; color: dodgerblue; min-height: 2em;">@Vm.GameMessage</p>
+
+        <div style="text-align:center; margin-top: 20px;">
+            <button class="btn btn-warning" @onclick="Vm.SpecialAttackCommand.ExecuteAsync" disabled="@(!Vm.SpecialAttackCommand.CanExecute(null))">
+                Special Attack
+            </button>
+            <button class="btn btn-info" @onclick="Vm.ResetGameCommand.ExecuteAsync" style="margin-left: 10px;">
+                New Game
+            </button>
+        </div>
+
+        @if (Vm.IsSpecialAttackOnCooldown)
+        {
+            <p style="text-align:center; color: orange;">Special Attack on Cooldown!</p>
+        }
+
+    </div>
+}
+
+@code {
+    private string? initializationError;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Subscribe to PropertyChanged if you need to manually trigger StateHasChanged
+        // For simple bindings to @Vm.PropertyName, Blazor should pick up changes if Vm implements INotifyPropertyChanged
+        // and the properties use SetProperty correctly.
+        Vm.PropertyChanged += ViewModel_PropertyChanged;
+
+        try
+        {
+            await Vm.InitializeRemoteAsync();
+        }
+        catch (Exception ex)
+        {
+            initializationError = $"Failed to initialize game: {ex.Message}";
+            Console.WriteLine($"Initialization Error: {ex}");
+        }
+    }
+
+    private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        // This tells Blazor to re-render the component when a property Vm changes.
+        // If your GameViewModelRemoteClient's properties correctly call OnPropertyChanged (via SetProperty from ObservableObject),
+        // Blazor's default binding behavior should pick up most changes automatically for direct property bindings.
+        // However, for computed properties or more complex UI updates based on state changes,
+        // explicitly calling StateHasChanged can be necessary.
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Vm.PropertyChanged -= ViewModel_PropertyChanged;
+        // The GameViewModelRemoteClient itself has a Dispose method that should handle CancellationTokenSource.
+        // If it were IAsyncDisposable, you would await Vm.DisposeAsync();
+        // For IDisposable:
+        Vm.Dispose();
+        await Task.CompletedTask; // To satisfy async signature if Vm.Dispose is not async
+    }
+}
