@@ -24,7 +24,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.68-g0d316d6eed">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.69-g1c06561e10">
 			<GrpcServices>Client</GrpcServices>
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
