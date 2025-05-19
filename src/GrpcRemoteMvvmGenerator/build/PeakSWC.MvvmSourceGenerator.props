@@ -1,22 +1,30 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project>
-
-	<PropertyGroup>
-		<GrpcServices
-		  Condition="'$(GrpcServices)' == '' and '@(_MvvmSourceGenPkg)' != ''">
-			%(_MvvmSourceGenPkg.GrpcServices)
-		</GrpcServices>
-		<!-- optional trim -->
-		<GrpcServices
-		  Condition="'$(GrpcServices)' != ''">
-			$([System.Text.RegularExpressions.Regex]::Replace($(GrpcServices), '\s+', ''))
-		</GrpcServices>
-	</PropertyGroup>
-
-
-	<!-- your existing item declaration -->
+	<!-- tell MSBuild that MvvmViewModelProtoSource is a valid, user-declared item -->
 	<ItemGroup>
 		<AvailableItemName Include="MvvmViewModelProtoSource" />
 	</ItemGroup>
 
+	<!-- …then all your PackageReference-filtering + GrpcServices logic… -->
+	<ItemGroup>
+		<_MvvmSourceGenPkg Include="@(PackageReference)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<_FilteredSourceGenPkg
+		  Include="@(_MvvmSourceGenPkg)"
+		  Condition=" '%(Identity)' == 'PeakSWC.MvvmSourceGenerator' " />
+	</ItemGroup>
+
+	<PropertyGroup Condition="
+    '$(GrpcServices)' == '' and
+    '@(_FilteredSourceGenPkg)' != '' ">
+		<GrpcServices>@(_FilteredSourceGenPkg->'%(GrpcServices)')</GrpcServices>
+	</PropertyGroup>
+
+	<PropertyGroup Condition=" '$(GrpcServices)' != '' ">
+		<GrpcServices>
+			$([System.Text.RegularExpressions.Regex]::Replace('$(GrpcServices)', '\s+', ''))
+		</GrpcServices>
+	</PropertyGroup>
 </Project>
