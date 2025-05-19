@@ -84,7 +84,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 "GenerateGrpcRemoteAttribute.g.cs",
                 SourceText.From(attributeSource, Encoding.UTF8)
                                 );
-                            });
+            });
             IncrementalValuesProvider<ClassDeclarationSyntax> classDeclarations = context.SyntaxProvider
                 .ForAttributeWithMetadataName(
                     GenerateGrpcRemoteAttributeFullName,
@@ -94,9 +94,17 @@ namespace PeakSWC.MvvmSourceGenerator
             IncrementalValueProvider<(Compilation, System.Collections.Immutable.ImmutableArray<ClassDeclarationSyntax>)> compilationAndClasses =
                 context.CompilationProvider.Combine(classDeclarations.Collect());
 
-            context.RegisterSourceOutput(compilationAndClasses, (spc, source) =>
-                Execute(source.Item1, source.Item2, spc));
+            // Combine with AnalyzerConfigOptionsProvider to pick up the GrpcServices setting
+            var optionsProvider = context.AnalyzerConfigOptionsProvider;
+            var fullInput = compilationAndClasses.Combine(optionsProvider);
+
+            context.RegisterSourceOutput(fullInput, (spc, input) =>
+            {
+                var ((compilation, classes), configOptions) = input;
+                Execute(compilation, classes, spc, configOptions);
+            });
         }
+
 
         internal class PropertyInfoData { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public ITypeSymbol? FullTypeSymbol { get; set; } }
         internal class CommandInfoData { public string MethodName { get; set; } = ""; public string CommandPropertyName { get; set; } = ""; public List<ParameterInfoData> Parameters { get; set; } = new List<ParameterInfoData>(); public bool IsAsync { get; set; } }
