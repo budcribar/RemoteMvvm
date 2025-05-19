@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
@@ -28,6 +28,7 @@
 		<PackageReference Include="System.Threading.Channels" Version="8.0.0" />
 		<EmbeddedResource Include="attributes\GenerateGrpcRemoteAttribute.cs" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
+		<None Remove="bin\Debug\netstandard2.0\\GrpcRemoteMvvmGenerator.dll" />
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
 		<Content Include="$(ProtoGeneratorUtilOutDir)ProtoGeneratorUtil.exe" Pack="true" PackagePath="tools\net8.0\" CopyToOutputDirectory="PreserveNewest" />
 		<Content Include="build\PeakSWC.MvvmSourceGenerator.targets" Pack="true" PackagePath="build\" />
