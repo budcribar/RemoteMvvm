@@ -5,7 +5,7 @@ using Grpc.Net.Client;
 using Grpc.Net.Client.Web; // For GrpcWebHandler
 // Assuming your generated gRPC client and RemoteClient are in these namespaces
 using MonsterClicker.ViewModels.Protos;
-using MonsterClicker.RemoteClients;
+using BlazorMonsterClicker.RemoteClients;
 
 namespace BlazorMonsterClicker
 {
@@ -17,7 +17,24 @@ namespace BlazorMonsterClicker
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
-            builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+            // Configure gRPC client
+            builder.Services.AddGrpcClient<GameViewModelService.GameViewModelServiceClient>(options =>
+            {
+                // The address of your gRPC service.
+                // This might be the same as your Blazor app's address if hosted together,
+                // or a different address if the gRPC service is hosted elsewhere.
+                options.Address = new Uri(builder.HostEnvironment.BaseAddress); // Adjust if gRPC service is on a different URL
+            })
+            .ConfigurePrimaryHttpMessageHandler(() =>
+            {
+                // Important for Blazor WASM: Use GrpcWebHandler
+                return new GrpcWebHandler(GrpcWebMode.GrpcWebText, new HttpClientHandler());
+            });
+
+            // Register your GameViewModelRemoteClient for dependency injection
+            // It depends on GameViewModelService.GameViewModelServiceClient which is now registered
+            builder.Services.AddScoped<GameViewModelRemoteClient>(); // Or Singleton/Transient as appropriate
 
             await builder.Build().RunAsync();
         }
