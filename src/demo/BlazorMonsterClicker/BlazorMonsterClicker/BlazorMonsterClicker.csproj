@@ -5,6 +5,7 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!--<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>-->
+		<!--<GrpcServices>Client</GrpcServices>-->
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -23,7 +24,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator"  Version="1.0.76-gd9d32c406c">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.77-g499cc5d10e">
 		
 			<GrpcServices>Client</GrpcServices>
 			<PrivateAssets>all</PrivateAssets>

@@ -141,6 +141,17 @@ namespace PeakSWC.MvvmSourceGenerator
                 ? "Both"
                 : rawGrpcServices?.Trim();
 
+            // *** DEBUG DUMP ***
+            context.ReportDiagnostic(Diagnostic.Create(
+                SGINFO003_ProcessingClass,  // re-using an Info descriptor for simplicity
+                Location.None,
+                $"[DEBUG] rawGrpcServices = '{rawGrpcServices ?? "<null>"}'"));
+            context.ReportDiagnostic(Diagnostic.Create(
+                SGINFO003_ProcessingClass,
+                Location.None,
+                $"[DEBUG] grpcServices     = '{grpcServices}'"));
+            // *** end dump ***
+
             foreach (var classSyntax in classes)
             {
                 var semanticModel = compilation.GetSemanticModel(classSyntax.SyntaxTree);
