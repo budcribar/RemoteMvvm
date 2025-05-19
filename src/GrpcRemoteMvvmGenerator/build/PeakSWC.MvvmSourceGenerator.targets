@@ -7,46 +7,39 @@
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net8ToolPathForExists)')">$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net6ToolPathForExists)') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 	</PropertyGroup>
-	<!-- 0) Grab every PackageReference up front -->
-	<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-		<!-- 0) Define the item globally, at the top of the file -->
+	<!-- 0) Define the item globally, at the top of the file -->
+	<ItemGroup>
+		<_MvvmSourceGenPkg Include="@(PackageReference)" />
+	</ItemGroup>
+
+	<Target Name="PeakSWC_SetGrpcServices"
+			BeforeTargets="CoreCompile">
+
+		<!-- 1) Now filter it by Identity -->
 		<ItemGroup>
-			<_MvvmSourceGenPkg Include="@(PackageReference)" />
+			<_Filtered
+			  Include="@(_MvvmSourceGenPkg)"
+			  Condition=" '%(Identity)' == 'PeakSWC.MvvmSourceGenerator' " />
 		</ItemGroup>
 
-		<Target Name="PeakSWC_SetGrpcServices"
-				BeforeTargets="CoreCompile">
-
-			<!-- 1) Now filter it by Identity -->
-			<ItemGroup>
-				<_Filtered
-				  Include="@(_MvvmSourceGenPkg)"
-				  Condition=" '%(Identity)' == 'PeakSWC.MvvmSourceGenerator' " />
-			</ItemGroup>
-
-			<PropertyGroup>
-				<!-- 2) Pull in the raw (still indented) metadata -->
-				<GrpcServices Condition="
+		<PropertyGroup>
+			<!-- 2) Pull in the raw (still indented) metadata -->
+			<GrpcServices Condition="
         '$(GrpcServices)' == '' 
         and '@(_Filtered)' != '' ">
-					%(_Filtered.GrpcServices)
-				</GrpcServices>
-				<!-- 3) Strip *all* whitespace so you end up with exactly "Client" -->
-				<GrpcServices Condition="'$(GrpcServices)' != ''">
-					$([System.Text.RegularExpressions.Regex]::Replace($(GrpcServices), '\s+', ''))
-				</GrpcServices>
-			</PropertyGroup>
+				%(_Filtered.GrpcServices)
+			</GrpcServices>
+			<!-- 3) Strip *all* whitespace so you end up with exactly "Client" -->
+			<GrpcServices Condition="'$(GrpcServices)' != ''">
+				$([System.Text.RegularExpressions.Regex]::Replace($(GrpcServices), '\s+', ''))
+			</GrpcServices>
+		</PropertyGroup>
 
-			<Message Importance="high"
-					 Condition="'$(GrpcServices)' != ''"
-					 Text="GrpcServices is now: '$(GrpcServices)'" />
-		</Target>
-
-		<!-- …the rest of your targets… -->
-
-	</Project>
-
+		<Message Importance="high"
+				 Condition="'$(GrpcServices)' != ''"
+				 Text="GrpcServices is now: '$(GrpcServices)'" />
+	</Target>
 
 
 	<Target Name="PeakSWC_GenerateProtoFiles"
