@@ -66,7 +66,7 @@ namespace PeakSWC.MvvmSourceGenerator
         private static string GetAttributeSource()
         {
             var assembly = typeof(GrpcRemoteMvvmGenerator).Assembly;
-            using var stream = assembly.GetManifestResourceStream("PeakSWC.MvvmSourceGenerator.attributes.GenerateGrpcRemoteAttribute.cs" );
+            using var stream = assembly.GetManifestResourceStream("GrpcRemoteMvvmGenerator.attributes.GenerateGrpcRemoteAttribute.cs" );
             if (stream == null)
                 throw new InvalidOperationException(
                     "Unable to find embedded resource " +
