@@ -7,19 +7,33 @@
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net8ToolPathForExists)')">$(MSBuildThisFileDirectory)..\tools\net8.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 		<_ProtoGeneratorUtilExePath Condition="Exists('$(_Net6ToolPathForExists)') AND '$(_ProtoGeneratorUtilExePath)' == ''">$(MSBuildThisFileDirectory)..\tools\net6.0\ProtoGeneratorUtil.exe</_ProtoGeneratorUtilExePath>
 	</PropertyGroup>
+	<!-- 1) grab every PackageReference up front -->
+	<ItemGroup>
+		<_MvvmSourceGenPkg Include="@(PackageReference)" />
+	</ItemGroup>
+
 	<Target Name="PeakSWC_SetGrpcServices"
-        BeforeTargets="CoreCompile">
+			BeforeTargets="CoreCompile">
+		<!-- 2) now filter it by Identity metadata -->
+		<ItemGroup>
+			<_Filtered
+			  Include="@(_MvvmSourceGenPkg)"
+			  Condition=" '%(Identity)' == 'PeakSWC.MvvmSourceGenerator' " />
+		</ItemGroup>
+
+		<!-- 3) and only then pull its GrpcServices into your property -->
 		<PropertyGroup>
-			<!-- Only grab the GrpcServices metadata from the one PackageReference whose identity matches -->
-			<GrpcServices Condition="'$(GrpcServices)' == ''">
-				@(PackageReference
-				->WithMetadataValue('Identity','PeakSWC.MvvmSourceGenerator')
-				->'%(GrpcServices)')
+			<GrpcServices Condition="
+        '$(GrpcServices)' == '' and
+        '@(_Filtered)' != '' ">
+				%(_Filtered.GrpcServices)
 			</GrpcServices>
 		</PropertyGroup>
 
-		<!-- DEBUG: remove once verified -->
-		<Message Importance="high" Text="GrpcServices is now: '$(GrpcServices)'" />
+		<!-- debug to verify -->
+		<Message Importance="high"
+				 Condition="'$(GrpcServices)' != ''"
+				 Text="GrpcServices is now: '$(GrpcServices)'" />
 	</Target>
 
 	<Target Name="PeakSWC_GenerateProtoFiles"
