@@ -477,7 +477,7 @@ namespace PeakSWC.MvvmSourceGenerator
             foreach (var prop in props)
             {
                 string backingFieldName = $"_{LowercaseFirst(prop.Name)}";
-                sb.AppendLine($"        private {prop.Type} {backingFieldName};");
+                sb.AppendLine($"        private {prop.Type} {backingFieldName} = default!;");
                 sb.AppendLine($"        public {prop.Type} {prop.Name}");
                 sb.AppendLine("        {");
                 sb.AppendLine($"            get => {backingFieldName};");
@@ -540,7 +540,7 @@ namespace PeakSWC.MvvmSourceGenerator
             foreach (var prop in props)
             {
                 string protoStateFieldName = ToPascalCase(prop.Name);
-                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}!;");
             }
             sb.AppendLine("                _isInitialized = true;");
             sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initialized successfully.\");");
