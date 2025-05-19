@@ -1,4 +1,4 @@
-﻿using CommandLine;
+using CommandLine;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -108,10 +108,17 @@ namespace ProtoGeneratorUtil
             }
             try
             {
-                var coreLibPath = typeof(object).Assembly.Location; // This might be empty if running in certain contexts
+                // AppContext.BaseDirectory is more reliable for single-file applications than Assembly.Location
+                // Assembly.Location might return an empty string for embedded assemblies.
+                // AppContext.BaseDirectory is the base directory of the application domain,
+                // which for single-file executables is typically the directory containing the executable.
+                var coreLibPath = AppContext.BaseDirectory;
+                // We don't need the specific System.Object assembly location itself for later reference loading.
+                // The important part is that AppContext.BaseDirectory gives us a root to find other assemblies.
+                // The original code was likely trying to find the BCL assemblies, which are now handled by the fallback logic.
                 Console.WriteLine($"ProtoGeneratorUtil: Core assembly (System.Object) location: '{coreLibPath ?? "N/A"}' (File Exists: {(!string.IsNullOrEmpty(coreLibPath) && File.Exists(coreLibPath))})");
             }
-            catch (Exception ex)
+            catch (Exception ex) // Should be rare for AppContext.BaseDirectory
             {
                 Console.WriteLine($"ProtoGeneratorUtil: Error resolving core assembly location: {ex.Message}");
             }
@@ -256,11 +263,14 @@ namespace ProtoGeneratorUtil
             if (!coreSystemRuntimeLoaded && !coreSystemPrivateCoreLibLoaded)
             {
                 Console.WriteLine("ProtoGeneratorUtil: Core runtime (System.Runtime.dll or System.Private.CoreLib.dll) not found in MSBuild paths. Attempting fallback load...");
-                string? coreDir = Path.GetDirectoryName(typeof(object).Assembly.Location);
+                // Use AppContext.BaseDirectory for the base directory of the application
+                string? coreDir = AppContext.BaseDirectory;
+                // If AppContext.BaseDirectory is null or empty (should not happen in a running process, but defensive check)
                 if (!string.IsNullOrEmpty(coreDir))
                 {
                     addRef(Path.Combine(coreDir, "System.Private.CoreLib.dll"), "Fallback Core"); // Most important for .NET Core+
                     addRef(Path.Combine(coreDir, "System.Runtime.dll"), "Fallback Core");
+                    // Also add netstandard.dll which might be needed
                     addRef(Path.Combine(coreDir, "netstandard.dll"), "Fallback Core");
                 }
             }
