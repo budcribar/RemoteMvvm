@@ -1,7 +1,7 @@
 ﻿<Project>
 	<PropertyGroup>
 		<!-- default GrpcServices to “Client” for *all* projects, unless they override it -->
-		<GrpcServices Condition="'$(GrpcServices)' == ''">Client</GrpcServices>
+		<!--<GrpcServices Condition="'$(GrpcServices)' == ''">Client</GrpcServices>-->
 	</PropertyGroup>
 	<Target Name="PeakSWC_SetGrpcServicesdbp" BeforeTargets="CoreCompile">
 		<Message

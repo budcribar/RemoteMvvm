@@ -16,8 +16,7 @@ namespace BlazorMonsterClicker
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
-
-
+        
             // Configure gRPC client
             builder.Services.AddGrpcClient<GameViewModelService.GameViewModelServiceClient>(options =>
             {

@@ -17,6 +17,7 @@
 		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
 		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
 		<PackageReference Include="Google.Protobuf" Version="3.31.0" />
+		<PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
 
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 
@@ -25,9 +26,9 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.78-g6bc5329e20">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.82-gf6c1fdf9a1">
 		
-			<GrpcServices>Client</GrpcServices>
+			<!--<GrpcServices>Server</GrpcServices>-->
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>

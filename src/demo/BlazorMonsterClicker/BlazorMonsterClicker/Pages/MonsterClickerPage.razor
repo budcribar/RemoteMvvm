@@ -4,7 +4,7 @@
 
 <h3>Monster Clicker (Blazor WASM Client)</h3>
 
-@if (!Vm.IsInitialized)
+@if (!isInitialized)
 {
     <p><em>Initializing game state from server...</em></p>
     if (!string.IsNullOrEmpty(initializationError))
@@ -25,7 +25,7 @@ else
         </div>
 
         <div style="text-align:center; margin-bottom: 20px;">
-            <button class="btn btn-success btn-lg" @onclick="Vm.AttackMonsterCommand.ExecuteAsync" disabled="@(!Vm.AttackMonsterCommand.CanExecute(null))">
+            <button class="btn btn-success btn-lg" @onclick="Vm.AttackMonsterCommand.Execute" disabled="@(!Vm.AttackMonsterCommand.CanExecute(null))">
                 ATTACK!
                 <br />
                 <img src="/Resources/sword.png" alt="Attack" style="width:50px; height:50px;" />
@@ -38,7 +38,7 @@ else
             <button class="btn btn-warning" @onclick="Vm.SpecialAttackCommand.ExecuteAsync" disabled="@(!Vm.SpecialAttackCommand.CanExecute(null))">
                 Special Attack
             </button>
-            <button class="btn btn-info" @onclick="Vm.ResetGameCommand.ExecuteAsync" style="margin-left: 10px;">
+            <button class="btn btn-info" @onclick="Vm.ResetGameCommand.Execute" style="margin-left: 10px;">
                 New Game
             </button>
         </div>
@@ -53,6 +53,7 @@ else
 
 @code {
     private string? initializationError;
+    private bool isInitialized = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -64,6 +65,7 @@ else
         try
         {
             await Vm.InitializeRemoteAsync();
+            isInitialized = true;
         }
         catch (Exception ex)
         {
