@@ -5,8 +5,8 @@
 	<ItemGroup>
 		<_PeakSWCSourceGenPkg
 		  Include="@(PackageReference)">
-			<PkgIdentity>%(PackageReference.Identity)</PkgIdentity>
-			<PkgGrpcServices>%(PackageReference.GrpcServices)</PkgGrpcServices>
+			<PkgIdentity>%(Identity)</PkgIdentity>
+			<PkgGrpcServices>%(GrpcServices)</PkgGrpcServices>
 		</_PeakSWCSourceGenPkg>
 	</ItemGroup>
 
@@ -31,8 +31,7 @@
 			<_RawGrpcServices
 			  Condition="
           '$(GrpcServices)' == ''
-          and '@(_FilteredPkg)' != ''
-        ">
+          and '@(_FilteredPkg)' != '' ">
 				%(_FilteredPkg.PkgGrpcServices)
 			</_RawGrpcServices>
 
@@ -40,18 +39,17 @@
 			<GrpcServices
 			  Condition="
           '$(GrpcServices)' == ''
-          and '$(_RawGrpcServices)' != ''
-        ">
+          and '$(_RawGrpcServices)' != '' ">
 				$([System.Text.RegularExpressions.Regex]::Replace('$(_RawGrpcServices)', '\s+', ''))
 			</GrpcServices>
 		</PropertyGroup>
 
-		<!-- 3c) (Optional) Debug message *inside* the target -->
+		<!-- 3c) Debug message *inside* the target -->
 		<Message
 		  Importance="high"
 		  Condition="'$(GrpcServices)' != ''"
 		  Text="GrpcServices is now: '$(GrpcServices)'" />
+
 	</Target>
 
 </Project>
-

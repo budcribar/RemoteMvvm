@@ -16,7 +16,7 @@
 		</PackageReference>
 
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.79-g8dec1869c7">
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.80-ga5a32f4278">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
