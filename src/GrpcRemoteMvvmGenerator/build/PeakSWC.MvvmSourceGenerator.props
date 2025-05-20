@@ -3,7 +3,6 @@
 
 	<!-- 1) Capture every PackageReference into our own item -->
 	<ItemGroup>
-		<CompilerVisibleProperty Include="GrpcServices" />
 		<_PeakSWCSourceGenPkg
 		  Include="@(PackageReference)">
 			<PkgIdentity>%(PackageReference.Identity)</PkgIdentity>
