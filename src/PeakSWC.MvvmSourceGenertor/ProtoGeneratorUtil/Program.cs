@@ -4,6 +4,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -91,8 +92,200 @@ namespace ProtoGeneratorUtil
         }
     }
     */
+    public static class AssemblyReferenceLoader
+    {
+        public static List<MetadataReference> LoadReferences()
+        {
+            var references = new List<MetadataReference>();
+            // Use a HashSet to keep track of assembly simple names we've already added
+            // to avoid duplicates, case-insensitive for assembly names.
+            var loadedAssemblyNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            // Load from assemblies currently in the AppDomain.
+            // This will use Assembly.Location if valid, or TryGetRawMetadata for bundled/in-memory assemblies.
+            LoadFromAppDomainAssemblies(references, loadedAssemblyNames);
+
+            Console.WriteLine($"Total unique references loaded: {references.Count}");
+            return references;
+        }
+
+        private static void LoadFromAppDomainAssemblies(List<MetadataReference> references, HashSet<string> loadedAssemblyNames)
+        {
+            int countFromLocation = 0;
+            int countFromBytes = 0;
+
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            Console.WriteLine($"Processing {assemblies.Length} assemblies from AppDomain.");
+
+            foreach (var assembly in assemblies)
+            {
+                if (assembly.IsDynamic) // Skip dynamic assemblies
+                {
+                    // Console.WriteLine($"Skipping dynamic assembly: {assembly.FullName}");
+                    continue;
+                }
+
+                string? assemblyName = assembly.GetName().Name;
+                if (string.IsNullOrEmpty(assemblyName))
+                {
+                    Console.WriteLine($"Skipping assembly with no name: {assembly.FullName}");
+                    continue;
+                }
+
+                if (loadedAssemblyNames.Contains(assemblyName))
+                {
+                    // Console.WriteLine($"Skipping already processed assembly: {assemblyName}");
+                    continue; // Already processed
+                }
+
+                bool loaded = false;
+
+                // Try 1: Assembly.Location (if valid and file exists)
+                // This might catch app-local DLLs not part of the single-file bundle or framework.
+                if (!string.IsNullOrEmpty(assembly.Location) && File.Exists(assembly.Location))
+                {
+                    try
+                    {
+                        // Console.WriteLine($"Attempting to load from location: {assembly.Location} for {assemblyName}");
+                        references.Add(MetadataReference.CreateFromFile(assembly.Location));
+                        loadedAssemblyNames.Add(assemblyName);
+                        countFromLocation++;
+                        loaded = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not load reference from file '{assembly.Location}' for '{assembly.FullName}': {ex.Message}");
+                    }
+                }
+
+                // Try 2: Get raw metadata bytes (especially for bundled assemblies where Location is useless)
+                // This is the key for single-file bundled assemblies like System.Runtime, System.Console etc.
+                if (!loaded) // Only try this if not loaded from location
+                {
+                    // Console.WriteLine($"Attempting to load from bytes for: {assemblyName} (Location was '{assembly.Location ?? "<null>"}')");
+                    try
+                    {
+                        unsafe // Required for working with the pointer
+                        {
+                            if (assembly.TryGetRawMetadata(out byte* blob, out int length))
+                            {
+                                var moduleMetadata = ModuleMetadata.CreateFromMetadata((IntPtr)blob, length);
+                                var assemblyMetadata = AssemblyMetadata.Create(moduleMetadata);
+                                references.Add(assemblyMetadata.GetReference());
+
+                                loadedAssemblyNames.Add(assemblyName); // Add after successful load
+                                countFromBytes++;
+                                loaded = true;
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Warning: Could not get raw metadata for '{assembly.FullName}'. TryGetRawMetadata returned false. Location: '{assembly.Location ?? "<null>"}'.");
+                            }
+                        }
+                    }
+                    catch (NotSupportedException nse) // Some assemblies (e.g. reflection-emit, some interop) don't support GetRawMetadata
+                    {
+                        Console.WriteLine($"Note: GetRawMetadata not supported for '{assembly.FullName}': {nse.Message}. This is expected for certain assembly types.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not load assembly bytes for '{assembly.FullName}': {ex.Message}");
+                    }
+                }
+
+                if (!loaded)
+                {
+                    Console.WriteLine($"Note: Could not create MetadataReference for '{assembly.FullName}' (Name: {assemblyName}). Location: '{assembly.Location ?? "<null>"}'.");
+                }
+            }
+            Console.WriteLine($"Loaded {countFromLocation} references from AppDomain assembly locations.");
+            Console.WriteLine($"Loaded {countFromBytes} references from AppDomain assembly bytes (TryGetRawMetadata).");
+        }
+
+        // Force load essential assemblies to ensure they are in the AppDomain
+        public static List<MetadataReference> LoadReferencesWithEssentials()
+        {
+            ForceLoadEssentialAssemblies();
+            return LoadReferences();
+        }
+
+        private static void ForceLoadEssentialAssemblies()
+        {
+            Console.WriteLine("Forcing load of essential assemblies...");
+            try
+            {
+                // Using a broader set to cover common scenarios
+                var typesToLoad = new Type[] {
+                typeof(object),                 // System.Private.CoreLib / System.Runtime
+                typeof(Uri),                    // System.Private.Uri
+                typeof(Console),                // System.Console
+                typeof(List<>),                 // System.Collections
+                typeof(Enumerable),             // System.Linq
+                typeof(System.Linq.Expressions.Expression), // System.Linq.Expressions
+                typeof(System.ComponentModel.BrowsableAttribute), // System.ComponentModel.Primitives / TypeConverter
+                typeof(System.Data.DataTable),  // System.Data.Common (if used)
+                typeof(System.Drawing.Point),   // System.Drawing.Primitives (if used)
+                typeof(System.Net.Http.HttpClient), // System.Net.Http
+                typeof(System.IO.MemoryStream), // System.IO
+                typeof(System.Reflection.Assembly), // System.Reflection
+                typeof(System.Text.RegularExpressions.Regex), // System.Text.RegularExpressions
+                typeof(System.Threading.Tasks.Task), // System.Threading.Tasks
+                typeof(System.Xml.XmlDocument), // System.Private.Xml / System.Xml.ReaderWriter
+                typeof(Microsoft.CodeAnalysis.CSharp.CSharpCompilation), // Microsoft.CodeAnalysis.CSharp (if you use CSharpCompilation directly)
+                typeof(Microsoft.CodeAnalysis.Compilation), // Microsoft.CodeAnalysis
+            };
+
+                foreach (var type in typesToLoad)
+                {
+                    try
+                    {
+                        _ = type.Assembly.GetName(); // Accessing a property often ensures it's more fully loaded
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Warning: Could not fully touch assembly for type '{type.FullName}': {ex.Message}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error during force loading of essential assemblies: {ex.Message}");
+            }
+            Console.WriteLine("Essential assembly loading attempt complete.");
+        }
+
+        public static void DebugShowAvailableAssemblies()
+        {
+            Console.WriteLine("\n=== AppDomain Assemblies (Post-Force Load Check) ===");
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies().OrderBy(a => a.FullName).ToList();
+            Console.WriteLine($"Found {assemblies.Count} assemblies in AppDomain.");
+            foreach (var assembly in assemblies)
+            {
+                string name = "<N/A>";
+                try { name = assembly.GetName().Name ?? "<null name>"; } catch { /* ignored */ }
+
+                bool metadataAvailable = false;
+                if (!assembly.IsDynamic)
+                {
+                    try
+                    {
+                        unsafe { metadataAvailable = assembly.TryGetRawMetadata(out _, out _); }
+                    }
+                    catch { /* ignored */ }
+                }
 
 
+                Console.WriteLine($"Name: {name}");
+                Console.WriteLine($"  Location: {(string.IsNullOrEmpty(assembly.Location) ? "<In Memory/Bundled>" : assembly.Location)}");
+                Console.WriteLine($"  File Exists at Location: {(!string.IsNullOrEmpty(assembly.Location) && File.Exists(assembly.Location))}");
+                Console.WriteLine($"  Dynamic: {assembly.IsDynamic}");
+                Console.WriteLine($"  TryGetRawMetadata available: {metadataAvailable}");
+                Console.WriteLine($"  FullName: {assembly.FullName}");
+                Console.WriteLine("  ---");
+            }
+            Console.WriteLine("============================================\n");
+        }
+    }
     class Program
     {
         const string AttributeDefinitionResourceName = "ProtoGeneratorUtil.Resources.GenerateGrpcRemoteAttribute.cs";
@@ -227,26 +420,7 @@ namespace ProtoGeneratorUtil
                 return;
             }
 
-            var references = new List<MetadataReference>();
-
-            // Use all loaded assemblies with a valid Location as references (self-contained/single-file compatible)
-            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
-                .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location) && a.Location.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-                .Select(a => a.Location)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            foreach (var dll in loadedAssemblies)
-            {
-                try
-                {
-                    references.Add(MetadataReference.CreateFromFile(dll));
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Warning: Could not load reference '{dll}': {ex.Message}");
-                }
-            }
-            Console.WriteLine($"Loaded references from AppDomain.CurrentDomain.GetAssemblies(): {loadedAssemblies.Count}");
+            var references = AssemblyReferenceLoader.LoadReferences();
 
             // Only embed and load CommunityToolkit.Mvvm.dll
             try
