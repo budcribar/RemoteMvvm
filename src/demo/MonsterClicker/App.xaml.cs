@@ -13,7 +13,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Grpc.AspNetCore.Web; // Ensure you have the correct NuGet package installed
+using Grpc.AspNetCore.Web;
+using Microsoft.AspNetCore.Cors.Infrastructure; // Ensure you have the correct NuGet package installed
 
 namespace MonsterClicker
 {
@@ -46,16 +47,16 @@ namespace MonsterClicker
                                 webBuilder.UseKestrel(options =>
                                 {
                                     // listen with HTTP/2 for "raw" gRPC clients
-                                    options.ListenLocalhost(50051, o => o.Protocols = HttpProtocols.Http2);
+                                    options.ListenLocalhost(50051, o => o.Protocols = HttpProtocols.Http1AndHttp2);
                                     // listen with HTTP/1.1 for gRPC-Web (you can combine into one port if needed)
-                                    options.ListenLocalhost(50052, o => o.Protocols = HttpProtocols.Http1);
+                                    //options.ListenLocalhost(50051, o => o.Protocols = HttpProtocols.Http1);
                                 });
 
                                 webBuilder.ConfigureServices(services =>
                                 {
                                     services.AddSingleton(gameVm);
                                     services.AddGrpc();                            // classic gRPC
-                                    //services.AddGrpcWeb();                         // gRPC-Web support
+                                    
                                 });
 
                                 webBuilder.Configure(app =>
@@ -63,14 +64,12 @@ namespace MonsterClicker
                                     app.UseRouting();
 
                                     // enable gRPC-Web for ANY gRPC endpoint on this host
-                                    app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
+                                    app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });  
 
                                     app.UseEndpoints(endpoints =>
                                     {
                                         // your generated service impl
-                                        endpoints.MapGrpcService<GameViewModelGrpcServiceImpl>()
-                                                 .EnableGrpcWeb()           // allow gRPC-Web calls
-                                                 .RequireHost("*:50052");   // only on the HTTP/1 port
+                                        endpoints.MapGrpcService<GameViewModelGrpcServiceImpl>();
 
                                         // (optional) a simple fallback endpoint
                                         endpoints.MapGet("/", async ctx =>
@@ -84,7 +83,7 @@ namespace MonsterClicker
 
                         await host.StartAsync();
 
-                        Console.WriteLine("gRPC (HTTP/2) on port 50051, gRPC-Web (HTTP/1.1) on port 50052");
+                        Console.WriteLine("gRPC (HTTP/2) on port 50051, gRPC-Web (HTTP/1.1) on port 50051");
                         mainWindow.DataContext = gameVm;
                         mainWindow.Title += " (Server Mode – Hosting Game)";
 
