@@ -246,6 +246,13 @@ namespace ProtoGeneratorUtil
             {
                 "Grpc.AspNetCore.dll",
                 "Grpc.AspNetCore.Web.dll",
+                "Grpc.AspNetCore.Server.dll",
+                "Grpc.AspNetCore.Server.ClientFactory.dll",
+                "Grpc.Net.Client.dll",
+                "Grpc.Net.ClientFactory.dll",
+                "Grpc.Net.Common.dll",
+                "Grpc.Core.dll",
+                "Grpc.Core.Api.dll",
                 "Microsoft.Extensions.Hosting.dll"
             };
 
