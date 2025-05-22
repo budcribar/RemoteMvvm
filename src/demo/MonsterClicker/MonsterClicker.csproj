@@ -23,7 +23,11 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.81-gc8504d6cd4"> 
+		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.51.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+		
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.83-g1cb616031e"> 
 			<GrpcServices>Both</GrpcServices>
 			<PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -32,6 +36,10 @@
 		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
 
+	<ItemGroup>
+		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+	</ItemGroup>
+	
 	<ItemGroup>
 		<MvvmViewModelProtoSource Include="ViewModels\GameViewModel.cs">
 			<ProtoNamespace>MonsterClicker.ViewModels.Protos</ProtoNamespace>

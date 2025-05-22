@@ -5,8 +5,15 @@ using MonsterClicker.ViewModels.Protos; // Assuming this is where your generated
 using MonsterClicker.GrpcServices; // Assuming this is where your generated GameServiceGrpcImpl would be
 using MonsterClicker.RemoteClients; // Assuming this is where your GameViewModelRemoteClient would be
 
-using Grpc.Core;
 using Grpc.Net.Client;
+
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Grpc.AspNetCore.Web; // Ensure you have the correct NuGet package installed
 
 namespace MonsterClicker
 {
@@ -26,22 +33,61 @@ namespace MonsterClicker
                 switch (mode)
                 {
                     case "server":
-                        Console.WriteLine("Starting in SERVER mode...");
-                        var gameViewModelForServer = new GameViewModel();
-                        // The generated GameServiceGrpcImpl would take gameViewModelForServer as a dependency
-                        // Example: var grpcService = new GameServiceGrpcImpl(gameViewModelForServer);
+                        
 
-                        Server server = new Server
-                        {
-                            Services = { GameViewModelService.BindService(new GameViewModelGrpcServiceImpl(gameViewModelForServer, Dispatcher)) }, // GameServiceGrpcImpl would be your generated class
-                            Ports = { new ServerPort("localhost", 50051, ServerCredentials.Insecure) }
-                        };
-                        server.Start();
-                        Console.WriteLine($"gRPC Server listening on port 50051");
+                        // … inside your switch("server") …
 
-                        // In server mode, the UI can still run locally, bound to the same VM instance
-                        mainWindow.DataContext = gameViewModelForServer;
-                        mainWindow.Title += " (Server Mode - Hosting Game)";
+                        Console.WriteLine("Starting in SERVER mode…");
+                        var gameVm = new GameViewModel();
+
+                        var host = Host.CreateDefaultBuilder()
+                            .ConfigureWebHostDefaults(webBuilder =>
+                            {
+                                webBuilder.UseKestrel(options =>
+                                {
+                                    // listen with HTTP/2 for "raw" gRPC clients
+                                    options.ListenLocalhost(50051, o => o.Protocols = HttpProtocols.Http2);
+                                    // listen with HTTP/1.1 for gRPC-Web (you can combine into one port if needed)
+                                    options.ListenLocalhost(50052, o => o.Protocols = HttpProtocols.Http1);
+                                });
+
+                                webBuilder.ConfigureServices(services =>
+                                {
+                                    services.AddSingleton(gameVm);
+                                    services.AddGrpc();                            // classic gRPC
+                                    //services.AddGrpcWeb();                         // gRPC-Web support
+                                });
+
+                                webBuilder.Configure(app =>
+                                {
+                                    app.UseRouting();
+
+                                    // enable gRPC-Web for ANY gRPC endpoint on this host
+                                    app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
+
+                                    app.UseEndpoints(endpoints =>
+                                    {
+                                        // your generated service impl
+                                        endpoints.MapGrpcService<GameViewModelGrpcServiceImpl>()
+                                                 .EnableGrpcWeb()           // allow gRPC-Web calls
+                                                 .RequireHost("*:50052");   // only on the HTTP/1 port
+
+                                        // (optional) a simple fallback endpoint
+                                        endpoints.MapGet("/", async ctx =>
+                                        {
+                                            await ctx.Response.WriteAsync("This server hosts gRPC + gRPC-Web.");
+                                        });
+                                    });
+                                });
+                            })
+                            .Build();
+
+                        await host.StartAsync();
+
+                        Console.WriteLine("gRPC (HTTP/2) on port 50051, gRPC-Web (HTTP/1.1) on port 50052");
+                        mainWindow.DataContext = gameVm;
+                        mainWindow.Title += " (Server Mode – Hosting Game)";
+
                         break;
 
                     case "client":
