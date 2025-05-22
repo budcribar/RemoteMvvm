@@ -242,7 +242,17 @@ namespace ProtoGeneratorUtil
                 }
             };
 
-            var msbuildProvidedRefs = opts.GetReferencePaths().ToList();
+            var skipAssemblies = new[]
+            {
+                "Grpc.AspNetCore.dll",
+                "Grpc.AspNetCore.Web.dll",
+                "Microsoft.Extensions.Hosting.dll"
+            };
+
+            var msbuildProvidedRefs = opts.GetReferencePaths()
+                .Where(p => !skipAssemblies.Any(skip => p.EndsWith(skip, StringComparison.OrdinalIgnoreCase)))
+                .ToList();
+
             if (msbuildProvidedRefs.Any())
             {
                 Console.WriteLine($"ProtoGeneratorUtil: Loading {msbuildProvidedRefs.Count} references from --referencePaths (MSBuild)...");
