@@ -10,14 +10,15 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Grpc.AspNetCore.Web;
-using Microsoft.AspNetCore.Cors.Infrastructure;
+using System.Windows.Threading;
 
 namespace MonsterClicker
 {
     public partial class App : Application
     {
-        private const string ServerAddress = "https://localhost:50051"; // Use HTTPS
+        private const string ServerAddress = "https://localhost:50051";
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -39,30 +40,29 @@ namespace MonsterClicker
                             {
                                 webBuilder.UseKestrel(options =>
                                 {
-                                    // HTTP port for gRPC-Web (Blazor WASM)
+                                    // Single port for both HTTP/1.1 (gRPC-Web) and HTTP/2 (gRPC)
                                     options.ListenLocalhost(50052, listenOptions =>
                                     {
-                                        listenOptions.Protocols = HttpProtocols.Http1;
-                                        // No HTTPS for simplicity - use HTTP for gRPC-Web
-                                    });
-
-                                    // HTTPS port for regular gRPC (optional)
-                                    options.ListenLocalhost(50051, listenOptions =>
-                                    {
-                                        listenOptions.Protocols = HttpProtocols.Http2;
-                                        listenOptions.UseHttps();
+                                        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+                                        // Start without HTTPS for debugging
                                     });
                                 });
 
                                 webBuilder.ConfigureServices(services =>
                                 {
                                     services.AddSingleton(gameVm);
-                                    services.AddGrpc();
+                                    services.AddSingleton<Dispatcher>(Dispatcher.CurrentDispatcher);
 
-                                    // Configure CORS for gRPC-Web
+                                    // Add gRPC services
+                                    services.AddGrpc(options =>
+                                    {
+                                        options.EnableDetailedErrors = true; // Enable detailed error messages
+                                    });
+
+                                    // Add CORS
                                     services.AddCors(options =>
                                     {
-                                        options.AddPolicy("AllowBlazorApp", policy =>
+                                        options.AddPolicy("AllowAll", policy =>
                                         {
                                             policy.AllowAnyOrigin()
                                                   .AllowAnyMethod()
@@ -71,26 +71,38 @@ namespace MonsterClicker
                                                       "Grpc-Status",
                                                       "Grpc-Message",
                                                       "Grpc-Encoding",
-                                                      "Grpc-Accept-Encoding",
-                                                      "Content-Grpc-Status",
-                                                      "Content-Grpc-Message",
-                                                      "Content-Grpc-Encoding");
+                                                      "Grpc-Accept-Encoding");
                                         });
                                     });
 
-                                    // Add logging for debugging
-                                    services.AddLogging();
+                                    // Add detailed logging
+                                    services.AddLogging(builder =>
+                                    {
+                                        builder.AddConsole();
+                                        builder.SetMinimumLevel(LogLevel.Debug);
+                                    });
                                 });
 
-                                webBuilder.Configure(app =>
+                                webBuilder.Configure((context, app) =>
                                 {
-                                    // Add exception handling middleware
-                                    app.UseExceptionHandler("/error");
+                                    var logger = app.ApplicationServices.GetRequiredService<ILogger<App>>();
+
+                                    // Add request logging middleware
+                                    app.Use(async (context, next) =>
+                                    {
+                                        logger.LogInformation($"Request: {context.Request.Method} {context.Request.Path} from {context.Request.Headers.UserAgent}");
+                                        logger.LogInformation($"Content-Type: {context.Request.ContentType}");
+                                        logger.LogInformation($"Headers: {string.Join(", ", context.Request.Headers.Select(h => $"{h.Key}:{h.Value}"))}");
+
+                                        await next();
+
+                                        logger.LogInformation($"Response: {context.Response.StatusCode}");
+                                    });
 
                                     app.UseRouting();
-                                    app.UseCors("AllowBlazorApp");
+                                    app.UseCors("AllowAll");
 
-                                    // Enable gRPC-Web with default options
+                                    // Enable gRPC-Web
                                     app.UseGrpcWeb(new GrpcWebOptions
                                     {
                                         DefaultEnabled = true
@@ -98,38 +110,53 @@ namespace MonsterClicker
 
                                     app.UseEndpoints(endpoints =>
                                     {
-                                        // Map gRPC service with explicit gRPC-Web and CORS
+                                        // Map the gRPC service
                                         endpoints.MapGrpcService<GameViewModelGrpcServiceImpl>()
                                                 .EnableGrpcWeb()
-                                                .RequireCors("AllowBlazorApp");
+                                                .RequireCors("AllowAll");
 
-                                        // Health check endpoint
+                                        // Test endpoint to verify server is working
                                         endpoints.MapGet("/", async context =>
                                         {
-                                            await context.Response.WriteAsync(
-                                                "gRPC Server is running. " +
-                                                "gRPC-Web available on HTTP :50052, " +
-                                                "gRPC available on HTTPS :50051");
+                                            var response = "gRPC Server is running on HTTP :50052\n" +
+                                                         "Available services:\n" +
+                                                         "- /monsterclicker_viewmodels_protos.GameViewModelService/GetState\n" +
+                                                         $"- Request path: {context.Request.Path}\n" +
+                                                         $"- Time: {DateTime.Now}";
+
+                                            await context.Response.WriteAsync(response);
                                         });
 
-                                        // Error handling endpoint
-                                        endpoints.MapGet("/error", async context =>
+                                        // Add a test endpoint for gRPC service discovery
+                                        endpoints.MapGet("/grpc/health", async context =>
                                         {
-                                            await context.Response.WriteAsync("An error occurred");
+                                            context.Response.ContentType = "application/json";
+                                            await context.Response.WriteAsync("{\"status\":\"serving\",\"service\":\"GameViewModelService\"}");
+                                        });
+
+                                        // Add endpoint to test CORS
+                                        endpoints.MapGet("/test-cors", async context =>
+                                        {
+                                            context.Response.Headers.Add("Access-Control-Allow-Origin", "*");
+                                            await context.Response.WriteAsync("CORS test endpoint working");
                                         });
                                     });
                                 });
                             })
                             .Build();
 
+                        // Start the host
                         await host.StartAsync();
 
-                        Console.WriteLine("gRPC Server started:");
-                        Console.WriteLine("- gRPC-Web (HTTP): http://localhost:50052");
-                        Console.WriteLine("- gRPC (HTTPS): https://localhost:50051");
+                        Console.WriteLine("=== gRPC Server Started ===");
+                        Console.WriteLine("Server URL: http://localhost:50052");
+                        Console.WriteLine("Test in browser: http://localhost:50052");
+                        Console.WriteLine("Health check: http://localhost:50052/grpc/health");
+                        Console.WriteLine("CORS test: http://localhost:50052/test-cors");
+                        Console.WriteLine("==============================");
 
                         mainWindow.DataContext = gameVm;
-                        mainWindow.Title += " (Server Mode – Hosting Game)";
+                        mainWindow.Title += " (Server Mode – Hosting Game on :50052)";
                         break;
 
                     case "client":
@@ -155,7 +182,7 @@ namespace MonsterClicker
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error during startup: {ex.Message}\n\nMode: {mode}",
+                MessageBox.Show($"Error during startup: {ex.Message}\n\nMode: {mode}\n\n{ex.StackTrace}",
                     "Startup Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 Console.WriteLine($"Detailed error: {ex}");
                 Current.Shutdown();
