@@ -242,22 +242,14 @@ namespace ProtoGeneratorUtil
                 }
             };
 
-            var skipAssemblies = new[]
+            var allowedAssemblies = new[]
             {
-                "Grpc.AspNetCore.dll",
-                "Grpc.AspNetCore.Web.dll",
-                "Grpc.AspNetCore.Server.dll",
-                "Grpc.AspNetCore.Server.ClientFactory.dll",
-                "Grpc.Net.Client.dll",
-                "Grpc.Net.ClientFactory.dll",
-                "Grpc.Net.Common.dll",
-                "Grpc.Core.dll",
-                "Grpc.Core.Api.dll",
-                "Microsoft.Extensions.Hosting.dll"
+                "System.Runtime.dll",
+                "CommunityToolkit.Mvvm.dll"
             };
 
             var msbuildProvidedRefs = opts.GetReferencePaths()
-                .Where(p => !skipAssemblies.Any(skip => p.EndsWith(skip, StringComparison.OrdinalIgnoreCase)))
+                .Where(p => allowedAssemblies.Any(allowed => p.EndsWith(allowed, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
             Console.Write("Filtered references:");
