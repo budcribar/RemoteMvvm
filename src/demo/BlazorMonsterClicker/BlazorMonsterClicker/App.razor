@@ -1,12 +1,9 @@
-﻿<Router AppAssembly="@typeof(App).Assembly">
+﻿@using BlazorMonsterClicker.Pages
+<Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
-        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
-        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        <RouteView RouteData="@routeData" DefaultLayout="@null" />
     </Found>
     <NotFound>
-        <PageTitle>Not found</PageTitle>
-        <LayoutView Layout="@typeof(MainLayout)">
-            <p role="alert">Sorry, there's nothing at this address.</p>
-        </LayoutView>
+        <MonsterClickerPage />
     </NotFound>
 </Router>
