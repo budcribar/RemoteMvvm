@@ -97,7 +97,6 @@ namespace ProtoGeneratorUtil
     {
         const string AttributeDefinitionResourceName = "ProtoGeneratorUtil.Resources.GenerateGrpcRemoteAttribute.cs";
         const string AttributeDefinitionPlaceholderPath = "embedded://PeakSWC/Mvvm/Remote/GenerateGrpcRemoteAttribute.cs";
-        const string SystemRuntimeResourceName = "ProtoGeneratorUtil.Resources.System.Runtime.dll";
         const string CommunityToolkitMvvmResourceName = "ProtoGeneratorUtil.Resources.CommunityToolkit.Mvvm.dll";
 
         static string ExtractResourceToTempFile(string resourceName)
@@ -229,16 +228,27 @@ namespace ProtoGeneratorUtil
             }
 
             var references = new List<MetadataReference>();
-            try
+
+            // Use all loaded assemblies with a valid Location as references (self-contained/single-file compatible)
+            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+                .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location) && a.Location.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
+                .Select(a => a.Location)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            foreach (var dll in loadedAssemblies)
             {
-                string sysRuntimePath = ExtractResourceToTempFile(SystemRuntimeResourceName);
-                references.Add(MetadataReference.CreateFromFile(sysRuntimePath));
-                Console.WriteLine($"Loaded System.Runtime.dll from embedded resource: {sysRuntimePath}");
+                try
+                {
+                    references.Add(MetadataReference.CreateFromFile(dll));
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Warning: Could not load reference '{dll}': {ex.Message}");
+                }
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed to load System.Runtime.dll from resource: {ex.Message}");
-            }
+            Console.WriteLine($"Loaded references from AppDomain.CurrentDomain.GetAssemblies(): {loadedAssemblies.Count}");
+
+            // Only embed and load CommunityToolkit.Mvvm.dll
             try
             {
                 string mvvmPath = ExtractResourceToTempFile(CommunityToolkitMvvmResourceName);
