@@ -24,5 +24,9 @@
 	<ItemGroup>
 	  <Folder Include="Resources\" />
 	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="C:\Users\budcr\.nuget\packages\communitytoolkit.mvvm\8.4.0\lib\net8.0\CommunityToolkit.Mvvm.dll" Link="Resources\CommunityToolkit.Mvvm.dll" />
+		<EmbeddedResource Include="publish\System.Runtime.dll" Link="Resources\System.Runtime.dll" />
+	</ItemGroup>
 
 </Project>

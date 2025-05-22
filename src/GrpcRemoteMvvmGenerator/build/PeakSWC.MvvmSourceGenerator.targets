@@ -32,8 +32,8 @@
 					  --output &quot;%(_MvvmViewModelProtoSourceProcessed.FinalOutputPath)&quot; ^
 					  --protoNamespace &quot;%(_MvvmViewModelProtoSourceProcessed.FinalProtoNamespace)&quot; ^
 					  --serviceName &quot;%(_MvvmViewModelProtoSourceProcessed.FinalServiceName)&quot; ^
-					  %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs) ^
-					  --referencePaths &quot;$(_ProtoUtil_ReferencePaths)&quot;"
+					  %(_MvvmViewModelProtoSourceProcessed.AdditionalArgs)"
+					  
               WorkingDirectory="$(MSBuildProjectDirectory)"
               ContinueOnError="false" />
 

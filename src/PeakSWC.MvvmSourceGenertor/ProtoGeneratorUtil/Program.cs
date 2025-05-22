@@ -97,6 +97,20 @@ namespace ProtoGeneratorUtil
     {
         const string AttributeDefinitionResourceName = "ProtoGeneratorUtil.Resources.GenerateGrpcRemoteAttribute.cs";
         const string AttributeDefinitionPlaceholderPath = "embedded://PeakSWC/Mvvm/Remote/GenerateGrpcRemoteAttribute.cs";
+        const string SystemRuntimeResourceName = "ProtoGeneratorUtil.Resources.System.Runtime.dll";
+        const string CommunityToolkitMvvmResourceName = "ProtoGeneratorUtil.Resources.CommunityToolkit.Mvvm.dll";
+
+        static string ExtractResourceToTempFile(string resourceName)
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream == null)
+                throw new InvalidOperationException($"Resource '{resourceName}' not found in assembly.");
+            var tempFile = Path.Combine(Path.GetTempPath(), $"ProtoGen_{Guid.NewGuid()}_{Path.GetFileName(resourceName)}");
+            using var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None);
+            stream.CopyTo(fs);
+            return tempFile;
+        }
 
         static async Task Main(string[] args)
         {
@@ -132,15 +146,12 @@ namespace ProtoGeneratorUtil
             Console.WriteLine($"ProtoGeneratorUtil: Starting .proto file generation...");
             Console.WriteLine($"  ViewModel files: {string.Join(", ", opts.ViewModelFiles)}");
             Console.WriteLine($"  Raw --referencePaths string: '{opts.ReferencePathsRaw ?? "null"}'");
-            var explicitRefs = opts.GetReferencePaths().ToList();
-            Console.WriteLine($"  Parsed Explicit Reference DLLs ({explicitRefs.Count}): {(explicitRefs.Any() ? string.Join("; ", explicitRefs.Take(5)) + (explicitRefs.Count > 5 ? "..." : "") : "None")}");
             Console.WriteLine($"  Output .proto (initial): {opts.OutputPath ?? "Not set, will derive"}");
             Console.WriteLine($"  Proto Namespace (initial): {opts.ProtoNamespace ?? "Not set, will derive"}");
             Console.WriteLine($"  gRPC Service Name (initial): {opts.GrpcServiceName ?? "Not set, will derive"}");
             Console.WriteLine($"  GenerateAttribute FQN: {opts.GenerateGrpcRemoteAttributeFullName}");
             Console.WriteLine($"  ObservablePropertyAttribute FQN: {opts.ObservablePropertyAttributeFullName}");
             Console.WriteLine($"  RelayCommandAttribute FQN: {opts.RelayCommandAttributeFullName}");
-
 
             if (!opts.ViewModelFiles.Any())
             {
@@ -152,7 +163,6 @@ namespace ProtoGeneratorUtil
             }
 
             var syntaxTrees = new List<SyntaxTree>();
-
             foreach (var filePath in opts.ViewModelFiles)
             {
                 if (!File.Exists(filePath))
@@ -219,102 +229,55 @@ namespace ProtoGeneratorUtil
             }
 
             var references = new List<MetadataReference>();
-            var loadedReferencePaths = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            Action<string, string> addRef = (path, source) => // Simplified addRef
+            try
             {
-                if (string.IsNullOrEmpty(path)) return;
-                if (!File.Exists(path))
+                string sysRuntimePath = ExtractResourceToTempFile(SystemRuntimeResourceName);
+                references.Add(MetadataReference.CreateFromFile(sysRuntimePath));
+                Console.WriteLine($"Loaded System.Runtime.dll from embedded resource: {sysRuntimePath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load System.Runtime.dll from resource: {ex.Message}");
+            }
+            try
+            {
+                string mvvmPath = ExtractResourceToTempFile(CommunityToolkitMvvmResourceName);
+                references.Add(MetadataReference.CreateFromFile(mvvmPath));
+                Console.WriteLine($"Loaded CommunityToolkit.Mvvm.dll from embedded resource: {mvvmPath}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to load CommunityToolkit.Mvvm.dll from resource: {ex.Message}");
+            }
+
+            // Add explicit references from the run string (ReferencePathsRaw), except system references
+            var explicitRefs = opts.GetReferencePaths().ToList();
+            foreach (var refPath in explicitRefs)
+            {
+                var fileName = Path.GetFileName(refPath);
+                if (fileName.Equals("System.Runtime.dll", StringComparison.OrdinalIgnoreCase) ||
+                    fileName.Equals("CommunityToolkit.Mvvm.dll", StringComparison.OrdinalIgnoreCase))
                 {
-                    // Console.WriteLine($"ProtoGeneratorUtil: Info: Reference path from {source} does not exist or is invalid: '{path}'"); // Can be noisy
-                    return;
+                    // Skip, already loaded from embedded resource
+                    continue;
                 }
-                if (loadedReferencePaths.Add(path))
-                { // Add returns true if the path was new
+                if (File.Exists(refPath))
+                {
                     try
                     {
-                        references.Add(MetadataReference.CreateFromFile(path));
+                        references.Add(MetadataReference.CreateFromFile(refPath));
+                        Console.WriteLine($"Loaded user-specified reference: {refPath}");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"ProtoGeneratorUtil: Warning: Could not load reference '{path}' (from {source}): {ex.GetType().Name} - {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}");
+                        Console.WriteLine($"Warning: Could not load user-specified reference '{refPath}': {ex.Message}");
                     }
                 }
-            };
-
-            var allowedAssemblies = new[]
-            {
-                "System.Runtime.dll",
-                "CommunityToolkit.Mvvm.dll"
-            };
-
-            var msbuildProvidedRefs = opts.GetReferencePaths()
-                .Where(p => allowedAssemblies.Any(allowed => p.EndsWith(allowed, StringComparison.OrdinalIgnoreCase)))
-                .ToList();
-
-            Console.Write("Filtered references:");
-            foreach (var refPath in msbuildProvidedRefs)
-                Console.Write(refPath);
-            Console.WriteLine();
-
-            if (msbuildProvidedRefs.Any())
-            {
-                Console.WriteLine($"ProtoGeneratorUtil: Loading {msbuildProvidedRefs.Count} references from --referencePaths (MSBuild)...");
-                foreach (var refPath in msbuildProvidedRefs)
+                else
                 {
-                    addRef(refPath, "MSBuild --referencePaths");
+                    Console.WriteLine($"Warning: User-specified reference not found: {refPath}");
                 }
             }
-            else
-            {
-                Console.WriteLine("ProtoGeneratorUtil: CRITICAL WARNING: No explicit --referencePaths provided by MSBuild. This will likely cause many compilation errors.");
-            }
-
-            // Fallback for essential assemblies if still missing (less reliable if MSBuild paths are incomplete)
-            bool coreSystemRuntimeLoaded = loadedReferencePaths.Any(p => Path.GetFileName(p).Equals("System.Runtime.dll", StringComparison.OrdinalIgnoreCase));
-            bool coreSystemPrivateCoreLibLoaded = loadedReferencePaths.Any(p => Path.GetFileName(p).Equals("System.Private.CoreLib.dll", StringComparison.OrdinalIgnoreCase));
-
-            if (!coreSystemRuntimeLoaded && !coreSystemPrivateCoreLibLoaded)
-            {
-                Console.WriteLine("ProtoGeneratorUtil: Core runtime (System.Runtime.dll or System.Private.CoreLib.dll) not found in MSBuild paths. Attempting fallback load...");
-                // Use AppContext.BaseDirectory for the base directory of the application
-                string? coreDir = AppContext.BaseDirectory;
-                // If AppContext.BaseDirectory is null or empty (should not happen in a running process, but defensive check)
-                if (!string.IsNullOrEmpty(coreDir))
-                {
-                    addRef(Path.Combine(coreDir, "System.Private.CoreLib.dll"), "Fallback Core"); // Most important for .NET Core+
-                    addRef(Path.Combine(coreDir, "System.Runtime.dll"), "Fallback Core");
-                    // Also add netstandard.dll which might be needed
-                    addRef(Path.Combine(coreDir, "netstandard.dll"), "Fallback Core");
-                }
-            }
-
-            if (!loadedReferencePaths.Any(p => Path.GetFileName(p).Equals("CommunityToolkit.Mvvm.dll", StringComparison.OrdinalIgnoreCase)))
-            {
-                Console.WriteLine("ProtoGeneratorUtil: CommunityToolkit.Mvvm.dll not found in MSBuild-provided references. Attempting heuristic load...");
-                TryAddAssemblyReferenceHeuristic(references, "CommunityToolkit.Mvvm.dll", opts.ViewModelFiles.FirstOrDefault(), isOptional: false, loadedReferencePaths);
-            }
-            else
-            {
-                Console.WriteLine("ProtoGeneratorUtil: CommunityToolkit.Mvvm.dll was included in MSBuild-provided references.");
-            }
-
-            Console.WriteLine($"ProtoGeneratorUtil: Total {references.Count} metadata references collected for compilation.");
-            coreSystemRuntimeLoaded = references.Any(r => r.Display != null && Path.GetFileName(r.Display).Equals("System.Runtime.dll", StringComparison.OrdinalIgnoreCase));
-            coreSystemPrivateCoreLibLoaded = references.Any(r => r.Display != null && Path.GetFileName(r.Display).Equals("System.Private.CoreLib.dll", StringComparison.OrdinalIgnoreCase));
-
-            if (!coreSystemRuntimeLoaded && !coreSystemPrivateCoreLibLoaded)
-            {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("ProtoGeneratorUtil: CRITICAL ERROR: A core runtime library (System.Private.CoreLib.dll or System.Runtime.dll) could not be loaded as a MetadataReference. Cannot proceed.");
-                Console.ResetColor();
-                Environment.ExitCode = 1; return;
-            }
-            if (references.Count < 50 && msbuildProvidedRefs.Any())
-            { // Heuristic check
-                Console.WriteLine("ProtoGeneratorUtil: Warning: Significantly fewer references loaded than provided by MSBuild. This might indicate issues with path processing or file existence for the provided reference paths.");
-            }
-
 
             Compilation compilation = CSharpCompilation.Create("ViewModelAssembly",
                 syntaxTrees: syntaxTrees,
@@ -544,118 +507,6 @@ namespace ProtoGeneratorUtil
         {
             return text.Replace("\r\n", "\n").Replace("\r", "\n");
         }
-
-        private static void TryAddAssemblyReferenceHeuristic(List<MetadataReference> references, string dllName, string? hintFilePath, bool isOptional, HashSet<string> loadedReferencePaths)
-        {
-            string? foundPath = null;
-            // 1. AppContext.BaseDirectory
-            if (Directory.Exists(AppContext.BaseDirectory))
-            {
-                foundPath = Directory.GetFiles(AppContext.BaseDirectory, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
-            }
-
-            // 2. Relative to hintFilePath (ViewModel file's directory and its parent directories)
-            if (foundPath == null && !string.IsNullOrEmpty(hintFilePath))
-            {
-                var hintDir = Path.GetDirectoryName(hintFilePath);
-                if (string.IsNullOrEmpty(hintDir)) hintDir = Directory.GetCurrentDirectory();
-
-                for (int i = 0; i < 4 && !string.IsNullOrEmpty(hintDir) && foundPath == null; i++) // Search up to 4 levels
-                {
-                    // Check direct subfolders common in builds: bin/Debug|Release/tfm
-                    string[] configurations = { "Debug", "Release" };
-                    string[] tfms = { "net8.0", "net7.0", "net6.0", "net5.0", "netstandard2.1", "netstandard2.0", "" }; // "" for non-tfm paths
-
-                    foreach (var config in configurations)
-                    {
-                        var configBinPath = Path.Combine(hintDir, "bin", config);
-                        if (Directory.Exists(configBinPath))
-                        {
-                            foundPath = Directory.GetFiles(configBinPath, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
-                            if (foundPath != null) break;
-
-                            foreach (var tfm in tfms)
-                            {
-                                var tfmPath = string.IsNullOrEmpty(tfm) ? configBinPath : Path.Combine(configBinPath, tfm);
-                                if (Directory.Exists(tfmPath))
-                                {
-                                    foundPath = Directory.GetFiles(tfmPath, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
-                                    if (foundPath != null) break;
-                                }
-                            }
-                        }
-                        if (foundPath != null) break;
-                    }
-                    if (foundPath == null && Directory.Exists(hintDir)) // Check current hintDir directly
-                    {
-                        foundPath = Directory.GetFiles(hintDir, dllName, SearchOption.TopDirectoryOnly).FirstOrDefault();
-                    }
-                    if (foundPath != null) break;
-                    hintDir = Path.GetDirectoryName(hintDir); // Go up one level
-                }
-            }
-            // (The rest of your TryAddAssemblyReferenceHeuristic logic for NuGet cache, SDK packs, etc.)
-            if (foundPath == null)
-            {
-                string nugetPackagesPath = Environment.GetEnvironmentVariable("NUGET_PACKAGES") ?? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".nuget", "packages");
-                if (Directory.Exists(nugetPackagesPath))
-                {
-                    string packageNameNoExt = Path.GetFileNameWithoutExtension(dllName).ToLowerInvariant();
-                    var packageDir = Path.Combine(nugetPackagesPath, packageNameNoExt);
-                    if (Directory.Exists(packageDir))
-                    {
-                        foundPath = Directory.GetFiles(packageDir, dllName, SearchOption.AllDirectories)
-                                          .Where(p => p.Contains(Path.DirectorySeparatorChar + "lib" + Path.DirectorySeparatorChar) || p.Contains(Path.DirectorySeparatorChar + "ref" + Path.DirectorySeparatorChar))
-                                          .OrderByDescending(f => f.ToLowerInvariant().Contains("net8.0") ? 30 : f.ToLowerInvariant().Contains("net7.0") ? 20 : f.ToLowerInvariant().Contains("net6.0") ? 10 : f.ToLowerInvariant().Contains("netstandard2.0") ? 5 : 0)
-                                          .ThenByDescending(f => f).FirstOrDefault();
-                    }
-                }
-            }
-            if (foundPath == null)
-            {
-                string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
-                string programFilesX86 = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86);
-                string dotnetRoot = Environment.GetEnvironmentVariable("DOTNET_ROOT") ?? Path.Combine(programFiles, "dotnet");
-                if (!Directory.Exists(dotnetRoot) && programFiles != programFilesX86) dotnetRoot = Path.Combine(programFilesX86, "dotnet");
-                string[] rootsToSearch = { Path.Combine(dotnetRoot, "packs"), Path.Combine(dotnetRoot, "shared", "Microsoft.NETCore.App"), Path.Combine(dotnetRoot, "shared", "Microsoft.AspNetCore.App") };
-                foreach (var root in rootsToSearch.Where(Directory.Exists))
-                {
-                    try
-                    {
-                        foundPath = Directory.GetFiles(root, dllName, SearchOption.AllDirectories)
-                                          .OrderByDescending(f => f.ToLowerInvariant().Contains("net8.0") ? 30 : f.ToLowerInvariant().Contains("net7.0") ? 20 : f.ToLowerInvariant().Contains("net6.0") ? 10 : 0)
-                                          .ThenByDescending(f => f).FirstOrDefault();
-                        if (foundPath != null) break;
-                    }
-                    catch { }
-                }
-            }
-
-
-            if (foundPath != null && File.Exists(foundPath))
-            {
-                if (loadedReferencePaths.Add(foundPath))
-                {
-                    try
-                    {
-                        references.Add(MetadataReference.CreateFromFile(foundPath));
-                        Console.WriteLine($"ProtoGeneratorUtil: Added reference for '{dllName}': {foundPath} (via heuristic search)");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"ProtoGeneratorUtil: Warning: Could not create MetadataReference for heuristically found file '{foundPath}': {ex.Message.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault()}");
-                    }
-                }
-            }
-            else
-            {
-                if (!isOptional)
-                {
-                    Console.WriteLine($"ProtoGeneratorUtil: Warning: Could not find required assembly '{dllName}' via heuristic search. Analysis might be incomplete.");
-                }
-            }
-        }
-
 
         private static List<PropertyInfo> GetObservableProperties(INamedTypeSymbol classSymbol, string observablePropertyAttributeFullName, Compilation compilation)
         {

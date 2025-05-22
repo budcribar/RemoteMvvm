@@ -8,12 +8,15 @@
 		<UseWPF>true</UseWPF>
 		<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>
 	</PropertyGroup>
-
 	<ItemGroup>
+	  <FrameworkReference Include="Microsoft.AspNetCore.App" />
 	  <EmbeddedResource Include="Resources\sword.png" />
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Grpc" Version="2.46.6" />
 		<PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
@@ -23,11 +26,9 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		
-		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
-		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
-		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 		
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.86-gad3eb3c308"> 
+		
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.91-g95771548c2"> 
 			<GrpcServices>Both</GrpcServices>
 			<PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -36,9 +37,7 @@
 		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
 
-	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
-	</ItemGroup>
+
 	
 	<ItemGroup>
 		<MvvmViewModelProtoSource Include="ViewModels\GameViewModel.cs">
