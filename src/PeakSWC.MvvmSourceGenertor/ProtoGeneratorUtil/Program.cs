@@ -260,6 +260,11 @@ namespace ProtoGeneratorUtil
                 .Where(p => !skipAssemblies.Any(skip => p.EndsWith(skip, StringComparison.OrdinalIgnoreCase)))
                 .ToList();
 
+            Console.Write("Filtered references:");
+            foreach (var refPath in msbuildProvidedRefs)
+                Console.Write(refPath);
+            Console.WriteLine();
+
             if (msbuildProvidedRefs.Any())
             {
                 Console.WriteLine($"ProtoGeneratorUtil: Loading {msbuildProvidedRefs.Count} references from --referencePaths (MSBuild)...");
