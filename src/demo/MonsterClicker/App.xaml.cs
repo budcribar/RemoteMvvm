@@ -34,7 +34,6 @@ namespace MonsterClicker
                 switch (mode)
                 {
                     case "server":
-                        
 
                         // … inside your switch("server") …
 
@@ -46,32 +45,48 @@ namespace MonsterClicker
                             {
                                 webBuilder.UseKestrel(options =>
                                 {
-                                    // listen with HTTP/2 for "raw" gRPC clients
-                                    options.ListenLocalhost(50051, o => o.Protocols = HttpProtocols.Http1AndHttp2);
-                                    // listen with HTTP/1.1 for gRPC-Web (you can combine into one port if needed)
-                                    //options.ListenLocalhost(50051, o => o.Protocols = HttpProtocols.Http1);
+                                    // Listen with HTTP/1.1 and HTTP/2, AND enable HTTPS
+                                    options.ListenLocalhost(50051, listenOptions =>
+                                    {
+                                        listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+                                        listenOptions.UseHttps(); // <-- ADD THIS to enable HTTPS
+                                                                  // This will use the default ASP.NET Core development certificate
+                                    });
                                 });
 
                                 webBuilder.ConfigureServices(services =>
                                 {
                                     services.AddSingleton(gameVm);
-                                    services.AddGrpc();                            // classic gRPC
-                                    
+                                    services.AddGrpc();
+
+                                    // --- Add CORS policy ---
+                                    services.AddCors(o => o.AddPolicy("AllowBlazorApp", builder =>
+                                    {
+                                        builder.AllowAnyOrigin()
+                                               .AllowAnyMethod()
+                                               .AllowAnyHeader()
+                                               // Allowing credentials if your app sends them (e.g., cookies, auth headers)
+                                               // .AllowCredentials()
+                                               // Expose gRPC-specific headers
+                                               .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
+                                    }));
                                 });
 
                                 webBuilder.Configure(app =>
                                 {
                                     app.UseRouting();
 
-                                    // enable gRPC-Web for ANY gRPC endpoint on this host
-                                    app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });  
+                                    // --- Use CORS (must be before UseGrpcWeb and UseEndpoints) ---
+                                    app.UseCors("AllowBlazorApp");
+
+                                    app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 
                                     app.UseEndpoints(endpoints =>
                                     {
-                                        // your generated service impl
-                                        endpoints.MapGrpcService<GameViewModelGrpcServiceImpl>();
+                                        endpoints.MapGrpcService<GameViewModelGrpcServiceImpl>()
+                                                 .EnableGrpcWeb() // Still okay to have, though DefaultEnabled=true makes it somewhat redundant
+                                                 .RequireCors("AllowBlazorApp"); // Apply CORS policy to this endpoint
 
-                                        // (optional) a simple fallback endpoint
                                         endpoints.MapGet("/", async ctx =>
                                         {
                                             await ctx.Response.WriteAsync("This server hosts gRPC + gRPC-Web.");
@@ -83,9 +98,11 @@ namespace MonsterClicker
 
                         await host.StartAsync();
 
-                        Console.WriteLine("gRPC (HTTP/2) on port 50051, gRPC-Web (HTTP/1.1) on port 50051");
+                        Console.WriteLine("gRPC (HTTP/2) and gRPC-Web (HTTP/1.1) on HTTPS port 50051"); // Updated message
                         mainWindow.DataContext = gameVm;
                         mainWindow.Title += " (Server Mode – Hosting Game)";
+
+                        break;
 
                         break;
 
