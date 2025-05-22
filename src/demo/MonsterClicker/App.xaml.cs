@@ -18,7 +18,7 @@ namespace MonsterClicker
 {
     public partial class App : Application
     {
-        private const string ServerAddress = "https://localhost:50051";
+        private const string ServerAddress = "https://localhost:50052";
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -44,6 +44,9 @@ namespace MonsterClicker
                                     options.ListenLocalhost(50052, listenOptions =>
                                     {
                                         listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
+
+                                        // UseHttps for Monster client comment out for BlazerMonster client
+                                        //listenOptions.UseHttps();
                                         // Start without HTTPS for debugging
                                     });
                                 });

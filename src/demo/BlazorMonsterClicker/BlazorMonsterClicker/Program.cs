@@ -20,7 +20,7 @@ namespace BlazorMonsterClicker
             var grpcAddress = "http://localhost:50052"; // HTTP endpoint for gRPC-Web
 
             // Option 2: If you want to use HTTPS, you'll need to handle certificate issues
-            // var grpcAddress = "https://localhost:50051";
+            //var grpcAddress = "https://localhost:50051";
 
             // Configure gRPC client for gRPC-Web
             builder.Services.AddGrpcClient<GameViewModelService.GameViewModelServiceClient>(options =>
