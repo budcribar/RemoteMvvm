@@ -14,6 +14,7 @@ namespace BlazorMonsterClicker
         public static async Task Main(string[] args)
         {
             var builder = WebAssemblyHostBuilder.CreateDefault(args);
+           
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
         
@@ -23,7 +24,7 @@ namespace BlazorMonsterClicker
                 // The address of your gRPC service.
                 // This might be the same as your Blazor app's address if hosted together,
                 // or a different address if the gRPC service is hosted elsewhere.
-                options.Address = new Uri(builder.HostEnvironment.BaseAddress); // Adjust if gRPC service is on a different URL
+                options.Address = new Uri("https://localhost:50051/"); // Adjust if gRPC service is on a different URL
             })
             .ConfigurePrimaryHttpMessageHandler(() =>
             {
