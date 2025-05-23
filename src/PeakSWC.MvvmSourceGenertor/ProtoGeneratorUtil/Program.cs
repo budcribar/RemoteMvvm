@@ -1207,6 +1207,18 @@ namespace ProtoGeneratorUtil
                 bodySb.AppendLine();
             }
 
+            // --- Always emit ConnectionStatus enum, ConnectionStatusResponse message, and Ping RPC ---
+            bodySb.AppendLine("enum ConnectionStatus {");
+            bodySb.AppendLine("  UNKNOWN = 0;");
+            bodySb.AppendLine("  CONNECTED = 1;");
+            bodySb.AppendLine("  DISCONNECTED = 2;");
+            bodySb.AppendLine("}");
+            bodySb.AppendLine();
+            bodySb.AppendLine("message ConnectionStatusResponse {");
+            bodySb.AppendLine("  ConnectionStatus status = 1;");
+            bodySb.AppendLine("}");
+            bodySb.AppendLine();
+
             bodySb.AppendLine($"service {grpcServiceName} {{");
             bodySb.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmStateMessageName});");
             bodySb.AppendLine($"  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);");
@@ -1215,6 +1227,8 @@ namespace ProtoGeneratorUtil
             {
                 bodySb.AppendLine($"  rpc {cmd.MethodName} ({cmd.MethodName}Request) returns ({cmd.MethodName}Response);");
             }
+            // Always add Ping RPC
+            bodySb.AppendLine("  rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);");
             bodySb.AppendLine("}");
             bodySb.AppendLine();
 

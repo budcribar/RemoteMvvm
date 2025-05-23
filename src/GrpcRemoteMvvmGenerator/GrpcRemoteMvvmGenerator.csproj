@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
+		<VersionPrefix>1.0.0</VersionPrefix>
+		<VersionSuffix>preview2</VersionSuffix>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
@@ -21,10 +23,6 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
-		<PackageReference Include="Nerdbank.GitVersioning" Version="3.7.115">
-		  <PrivateAssets>all</PrivateAssets>
-		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="System.Threading.Channels" Version="8.0.0" />
 		<EmbeddedResource Include="attributes\GenerateGrpcRemoteAttribute.cs" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
