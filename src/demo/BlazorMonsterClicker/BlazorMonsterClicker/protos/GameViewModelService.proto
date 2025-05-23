@@ -53,6 +53,16 @@ message SpecialAttackAsyncResponse {
   // Add fields here if the command returns data.
 }
 
+enum ConnectionStatus {
+  UNKNOWN = 0;
+  CONNECTED = 1;
+  DISCONNECTED = 2;
+}
+
+message ConnectionStatusResponse {
+  ConnectionStatus status = 1;
+}
+
 service GameViewModelService {
   rpc GetState (google.protobuf.Empty) returns (GameViewModelState);
   rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);
@@ -60,5 +70,6 @@ service GameViewModelService {
   rpc AttackMonster (AttackMonsterRequest) returns (AttackMonsterResponse);
   rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
   rpc SpecialAttackAsync (SpecialAttackAsyncRequest) returns (SpecialAttackAsyncResponse);
+  rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
 }
 
