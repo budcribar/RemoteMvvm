@@ -7,6 +7,10 @@
     "Client": {
       "commandName": "Project",
       "commandLineArgs": "client"
+    },
+    "Local": {
+      "commandName": "Project",
+      "commandLineArgs": "local"
     }
   }
 }

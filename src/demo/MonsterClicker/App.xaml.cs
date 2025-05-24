@@ -24,8 +24,8 @@ namespace MonsterClicker
         {
             base.OnStartup(e);
 
-            var mainWindow = new MainWindow();
             string mode = e.Args.FirstOrDefault()?.ToLowerInvariant() ?? "local";
+            MainWindow mainWindow;
 
             try
             {
@@ -34,6 +34,7 @@ namespace MonsterClicker
                     case "server":
                         Console.WriteLine("Starting in SERVER mode...");
                         var gameVm = new GameViewModel();
+                        mainWindow = new MainWindow(AppModeUtil.AppMode.Server);
 
                         var host = Host.CreateDefaultBuilder()
                             .ConfigureWebHostDefaults(webBuilder =>
@@ -170,12 +171,14 @@ namespace MonsterClicker
                         var remoteViewModel = new GameViewModelRemoteClient(grpcClient);
                         await remoteViewModel.InitializeRemoteAsync();
 
+                        mainWindow = new MainWindow(AppModeUtil.AppMode.Client);
                         mainWindow.DataContext = remoteViewModel;
                         mainWindow.Title += $" (Client Mode - Connected to {ServerAddress})";
                         break;
 
                     default: // "local"
                         Console.WriteLine("Starting in LOCAL mode...");
+                        mainWindow = new MainWindow(AppModeUtil.AppMode.Local);
                         mainWindow.DataContext = new GameViewModel();
                         mainWindow.Title += " (Local Mode)";
                         break;

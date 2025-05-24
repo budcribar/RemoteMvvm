@@ -10,30 +10,59 @@ using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.ComponentModel;
 
+public static class AppModeUtil
+{
+    public enum AppMode
+    {
+        Local,
+        Server,
+        Client
+    }
+}
+
 namespace MonsterClicker
 {
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        public MainWindow()
+        public bool IsServerMode => _mode == AppModeUtil.AppMode.Server;
+        public bool IsClientMode => _mode == AppModeUtil.AppMode.Client;
+        public bool IsFooterVisible => _mode != AppModeUtil.AppMode.Local;
+        private AppModeUtil.AppMode _mode;
+
+        public MainWindow(AppModeUtil.AppMode mode = AppModeUtil.AppMode.Local)
         {
+            _mode = mode;
             InitializeComponent();
             this.DataContextChanged += MainWindow_DataContextChanged;
+            if (IsServerMode)
+                MonsterClicker.GrpcServices.GameViewModelGrpcServiceImpl.ClientCountChanged += OnClientCountChanged;
         }
 
-        public bool IsClientMode
+        protected override void OnClosed(EventArgs e)
         {
-            get
+            base.OnClosed(e);
+            if (IsServerMode)
+                MonsterClicker.GrpcServices.GameViewModelGrpcServiceImpl.ClientCountChanged -= OnClientCountChanged;
+        }
+
+        public int ConnectedClients
+        {
+            get => _connectedClients;
+            set
             {
-                // DataContext is set to GameViewModelRemoteClient in client mode
-                return DataContext?.GetType().Name == "GameViewModelRemoteClient";
+                if (_connectedClients != value)
+                {
+                    _connectedClients = value;
+                    OnPropertyChanged(nameof(ConnectedClients));
+                }
             }
         }
+        private int _connectedClients;
 
         public string ConnectionStatus
         {
             get
             {
-                // If DataContext has a ConnectionStatus property, return it
                 var prop = DataContext?.GetType().GetProperty("ConnectionStatus");
                 if (prop != null)
                 {
@@ -45,23 +74,17 @@ namespace MonsterClicker
 
         private void MainWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
-            if (e.OldValue is INotifyPropertyChanged oldInpc)
-                oldInpc.PropertyChanged -= DataContext_PropertyChanged;
-            if (e.NewValue is INotifyPropertyChanged newInpc)
-                newInpc.PropertyChanged += DataContext_PropertyChanged;
-            // Notify UI to update ConnectionStatus
             OnPropertyChanged(nameof(ConnectionStatus));
+            OnPropertyChanged(nameof(ConnectedClients));
         }
 
-        private void DataContext_PropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnClientCountChanged(object? sender, int count)
         {
-            if (e.PropertyName == "ConnectionStatus")
-            {
-                OnPropertyChanged(nameof(ConnectionStatus));
-            }
+            Dispatcher.Invoke(() => ConnectedClients = count);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
         protected void OnPropertyChanged(string propertyName)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));

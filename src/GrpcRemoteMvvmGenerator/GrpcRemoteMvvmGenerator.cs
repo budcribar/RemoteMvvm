@@ -323,6 +323,22 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("{");
             sb.AppendLine($"    public partial class {vmName}GrpcServiceImpl : {protoCsNamespace}.{grpcServiceName}.{grpcServiceName}Base");
             sb.AppendLine("    {");
+            // Add static event and property for client count
+            sb.AppendLine("        public static event System.EventHandler<int>? ClientCountChanged;");
+            sb.AppendLine("        private static int _clientCount;");
+            sb.AppendLine("        public static int ClientCount");
+            sb.AppendLine("        {");
+            sb.AppendLine("            get => _clientCount;");
+            sb.AppendLine("            private set");
+            sb.AppendLine("            {");
+            sb.AppendLine("                if (_clientCount != value)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    _clientCount = value;");
+            sb.AppendLine("                    ClientCountChanged?.Invoke(null, value);");
+            sb.AppendLine("                }");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine();
             sb.AppendLine($"        private readonly {vmFullName} _viewModel;");
             sb.AppendLine($"        private readonly ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>>();");
             sb.AppendLine("        private readonly Dispatcher _dispatcher; // For UI thread marshalling");
@@ -366,6 +382,8 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            _subscriberChannels.TryAdd(responseStream, channel);");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Channel created and added for subscriber.\");");
             sb.AppendLine();
+            sb.AppendLine("            ClientCount = _subscriberChannels.Count; // Update count on subscribe");
+            sb.AppendLine();
             sb.AppendLine("            try");
             sb.AppendLine("            {");
             sb.AppendLine("                await foreach (var notification in channel.Reader.ReadAllAsync(context.CancellationToken))");
@@ -381,6 +399,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            {");
             sb.AppendLine("                _subscriberChannels.TryRemove(responseStream, out _);");
             sb.AppendLine("                channel.Writer.TryComplete();");
+            sb.AppendLine("                ClientCount = _subscriberChannels.Count; // Update count on unsubscribe");
             sb.AppendLine("                Debug.WriteLine(\"[GrpcService:" + vmName + "] Client unsubscribed and channel completed.\");");
             sb.AppendLine("            }");
             sb.AppendLine("        }");

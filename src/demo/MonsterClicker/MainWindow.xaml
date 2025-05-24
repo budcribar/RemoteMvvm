@@ -8,7 +8,7 @@
         mc:Ignorable="d"
         Title="Monster Clicker Adventure" Height="450" Width="600"
         FontFamily="Segoe UI">
-   
+    
     <Window.Resources>
         <local:InverseBooleanConverter x:Key="InverseBooleanConverter"/>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
@@ -168,8 +168,15 @@
         </StackPanel>
 
         <!-- StatusBar in the last row -->
-        <StatusBar Grid.Row="5" VerticalAlignment="Bottom">
-            <StatusBarItem>
+        <StatusBar Grid.Row="5" VerticalAlignment="Bottom"
+                   Visibility="{Binding IsFooterVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StatusBarItem Visibility="{Binding IsServerMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock>
+                    <Run Text="Connected Clients: "/>
+                    <Run Text="{Binding ConnectedClients, Mode=OneWay}"/>
+                </TextBlock>
+            </StatusBarItem>
+            <StatusBarItem Visibility="{Binding IsClientMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <TextBlock>
                     <Run Text="Connection Status: "/>
                     <Run Text="{Binding ConnectionStatus, Mode=OneWay}"/>
