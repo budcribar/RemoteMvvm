@@ -170,13 +170,13 @@
         <!-- StatusBar in the last row -->
         <StatusBar Grid.Row="5" VerticalAlignment="Bottom"
                    Visibility="{Binding IsFooterVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-            <StatusBarItem Visibility="{Binding IsServerMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StatusBarItem x:Name="ServerStatusBarItem" Visibility="Collapsed">
                 <TextBlock>
                     <Run Text="Connected Clients: "/>
                     <Run Text="{Binding ConnectedClients, Mode=OneWay}"/>
                 </TextBlock>
             </StatusBarItem>
-            <StatusBarItem Visibility="{Binding IsClientMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+            <StatusBarItem x:Name="ClientStatusBarItem" Visibility="Collapsed">
                 <TextBlock>
                     <Run Text="Connection Status: "/>
                     <Run Text="{Binding ConnectionStatus, Mode=OneWay}"/>

@@ -35,7 +35,11 @@ namespace MonsterClicker
             InitializeComponent();
             this.DataContextChanged += MainWindow_DataContextChanged;
             if (IsServerMode)
+            {
                 MonsterClicker.GrpcServices.GameViewModelGrpcServiceImpl.ClientCountChanged += OnClientCountChanged;
+                // Set initial value on startup
+                ConnectedClients = MonsterClicker.GrpcServices.GameViewModelGrpcServiceImpl.ClientCount;
+            }
         }
 
         protected override void OnClosed(EventArgs e)
@@ -72,10 +76,25 @@ namespace MonsterClicker
             }
         }
 
+        public override void OnApplyTemplate()
+        {
+            base.OnApplyTemplate();
+            SetFooterVisibility();
+        }
+
+        private void SetFooterVisibility()
+        {
+            if (this.FindName("ServerStatusBarItem") is System.Windows.FrameworkElement serverItem)
+                serverItem.Visibility = IsServerMode ? Visibility.Visible : Visibility.Collapsed;
+            if (this.FindName("ClientStatusBarItem") is System.Windows.FrameworkElement clientItem)
+                clientItem.Visibility = IsClientMode ? Visibility.Visible : Visibility.Collapsed;
+        }
+
         private void MainWindow_DataContextChanged(object sender, DependencyPropertyChangedEventArgs e)
         {
             OnPropertyChanged(nameof(ConnectionStatus));
             OnPropertyChanged(nameof(ConnectedClients));
+            SetFooterVisibility();
         }
 
         private void OnClientCountChanged(object? sender, int count)
