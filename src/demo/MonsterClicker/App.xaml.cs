@@ -46,7 +46,7 @@ namespace MonsterClicker
                                         listenOptions.Protocols = HttpProtocols.Http1AndHttp2;
 
                                         // UseHttps for Monster client comment out for BlazerMonster client
-                                        //listenOptions.UseHttps();
+                                        listenOptions.UseHttps();
                                         // Start without HTTPS for debugging
                                     });
                                 });

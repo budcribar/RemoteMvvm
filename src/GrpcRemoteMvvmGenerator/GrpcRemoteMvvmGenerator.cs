@@ -598,23 +598,46 @@ namespace PeakSWC.MvvmSourceGenerator
 
             sb.AppendLine("        private async Task StartPingLoopAsync()");
             sb.AppendLine("        {");
+            sb.AppendLine("            string lastStatus = ConnectionStatus;");
             sb.AppendLine("            while (!_isDisposed)");
             sb.AppendLine("            {");
             sb.AppendLine("                try");
             sb.AppendLine("                {");
             sb.AppendLine("                    var response = await _grpcClient.PingAsync(new Google.Protobuf.WellKnownTypes.Empty(), cancellationToken: _cts.Token);");
-            sb.AppendLine("                    if (response.Status == ConnectionStatus.Connected)");
+            sb.AppendLine("                    if (response.Status == MonsterClicker.ViewModels.Protos.ConnectionStatus.Connected)");
             sb.AppendLine("                    {");
+            sb.AppendLine("                        if (lastStatus != \"Connected\")");
+            sb.AppendLine("                        {");
+            sb.AppendLine("                            // Reconnected: fetch state and resubscribe");
+            sb.AppendLine("                            try");
+            sb.AppendLine("                            {");
+            sb.AppendLine("                                var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);");
+            foreach (var prop in props)
+            {
+                string protoStateFieldName = ToPascalCase(prop.Name);
+                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+            }
+            sb.AppendLine("                                Debug.WriteLine(\"[ClientProxy] State re-synced after reconnect.\");");
+            sb.AppendLine("                                StartListeningToPropertyChanges(_cts.Token);");
+            sb.AppendLine("                            }");
+            sb.AppendLine("                            catch (Exception ex)");
+            sb.AppendLine("                            {");
+            sb.AppendLine("                                Debug.WriteLine($\"[ClientProxy] Error re-syncing state after reconnect: {ex.Message}\");");
+            sb.AppendLine("                            }");
+            sb.AppendLine("                        }");
             sb.AppendLine("                        ConnectionStatus = \"Connected\";");
+            sb.AppendLine("                        lastStatus = \"Connected\";");
             sb.AppendLine("                    }");
             sb.AppendLine("                    else");
             sb.AppendLine("                    {");
             sb.AppendLine("                        ConnectionStatus = \"Disconnected\";");
+            sb.AppendLine("                        lastStatus = \"Disconnected\";");
             sb.AppendLine("                    }");
             sb.AppendLine("                }");
             sb.AppendLine("                catch (Exception ex)");
             sb.AppendLine("                {");
             sb.AppendLine("                    ConnectionStatus = \"Disconnected\";");
+            sb.AppendLine("                    lastStatus = \"Disconnected\";");
             sb.AppendLine("                    Debug.WriteLine($\"[ClientProxy] Ping failed: {ex.Message}. Attempting to reconnect...\");");
             sb.AppendLine("                }");
             sb.AppendLine("                await Task.Delay(5000);");
