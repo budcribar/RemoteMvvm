@@ -1,3 +1,12 @@
 ﻿@inherits LayoutComponentBase
 <!-- Layout removed: No menu, no header, just the page body -->
-@Body
+<div style="min-height: 90vh;">
+    @Body
+</div>
+<footer style="background: #f8f9fa; border-top: 1px solid #ddd; padding: 8px 0; text-align: center; font-size: 0.95em; color: #555; position: sticky; bottom: 0; width: 100vw;">
+    Connection Status: <span style="font-weight:bold;" class="connection-status">@Vm?.ConnectionStatus ?? "Unknown"</span>
+</footer>
+
+@code {
+    [Inject] public MonsterClicker.RemoteClients.GameViewModelRemoteClient? Vm { get; set; }
+}

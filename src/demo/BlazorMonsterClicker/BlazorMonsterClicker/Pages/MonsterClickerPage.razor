@@ -1,5 +1,5 @@
 ﻿@page "/monster-clicker"
-@* @layout null *@
+@layout BlazorMonsterClicker.Layout.MainLayout
 @inject MonsterClicker.RemoteClients.GameViewModelRemoteClient Vm
 @implements IAsyncDisposable
 
@@ -58,11 +58,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // Subscribe to PropertyChanged if you need to manually trigger StateHasChanged
-        // For simple bindings to @Vm.PropertyName, Blazor should pick up changes if Vm implements INotifyPropertyChanged
-        // and the properties use SetProperty correctly.
         Vm.PropertyChanged += ViewModel_PropertyChanged;
-
         try
         {
             await Vm.InitializeRemoteAsync();
@@ -77,21 +73,13 @@ else
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        // This tells Blazor to re-render the component when a property Vm changes.
-        // If your GameViewModelRemoteClient's properties correctly call OnPropertyChanged (via SetProperty from ObservableObject),
-        // Blazor's default binding behavior should pick up most changes automatically for direct property bindings.
-        // However, for computed properties or more complex UI updates based on state changes,
-        // explicitly calling StateHasChanged can be necessary.
         InvokeAsync(StateHasChanged);
     }
 
     public async ValueTask DisposeAsync()
     {
         Vm.PropertyChanged -= ViewModel_PropertyChanged;
-        // The GameViewModelRemoteClient itself has a Dispose method that should handle CancellationTokenSource.
-        // If it were IAsyncDisposable, you would await Vm.DisposeAsync();
-        // For IDisposable:
         Vm.Dispose();
-        await Task.CompletedTask; // To satisfy async signature if Vm.Dispose is not async
+        await Task.CompletedTask;
     }
 }

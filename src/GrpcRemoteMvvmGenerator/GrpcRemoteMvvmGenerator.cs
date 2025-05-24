@@ -406,6 +406,12 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            sb.AppendLine($"        public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
             foreach (var cmd in cmds)
             {
                 sb.AppendLine($"        public override async Task<{protoCsNamespace}.{cmd.MethodName}Response> {cmd.MethodName}({protoCsNamespace}.{cmd.MethodName}Request request, ServerCallContext context)");
@@ -528,6 +534,13 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        private bool _isInitialized = false;");
             sb.AppendLine("        private bool _isDisposed = false;");
             sb.AppendLine();
+            sb.AppendLine("        private string _connectionStatus = \"Unknown\";");
+            sb.AppendLine("        public string ConnectionStatus");
+            sb.AppendLine("        {");
+            sb.AppendLine("            get => _connectionStatus;");
+            sb.AppendLine("            private set => SetProperty(ref _connectionStatus, value);");
+            sb.AppendLine("        }");
+            sb.AppendLine();
 
             foreach (var prop in props)
             {
@@ -583,6 +596,32 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        }");
             sb.AppendLine();
 
+            sb.AppendLine("        private async Task StartPingLoopAsync()");
+            sb.AppendLine("        {");
+            sb.AppendLine("            while (!_isDisposed)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                try");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var response = await _grpcClient.PingAsync(new Google.Protobuf.WellKnownTypes.Empty(), cancellationToken: _cts.Token);");
+            sb.AppendLine("                    if (response.Status == ConnectionStatus.Connected)");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        ConnectionStatus = \"Connected\";");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    else");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        ConnectionStatus = \"Disconnected\";");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                }");
+            sb.AppendLine("                catch (Exception ex)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    ConnectionStatus = \"Disconnected\";");
+            sb.AppendLine("                    Debug.WriteLine($\"[ClientProxy] Ping failed: {ex.Message}. Attempting to reconnect...\");");
+            sb.AppendLine("                }");
+            sb.AppendLine("                await Task.Delay(5000);");
+            sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+
             sb.AppendLine("        public async Task InitializeRemoteAsync(CancellationToken cancellationToken = default)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (_isInitialized || _isDisposed) return;");
@@ -600,6 +639,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                _isInitialized = true;");
             sb.AppendLine($"                Debug.WriteLine(\"[{originalVmName}RemoteClient] Initialized successfully.\");");
             sb.AppendLine("                StartListeningToPropertyChanges(_cts.Token);");
+            sb.AppendLine("                _ = StartPingLoopAsync();");
             sb.AppendLine("            }");
             sb.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Failed to initialize: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
             sb.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine(\"[ClientProxy:" + originalVmName + $"] Initialization cancelled.\"); }}");
