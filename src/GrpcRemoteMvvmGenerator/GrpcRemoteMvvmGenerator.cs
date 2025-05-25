@@ -325,7 +325,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("    {");
             // Add static event and property for client count
             sb.AppendLine("        public static event System.EventHandler<int>? ClientCountChanged;");
-            sb.AppendLine("        private static int _clientCount;");
+            sb.AppendLine("        private static int _clientCount = -1;");
             sb.AppendLine("        public static int ClientCount");
             sb.AppendLine("        {");
             sb.AppendLine("            get => _clientCount;");
@@ -337,6 +337,11 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    ClientCountChanged?.Invoke(null, value);");
             sb.AppendLine("                }");
             sb.AppendLine("            }");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine($"        static {vmName}GrpcServiceImpl()");
+            sb.AppendLine("        {");
+            sb.AppendLine("            ClientCount = 0;");
             sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine($"        private readonly {vmFullName} _viewModel;");
