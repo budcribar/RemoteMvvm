@@ -3,7 +3,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 using System;
-using System.Collections.Concurrent;
+//using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -11,7 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 // Required for Channel<T>
-using System.Threading.Channels;
+//using System.Threading.Channels;
 
 namespace PeakSWC.MvvmSourceGenerator
 {
@@ -366,7 +366,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("        }");
             sb.AppendLine();
             sb.AppendLine($"        private readonly {vmFullName} _viewModel;");
-            sb.AppendLine($"        private readonly ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>>();");
+            sb.AppendLine($"        private static readonly ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification>, System.Threading.Channels.Channel<{protoCsNamespace}.PropertyChangeNotification>>();");
             sb.AppendLine("        private readonly Dispatcher _dispatcher; // For UI thread marshalling");
             sb.AppendLine();
             sb.AppendLine($"        public {vmName}GrpcServiceImpl({vmFullName} viewModel, Dispatcher dispatcher)");
