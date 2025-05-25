@@ -27,7 +27,7 @@
 		</PackageReference>
 		
 		
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.0-preview20"> 
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.0-preview22"> 
 			<GrpcServices>Both</GrpcServices>
 			<PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -51,6 +51,5 @@
 	<ItemGroup>
 		<Folder Include="protos\" />
 	</ItemGroup>
-
 
 </Project>

@@ -250,7 +250,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 }
 
                 // Generate partial class for ViewModel with options-based constructor
-                string viewModelCode = GenerateViewModelPartialClass(originalViewModelName, classSymbol.ContainingNamespace.ToDisplayString());
+                string viewModelCode = GenerateViewModelPartialClass(originalViewModelName, classSymbol.ContainingNamespace.ToDisplayString(), serverImplNamespace);
                 context.AddSource($"{originalViewModelName}.GrpcRemoteOptions.g.cs", SourceText.From(viewModelCode, Encoding.UTF8));
                 context.ReportDiagnostic(Diagnostic.Create(SGINFO007_GeneratedClientProxy, Location.None, originalViewModelName, $"{classSymbol.ContainingNamespace.ToDisplayString()} (GrpcRemoteOptions)"));
             }
@@ -817,7 +817,7 @@ namespace PeakSWC.MvvmSourceGenerator
             return sb.ToString();
         }
 
-        private string GenerateViewModelPartialClass(string viewModelName, string viewModelNamespace)
+        private string GenerateViewModelPartialClass(string viewModelName, string viewModelNamespace, string serverImplNamespace)
         {
             var sb = new StringBuilder();
             // Only emit ServerOptions/ClientOptions if they are not already defined (avoid duplicate definitions)
@@ -885,7 +885,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                        app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });");
             sb.AppendLine("                        app.UseEndpoints(endpoints =>");
             sb.AppendLine("                        {");
-            sb.AppendLine($"                            endpoints.MapGrpcService<{viewModelNamespace}.GrpcServices.{viewModelName}GrpcServiceImpl>().EnableGrpcWeb().RequireCors(serverOptions.CorsPolicyName ?? \"AllowAll\");");
+            sb.AppendLine($"                            endpoints.MapGrpcService<{serverImplNamespace}.{viewModelName}GrpcServiceImpl>().EnableGrpcWeb().RequireCors(serverOptions.CorsPolicyName ?? \"AllowAll\");");
             sb.AppendLine("                        });");
             sb.AppendLine("                    });");
             sb.AppendLine("                });");

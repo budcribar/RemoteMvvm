@@ -4,16 +4,27 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcRemoteMvvmGenerator", "src\GrpcRemoteMvvmGenerator\GrpcRemoteMvvmGenerator.csproj", "{BB2260C9-F7EE-79F5-CE89-E839C2BA6A20}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CB749C9C-31A2-142E-71E9-595611ABCFDD} = {CB749C9C-31A2-142E-71E9-595611ABCFDD}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SampleViewModel", "src\tests\MvvmClass\SampleViewModel.csproj", "{CBE4D35F-1F0C-484D-B22B-5A241CEFC172}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestProject", "src\TestProject\TestProject.csproj", "{D2BA9BEC-70C9-478C-B19C-F050EBF24FDF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsterClicker", "src\demo\MonsterClicker\MonsterClicker.csproj", "{8320DA7B-82A6-474A-AB17-1B464AA023D7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BB2260C9-F7EE-79F5-CE89-E839C2BA6A20} = {BB2260C9-F7EE-79F5-CE89-E839C2BA6A20}
+		{CB749C9C-31A2-142E-71E9-595611ABCFDD} = {CB749C9C-31A2-142E-71E9-595611ABCFDD}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProtoGeneratorUtil", "src\PeakSWC.MvvmSourceGenertor\ProtoGeneratorUtil\ProtoGeneratorUtil.csproj", "{CB749C9C-31A2-142E-71E9-595611ABCFDD}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorMonsterClicker", "src\demo\BlazorMonsterClicker\BlazorMonsterClicker\BlazorMonsterClicker.csproj", "{66AEA150-2D52-4BC8-AEE9-527F747D2F95}"
+	ProjectSection(ProjectDependencies) = postProject
+		{BB2260C9-F7EE-79F5-CE89-E839C2BA6A20} = {BB2260C9-F7EE-79F5-CE89-E839C2BA6A20}
+		{CB749C9C-31A2-142E-71E9-595611ABCFDD} = {CB749C9C-31A2-142E-71E9-595611ABCFDD}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
