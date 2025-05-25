@@ -250,7 +250,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 }
 
                 // Generate partial class for ViewModel with options-based constructor
-                string viewModelCode = GenerateViewModelPartialClass(originalViewModelName, classSymbol.ContainingNamespace.ToDisplayString(), serverImplNamespace);
+                string viewModelCode = GenerateViewModelPartialClass(originalViewModelName, classSymbol.ContainingNamespace.ToDisplayString(), serverImplNamespace, clientProxyNamespace);
                 context.AddSource($"{originalViewModelName}.GrpcRemoteOptions.g.cs", SourceText.From(viewModelCode, Encoding.UTF8));
                 context.ReportDiagnostic(Diagnostic.Create(SGINFO007_GeneratedClientProxy, Location.None, originalViewModelName, $"{classSymbol.ContainingNamespace.ToDisplayString()} (GrpcRemoteOptions)"));
             }
@@ -817,7 +817,7 @@ namespace PeakSWC.MvvmSourceGenerator
             return sb.ToString();
         }
 
-        private string GenerateViewModelPartialClass(string viewModelName, string viewModelNamespace, string serverImplNamespace)
+        private string GenerateViewModelPartialClass(string viewModelName, string viewModelNamespace, string serverImplNamespace, string clientProxyNamespace)
         {
             var sb = new StringBuilder();
             // Only emit ServerOptions/ClientOptions if they are not already defined (avoid duplicate definitions)
@@ -832,12 +832,17 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("using Grpc.AspNetCore.Web;");
             sb.AppendLine("using Microsoft.AspNetCore.Server.Kestrel.Core;");
             sb.AppendLine("using System.Windows.Threading;");
+            sb.AppendLine($"using {clientProxyNamespace};");
+            sb.AppendLine($"using {viewModelNamespace}.Protos;");
             sb.AppendLine();
             sb.AppendLine($"namespace {viewModelNamespace}");
             sb.AppendLine("{");
+          
             sb.AppendLine($"    public partial class {viewModelName}");
             sb.AppendLine("    {");
             sb.AppendLine("        public object? GrpcHostOrClient { get; private set; }");
+            sb.AppendLine($"        public {viewModelName}RemoteClient RemoteClient {{ get; private set; }} = default!;");
+            sb.AppendLine($"        public async Task<{viewModelName}RemoteClient> GetRemoteModel() {{await RemoteClient.InitializeRemoteAsync(); return RemoteClient;}}");
             sb.AppendLine($"        public {viewModelName}(object? options = null)");
             sb.AppendLine("        {");
             sb.AppendLine("            if (options is PeakSWC.Mvvm.Remote.ServerOptions serverOptions)");
@@ -900,9 +905,9 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            {");
             sb.AppendLine("                // Client mode: connect to gRPC server");
             sb.AppendLine("                var channel = Grpc.Net.Client.GrpcChannel.ForAddress(clientOptions.Address);");
-            sb.AppendLine($"                var grpcClient = new {viewModelNamespace}.Protos.{viewModelName}Service.{viewModelName}ServiceClient(channel);");
-            sb.AppendLine("                GrpcHostOrClient = grpcClient;");
-            sb.AppendLine("                // Optionally: initialize remote client logic here");
+            sb.AppendLine($"                var grpClient = new {viewModelName}Service.{viewModelName}ServiceClient(channel);");
+            sb.AppendLine($"                RemoteClient = new {viewModelName}RemoteClient(grpClient);");
+            sb.AppendLine("                ");
             sb.AppendLine("            }");
             sb.AppendLine("            else");
             sb.AppendLine("            {");
