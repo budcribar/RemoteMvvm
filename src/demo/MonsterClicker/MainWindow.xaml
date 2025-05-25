@@ -173,7 +173,7 @@
             <StatusBarItem x:Name="ServerStatusBarItem" Visibility="Collapsed">
                 <TextBlock>
                     <Run Text="Connected Clients: "/>
-                    <Run Text="{Binding ConnectedClients, Mode=OneWay}"/>
+                    <Run Text="{Binding ConnectedClients, RelativeSource={RelativeSource AncestorType=Window}, Mode=OneWay}"/>
                 </TextBlock>
             </StatusBarItem>
             <StatusBarItem x:Name="ClientStatusBarItem" Visibility="Collapsed">
