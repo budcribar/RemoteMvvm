@@ -55,7 +55,7 @@ namespace MonsterClicker
                         //        webBuilder.ConfigureServices(services =>
                         //        {
                         //            services.AddSingleton(gameVm);
-                        //            services.AddSingleton<Dispatcher>(Dispatcher.CurrentDispatcher);
+                         //          services.AddSingleton<Dispatcher>(Dispatcher.CurrentDispatcher);
 
                         //            // Add gRPC services
                         //            services.AddGrpc(options =>

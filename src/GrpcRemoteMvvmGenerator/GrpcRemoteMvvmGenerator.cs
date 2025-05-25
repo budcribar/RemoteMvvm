@@ -831,6 +831,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("using Microsoft.Extensions.Logging;");
             sb.AppendLine("using Grpc.AspNetCore.Web;");
             sb.AppendLine("using Microsoft.AspNetCore.Server.Kestrel.Core;");
+            sb.AppendLine("using System.Windows.Threading;");
             sb.AppendLine();
             sb.AppendLine($"namespace {viewModelNamespace}");
             sb.AppendLine("{");
@@ -857,6 +858,8 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    webBuilder.ConfigureServices(services =>");
             sb.AppendLine("                    {");
             sb.AppendLine("                        services.AddSingleton(this);");
+            sb.AppendLine("                        services.AddSingleton<Dispatcher>(Dispatcher.CurrentDispatcher);");
+
             sb.AppendLine("                        services.AddGrpc(options => { options.EnableDetailedErrors = true; });");
             sb.AppendLine("                        services.AddCors(corsOptions =>");
             sb.AppendLine("                        {");
