@@ -2,7 +2,7 @@
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<VersionPrefix>1.0.0</VersionPrefix>
-		<VersionSuffix>preview15</VersionSuffix>
+		<VersionSuffix>preview20</VersionSuffix>
 		<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
@@ -19,12 +19,16 @@
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="attributes\GrpcRemoteOptions.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CodeAnalysis.Common" Version="4.13.0" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
 		<PackageReference Include="System.Threading.Channels" Version="8.0.0" />
 		<EmbeddedResource Include="attributes\GenerateGrpcRemoteAttribute.cs" />
+		<EmbeddedResource Include="attributes\GrpcRemoteOptions.cs" />
 		<None Include="README.md" Pack="true" PackagePath="\" />
 		<None Remove="bin\Debug\netstandard2.0\\GrpcRemoteMvvmGenerator.dll" />
 		<None Include="$(OutputPath)\$(AssemblyName).dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
