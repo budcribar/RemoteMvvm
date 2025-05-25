@@ -4,6 +4,7 @@ using Grpc.Net.Client;
 using Grpc.Net.Client.Web;
 using MonsterClicker.ViewModels.Protos;
 using MonsterClicker.RemoteClients;
+using MonsterClicker; // For NetworkConfig
 
 namespace BlazorMonsterClicker
 {
@@ -16,8 +17,7 @@ namespace BlazorMonsterClicker
             builder.RootComponents.Add<App>("#app");
             builder.RootComponents.Add<HeadOutlet>("head::after");
 
-            // Option 1: Use HTTP endpoint for gRPC-Web (recommended for development)
-            var grpcAddress = "http://localhost:50052"; // HTTP endpoint for gRPC-Web
+            var grpcAddress = NetworkConfig.GrpcWebAddress; // HTTP endpoint for gRPC-Web
 
             // Option 2: If you want to use HTTPS, you'll need to handle certificate issues
             //var grpcAddress = "https://localhost:50051";

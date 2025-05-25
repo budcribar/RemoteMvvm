@@ -2,7 +2,7 @@ namespace PeakSWC.Mvvm.Remote
 {
     public class ServerOptions
     {
-        public int Port { get; set; } = 50052;
+        public int Port { get; set; } = MonsterClicker.NetworkConfig.Port;
         public bool UseHttps { get; set; } = true;
         public string? CorsPolicyName { get; set; } = "AllowAll";
         public string[]? AllowedOrigins { get; set; } = null; // null = allow all
@@ -15,7 +15,7 @@ namespace PeakSWC.Mvvm.Remote
 
     public class ClientOptions
     {
-        public string Address { get; set; } = "https://localhost:50052";
+        public string Address { get; set; } = MonsterClicker.NetworkConfig.ServerAddress;
         // Add other client options as needed
     }
 }
