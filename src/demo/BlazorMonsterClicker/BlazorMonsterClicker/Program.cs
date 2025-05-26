@@ -33,20 +33,6 @@ namespace BlazorMonsterClicker
                 return handler;
             });
 
-            // Alternative: Configure gRPC client manually for more control
-            builder.Services.AddScoped(services =>
-            {
-                var httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWebText, new HttpClientHandler()));
-                var channel = GrpcChannel.ForAddress(grpcAddress, new GrpcChannelOptions
-                {
-                    HttpClient = httpClient,
-                    // Add timeout and retry options
-                    MaxReceiveMessageSize = 4 * 1024 * 1024, // 4MB
-                    MaxSendMessageSize = 4 * 1024 * 1024,    // 4MB
-                });
-                return new GameViewModelService.GameViewModelServiceClient(channel);
-            });
-
             // Register your GameViewModelRemoteClient
             builder.Services.AddScoped<GameViewModelRemoteClient>();
 
