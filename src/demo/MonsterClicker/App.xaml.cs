@@ -12,14 +12,13 @@ namespace MonsterClicker
 
             string mode = e.Args.FirstOrDefault()?.ToLowerInvariant() ?? "local";
             MainWindow mainWindow;
-
+            Console.WriteLine($"Starting in {mode} mode...");
             try
             {
                 switch (mode)
                 {
                     case "server":
-                        Console.WriteLine("Starting in SERVER mode...");
-                        var gameVm = new GameViewModel(new ServerOptions { Port = NetworkConfig.Port });
+                        var gameVm = new GameViewModel(new ServerOptions { Port = NetworkConfig.Port, UseHttps = false });
                         mainWindow = new MainWindow(AppModeUtil.AppMode.Server)
                         {
                             DataContext = gameVm,
@@ -28,7 +27,6 @@ namespace MonsterClicker
                         break;
 
                     case "client":
-                        Console.WriteLine("Starting in CLIENT mode...");
                         var clientVm = new GameViewModel(new ClientOptions { Address = NetworkConfig.ServerAddress });
                         mainWindow = new MainWindow(AppModeUtil.AppMode.Client)
                         {
@@ -38,7 +36,6 @@ namespace MonsterClicker
                         break;
 
                     default: // "local"
-                        Console.WriteLine("Starting in LOCAL mode...");
                         mainWindow = new MainWindow(AppModeUtil.AppMode.Local)
                         {
                             DataContext = new GameViewModel(),
