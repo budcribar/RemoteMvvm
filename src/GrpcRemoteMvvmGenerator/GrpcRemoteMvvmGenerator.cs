@@ -401,7 +401,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("            return Task.FromResult(state);");
             sb.AppendLine("        }");
             sb.AppendLine();
-            sb.AppendLine($"        public override async Task SubscribeToPropertyChanges(Empty request, IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification> responseStream, ServerCallContext context)");
+            sb.AppendLine($"        public override async Task SubscribeToPropertyChanges({protoCsNamespace}.SubscribeRequest request, IServerStreamWriter<{protoCsNamespace}.PropertyChangeNotification> responseStream, ServerCallContext context)");
             sb.AppendLine("        {");
             sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Client subscribed to property changes.\");");
             sb.AppendLine($"            var channel = System.Threading.Channels.Channel.CreateUnbounded<{protoCsNamespace}.PropertyChangeNotification>(new UnboundedChannelOptions {{ SingleReader = true, SingleWriter = false }});");
@@ -653,7 +653,7 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                    {");
             sb.AppendLine("                        if (lastStatus != \"Connected\")");
             sb.AppendLine("                        {");
-            sb.AppendLine("                            // Reconnected: fetch state and resubscribe");
+            sb.AppendLine("                            // Reconnected: fetch state");
             sb.AppendLine("                            try");
             sb.AppendLine("                            {");
             sb.AppendLine("                                var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);");
@@ -663,7 +663,6 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
             }
             sb.AppendLine("                                Debug.WriteLine(\"[ClientProxy] State re-synced after reconnect.\");");
-            sb.AppendLine("                                StartListeningToPropertyChanges(_cts.Token);");
             sb.AppendLine("                            }");
             sb.AppendLine("                            catch (Exception ex)");
             sb.AppendLine("                            {");
@@ -760,7 +759,8 @@ namespace PeakSWC.MvvmSourceGenerator
             sb.AppendLine("                Debug.WriteLine(\"[" + originalVmName + "RemoteClient] Starting property change listener...\");");
             sb.AppendLine("                try");
             sb.AppendLine("                {");
-            sb.AppendLine($"                    using var call = _grpcClient.SubscribeToPropertyChanges(new Empty(), cancellationToken: cancellationToken);");
+            sb.AppendLine($"                    var subscribeRequest = new {protoCsNamespace}.SubscribeRequest {{ ClientId = Guid.NewGuid().ToString() }};");
+            sb.AppendLine($"                    using var call = _grpcClient.SubscribeToPropertyChanges(subscribeRequest, cancellationToken: cancellationToken);");
             sb.AppendLine("                    Debug.WriteLine(\"[" + originalVmName + "RemoteClient] Subscribed to property changes. Waiting for updates...\");");
             sb.AppendLine("                    int updateCount = 0;");
             sb.AppendLine("                    await foreach (var update in call.ResponseStream.ReadAllAsync(cancellationToken))");
