@@ -23,39 +23,39 @@ namespace PeakSWC.MvvmSourceGenerator
         private const string RelayCommandAttributeFullName = "CommunityToolkit.Mvvm.Input.RelayCommandAttribute";
 
         // Diagnostic Descriptors
-        private static readonly DiagnosticDescriptor SGINFO001_GeneratorStarted = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGINFO001_GeneratorStarted = new(
             id: "SGINFO001", title: "Generator Execution", messageFormat: "GrpcRemoteMvvmGenerator Execute method started",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGINFO002_NoClassesFound = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGINFO002_NoClassesFound = new(
             id: "SGINFO002", title: "Generator Execution", messageFormat: "No classes found with the GenerateGrpcRemoteAttribute",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGINFO003_ProcessingClass = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGINFO003_ProcessingClass = new(
             id: "SGINFO003", title: "Generator Execution", messageFormat: "Processing class: {0}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGWARN001_AttributeNotFound = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGWARN001_AttributeNotFound = new(
             id: "SGWARN001", title: "Attribute Resolution", messageFormat: "GenerateGrpcRemoteAttribute not found or not resolved on class {0}. Expected FQN: {1}.",
             category: "SourceGenerator", DiagnosticSeverity.Warning, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGINFO004_AttributeFound = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGINFO004_AttributeFound = new(
             id: "SGINFO004", title: "Attribute Resolution", messageFormat: "Found GenerateGrpcRemoteAttribute on {0}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGERR001_MissingAttributeArgs = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGERR001_MissingAttributeArgs = new(
             id: "SGERR001", title: "Attribute Usage", messageFormat: "Class '{0}' is missing required constructor arguments (protoCsNamespace, grpcServiceName) for [GenerateGrpcRemoteAttribute]",
             category: "SourceGenerator", DiagnosticSeverity.Error, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGINFO005_ExtractedMembers = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGINFO005_ExtractedMembers = new(
             id: "SGINFO005", title: "Generator Execution", messageFormat: "Extracted {0} properties and {1} commands for {2}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGINFO006_GeneratedServerImpl = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGINFO006_GeneratedServerImpl = new(
             id: "SGINFO006", title: "Code Generation", messageFormat: "Generated server implementation for {0} in namespace {1}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
-        private static readonly DiagnosticDescriptor SGINFO007_GeneratedClientProxy = new DiagnosticDescriptor(
+        private static readonly DiagnosticDescriptor SGINFO007_GeneratedClientProxy = new(
             id: "SGINFO007", title: "Code Generation", messageFormat: "Generated client proxy for {0} in namespace {1}",
             category: "SourceGenerator", DiagnosticSeverity.Info, isEnabledByDefault: true);
 
@@ -122,9 +122,9 @@ namespace PeakSWC.MvvmSourceGenerator
         }
 
 
-        internal class PropertyInfoData { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public ITypeSymbol? FullTypeSymbol { get; set; } }
-        internal class CommandInfoData { public string MethodName { get; set; } = ""; public string CommandPropertyName { get; set; } = ""; public List<ParameterInfoData> Parameters { get; set; } = new List<ParameterInfoData>(); public bool IsAsync { get; set; } }
-        internal class ParameterInfoData { public string Name { get; set; } = ""; public string Type { get; set; } = ""; public ITypeSymbol? FullTypeSymbol { get; set; } }
+        internal class PropertyInfoData { public string Name { get; set; } = string.Empty; public string Type { get; set; } = string.Empty; public ITypeSymbol? FullTypeSymbol { get; set; } }
+        internal class CommandInfoData { public string MethodName { get; set; } = string.Empty; public string CommandPropertyName { get; set; } = string.Empty; public List<ParameterInfoData> Parameters { get; set; } = new(); public bool IsAsync { get; set; } }
+        internal class ParameterInfoData { public string Name { get; set; } = string.Empty; public string Type { get; set; } = string.Empty; public ITypeSymbol? FullTypeSymbol { get; set; } }
         // Add the following attribute to enable analyzer release tracking for the diagnostic descriptor SGWARN001.
         // This attribute is required to comply with RS2008.
 
@@ -137,6 +137,8 @@ namespace PeakSWC.MvvmSourceGenerator
 
             public override void Initialize(AnalysisContext context)
             {
+                context.EnableConcurrentExecution(); 
+                context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.Analyze | GeneratedCodeAnalysisFlags.ReportDiagnostics);
                 // Analyzer initialization logic (if needed)
             }
         }
@@ -181,12 +183,12 @@ namespace PeakSWC.MvvmSourceGenerator
 
                 var attributeData = classSymbol.GetAttributes().FirstOrDefault(ad =>
                 {
-                    if (ad.AttributeClass == null) return false;
+                    if (ad.AttributeClass is null) return false;
                     string? fqn = ad.AttributeClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
                     return fqn == GenerateGrpcRemoteAttributeFullName || ad.AttributeClass.Name == GenerateGrpcRemoteAttributeFullName;
                 });
 
-                if (attributeData == null)
+                if (attributeData is null)
                 {
                     context.ReportDiagnostic(Diagnostic.Create(SGWARN001_AttributeNotFound, classSyntax.GetLocation(), classSymbol.Name, GenerateGrpcRemoteAttributeFullName));
                     continue;
@@ -833,11 +835,10 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine("using Microsoft.AspNetCore.Server.Kestrel.Core;");
                 sb.AppendLine("using System.Windows.Threading;");
                 sb.AppendLine("using Grpc.AspNetCore.Web;");
+                sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
             }
-            sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
-            sb.AppendLine("using Microsoft.Extensions.Logging;");
-       
-            
+           
+            sb.AppendLine("using Microsoft.Extensions.Logging;");       
            
             sb.AppendLine($"using {clientProxyNamespace};");
             sb.AppendLine($"using {viewModelNamespace}.Protos;");
@@ -933,13 +934,14 @@ namespace PeakSWC.MvvmSourceGenerator
 
         private string LowercaseFirst(string str) => string.IsNullOrEmpty(str) ? str : char.ToLowerInvariant(str[0]) + str.Substring(1);
         private string ToPascalCase(string str) => string.IsNullOrEmpty(str) ? str : char.ToUpperInvariant(str[0]) + str.Substring(1);
+
         private string ToSnakeCase(string pascalCaseName)
         {
             if (string.IsNullOrEmpty(pascalCaseName)) return pascalCaseName;
             return Regex.Replace(pascalCaseName, @"(?<=[a-z0-9])([A-Z])|(?<=[A-Z])([A-Z])(?=[a-z])", "_$1$2").ToLower();
         }
 
-        private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol, Compilation compilation)
+        private string GetProtoWellKnownTypeFor(ITypeSymbol typeSymbol, Compilation _)
         {
             if (typeSymbol is null) return "Any";
 

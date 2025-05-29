@@ -22,10 +22,10 @@
 
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 
-		<PackageReference Include="Grpc.Tools" Version="2.72.0">
+		<!--<PackageReference Include="Grpc.Tools" Version="2.72.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+		</PackageReference>-->
 
 		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.0-preview48">
 			<!--<GrpcServices>Server</GrpcServices>-->

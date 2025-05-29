@@ -1,0 +1,73 @@
+﻿syntax = "proto3";
+
+package sampleapp_viewmodels_protos;
+
+option csharp_namespace = "SampleApp.ViewModels.Protos";
+
+import "google/protobuf/any.proto";
+import "google/protobuf/empty.proto";
+
+// Message representing the full state of the SampleViewModel
+message SampleViewModelState {
+  int32 count = 1; // Original C#: int Count
+  string name = 2; // Original C#: string Name
+}
+
+message PropertyChangeNotification {
+  string property_name = 1;
+  google.protobuf.Any new_value = 2;
+}
+
+message UpdatePropertyValueRequest {
+  string property_name = 1;
+  google.protobuf.Any new_value = 2;
+}
+
+message DelayedIncrementAsyncRequest {
+  int32 delay_milliseconds = 1; // Original C#: int delayMilliseconds
+}
+
+message DelayedIncrementAsyncResponse {
+  // Add fields here if the command returns data.
+}
+
+message IncrementCountRequest {
+  // This command takes no parameters.
+}
+
+message IncrementCountResponse {
+  // Add fields here if the command returns data.
+}
+
+message SetNameToValueRequest {
+  string value = 1; // Original C#: string value
+}
+
+message SetNameToValueResponse {
+  // Add fields here if the command returns data.
+}
+
+message SubscribeRequest {
+  string client_id = 1;
+}
+
+enum ConnectionStatus {
+  UNKNOWN = 0;
+  CONNECTED = 1;
+  DISCONNECTED = 2;
+}
+
+message ConnectionStatusResponse {
+  ConnectionStatus status = 1;
+}
+
+service SampleViewModelService {
+  rpc GetState (google.protobuf.Empty) returns (SampleViewModelState);
+  rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);
+  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
+  rpc DelayedIncrementAsync (DelayedIncrementAsyncRequest) returns (DelayedIncrementAsyncResponse);
+  rpc IncrementCount (IncrementCountRequest) returns (IncrementCountResponse);
+  rpc SetNameToValue (SetNameToValueRequest) returns (SetNameToValueResponse);
+  rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
+}
+

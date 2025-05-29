@@ -9,7 +9,7 @@ namespace SampleApp.ViewModels
     // Attribute to mark this ViewModel for gRPC remote generation
     // Parameters: proto C# namespace, gRPC service name
     // Optional named parameters: ServerImplNamespace, ClientProxyNamespace
-    [GenerateGrpcRemote("SampleApp.Protos.Counter", "CounterService",
+    [GenerateGrpcRemote("SampleApp.ViewModels.Protos", "CounterService",
         ServerImplNamespace = "SampleApp.GrpcServices",
         ClientProxyNamespace = "SampleApp.RemoteClients")]
     public partial class SampleViewModel : ObservableObject
