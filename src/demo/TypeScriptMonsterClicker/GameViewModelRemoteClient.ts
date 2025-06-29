@@ -39,6 +39,22 @@ export class GameViewModelRemoteClient {
         this.connectionStatus = 'Connected';
     }
 
+    async refreshState(): Promise<void> {
+        const state = await new Promise<GameViewModelState>((resolve, reject) => {
+            this.grpcClient.getState(new Empty(), (err, res) => {
+                if (err) reject(err); else resolve(res!);
+            });
+        });
+        this.monsterName = (state as any)['monster_name'];
+        this.monsterMaxHealth = (state as any)['monster_max_health'];
+        this.monsterCurrentHealth = (state as any)['monster_current_health'];
+        this.playerDamage = (state as any)['player_damage'];
+        this.gameMessage = (state as any)['game_message'];
+        this.isMonsterDefeated = (state as any)['is_monster_defeated'];
+        this.canUseSpecialAttack = (state as any)['can_use_special_attack'];
+        this.isSpecialAttackOnCooldown = (state as any)['is_special_attack_on_cooldown'];
+    }
+
     async updatePropertyValue(propertyName: string, value: any): Promise<void> {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);

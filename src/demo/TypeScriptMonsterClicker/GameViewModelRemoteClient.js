@@ -40,6 +40,26 @@ class GameViewModelRemoteClient {
             this.connectionStatus = 'Connected';
         });
     }
+    refreshState() {
+        return __awaiter(this, void 0, void 0, function* () {
+            const state = yield new Promise((resolve, reject) => {
+                this.grpcClient.getState(new empty_pb_1.Empty(), (err, res) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(res);
+                });
+            });
+            this.monsterName = state['monster_name'];
+            this.monsterMaxHealth = state['monster_max_health'];
+            this.monsterCurrentHealth = state['monster_current_health'];
+            this.playerDamage = state['player_damage'];
+            this.gameMessage = state['game_message'];
+            this.isMonsterDefeated = state['is_monster_defeated'];
+            this.canUseSpecialAttack = state['can_use_special_attack'];
+            this.isSpecialAttackOnCooldown = state['is_special_attack_on_cooldown'];
+        });
+    }
     updatePropertyValue(propertyName, value) {
         return __awaiter(this, void 0, void 0, function* () {
             const req = new GameViewModelService_pb_1.UpdatePropertyValueRequest();
