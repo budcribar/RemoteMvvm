@@ -53,7 +53,9 @@ namespace GrpcRemoteMvvmModelUtil
                         foreach (var attr in classSymbol.GetAttributes())
                         {
                             string? attrFqn = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                            if (attrFqn == generateGrpcRemoteAttributeFullName)
+                            string? attrShortName = attr.AttributeClass?.Name;
+                            if (attrFqn == generateGrpcRemoteAttributeFullName ||
+                                (attr.AttributeClass != null && !attr.AttributeClass.IsUnboundGenericType && attrFqn == null && attrShortName == Path.GetFileNameWithoutExtension(generateGrpcRemoteAttributeFullName)))
                             {
                                 mainViewModelSymbol = classSymbol;
                                 originalVmName = classSymbol.Name;
