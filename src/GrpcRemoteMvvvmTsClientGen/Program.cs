@@ -125,7 +125,8 @@ namespace GrpcRemoteMvvmTsClientGen
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"// Auto-generated TypeScript client for {vmName}");
-            sb.AppendLine($"import {{ {serviceName}Client, {vmName}State, UpdatePropertyValueRequest, SubscribeRequest }} from './protos/{serviceName}';");
+            sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}_pb_service';");
+            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest }} from './generated/{serviceName}_pb';");
             sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
             sb.AppendLine();
             sb.AppendLine($"export class {vmName}RemoteClient {{");
@@ -142,7 +143,11 @@ namespace GrpcRemoteMvvmTsClientGen
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    async initializeRemote(): Promise<void> {");
-            sb.AppendLine("        const state = await this.grpcClient.getState(new Empty());");
+            sb.AppendLine($"        const state = await new Promise<{vmName}State>((resolve, reject) => {{");
+            sb.AppendLine("            this.grpcClient.getState(new Empty(), (err, res) => {");
+            sb.AppendLine("                if (err) reject(err); else resolve(res!);");
+            sb.AppendLine("            });");
+            sb.AppendLine("        });");
             foreach (var prop in properties)
             {
                 sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any)['{ToSnakeCase(prop.Name)}'];");
@@ -152,7 +157,11 @@ namespace GrpcRemoteMvvmTsClientGen
             sb.AppendLine();
             sb.AppendLine("    async updatePropertyValue(propertyName: string, value: any): Promise<void> {");
             sb.AppendLine("        const req: UpdatePropertyValueRequest = { propertyName, newValue: value }; ");
-            sb.AppendLine("        await this.grpcClient.updatePropertyValue(req); ");
+            sb.AppendLine("        await new Promise<void>((resolve, reject) => {");
+            sb.AppendLine("            this.grpcClient.updatePropertyValue(req, (err) => {");
+            sb.AppendLine("                if (err) reject(err); else resolve();");
+            sb.AppendLine("            });");
+            sb.AppendLine("        });");
             sb.AppendLine("    }");
             sb.AppendLine();
             foreach (var cmd in commands)
@@ -161,7 +170,11 @@ namespace GrpcRemoteMvvmTsClientGen
                 var paramAssignments = string.Join(", ", cmd.Parameters.Select(p => $"{ToSnakeCase(p.Name)}: {ToCamelCase(p.Name)}"));
                 sb.AppendLine($"    async {ToCamelCase(cmd.MethodName)}({paramList}): Promise<void> {{");
                 sb.AppendLine($"        const req = {{ {paramAssignments} }} as any;");
-                sb.AppendLine($"        await this.grpcClient.{ToCamelCase(cmd.MethodName)}(req);");
+                sb.AppendLine("        await new Promise<void>((resolve, reject) => {");
+                sb.AppendLine($"            this.grpcClient.{ToCamelCase(cmd.MethodName)}(req, (err) => {{");
+                sb.AppendLine("                if (err) reject(err); else resolve();");
+                sb.AppendLine("            });");
+                sb.AppendLine("        });");
                 sb.AppendLine("    }");
             }
             sb.AppendLine("}");
