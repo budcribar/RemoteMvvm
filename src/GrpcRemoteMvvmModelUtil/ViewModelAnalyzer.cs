@@ -81,8 +81,8 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
-                    var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
-                        a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == observablePropertyAttributeFullName);
+                var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
+                    Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
                     if (obsPropAttribute != null)
                     {
                         string propertyName = fieldSymbol.Name.TrimStart('_');
@@ -104,8 +104,8 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 if (member is IMethodSymbol methodSymbol)
                 {
-                    var relayCmdAttribute = methodSymbol.GetAttributes().FirstOrDefault(a =>
-                        a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == relayCommandAttributeFullName);
+                var relayCmdAttribute = methodSymbol.GetAttributes().FirstOrDefault(a =>
+                    Helpers.AttributeMatches(a, relayCommandAttributeFullName));
                     if (relayCmdAttribute != null)
                     {
                         string baseMethodName = methodSymbol.Name;
