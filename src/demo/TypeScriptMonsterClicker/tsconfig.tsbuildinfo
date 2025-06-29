@@ -1,1 +1,1 @@
-{"root":["./GameViewModelRemoteClient.ts","./app.ts","./generated/GameViewModelService_pb.d.ts","./generated/GameViewModelService_pb_service.d.ts"],"version":"5.8.3"}
+{"root":["./gameviewmodelremoteclient.ts","./app.ts","./generated/gameviewmodelservice_pb.d.ts","./generated/gameviewmodelservice_pb_service.d.ts"],"errors":true,"version":"5.8.3"}
