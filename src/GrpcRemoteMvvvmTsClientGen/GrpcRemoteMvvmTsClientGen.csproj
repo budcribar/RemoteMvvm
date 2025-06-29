@@ -9,8 +9,15 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 	<ItemGroup>
+	  <EmbeddedResource Include="..\..\..\..\..\.nuget\packages\communitytoolkit.mvvm\8.4.0\lib\net8.0\CommunityToolkit.Mvvm.dll" Link="Resources\CommunityToolkit.Mvvm.dll" />
+	  <EmbeddedResource Include="..\GrpcRemoteMvvmGenerator\attributes\GenerateGrpcRemoteAttribute.cs" Link="Resources\GenerateGrpcRemoteAttribute.cs" />
+	</ItemGroup>
+	<ItemGroup>
 		<PackageReference Include="Google.Protobuf.Tools" Version="3.24.4" />
 		<ProjectReference Include="..\GrpcRemoteMvvmModelUtil\GrpcRemoteMvvmModelUtil.csproj" />
 		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Resources\" />
 	</ItemGroup>
 </Project>
