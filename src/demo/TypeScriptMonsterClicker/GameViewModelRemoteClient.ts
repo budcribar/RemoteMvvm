@@ -23,11 +23,7 @@ export class GameViewModelRemoteClient {
     async initializeRemote(): Promise<void> {
         const state = await new Promise<GameViewModelState>((resolve, reject) => {
             this.grpcClient.getState(new Empty(), (err, res) => {
-                if (err || !res) {
-                    reject(err);
-                } else {
-                    resolve(res);
-                }
+                if (err) reject(err); else resolve(res!);
             });
         });
         this.monsterName = (state as any)['monster_name'];
@@ -42,14 +38,10 @@ export class GameViewModelRemoteClient {
     }
 
     async updatePropertyValue(propertyName: string, value: any): Promise<void> {
-        const req: UpdatePropertyValueRequest = { propertyName, newValue: value };
+        const req: UpdatePropertyValueRequest = { propertyName, newValue: value }; 
         await new Promise<void>((resolve, reject) => {
-            this.grpcClient.updatePropertyValue(req, err => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve();
-                }
+            this.grpcClient.updatePropertyValue(req, (err) => {
+                if (err) reject(err); else resolve();
             });
         });
     }

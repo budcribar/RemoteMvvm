@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@improbable-eng/grpc-web": "^0.15.0",
     "@types/google-protobuf": "3.15.12"
   },
   "devDependencies": {

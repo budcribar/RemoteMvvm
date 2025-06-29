@@ -18,7 +18,14 @@ class GameViewModelRemoteClient {
     }
     initializeRemote() {
         return __awaiter(this, void 0, void 0, function* () {
-            const state = yield this.grpcClient.getState(new empty_pb_1.Empty());
+            const state = yield new Promise((resolve, reject) => {
+                this.grpcClient.getState(new empty_pb_1.Empty(), (err, res) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve(res);
+                });
+            });
             this.monsterName = state['monster_name'];
             this.monsterMaxHealth = state['monster_max_health'];
             this.monsterCurrentHealth = state['monster_current_health'];
@@ -33,7 +40,14 @@ class GameViewModelRemoteClient {
     updatePropertyValue(propertyName, value) {
         return __awaiter(this, void 0, void 0, function* () {
             const req = { propertyName, newValue: value };
-            yield this.grpcClient.updatePropertyValue(req);
+            yield new Promise((resolve, reject) => {
+                this.grpcClient.updatePropertyValue(req, (err) => {
+                    if (err)
+                        reject(err);
+                    else
+                        resolve();
+                });
+            });
         });
     }
 }
