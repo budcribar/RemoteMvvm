@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Monster Clicker</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .game-container { padding:20px;border:1px solid #ccc;border-radius:8px;max-width:500px;margin:auto; }
+        .hidden { display:none; }
+    </style>
+</head>
+<body>
+    <h3>Monster Clicker (TypeScript Client)</h3>
+    <div id="init-msg"><em>Initializing game state from server...</em></div>
+    <div id="game" class="game-container hidden">
+        <h4 id="monsterName" style="text-align:center;margin-bottom:10px;"></h4>
+        <div style="display:flex;align-items:center;justify-content:center;margin-bottom:20px;">
+            <span>Health: </span>
+            <progress id="healthBar" max="0" value="0" style="width:200px;margin:0 10px;"></progress>
+            <span id="healthText"></span>
+        </div>
+        <div style="text-align:center;margin-bottom:20px;">
+            <button id="attackBtn" class="btn btn-success btn-lg">
+                ATTACK!<br />
+                <img src="sword.png" alt="Attack" style="width:50px;height:50px;" />
+            </button>
+        </div>
+        <p id="gameMessage" style="text-align:center;font-style:italic;color:dodgerblue;min-height:2em;"></p>
+        <div style="text-align:center;margin-top:20px;">
+            <button id="specialAttackBtn" class="btn btn-warning">Special Attack</button>
+            <button id="resetBtn" class="btn btn-info" style="margin-left:10px;">New Game</button>
+        </div>
+        <p id="cooldownMessage" style="text-align:center;color:orange;display:none;">Special Attack on Cooldown!</p>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
