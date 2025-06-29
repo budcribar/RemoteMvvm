@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System.Text.RegularExpressions;
 
 namespace GrpcRemoteMvvmTsClientGen
@@ -90,14 +91,28 @@ namespace GrpcRemoteMvvmTsClientGen
                 a.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) ==
                 "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute");
 
-            if (attr == null || attr.ConstructorArguments.Length < 2)
+            string protoNamespace = string.Empty;
+            string serviceName = string.Empty;
+
+            if (attr != null && attr.ConstructorArguments.Length >= 2)
+            {
+                protoNamespace = attr.ConstructorArguments[0].Value?.ToString() ?? string.Empty;
+                serviceName = attr.ConstructorArguments[1].Value?.ToString() ?? string.Empty;
+            }
+            else if (attr?.ApplicationSyntaxReference?.GetSyntax() is AttributeSyntax attrSyntax &&
+                     attrSyntax.ArgumentList?.Arguments.Count >= 2)
+            {
+                var model = compilation.GetSemanticModel(attrSyntax.SyntaxTree);
+                var arg0 = model.GetConstantValue(attrSyntax.ArgumentList.Arguments[0].Expression);
+                var arg1 = model.GetConstantValue(attrSyntax.ArgumentList.Arguments[1].Expression);
+                protoNamespace = arg0.HasValue ? arg0.Value?.ToString() ?? string.Empty : string.Empty;
+                serviceName = arg1.HasValue ? arg1.Value?.ToString() ?? string.Empty : string.Empty;
+            }
+            else
             {
                 Console.WriteLine("GenerateGrpcRemoteAttribute with required arguments not found.");
                 return;
             }
-
-            var protoNamespace = attr.ConstructorArguments[0].Value?.ToString() ?? string.Empty;
-            var serviceName = attr.ConstructorArguments[1].Value?.ToString() ?? string.Empty;
 
             // Generate TypeScript client code
             var tsCode = GenerateTypeScriptClient(vmName, protoNamespace, serviceName, properties, commands);
