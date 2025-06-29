@@ -126,7 +126,15 @@ namespace GrpcRemoteMvvmTsClientGen
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"// Auto-generated TypeScript client for {vmName}");
             sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}_pb_service';");
-            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest }} from './generated/{serviceName}_pb';");
+            var requestTypes = string.Join(", ", commands.Select(c => c.MethodName + "Request").Distinct());
+            if (!string.IsNullOrWhiteSpace(requestTypes))
+            {
+                sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, {requestTypes} }} from './generated/{serviceName}_pb';");
+            }
+            else
+            {
+                sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest }} from './generated/{serviceName}_pb';");
+            }
             sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
             sb.AppendLine("import { Any } from 'google-protobuf/google/protobuf/any_pb';");
             sb.AppendLine("import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';");
@@ -155,6 +163,19 @@ namespace GrpcRemoteMvvmTsClientGen
                 sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any)['{ToSnakeCase(prop.Name)}'];");
             }
             sb.AppendLine("        this.connectionStatus = 'Connected';");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            // Method to refresh state without altering connection status
+            sb.AppendLine("    async refreshState(): Promise<void> {");
+            sb.AppendLine($"        const state = await new Promise<{vmName}State>((resolve, reject) => {{");
+            sb.AppendLine("            this.grpcClient.getState(new Empty(), (err, res) => {");
+            sb.AppendLine("                if (err) reject(err); else resolve(res!);");
+            sb.AppendLine("            });");
+            sb.AppendLine("        });");
+            foreach (var prop in properties)
+            {
+                sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any)['{ToSnakeCase(prop.Name)}'];");
+            }
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    async updatePropertyValue(propertyName: string, value: any): Promise<void> {");
@@ -191,9 +212,13 @@ namespace GrpcRemoteMvvmTsClientGen
             foreach (var cmd in commands)
             {
                 var paramList = string.Join(", ", cmd.Parameters.Select(p => ToCamelCase(p.Name) + ": any"));
-                var paramAssignments = string.Join(", ", cmd.Parameters.Select(p => $"{ToSnakeCase(p.Name)}: {ToCamelCase(p.Name)}"));
+                var reqType = cmd.MethodName + "Request";
                 sb.AppendLine($"    async {ToCamelCase(cmd.MethodName)}({paramList}): Promise<void> {{");
-                sb.AppendLine($"        const req = {{ {paramAssignments} }} as any;");
+                sb.AppendLine($"        const req = new {reqType}();");
+                foreach (var p in cmd.Parameters)
+                {
+                    sb.AppendLine($"        (req as any)['{ToSnakeCase(p.Name)}'] = {ToCamelCase(p.Name)};");
+                }
                 sb.AppendLine("        await new Promise<void>((resolve, reject) => {");
                 sb.AppendLine($"            this.grpcClient.{ToCamelCase(cmd.MethodName)}(req, (err) => {{");
                 sb.AppendLine("                if (err) reject(err); else resolve();");
