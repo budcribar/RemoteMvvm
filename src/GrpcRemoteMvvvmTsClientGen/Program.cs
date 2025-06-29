@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
 using Microsoft.CodeAnalysis;
@@ -10,6 +11,9 @@ namespace GrpcRemoteMvvmTsClientGen
 {
     class Program
     {
+        const string AttributeDefinitionResourceName = "GrpcRemoteMvvmTsClientGen.Resources.GenerateGrpcRemoteAttribute.cs";
+        const string AttributeDefinitionPlaceholderPath = "embedded://PeakSWC/Mvvm/Remote/GenerateGrpcRemoteAttribute.cs";
+        const string CommunityToolkitMvvmResourceName = "GrpcRemoteMvvmTsClientGen.Resources.CommunityToolkit.Mvvm.dll";
         static async Task Main(string[] args)
         {
             if (args.Length < 2)
@@ -29,13 +33,50 @@ namespace GrpcRemoteMvvmTsClientGen
 
             Directory.CreateDirectory(outputDir);
 
+            // Load embedded attribute definition and CommunityToolkit.Mvvm.dll similar to ProtoGeneratorUtil
+            string? attributeSource = null;
+            try
+            {
+                var asm = Assembly.GetExecutingAssembly();
+                using Stream? stream = asm.GetManifestResourceStream(AttributeDefinitionResourceName);
+                if (stream != null)
+                {
+                    using var reader = new StreamReader(stream);
+                    attributeSource = await reader.ReadToEndAsync();
+                }
+                else
+                {
+                    Console.WriteLine($"Embedded attribute resource '{AttributeDefinitionResourceName}' not found.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading embedded attribute: {ex.Message}");
+            }
+
+            string? mvvmDllPath = null;
+            try
+            {
+                mvvmDllPath = ExtractResourceToTempFile(CommunityToolkitMvvmResourceName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error extracting CommunityToolkit.Mvvm.dll: {ex.Message}");
+            }
+
+            var referencePaths = new System.Collections.Generic.List<string>();
+            if (!string.IsNullOrEmpty(mvvmDllPath))
+                referencePaths.Add(mvvmDllPath);
+
             // Use the shared analyzer to load the ViewModel
             var (vmSymbol, vmName, properties, commands, compilation) = await ViewModelAnalyzer.AnalyzeAsync(
                 new[] { viewModelFile },
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
                 "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute",
-                Array.Empty<string>()
+                referencePaths,
+                attributeSource,
+                AttributeDefinitionPlaceholderPath
             );
 
             if (vmSymbol == null)
@@ -110,6 +151,18 @@ namespace GrpcRemoteMvvmTsClientGen
             }
             sb.AppendLine("}");
             return sb.ToString();
+        }
+
+        static string ExtractResourceToTempFile(string resourceName)
+        {
+            var asm = Assembly.GetExecutingAssembly();
+            using Stream? stream = asm.GetManifestResourceStream(resourceName);
+            if (stream == null)
+                throw new InvalidOperationException($"Resource '{resourceName}' not found in assembly.");
+            var tempFile = Path.Combine(Path.GetTempPath(), $"TsClientGen_{Guid.NewGuid()}_{Path.GetFileName(resourceName)}");
+            using var fs = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.None);
+            stream.CopyTo(fs);
+            return tempFile;
         }
 
         static string ToCamelCase(string s)
