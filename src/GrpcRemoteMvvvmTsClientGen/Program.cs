@@ -1,56 +1,79 @@
 using System;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using GrpcRemoteMvvmModelUtil;
 
 namespace GrpcRemoteMvvmTsClientGen
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args.Length < 2)
             {
-                Console.WriteLine("Usage: grpc-remote-mvvm-ts-client <input.proto> <outputDir>");
+                Console.WriteLine("Usage: grpc-remote-mvvm-ts-client <inputViewModel.cs> <outputDir>");
                 return;
             }
 
-            var protoFile = args[0];
+            var viewModelFile = args[0];
             var outputDir = args[1];
 
-            if (!File.Exists(protoFile))
+            if (!File.Exists(viewModelFile))
             {
-                Console.WriteLine($"File not found: {protoFile}");
+                Console.WriteLine($"File not found: {viewModelFile}");
                 return;
             }
 
             Directory.CreateDirectory(outputDir);
 
-            // Call protoc to generate TypeScript client using ts-proto
-            var tsProtoPlugin = "protoc-gen-ts_proto"; // Assumes ts-proto is installed and in PATH
-            var process = new System.Diagnostics.Process
+            // Use the shared analyzer to load the ViewModel
+            var (vmSymbol, vmName, properties, commands, compilation) = await ViewModelAnalyzer.AnalyzeAsync(
+                new[] { viewModelFile },
+                "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+                "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+                "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute",
+                Array.Empty<string>()
+            );
+
+            if (vmSymbol == null)
             {
-                StartInfo = new System.Diagnostics.ProcessStartInfo
-                {
-                    FileName = "protoc",
-                    Arguments = $"--plugin=protoc-gen-ts_proto={tsProtoPlugin} --ts_proto_out={outputDir} --ts_proto_opt=outputServices=grpc-web {protoFile}",
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    UseShellExecute = false,
-                    CreateNoWindow = true
-                }
-            };
-            process.Start();
-            string output = process.StandardOutput.ReadToEnd();
-            string error = process.StandardError.ReadToEnd();
-            process.WaitForExit();
+                Console.WriteLine("No ViewModel with [GenerateGrpcRemote] attribute found.");
+                return;
+            }
 
-            Console.WriteLine(output);
-            if (!string.IsNullOrWhiteSpace(error))
-                Console.Error.WriteLine(error);
+            // Generate TypeScript client code
+            var tsCode = GenerateTypeScriptClient(vmName, properties, commands);
+            var outFile = Path.Combine(outputDir, $"{vmName}RemoteClient.ts");
+            await File.WriteAllTextAsync(outFile, tsCode);
+            Console.WriteLine($"TypeScript client generated: {outFile}");
+        }
 
-            if (process.ExitCode == 0)
-                Console.WriteLine("TypeScript client generated successfully.");
-            else
-                Console.WriteLine("Failed to generate TypeScript client.");
+        static string GenerateTypeScriptClient(string vmName, System.Collections.Generic.List<GrpcRemoteMvvmModelUtil.PropertyInfo> properties, System.Collections.Generic.List<GrpcRemoteMvvmModelUtil.CommandInfo> commands)
+        {
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine($"// Auto-generated TypeScript client for {vmName}");
+            sb.AppendLine($"export class {vmName}RemoteClient {{");
+            foreach (var prop in properties)
+            {
+                sb.AppendLine($"    {ToCamelCase(prop.Name)}: any;");
+            }
+            sb.AppendLine();
+            foreach (var cmd in commands)
+            {
+                var paramList = string.Join(", ", cmd.Parameters.Select(p => ToCamelCase(p.Name) + ": any"));
+                sb.AppendLine($"    async {ToCamelCase(cmd.MethodName)}({paramList}): Promise<any> {{");
+                sb.AppendLine($"        // TODO: Implement gRPC call for {cmd.MethodName}");
+                sb.AppendLine($"    }}");
+            }
+            sb.AppendLine("}");
+            return sb.ToString();
+        }
+
+        static string ToCamelCase(string s)
+        {
+            if (string.IsNullOrEmpty(s) || char.IsLower(s[0])) return s;
+            return char.ToLowerInvariant(s[0]) + s.Substring(1);
         }
     }
 }
