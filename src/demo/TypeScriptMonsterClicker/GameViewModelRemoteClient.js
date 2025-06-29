@@ -10,7 +10,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.GameViewModelRemoteClient = void 0;
+const GameViewModelService_pb_1 = require("./generated/GameViewModelService_pb");
 const empty_pb_1 = require("google-protobuf/google/protobuf/empty_pb");
+const any_pb_1 = require("google-protobuf/google/protobuf/any_pb");
+const wrappers_pb_1 = require("google-protobuf/google/protobuf/wrappers_pb");
 class GameViewModelRemoteClient {
     constructor(grpcClient) {
         this.connectionStatus = 'Unknown';
@@ -39,7 +42,9 @@ class GameViewModelRemoteClient {
     }
     updatePropertyValue(propertyName, value) {
         return __awaiter(this, void 0, void 0, function* () {
-            const req = { propertyName, newValue: value };
+            const req = new GameViewModelService_pb_1.UpdatePropertyValueRequest();
+            req.setPropertyName(propertyName);
+            req.setNewValue(this.createAnyValue(value));
             yield new Promise((resolve, reject) => {
                 this.grpcClient.updatePropertyValue(req, (err) => {
                     if (err)
@@ -49,6 +54,28 @@ class GameViewModelRemoteClient {
                 });
             });
         });
+    }
+    createAnyValue(value) {
+        const anyVal = new any_pb_1.Any();
+        if (typeof value === 'string') {
+            const wrapper = new wrappers_pb_1.StringValue();
+            wrapper.setValue(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
+        }
+        else if (typeof value === 'number' && Number.isInteger(value)) {
+            const wrapper = new wrappers_pb_1.Int32Value();
+            wrapper.setValue(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+        }
+        else if (typeof value === 'boolean') {
+            const wrapper = new wrappers_pb_1.BoolValue();
+            wrapper.setValue(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.BoolValue');
+        }
+        else {
+            throw new Error('Unsupported value type');
+        }
+        return anyVal;
     }
 }
 exports.GameViewModelRemoteClient = GameViewModelRemoteClient;
