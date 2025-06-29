@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net8.0</TargetFramework>
+		<PackAsTool>true</PackAsTool>
+		<ToolCommandName>grpc-remote-mvvm-ts-client</ToolCommandName>
+		<Authors>YourName</Authors>
+		<Description>Generates a TypeScript client for gRPC Remote MVVM services.</Description>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	<ItemGroup>
+		<PackageReference Include="Google.Protobuf.Tools" Version="3.24.4" />
+		<ProjectReference Include="..\GrpcRemoteMvvmModelUtil\GrpcRemoteMvvmModelUtil.csproj" />
+		<PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+	</ItemGroup>
+</Project>

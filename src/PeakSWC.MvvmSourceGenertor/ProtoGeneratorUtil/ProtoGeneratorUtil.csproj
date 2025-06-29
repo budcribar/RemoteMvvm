@@ -29,5 +29,8 @@
 	<ItemGroup>
 		<EmbeddedResource Include="C:\Users\budcr\.nuget\packages\communitytoolkit.mvvm\8.4.0\lib\net8.0\CommunityToolkit.Mvvm.dll" Link="Resources\CommunityToolkit.Mvvm.dll" />
 	</ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\GrpcRemoteMvvmModelUtil\GrpcRemoteMvvmModelUtil.csproj" />
+	</ItemGroup>
 
 </Project>
