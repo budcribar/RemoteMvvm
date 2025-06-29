@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "GrpcRemoteMvvmTsClientGen": {
+      "commandName": "Project",
+      "commandLineArgs": "MonsterClicker\\ViewModels\\GameViewModel.cs TypeScriptMonsterClicker ",
+      "workingDirectory": "C:\\Users\\budcr\\source\\repos\\RemoteMvvm\\src\\demo\\MonsterClicker\\ViewModels"
+    }
+  }
+}
