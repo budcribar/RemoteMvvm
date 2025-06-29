@@ -1,6 +1,6 @@
 // Auto-generated TypeScript client for GameViewModel
 import { GameViewModelServiceClient } from './generated/GameViewModelService_pb_service';
-import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest } from './generated/GameViewModelService_pb';
+import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest } from './generated/GameViewModelService_pb';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';
@@ -84,6 +84,33 @@ export class GameViewModelRemoteClient {
             throw new Error('Unsupported value type');
         }
         return anyVal;
+    }
+
+    async attackMonster(): Promise<void> {
+        const req = new AttackMonsterRequest();
+        await new Promise<void>((resolve, reject) => {
+            this.grpcClient.attackMonster(req, (err) => {
+                if (err) reject(err); else resolve();
+            });
+        });
+    }
+
+    async specialAttackAsync(): Promise<void> {
+        const req = new SpecialAttackAsyncRequest();
+        await new Promise<void>((resolve, reject) => {
+            this.grpcClient.specialAttackAsync(req, (err) => {
+                if (err) reject(err); else resolve();
+            });
+        });
+    }
+
+    async resetGame(): Promise<void> {
+        const req = new ResetGameRequest();
+        await new Promise<void>((resolve, reject) => {
+            this.grpcClient.resetGame(req, (err) => {
+                if (err) reject(err); else resolve();
+            });
+        });
     }
 
 }
