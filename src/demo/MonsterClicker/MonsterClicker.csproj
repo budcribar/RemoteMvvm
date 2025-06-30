@@ -8,6 +8,8 @@
 		<UseWPF>true</UseWPF>
 		<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>
 	</PropertyGroup>
+
+	
 	<ItemGroup>
 	  <FrameworkReference Include="Microsoft.AspNetCore.App" />
 	  <EmbeddedResource Include="Resources\sword.png" />
@@ -15,6 +17,9 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
+		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 		
 		<!--<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
 		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
@@ -29,7 +34,7 @@
 		</PackageReference>-->
 		
 		
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.0-preview43"> 
+		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.0-preview50"> 
 			<GrpcServices>Both</GrpcServices>
 			<PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

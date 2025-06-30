@@ -42,9 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     (document.getElementById('special-btn') as HTMLButtonElement).addEventListener('click', async () => {
         await vm.specialAttackAsync();
-        // Special attack executes asynchronously on the server. Give it a
-        // moment to update the ViewModel before refreshing the client state.
-        await new Promise(r => setTimeout(r, 800));
         await vm.refreshState();
         await render();
     });
