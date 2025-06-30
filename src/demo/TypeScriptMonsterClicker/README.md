@@ -14,3 +14,7 @@ protoc \
 ```
 
 The command requires both `protoc` and the `protoc-gen-grpc-web` plugin to be installed and on your `PATH`.
+
+The `GameViewModelRemoteClient` now listens for property changes and pings the
+server to keep the connection status up to date. When any value changes on the
+server the page updates automatically.

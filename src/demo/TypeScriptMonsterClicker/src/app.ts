@@ -24,6 +24,7 @@ async function render() {
 async function init() {
     try {
         await vm.initializeRemote();
+        vm.addChangeListener(render);
         document.getElementById('loading')!.style.display = 'none';
         document.getElementById('game-container')!.style.display = 'block';
         await render();

@@ -1,12 +1,17 @@
 // Auto-generated TypeScript client for GameViewModel
 import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
-import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest } from './generated/GameViewModelService_pb';
+import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus } from './generated/GameViewModelService_pb';
+import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export class GameViewModelRemoteClient {
     private readonly grpcClient: GameViewModelServiceClient;
+
+    private propertyStream?: grpcWeb.ClientReadableStream<PropertyChangeNotification>;
+    private pingIntervalId?: any;
+    private changeCallbacks: Array<() => void> = [];
 
     monsterName: any;
     monsterMaxHealth: any;
@@ -17,6 +22,14 @@ export class GameViewModelRemoteClient {
     canUseSpecialAttack: any;
     isSpecialAttackOnCooldown: any;
     connectionStatus: string = 'Unknown';
+
+    addChangeListener(cb: () => void): void {
+        this.changeCallbacks.push(cb);
+    }
+
+    private notifyChange(): void {
+        this.changeCallbacks.forEach(cb => cb());
+    }
 
     constructor(grpcClient: GameViewModelServiceClient) {
         this.grpcClient = grpcClient;
@@ -33,6 +46,9 @@ export class GameViewModelRemoteClient {
         this.canUseSpecialAttack = (state as any).getCanUseSpecialAttack();
         this.isSpecialAttackOnCooldown = (state as any).getIsSpecialAttackOnCooldown();
         this.connectionStatus = 'Connected';
+        this.notifyChange();
+        this.startListeningToPropertyChanges();
+        this.startPingLoop();
     }
 
     async refreshState(): Promise<void> {
@@ -45,6 +61,7 @@ export class GameViewModelRemoteClient {
         this.isMonsterDefeated = (state as any).getIsMonsterDefeated();
         this.canUseSpecialAttack = (state as any).getCanUseSpecialAttack();
         this.isSpecialAttackOnCooldown = (state as any).getIsSpecialAttackOnCooldown();
+        this.notifyChange();
     }
 
     async updatePropertyValue(propertyName: string, value: any): Promise<void> {
@@ -85,5 +102,81 @@ export class GameViewModelRemoteClient {
     async resetGame(): Promise<void> {
         const req = new ResetGameRequest();
         await this.grpcClient.resetGame(req);
+    }
+
+    private startPingLoop(): void {
+        if (this.pingIntervalId) return;
+        this.pingIntervalId = setInterval(async () => {
+            try {
+                const resp: ConnectionStatusResponse = await this.grpcClient.ping(new Empty());
+                if (resp.getStatus() === ConnectionStatus.CONNECTED) {
+                    if (this.connectionStatus !== 'Connected') {
+                        await this.refreshState();
+                    }
+                    this.connectionStatus = 'Connected';
+                } else {
+                    this.connectionStatus = 'Disconnected';
+                }
+            } catch {
+                this.connectionStatus = 'Disconnected';
+            }
+            this.notifyChange();
+        }, 5000);
+    }
+
+    private startListeningToPropertyChanges(): void {
+        const req = new SubscribeRequest();
+        req.setClientId(Math.random().toString());
+        this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);
+        this.propertyStream.on('data', (update: PropertyChangeNotification) => {
+            const anyVal = update.getNewValue();
+            switch (update.getPropertyName()) {
+                case 'MonsterName':
+                    this.monsterName = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
+                case 'MonsterMaxHealth':
+                    this.monsterMaxHealth = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'MonsterCurrentHealth':
+                    this.monsterCurrentHealth = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'PlayerDamage':
+                    this.playerDamage = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'GameMessage':
+                    this.gameMessage = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
+                case 'IsMonsterDefeated':
+                    this.isMonsterDefeated = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+                case 'CanUseSpecialAttack':
+                    this.canUseSpecialAttack = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+                case 'IsSpecialAttackOnCooldown':
+                    this.isSpecialAttackOnCooldown = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+            }
+            this.notifyChange();
+        });
+        this.propertyStream.on('error', () => {
+            // try to reconnect on error
+            this.propertyStream = undefined;
+            setTimeout(() => this.startListeningToPropertyChanges(), 1000);
+        });
+        this.propertyStream.on('end', () => {
+            this.propertyStream = undefined;
+            setTimeout(() => this.startListeningToPropertyChanges(), 1000);
+        });
+    }
+
+    dispose(): void {
+        if (this.propertyStream) {
+            this.propertyStream.cancel();
+            this.propertyStream = undefined;
+        }
+        if (this.pingIntervalId) {
+            clearInterval(this.pingIntervalId);
+            this.pingIntervalId = undefined;
+        }
     }
 }
