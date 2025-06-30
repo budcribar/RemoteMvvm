@@ -65,7 +65,7 @@ namespace GrpcRemoteMvvmTsClientGen
                 Console.WriteLine($"Error extracting CommunityToolkit.Mvvm.dll: {ex.Message}");
             }
 
-            var referencePaths = new System.Collections.Generic.List<string>();
+            var referencePaths = LoadDefaultReferencePaths();
             if (!string.IsNullOrEmpty(mvvmDllPath))
                 referencePaths.Add(mvvmDllPath);
 
@@ -252,6 +252,23 @@ namespace GrpcRemoteMvvmTsClientGen
         {
             if (string.IsNullOrEmpty(s)) return s;
             return System.Text.RegularExpressions.Regex.Replace(s, @"(?<=[a-z0-9])([A-Z])|(?<=[A-Z])([A-Z])(?=[a-z])", "_$1$2").ToLowerInvariant();
+        }
+
+        static System.Collections.Generic.List<string> LoadDefaultReferencePaths()
+        {
+            var refs = new System.Collections.Generic.List<string>();
+            string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+            if (!string.IsNullOrEmpty(tpa))
+            {
+                foreach (var p in tpa.Split(Path.PathSeparator))
+                {
+                    if (!string.IsNullOrEmpty(p) && File.Exists(p))
+                    {
+                        refs.Add(p);
+                    }
+                }
+            }
+            return refs;
         }
     }
 }
