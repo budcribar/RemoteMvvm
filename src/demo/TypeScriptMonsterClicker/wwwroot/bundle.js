@@ -4294,6 +4294,7 @@ async function render() {
 }
 async function init() {
     try {
+        debugger;
         await vm.initializeRemote();
         document.getElementById('loading').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
@@ -4305,6 +4306,7 @@ async function init() {
     }
 }
 document.addEventListener('DOMContentLoaded', () => {
+    debugger;
     init();
     document.getElementById('attack-btn').addEventListener('click', async () => {
         await vm.attackMonster();
