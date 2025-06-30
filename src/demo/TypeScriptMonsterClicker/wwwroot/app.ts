@@ -1,4 +1,4 @@
-import { GameViewModelServiceClient } from './generated/GameViewModelService_pb_service';
+import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
 import { GameViewModelRemoteClient } from './GameViewModelRemoteClient';
 
 const grpcHost = 'http://localhost:50052';
