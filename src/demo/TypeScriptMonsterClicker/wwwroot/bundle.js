@@ -2142,26 +2142,26 @@ class GameViewModelRemoteClient {
     }
     async initializeRemote() {
         const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
-        this.monsterName = state['monster_name'];
-        this.monsterMaxHealth = state['monster_max_health'];
-        this.monsterCurrentHealth = state['monster_current_health'];
-        this.playerDamage = state['player_damage'];
-        this.gameMessage = state['game_message'];
-        this.isMonsterDefeated = state['is_monster_defeated'];
-        this.canUseSpecialAttack = state['can_use_special_attack'];
-        this.isSpecialAttackOnCooldown = state['is_special_attack_on_cooldown'];
+        this.monsterName = state.getMonsterName();
+        this.monsterMaxHealth = state.getMonsterMaxHealth();
+        this.monsterCurrentHealth = state.getMonsterCurrentHealth();
+        this.playerDamage = state.getPlayerDamage();
+        this.gameMessage = state.getGameMessage();
+        this.isMonsterDefeated = state.getIsMonsterDefeated();
+        this.canUseSpecialAttack = state.getCanUseSpecialAttack();
+        this.isSpecialAttackOnCooldown = state.getIsSpecialAttackOnCooldown();
         this.connectionStatus = 'Connected';
     }
     async refreshState() {
         const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
-        this.monsterName = state['monster_name'];
-        this.monsterMaxHealth = state['monster_max_health'];
-        this.monsterCurrentHealth = state['monster_current_health'];
-        this.playerDamage = state['player_damage'];
-        this.gameMessage = state['game_message'];
-        this.isMonsterDefeated = state['is_monster_defeated'];
-        this.canUseSpecialAttack = state['can_use_special_attack'];
-        this.isSpecialAttackOnCooldown = state['is_special_attack_on_cooldown'];
+        this.monsterName = state.getMonsterName();
+        this.monsterMaxHealth = state.getMonsterMaxHealth();
+        this.monsterCurrentHealth = state.getMonsterCurrentHealth();
+        this.playerDamage = state.getPlayerDamage();
+        this.gameMessage = state.getGameMessage();
+        this.isMonsterDefeated = state.getIsMonsterDefeated();
+        this.canUseSpecialAttack = state.getCanUseSpecialAttack();
+        this.isSpecialAttackOnCooldown = state.getIsSpecialAttackOnCooldown();
     }
     async updatePropertyValue(propertyName, value) {
         const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
@@ -4294,7 +4294,6 @@ async function render() {
 }
 async function init() {
     try {
-        debugger;
         await vm.initializeRemote();
         document.getElementById('loading').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
@@ -4306,7 +4305,6 @@ async function init() {
     }
 }
 document.addEventListener('DOMContentLoaded', () => {
-    debugger;
     init();
     document.getElementById('attack-btn').addEventListener('click', async () => {
         await vm.attackMonster();
