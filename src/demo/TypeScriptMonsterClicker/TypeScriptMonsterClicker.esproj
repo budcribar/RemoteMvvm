@@ -31,4 +31,7 @@
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="wwwroot\generated\" />
+  </ItemGroup>
 </Project>
