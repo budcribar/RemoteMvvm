@@ -1,11 +1,11 @@
 const path = require('path');
 
 module.exports = {
-    entry: './src/app.ts',
+  entry: './src/app.ts', // Move your app.ts to /src
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'wwwroot'),
-    clean: false,
+    clean: false, // Prevent deleting static files in wwwroot
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -29,7 +29,9 @@ module.exports = {
   },
   devtool: 'source-map',
   devServer: {
-    static: './wwwroot',
+    static: {
+      directory: path.join(__dirname, 'wwwroot'),
+    },
     hot: true,
     open: true,
     port: 3000,

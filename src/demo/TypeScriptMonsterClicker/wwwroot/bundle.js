@@ -2112,10 +2112,10 @@ Lb="undefined"!==typeof globalThis&&globalThis||self;
 
 /***/ }),
 
-/***/ "./wwwroot/GameViewModelRemoteClient.ts":
-/*!**********************************************!*\
-  !*** ./wwwroot/GameViewModelRemoteClient.ts ***!
-  \**********************************************/
+/***/ "./src/GameViewModelRemoteClient.ts":
+/*!******************************************!*\
+  !*** ./src/GameViewModelRemoteClient.ts ***!
+  \******************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2123,7 +2123,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   GameViewModelRemoteClient: () => (/* binding */ GameViewModelRemoteClient)
 /* harmony export */ });
-/* harmony import */ var _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelService_pb */ "./wwwroot/generated/GameViewModelService_pb.js");
+/* harmony import */ var _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelService_pb */ "./src/generated/GameViewModelService_pb.js");
 /* harmony import */ var _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! google-protobuf/google/protobuf/empty_pb */ "./node_modules/google-protobuf/google/protobuf/empty_pb.js");
 /* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__);
@@ -2208,10 +2208,10 @@ class GameViewModelRemoteClient {
 
 /***/ }),
 
-/***/ "./wwwroot/generated/GameViewModelServiceServiceClientPb.ts":
-/*!******************************************************************!*\
-  !*** ./wwwroot/generated/GameViewModelServiceServiceClientPb.ts ***!
-  \******************************************************************/
+/***/ "./src/generated/GameViewModelServiceServiceClientPb.ts":
+/*!**************************************************************!*\
+  !*** ./src/generated/GameViewModelServiceServiceClientPb.ts ***!
+  \**************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -2223,7 +2223,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var grpc_web__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(grpc_web__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! google-protobuf/google/protobuf/empty_pb */ "./node_modules/google-protobuf/google/protobuf/empty_pb.js");
 /* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./GameViewModelService_pb */ "./wwwroot/generated/GameViewModelService_pb.js");
+/* harmony import */ var _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./GameViewModelService_pb */ "./src/generated/GameViewModelService_pb.js");
 /* harmony import */ var _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__);
 /**
  * @fileoverview gRPC-Web generated client stub for monsterclicker_viewmodels_protos
@@ -2330,10 +2330,10 @@ class GameViewModelServiceClient {
 
 /***/ }),
 
-/***/ "./wwwroot/generated/GameViewModelService_pb.js":
-/*!******************************************************!*\
-  !*** ./wwwroot/generated/GameViewModelService_pb.js ***!
-  \******************************************************/
+/***/ "./src/generated/GameViewModelService_pb.js":
+/*!**************************************************!*\
+  !*** ./src/generated/GameViewModelService_pb.js ***!
+  \**************************************************/
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 // source: GameViewModelService.proto
@@ -4266,12 +4266,12 @@ var __webpack_exports__ = {};
 // This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
 (() => {
 "use strict";
-/*!************************!*\
-  !*** ./wwwroot/app.ts ***!
-  \************************/
+/*!********************!*\
+  !*** ./src/app.ts ***!
+  \********************/
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _generated_GameViewModelServiceServiceClientPb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelServiceServiceClientPb */ "./wwwroot/generated/GameViewModelServiceServiceClientPb.ts");
-/* harmony import */ var _GameViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./GameViewModelRemoteClient */ "./wwwroot/GameViewModelRemoteClient.ts");
+/* harmony import */ var _generated_GameViewModelServiceServiceClientPb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelServiceServiceClientPb */ "./src/generated/GameViewModelServiceServiceClientPb.ts");
+/* harmony import */ var _GameViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./GameViewModelRemoteClient */ "./src/GameViewModelRemoteClient.ts");
 
 
 const grpcHost = 'http://localhost:50052';
