@@ -466,7 +466,7 @@ namespace PeakSWC.MvvmSourceGenerator
                 sb.AppendLine("        {");
                 sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + $"] Executing command {cmd.MethodName}.\");");
                 sb.AppendLine("            try {");
-                sb.AppendLine("                await _dispatcher.InvokeAsync(async () => {");
+                sb.AppendLine("                await await _dispatcher.InvokeAsync(async () => {");
                 string commandPropertyAccess = $"_viewModel.{cmd.CommandPropertyName}";
                 if (cmd.IsAsync)
                 {
