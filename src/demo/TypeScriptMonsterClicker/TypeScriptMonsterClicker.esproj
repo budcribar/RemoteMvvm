@@ -32,6 +32,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="wwwroot\generated\" />
+    <Folder Include="wwwroot\generated\ts\" />
   </ItemGroup>
 </Project>
