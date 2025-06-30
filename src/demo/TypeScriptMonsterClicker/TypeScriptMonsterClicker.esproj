@@ -1,5 +1,13 @@
 <Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.2752196">
   <ItemGroup>
+    <None Update="wwwroot\css\bootstrap\bootstrap.min.css">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
+    <None Update="wwwroot\css\bootstrap\bootstrap.min.css.map">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </None>
     <None Update="wwwroot\favicon.png">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
