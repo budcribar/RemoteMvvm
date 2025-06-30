@@ -1,11 +1,11 @@
 const path = require('path');
 
 module.exports = {
-    entry: './wwwroot/app.ts',
+    entry: './src/app.ts',
   output: {
     filename: 'bundle.js',
     path: path.resolve(__dirname, 'wwwroot'),
-    clean: true,
+    clean: false,
   },
   resolve: {
     extensions: ['.tsx', '.ts', '.js'],
@@ -29,7 +29,7 @@ module.exports = {
   },
   devtool: 'source-map',
   devServer: {
-    static: './dist',
+    static: './wwwroot',
     hot: true,
     open: true,
     port: 3000,
