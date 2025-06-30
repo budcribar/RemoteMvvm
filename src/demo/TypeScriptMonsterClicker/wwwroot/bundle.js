@@ -2136,7 +2136,14 @@ __webpack_require__.r(__webpack_exports__);
 
 
 class GameViewModelRemoteClient {
+    addChangeListener(cb) {
+        this.changeCallbacks.push(cb);
+    }
+    notifyChange() {
+        this.changeCallbacks.forEach(cb => cb());
+    }
     constructor(grpcClient) {
+        this.changeCallbacks = [];
         this.connectionStatus = 'Unknown';
         this.grpcClient = grpcClient;
     }
@@ -2151,6 +2158,9 @@ class GameViewModelRemoteClient {
         this.canUseSpecialAttack = state.getCanUseSpecialAttack();
         this.isSpecialAttackOnCooldown = state.getIsSpecialAttackOnCooldown();
         this.connectionStatus = 'Connected';
+        this.notifyChange();
+        this.startListeningToPropertyChanges();
+        this.startPingLoop();
     }
     async refreshState() {
         const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
@@ -2162,6 +2172,7 @@ class GameViewModelRemoteClient {
         this.isMonsterDefeated = state.getIsMonsterDefeated();
         this.canUseSpecialAttack = state.getCanUseSpecialAttack();
         this.isSpecialAttackOnCooldown = state.getIsSpecialAttackOnCooldown();
+        this.notifyChange();
     }
     async updatePropertyValue(propertyName, value) {
         const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
@@ -2202,6 +2213,81 @@ class GameViewModelRemoteClient {
     async resetGame() {
         const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.ResetGameRequest();
         await this.grpcClient.resetGame(req);
+    }
+    startPingLoop() {
+        if (this.pingIntervalId)
+            return;
+        this.pingIntervalId = setInterval(async () => {
+            try {
+                const resp = await this.grpcClient.ping(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
+                if (resp.getStatus() === _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.ConnectionStatus.CONNECTED) {
+                    if (this.connectionStatus !== 'Connected') {
+                        await this.refreshState();
+                    }
+                    this.connectionStatus = 'Connected';
+                }
+                else {
+                    this.connectionStatus = 'Disconnected';
+                }
+            }
+            catch {
+                this.connectionStatus = 'Disconnected';
+            }
+            this.notifyChange();
+        }, 5000);
+    }
+    startListeningToPropertyChanges() {
+        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.SubscribeRequest();
+        req.setClientId(Math.random().toString());
+        this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);
+        this.propertyStream.on('data', (update) => {
+            const anyVal = update.getNewValue();
+            switch (update.getPropertyName()) {
+                case 'MonsterName':
+                    this.monsterName = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
+                case 'MonsterMaxHealth':
+                    this.monsterMaxHealth = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'MonsterCurrentHealth':
+                    this.monsterCurrentHealth = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'PlayerDamage':
+                    this.playerDamage = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'GameMessage':
+                    this.gameMessage = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
+                case 'IsMonsterDefeated':
+                    this.isMonsterDefeated = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+                case 'CanUseSpecialAttack':
+                    this.canUseSpecialAttack = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+                case 'IsSpecialAttackOnCooldown':
+                    this.isSpecialAttackOnCooldown = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+            }
+            this.notifyChange();
+        });
+        this.propertyStream.on('error', () => {
+            this.propertyStream = undefined;
+            setTimeout(() => this.startListeningToPropertyChanges(), 1000);
+        });
+        this.propertyStream.on('end', () => {
+            this.propertyStream = undefined;
+            setTimeout(() => this.startListeningToPropertyChanges(), 1000);
+        });
+    }
+    dispose() {
+        if (this.propertyStream) {
+            this.propertyStream.cancel();
+            this.propertyStream = undefined;
+        }
+        if (this.pingIntervalId) {
+            clearInterval(this.pingIntervalId);
+            this.pingIntervalId = undefined;
+        }
     }
 }
 
@@ -4295,6 +4381,7 @@ async function render() {
 async function init() {
     try {
         await vm.initializeRemote();
+        vm.addChangeListener(render);
         document.getElementById('loading').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
         await render();

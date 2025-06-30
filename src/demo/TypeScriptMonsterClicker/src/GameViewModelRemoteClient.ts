@@ -1,6 +1,6 @@
 // Auto-generated TypeScript client for GameViewModel
 import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
-import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus } from './generated/GameViewModelService_pb';
+import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest } from './generated/GameViewModelService_pb';
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
@@ -8,7 +8,6 @@ import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/proto
 
 export class GameViewModelRemoteClient {
     private readonly grpcClient: GameViewModelServiceClient;
-
     private propertyStream?: grpcWeb.ClientReadableStream<PropertyChangeNotification>;
     private pingIntervalId?: any;
     private changeCallbacks: Array<() => void> = [];
@@ -159,7 +158,6 @@ export class GameViewModelRemoteClient {
             this.notifyChange();
         });
         this.propertyStream.on('error', () => {
-            // try to reconnect on error
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
