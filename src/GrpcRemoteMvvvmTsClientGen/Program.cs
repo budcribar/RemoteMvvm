@@ -129,24 +129,36 @@ namespace GrpcRemoteMvvmTsClientGen
             var requestTypes = string.Join(", ", commands.Select(c => c.MethodName + "Request").Distinct());
             if (!string.IsNullOrWhiteSpace(requestTypes))
             {
-                sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, {requestTypes} }} from './generated/{serviceName}_pb';");
+                sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, {requestTypes} }} from './generated/{serviceName}_pb';");
             }
             else
             {
-                sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest }} from './generated/{serviceName}_pb';");
+                sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus }} from './generated/{serviceName}_pb';");
             }
+            sb.AppendLine("import * as grpcWeb from 'grpc-web';");
             sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
             sb.AppendLine("import { Any } from 'google-protobuf/google/protobuf/any_pb';");
             sb.AppendLine("import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';");
             sb.AppendLine();
             sb.AppendLine($"export class {vmName}RemoteClient {{");
             sb.AppendLine($"    private readonly grpcClient: {serviceName}Client;");
+            sb.AppendLine("    private propertyStream?: grpcWeb.ClientReadableStream<PropertyChangeNotification>;");
+            sb.AppendLine("    private pingIntervalId?: any;");
+            sb.AppendLine("    private changeCallbacks: Array<() => void> = [];");
             sb.AppendLine();
             foreach (var prop in properties)
             {
                 sb.AppendLine($"    {ToCamelCase(prop.Name)}: any;");
             }
             sb.AppendLine("    connectionStatus: string = 'Unknown';");
+            sb.AppendLine();
+            sb.AppendLine("    addChangeListener(cb: () => void): void {");
+            sb.AppendLine("        this.changeCallbacks.push(cb);");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    private notifyChange(): void {");
+            sb.AppendLine("        this.changeCallbacks.forEach(cb => cb());");
+            sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine($"    constructor(grpcClient: {serviceName}Client) {{");
             sb.AppendLine("        this.grpcClient = grpcClient;");
@@ -159,6 +171,9 @@ namespace GrpcRemoteMvvmTsClientGen
                 sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any).get{prop.Name}();");
             }
             sb.AppendLine("        this.connectionStatus = 'Connected';");
+            sb.AppendLine("        this.notifyChange();");
+            sb.AppendLine("        this.startListeningToPropertyChanges();");
+            sb.AppendLine("        this.startPingLoop();");
             sb.AppendLine("    }");
             sb.AppendLine();
             // Method to refresh state without altering connection status
@@ -168,6 +183,7 @@ namespace GrpcRemoteMvvmTsClientGen
             {
                 sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any).get{prop.Name}();");
             }
+            sb.AppendLine("        this.notifyChange();");
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    async updatePropertyValue(propertyName: string, value: any): Promise<void> {");
@@ -210,6 +226,74 @@ namespace GrpcRemoteMvvmTsClientGen
                 sb.AppendLine($"        await this.grpcClient.{ToCamelCase(cmd.MethodName)}(req);");
                 sb.AppendLine("    }");
             }
+            sb.AppendLine();
+            sb.AppendLine("    private startPingLoop(): void {");
+            sb.AppendLine("        if (this.pingIntervalId) return;");
+            sb.AppendLine("        this.pingIntervalId = setInterval(async () => {");
+            sb.AppendLine("            try {");
+            sb.AppendLine("                const resp: ConnectionStatusResponse = await this.grpcClient.ping(new Empty());");
+            sb.AppendLine("                if (resp.getStatus() === ConnectionStatus.CONNECTED) {");
+            sb.AppendLine("                    if (this.connectionStatus !== 'Connected') {");
+            sb.AppendLine("                        await this.refreshState();");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    this.connectionStatus = 'Connected';");
+            sb.AppendLine("                } else {");
+            sb.AppendLine("                    this.connectionStatus = 'Disconnected';");
+            sb.AppendLine("                }");
+            sb.AppendLine("            } catch {");
+            sb.AppendLine("                this.connectionStatus = 'Disconnected';");
+            sb.AppendLine("            }");
+            sb.AppendLine("            this.notifyChange();");
+            sb.AppendLine("        }, 5000);");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    private startListeningToPropertyChanges(): void {");
+            sb.AppendLine("        const req = new SubscribeRequest();");
+            sb.AppendLine("        req.setClientId(Math.random().toString());");
+            sb.AppendLine("        this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);");
+            sb.AppendLine("        this.propertyStream.on('data', (update: PropertyChangeNotification) => {");
+            sb.AppendLine("            const anyVal = update.getNewValue();");
+            sb.AppendLine("            switch (update.getPropertyName()) {");
+            foreach (var prop in properties)
+            {
+                var wrapper = GetWrapperType(prop.TypeString);
+                if (wrapper != null)
+                {
+                    sb.AppendLine($"                case '{prop.Name}':");
+                    string unpack = wrapper switch
+                    {
+                        "StringValue" => "StringValue.deserializeBinary",
+                        "Int32Value" => "Int32Value.deserializeBinary",
+                        "BoolValue" => "BoolValue.deserializeBinary",
+                        _ => ""
+                    };
+                    sb.AppendLine($"                    this.{ToCamelCase(prop.Name)} = anyVal?.unpack({unpack}, 'google.protobuf.{wrapper}')?.getValue();");
+                    sb.AppendLine("                    break;");
+                }
+            }
+            sb.AppendLine("            }");
+            sb.AppendLine("            this.notifyChange();");
+            sb.AppendLine("        });");
+            sb.AppendLine("        this.propertyStream.on('error', () => {");
+            sb.AppendLine("            this.propertyStream = undefined;");
+            sb.AppendLine("            setTimeout(() => this.startListeningToPropertyChanges(), 1000);");
+            sb.AppendLine("        });");
+            sb.AppendLine("        this.propertyStream.on('end', () => {");
+            sb.AppendLine("            this.propertyStream = undefined;");
+            sb.AppendLine("            setTimeout(() => this.startListeningToPropertyChanges(), 1000);");
+            sb.AppendLine("        });");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+            sb.AppendLine("    dispose(): void {");
+            sb.AppendLine("        if (this.propertyStream) {");
+            sb.AppendLine("            this.propertyStream.cancel();");
+            sb.AppendLine("            this.propertyStream = undefined;");
+            sb.AppendLine("        }");
+            sb.AppendLine("        if (this.pingIntervalId) {");
+            sb.AppendLine("            clearInterval(this.pingIntervalId);");
+            sb.AppendLine("            this.pingIntervalId = undefined;");
+            sb.AppendLine("        }");
+            sb.AppendLine("    }");
             sb.AppendLine("}");
             return sb.ToString();
         }
@@ -236,6 +320,19 @@ namespace GrpcRemoteMvvmTsClientGen
         {
             if (string.IsNullOrEmpty(s)) return s;
             return char.ToUpperInvariant(s[0]) + s.Substring(1);
+        }
+
+        static string? GetWrapperType(string typeName)
+        {
+            return typeName switch
+            {
+                "string" => "StringValue",
+                "int" => "Int32Value",
+                "System.Int32" => "Int32Value",
+                "bool" => "BoolValue",
+                "System.Boolean" => "BoolValue",
+                _ => null
+            };
         }
 
         static string ToSnakeCase(string s)
