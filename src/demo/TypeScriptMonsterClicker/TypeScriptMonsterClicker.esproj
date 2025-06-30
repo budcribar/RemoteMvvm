@@ -1,5 +1,9 @@
 <Project Sdk="Microsoft.VisualStudio.JavaScript.Sdk/1.0.2752196">
   <ItemGroup>
+    <None Remove="wwwroot\generated\**" />
+    <TypeScriptConfiguration Remove="wwwroot\generated\**" />
+  </ItemGroup>
+  <ItemGroup>
     <None Update="protos\GameViewModelService.proto">
       <Access>Public</Access>
       <ProtoRoot>Protos\</ProtoRoot>
@@ -30,8 +34,5 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </None>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="wwwroot\generated\ts\" />
   </ItemGroup>
 </Project>
