@@ -9,13 +9,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const grpc_web_1 = require("@improbable-eng/grpc-web");
-const GameViewModelService_pb_service_1 = require("./generated/GameViewModelService_pb_service");
+const GameViewModelServiceServiceClientPb_1 = require("./generated/GameViewModelServiceServiceClientPb");
 const GameViewModelRemoteClient_1 = require("./GameViewModelRemoteClient");
 const grpcHost = 'http://localhost:50052';
-const grpcClient = new GameViewModelService_pb_service_1.GameViewModelServiceClient(grpcHost, {
-    transport: grpc_web_1.grpc.CrossBrowserHttpTransport({ withCredentials: false })
-});
+const grpcClient = new GameViewModelServiceServiceClientPb_1.GameViewModelServiceClient(grpcHost);
 const vm = new GameViewModelRemoteClient_1.GameViewModelRemoteClient(grpcClient);
 function render() {
     return __awaiter(this, void 0, void 0, function* () {
