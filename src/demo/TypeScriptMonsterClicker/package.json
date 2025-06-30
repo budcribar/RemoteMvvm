@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc --build",
-    "clean": "tsc --build --clean"
+    "clean": "tsc --build --clean",
+    "protoc": "protoc --proto_path=protos --js_out=import_style=commonjs,binary:./wwwroot/generated --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./wwwroot/generated protos/*.proto && protoc --plugin=protoc-gen-ts=./node_modules/.bin/protoc-gen-ts --ts_out=service=grpc-web:./wwwroot/generated --proto_path=protos protos/*.proto"
   },
   "keywords": [],
   "author": "",
@@ -18,6 +19,8 @@
   "devDependencies": {
     "@types/node": "^24.0.7",
     "eslint": "^9.30.0",
+    "protoc-gen-grpc-web": "^1.5.0",
     "typescript": "^5.8.3"
   }
+ 
 }
