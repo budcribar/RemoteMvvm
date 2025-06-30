@@ -1,2 +1,4330 @@
-(()=>{var t={20:(t,e,o)=>{var r=o(339),n=r,i="undefined"!=typeof globalThis&&globalThis||"undefined"!=typeof window&&window||void 0!==i&&i||"undefined"!=typeof self&&self||function(){return this}.call(null)||Function("return this")();n.exportSymbol("proto.google.protobuf.Empty",null,i),proto.google.protobuf.Empty=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.Empty,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.Empty.displayName="proto.google.protobuf.Empty"),r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.Empty.prototype.toObject=function(t){return proto.google.protobuf.Empty.toObject(t,this)},proto.google.protobuf.Empty.toObject=function(t,e){var o={};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.Empty.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.Empty;return proto.google.protobuf.Empty.deserializeBinaryFromReader(o,e)},proto.google.protobuf.Empty.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)e.getFieldNumber(),e.skipField();return t},proto.google.protobuf.Empty.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.Empty.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.Empty.serializeBinaryToWriter=function(t,e){},n.object.extend(e,proto.google.protobuf)},33:(t,e,o)=>{var r=o(339),n=r,i=function(){return this||window||i||self||Function("return this")()}.call(null),s=o(653);n.object.extend(proto,s);var a=o(20);n.object.extend(proto,a),n.exportSymbol("proto.monsterclicker_viewmodels_protos.AttackMonsterRequest",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.AttackMonsterResponse",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.ConnectionStatus",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.GameViewModelState",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.PropertyChangeNotification",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.ResetGameRequest",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.ResetGameResponse",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.SubscribeRequest",null,i),n.exportSymbol("proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest",null,i),proto.monsterclicker_viewmodels_protos.GameViewModelState=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.GameViewModelState,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.GameViewModelState.displayName="proto.monsterclicker_viewmodels_protos.GameViewModelState"),proto.monsterclicker_viewmodels_protos.PropertyChangeNotification=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.PropertyChangeNotification,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.displayName="proto.monsterclicker_viewmodels_protos.PropertyChangeNotification"),proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.displayName="proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest"),proto.monsterclicker_viewmodels_protos.AttackMonsterRequest=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.AttackMonsterRequest,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.displayName="proto.monsterclicker_viewmodels_protos.AttackMonsterRequest"),proto.monsterclicker_viewmodels_protos.AttackMonsterResponse=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.AttackMonsterResponse,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.displayName="proto.monsterclicker_viewmodels_protos.AttackMonsterResponse"),proto.monsterclicker_viewmodels_protos.ResetGameRequest=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.ResetGameRequest,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.ResetGameRequest.displayName="proto.monsterclicker_viewmodels_protos.ResetGameRequest"),proto.monsterclicker_viewmodels_protos.ResetGameResponse=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.ResetGameResponse,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.ResetGameResponse.displayName="proto.monsterclicker_viewmodels_protos.ResetGameResponse"),proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.displayName="proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest"),proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.displayName="proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse"),proto.monsterclicker_viewmodels_protos.SubscribeRequest=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.SubscribeRequest,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.SubscribeRequest.displayName="proto.monsterclicker_viewmodels_protos.SubscribeRequest"),proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse,r.Message),n.DEBUG&&!COMPILED&&(proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.displayName="proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse"),r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.GameViewModelState.toObject(t,this)},proto.monsterclicker_viewmodels_protos.GameViewModelState.toObject=function(t,e){var o={canUseSpecialAttack:r.Message.getBooleanFieldWithDefault(e,1,!1),gameMessage:r.Message.getFieldWithDefault(e,2,""),isMonsterDefeated:r.Message.getBooleanFieldWithDefault(e,3,!1),isSpecialAttackOnCooldown:r.Message.getBooleanFieldWithDefault(e,4,!1),monsterCurrentHealth:r.Message.getFieldWithDefault(e,5,0),monsterMaxHealth:r.Message.getFieldWithDefault(e,6,0),monsterName:r.Message.getFieldWithDefault(e,7,""),playerDamage:r.Message.getFieldWithDefault(e,8,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.GameViewModelState.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.GameViewModelState;return proto.monsterclicker_viewmodels_protos.GameViewModelState.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.GameViewModelState.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)switch(e.getFieldNumber()){case 1:var o=e.readBool();t.setCanUseSpecialAttack(o);break;case 2:o=e.readString(),t.setGameMessage(o);break;case 3:o=e.readBool(),t.setIsMonsterDefeated(o);break;case 4:o=e.readBool(),t.setIsSpecialAttackOnCooldown(o);break;case 5:o=e.readInt32(),t.setMonsterCurrentHealth(o);break;case 6:o=e.readInt32(),t.setMonsterMaxHealth(o);break;case 7:o=e.readString(),t.setMonsterName(o);break;case 8:o=e.readInt32(),t.setPlayerDamage(o);break;default:e.skipField()}return t},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.GameViewModelState.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.GameViewModelState.serializeBinaryToWriter=function(t,e){var o=void 0;(o=t.getCanUseSpecialAttack())&&e.writeBool(1,o),(o=t.getGameMessage()).length>0&&e.writeString(2,o),(o=t.getIsMonsterDefeated())&&e.writeBool(3,o),(o=t.getIsSpecialAttackOnCooldown())&&e.writeBool(4,o),0!==(o=t.getMonsterCurrentHealth())&&e.writeInt32(5,o),0!==(o=t.getMonsterMaxHealth())&&e.writeInt32(6,o),(o=t.getMonsterName()).length>0&&e.writeString(7,o),0!==(o=t.getPlayerDamage())&&e.writeInt32(8,o)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getCanUseSpecialAttack=function(){return r.Message.getBooleanFieldWithDefault(this,1,!1)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setCanUseSpecialAttack=function(t){return r.Message.setProto3BooleanField(this,1,t)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getGameMessage=function(){return r.Message.getFieldWithDefault(this,2,"")},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setGameMessage=function(t){return r.Message.setProto3StringField(this,2,t)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getIsMonsterDefeated=function(){return r.Message.getBooleanFieldWithDefault(this,3,!1)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setIsMonsterDefeated=function(t){return r.Message.setProto3BooleanField(this,3,t)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getIsSpecialAttackOnCooldown=function(){return r.Message.getBooleanFieldWithDefault(this,4,!1)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setIsSpecialAttackOnCooldown=function(t){return r.Message.setProto3BooleanField(this,4,t)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getMonsterCurrentHealth=function(){return r.Message.getFieldWithDefault(this,5,0)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setMonsterCurrentHealth=function(t){return r.Message.setProto3IntField(this,5,t)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getMonsterMaxHealth=function(){return r.Message.getFieldWithDefault(this,6,0)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setMonsterMaxHealth=function(t){return r.Message.setProto3IntField(this,6,t)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getMonsterName=function(){return r.Message.getFieldWithDefault(this,7,"")},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setMonsterName=function(t){return r.Message.setProto3StringField(this,7,t)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getPlayerDamage=function(){return r.Message.getFieldWithDefault(this,8,0)},proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setPlayerDamage=function(t){return r.Message.setProto3IntField(this,8,t)},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.toObject(t,this)},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.toObject=function(t,e){var o,n={propertyName:r.Message.getFieldWithDefault(e,1,""),newValue:(o=e.getNewValue())&&s.Any.toObject(t,o)};return t&&(n.$jspbMessageInstance=e),n}),proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.PropertyChangeNotification;return proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)switch(e.getFieldNumber()){case 1:var o=e.readString();t.setPropertyName(o);break;case 2:o=new s.Any,e.readMessage(o,s.Any.deserializeBinaryFromReader),t.setNewValue(o);break;default:e.skipField()}return t},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.serializeBinaryToWriter=function(t,e){var o=void 0;(o=t.getPropertyName()).length>0&&e.writeString(1,o),null!=(o=t.getNewValue())&&e.writeMessage(2,o,s.Any.serializeBinaryToWriter)},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.getPropertyName=function(){return r.Message.getFieldWithDefault(this,1,"")},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.setPropertyName=function(t){return r.Message.setProto3StringField(this,1,t)},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.getNewValue=function(){return r.Message.getWrapperField(this,s.Any,2)},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.setNewValue=function(t){return r.Message.setWrapperField(this,2,t)},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.clearNewValue=function(){return this.setNewValue(void 0)},proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.hasNewValue=function(){return null!=r.Message.getField(this,2)},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.toObject(t,this)},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.toObject=function(t,e){var o,n={propertyName:r.Message.getFieldWithDefault(e,1,""),newValue:(o=e.getNewValue())&&s.Any.toObject(t,o)};return t&&(n.$jspbMessageInstance=e),n}),proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest;return proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)switch(e.getFieldNumber()){case 1:var o=e.readString();t.setPropertyName(o);break;case 2:o=new s.Any,e.readMessage(o,s.Any.deserializeBinaryFromReader),t.setNewValue(o);break;default:e.skipField()}return t},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.serializeBinaryToWriter=function(t,e){var o=void 0;(o=t.getPropertyName()).length>0&&e.writeString(1,o),null!=(o=t.getNewValue())&&e.writeMessage(2,o,s.Any.serializeBinaryToWriter)},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.getPropertyName=function(){return r.Message.getFieldWithDefault(this,1,"")},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.setPropertyName=function(t){return r.Message.setProto3StringField(this,1,t)},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.getNewValue=function(){return r.Message.getWrapperField(this,s.Any,2)},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.setNewValue=function(t){return r.Message.setWrapperField(this,2,t)},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.clearNewValue=function(){return this.setNewValue(void 0)},proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.hasNewValue=function(){return null!=r.Message.getField(this,2)},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.toObject(t,this)},proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.toObject=function(t,e){var o={};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.AttackMonsterRequest;return proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)e.getFieldNumber(),e.skipField();return t},proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.serializeBinaryToWriter=function(t,e){},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.toObject(t,this)},proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.toObject=function(t,e){var o={};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.AttackMonsterResponse;return proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)e.getFieldNumber(),e.skipField();return t},proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.serializeBinaryToWriter=function(t,e){},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.ResetGameRequest.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.ResetGameRequest.toObject(t,this)},proto.monsterclicker_viewmodels_protos.ResetGameRequest.toObject=function(t,e){var o={};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.ResetGameRequest.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.ResetGameRequest;return proto.monsterclicker_viewmodels_protos.ResetGameRequest.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.ResetGameRequest.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)e.getFieldNumber(),e.skipField();return t},proto.monsterclicker_viewmodels_protos.ResetGameRequest.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.ResetGameRequest.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.ResetGameRequest.serializeBinaryToWriter=function(t,e){},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.ResetGameResponse.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.ResetGameResponse.toObject(t,this)},proto.monsterclicker_viewmodels_protos.ResetGameResponse.toObject=function(t,e){var o={};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.ResetGameResponse.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.ResetGameResponse;return proto.monsterclicker_viewmodels_protos.ResetGameResponse.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.ResetGameResponse.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)e.getFieldNumber(),e.skipField();return t},proto.monsterclicker_viewmodels_protos.ResetGameResponse.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.ResetGameResponse.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.ResetGameResponse.serializeBinaryToWriter=function(t,e){},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.toObject(t,this)},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.toObject=function(t,e){var o={};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest;return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)e.getFieldNumber(),e.skipField();return t},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.serializeBinaryToWriter=function(t,e){},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.toObject(t,this)},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.toObject=function(t,e){var o={};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse;return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)e.getFieldNumber(),e.skipField();return t},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.serializeBinaryToWriter=function(t,e){},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.SubscribeRequest.toObject(t,this)},proto.monsterclicker_viewmodels_protos.SubscribeRequest.toObject=function(t,e){var o={clientId:r.Message.getFieldWithDefault(e,1,"")};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.SubscribeRequest.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.SubscribeRequest;return proto.monsterclicker_viewmodels_protos.SubscribeRequest.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.SubscribeRequest.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readString();t.setClientId(o)}else e.skipField();return t},proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.SubscribeRequest.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.SubscribeRequest.serializeBinaryToWriter=function(t,e){var o;(o=t.getClientId()).length>0&&e.writeString(1,o)},proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.getClientId=function(){return r.Message.getFieldWithDefault(this,1,"")},proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.setClientId=function(t){return r.Message.setProto3StringField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.toObject=function(t){return proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.toObject(t,this)},proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.toObject=function(t,e){var o={status:r.Message.getFieldWithDefault(e,1,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse;return proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.deserializeBinaryFromReader(o,e)},proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readEnum();t.setStatus(o)}else e.skipField();return t},proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.serializeBinaryToWriter=function(t,e){var o;0!==(o=t.getStatus())&&e.writeEnum(1,o)},proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.getStatus=function(){return r.Message.getFieldWithDefault(this,1,0)},proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.setStatus=function(t){return r.Message.setProto3EnumField(this,1,t)},proto.monsterclicker_viewmodels_protos.ConnectionStatus={UNKNOWN:0,CONNECTED:1,DISCONNECTED:2},n.object.extend(e,proto.monsterclicker_viewmodels_protos)},154:function(t,e,o){var r;function n(t){var e=0;return function(){return e<t.length?{done:!1,value:t[e++]}:{done:!0}}}var i="function"==typeof Object.defineProperties?Object.defineProperty:function(t,e,o){t!=Array.prototype&&t!=Object.prototype&&(t[e]=o.value)},s=function(t){t=["object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof o.g&&o.g,t];for(var e=0;e<t.length;++e){var r=t[e];if(r&&r.Math==Math)return r}throw Error("Cannot find global object")}(this);function a(){a=function(){},s.Symbol||(s.Symbol=u)}function p(t,e){this.a=t,i(this,"description",{configurable:!0,writable:!0,value:e})}p.prototype.toString=function(){return this.a};var l,u=(l=0,function t(e){if(this instanceof t)throw new TypeError("Symbol is not a constructor");return new p("jscomp_symbol_"+(e||"")+"_"+l++,e)});function c(){a();var t=s.Symbol.iterator;t||(t=s.Symbol.iterator=s.Symbol("Symbol.iterator")),"function"!=typeof Array.prototype[t]&&i(Array.prototype,t,{configurable:!0,writable:!0,value:function(){return function(t){return c(),(t={next:t})[s.Symbol.iterator]=function(){return this},t}(n(this))}}),c=function(){}}function h(t){var e="undefined"!=typeof Symbol&&Symbol.iterator&&t[Symbol.iterator];return e?e.call(t):{next:n(t)}}var f,y="function"==typeof Object.create?Object.create:function(t){function e(){}return e.prototype=t,new e};if("function"==typeof Object.setPrototypeOf)f=Object.setPrototypeOf;else{var d;t:{var g={};try{g.__proto__={V:!0},d=g.V;break t}catch(et){}d=!1}f=d?function(t,e){if(t.__proto__=e,t.__proto__!==e)throw new TypeError(t+" is not extensible");return t}:null}var b=f;function v(t,e){if(t.prototype=y(e.prototype),t.prototype.constructor=t,b)b(t,e);else for(var o in e)if("prototype"!=o)if(Object.defineProperties){var r=Object.getOwnPropertyDescriptor(e,o);r&&Object.defineProperty(t,o,r)}else t[o]=e[o];t.O=e.prototype}function m(t,e){if(e){var o=s;t=t.split(".");for(var r=0;r<t.length-1;r++){var n=t[r];n in o||(o[n]={}),o=o[n]}(e=e(r=o[t=t[t.length-1]]))!=r&&null!=e&&i(o,t,{configurable:!0,writable:!0,value:e})}}m("Array.prototype.keys",function(t){return t||function(){return function(t,e){c(),t instanceof String&&(t+="");var o=0,r={next:function(){if(o<t.length){var n=o++;return{value:e(n,t[n]),done:!1}}return r.next=function(){return{done:!0,value:void 0}},r.next()}};return r[Symbol.iterator]=function(){return r},r}(this,function(t){return t})}}),m("Array.prototype.find",function(t){return t||function(t,e){t:{var o=this;o instanceof String&&(o=String(o));for(var r=o.length,n=0;n<r;n++){var i=o[n];if(t.call(e,i,n,o)){t=i;break t}}t=void 0}return t}}),m("Object.is",function(t){return t||function(t,e){return t===e?0!==t||1/t==1/e:t!=t&&e!=e}}),m("Array.prototype.includes",function(t){return t||function(t,e){var o=this;o instanceof String&&(o=String(o));var r=o.length;for(0>(e=e||0)&&(e=Math.max(e+r,0));e<r;e++){var n=o[e];if(n===t||Object.is(n,t))return!0}return!1}}),m("Promise",function(t){function e(t){this.b=0,this.c=void 0,this.a=[];var e=this.f();try{t(e.resolve,e.reject)}catch(t){e.reject(t)}}function o(){this.a=null}function r(t){return t instanceof e?t:new e(function(e){e(t)})}if(t)return t;o.prototype.b=function(t){if(null==this.a){this.a=[];var e=this;this.c(function(){e.g()})}this.a.push(t)};var n=s.setTimeout;o.prototype.c=function(t){n(t,0)},o.prototype.g=function(){for(;this.a&&this.a.length;){var t=this.a;this.a=[];for(var e=0;e<t.length;++e){var o=t[e];t[e]=null;try{o()}catch(t){this.f(t)}}}this.a=null},o.prototype.f=function(t){this.c(function(){throw t})},e.prototype.f=function(){function t(t){return function(r){o||(o=!0,t.call(e,r))}}var e=this,o=!1;return{resolve:t(this.s),reject:t(this.g)}},e.prototype.s=function(t){if(t===this)this.g(new TypeError("A Promise cannot resolve to itself"));else if(t instanceof e)this.v(t);else{t:switch(typeof t){case"object":var o=null!=t;break t;case"function":o=!0;break t;default:o=!1}o?this.m(t):this.h(t)}},e.prototype.m=function(t){var e=void 0;try{e=t.then}catch(t){return void this.g(t)}"function"==typeof e?this.w(e,t):this.h(t)},e.prototype.g=function(t){this.i(2,t)},e.prototype.h=function(t){this.i(1,t)},e.prototype.i=function(t,e){if(0!=this.b)throw Error("Cannot settle("+t+", "+e+"): Promise already settled in state"+this.b);this.b=t,this.c=e,this.l()},e.prototype.l=function(){if(null!=this.a){for(var t=0;t<this.a.length;++t)i.b(this.a[t]);this.a=null}};var i=new o;return e.prototype.v=function(t){var e=this.f();t.F(e.resolve,e.reject)},e.prototype.w=function(t,e){var o=this.f();try{t.call(e,o.resolve,o.reject)}catch(t){o.reject(t)}},e.prototype.then=function(t,o){function r(t,e){return"function"==typeof t?function(e){try{n(t(e))}catch(t){i(t)}}:e}var n,i,s=new e(function(t,e){n=t,i=e});return this.F(r(t,n),r(o,i)),s},e.prototype.catch=function(t){return this.then(void 0,t)},e.prototype.F=function(t,e){function o(){switch(r.b){case 1:t(r.c);break;case 2:e(r.c);break;default:throw Error("Unexpected state: "+r.b)}}var r=this;null==this.a?i.b(o):this.a.push(o)},e.resolve=r,e.reject=function(t){return new e(function(e,o){o(t)})},e.race=function(t){return new e(function(e,o){for(var n=h(t),i=n.next();!i.done;i=n.next())r(i.value).F(e,o)})},e.all=function(t){var o=h(t),n=o.next();return n.done?r([]):new e(function(t,e){function i(e){return function(o){s[e]=o,0==--a&&t(s)}}var s=[],a=0;do{s.push(void 0),a++,r(n.value).F(i(s.length-1),e),n=o.next()}while(!n.done)})},e});var w=w||{},_=this||self;function k(t,e){t=t.split("."),e=e||_;for(var o=0;o<t.length;o++)if(null==(e=e[t[o]]))return null;return e}function S(){}function M(t){var e=typeof t;return"object"==e&&null!=t||"function"==e}var B="closure_uid_"+(1e9*Math.random()>>>0),R=0;function A(t,e,o){return t.call.apply(t.bind,arguments)}function E(t,e,o){if(!t)throw Error();if(2<arguments.length){var r=Array.prototype.slice.call(arguments,2);return function(){var o=Array.prototype.slice.call(arguments);return Array.prototype.unshift.apply(o,r),t.apply(e,o)}}return function(){return t.apply(e,arguments)}}function V(t,e,o){return(V=Function.prototype.bind&&-1!=Function.prototype.bind.toString().indexOf("native code")?A:E).apply(null,arguments)}function F(t,e){function o(){}o.prototype=e.prototype,t.O=e.prototype,t.prototype=new o,t.prototype.constructor=t}function O(t){this.a=t||{}}function I(t,e,o,r){this.f=t,this.c=e,this.b=o,this.a=r}function j(t,e,o,r){o=void 0===o?{}:o,this.c=t,this.a=o,this.b=e,this.f=void 0===r?null:r}function C(t,e,o,r,n,i){this.name=t,this.a=n,this.b=i}function T(t,e,o){o=void 0===o?{}:o;var r=void 0===r?new O:r;return new I(e,t,o,r)}function x(t,e,o){o=void 0===o?{}:o,e=Error.call(this,e),this.message=e.message,"stack"in e&&(this.stack=e.stack),this.code=t,this.metadata=o}function P(t){this.a=t}function N(t){if(Error.captureStackTrace)Error.captureStackTrace(this,N);else{var e=Error().stack;e&&(this.stack=e)}t&&(this.message=String(t))}function D(t,e){for(var o="",r=(t=t.split("%s")).length-1,n=0;n<r;n++)o+=t[n]+(n<e.length?e[n]:"%s");N.call(this,o+t[r])}function U(){this.l=null,this.i=[],this.m=0,this.b=z,this.f=this.a=this.h=0,this.c=null,this.g=0}O.prototype.get=function(t){return this.a[t]},O.prototype.G=function(){return Object.keys(this.a)},I.prototype.getRequestMessage=function(){return this.f},I.prototype.getMethodDescriptor=function(){return this.c},I.prototype.getMetadata=function(){return this.b},I.prototype.getCallOptions=function(){return this.a},j.prototype.getResponseMessage=function(){return this.c},j.prototype.getMetadata=function(){return this.a},j.prototype.getMethodDescriptor=function(){return this.b},j.prototype.getStatus=function(){return this.f},C.prototype.getName=function(){return this.name},C.prototype.getName=C.prototype.getName,v(x,Error),x.prototype.toString=function(){var t="RpcError("+(function(t){switch(t){case 0:return"OK";case 1:return"CANCELLED";case 2:return"UNKNOWN";case 3:return"INVALID_ARGUMENT";case 4:return"DEADLINE_EXCEEDED";case 5:return"NOT_FOUND";case 6:return"ALREADY_EXISTS";case 7:return"PERMISSION_DENIED";case 16:return"UNAUTHENTICATED";case 8:return"RESOURCE_EXHAUSTED";case 9:return"FAILED_PRECONDITION";case 10:return"ABORTED";case 11:return"OUT_OF_RANGE";case 12:return"UNIMPLEMENTED";case 13:return"INTERNAL";case 14:return"UNAVAILABLE";case 15:return"DATA_LOSS";default:return""}}(this.code)||String(this.code))+")";return this.message&&(t+=": "+this.message),t},x.prototype.name="RpcError",P.prototype.on=function(t,e){return"data"==t||"error"==t?this:this.a.on(t,e)},P.prototype.removeListener=function(t,e){return this.a.removeListener(t,e)},P.prototype.cancel=function(){this.a.cancel()},F(N,Error),N.prototype.name="CustomError",F(D,N),D.prototype.name="AssertionError";var z=0,G=128;function W(t,e,o,r){throw t.b=3,t.l="The stream is broken @"+t.m+"/"+o+". Error: "+r+". With input:\n"+e,Error(t.l)}var L,q=Array.prototype.indexOf?function(t,e){return Array.prototype.indexOf.call(t,e,void 0)}:function(t,e){if("string"==typeof t)return"string"!=typeof e||1!=e.length?-1:t.indexOf(e,0);for(var o=0;o<t.length;o++)if(o in t&&t[o]===e)return o;return-1},H=String.prototype.trim?function(t){return t.trim()}:function(t){return/^[\s\xa0]*([\s\S]*?)[\s\xa0]*$/.exec(t)[1]};function X(t,e){return-1!=t.indexOf(e)}function $(t,e){return t<e?-1:t>e?1:0}t:{var J=_.navigator;if(J){var K=J.userAgent;if(K){L=K;break t}}L=""}var Y="constructor hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString valueOf".split(" ");function Z(t){var e=1;t=t.split(":");for(var o=[];0<e&&t.length;)o.push(t.shift()),e--;return t.length&&o.push(t.join(":")),o}function Q(t){return Q[" "](t),t}Q[" "]=S;var tt,et,ot=X(L,"Opera"),rt=X(L,"Trident")||X(L,"MSIE"),nt=X(L,"Edge"),it=X(L,"Gecko")&&!(X(L.toLowerCase(),"webkit")&&!X(L,"Edge"))&&!(X(L,"Trident")||X(L,"MSIE"))&&!X(L,"Edge"),st=X(L.toLowerCase(),"webkit")&&!X(L,"Edge");t:{var at="",pt=(et=L,it?/rv:([^\);]+)(\)|;)/.exec(et):nt?/Edge\/([\d\.]+)/.exec(et):rt?/\b(?:MSIE|rv)[: ]([^\);]+)(\)|;)/.exec(et):st?/WebKit\/(\S+)/.exec(et):ot?/(?:Version)[ \/]?(\S+)/.exec(et):void 0);if(pt&&(at=pt?pt[1]:""),rt){var lt,ut=_.document;if(null!=(lt=ut?ut.documentMode:void 0)&&lt>parseFloat(at)){tt=String(lt);break t}}tt=at}var ct={};function ht(){return function(){var t=ct;return Object.prototype.hasOwnProperty.call(t,9)?t[9]:t[9]=function(){for(var t=0,e=H(String(tt)).split("."),o=H("9").split("."),r=Math.max(e.length,o.length),n=0;0==t&&n<r;n++){var i=e[n]||"",s=o[n]||"";do{if(i=/(\d*)(\D*)(.*)/.exec(i)||["","","",""],s=/(\d*)(\D*)(.*)/.exec(s)||["","","",""],0==i[0].length&&0==s[0].length)break;t=$(0==i[1].length?0:parseInt(i[1],10),0==s[1].length?0:parseInt(s[1],10))||$(0==i[2].length,0==s[2].length)||$(i[2],s[2]),i=i[3],s=s[3]}while(0==t)}return 0<=t}()}()}function ft(){0!=yt&&(Object.prototype.hasOwnProperty.call(this,B)&&this[B]||(this[B]=++R)),this.K=this.K}var yt=0;ft.prototype.K=!1;var dt=Object.freeze||function(t){return t};function gt(t,e){this.type=t,this.a=this.target=e,this.defaultPrevented=!1}gt.prototype.b=function(){this.defaultPrevented=!0};var bt=function(){if(!_.addEventListener||!Object.defineProperty)return!1;var t=!1,e=Object.defineProperty({},"passive",{get:function(){t=!0}});try{_.addEventListener("test",S,e),_.removeEventListener("test",S,e)}catch(t){}return t}();function vt(t,e){if(gt.call(this,t?t.type:""),this.relatedTarget=this.a=this.target=null,this.button=this.screenY=this.screenX=this.clientY=this.clientX=0,this.key="",this.metaKey=this.shiftKey=this.altKey=this.ctrlKey=!1,this.pointerId=0,this.pointerType="",this.c=null,t){var o=this.type=t.type,r=t.changedTouches&&t.changedTouches.length?t.changedTouches[0]:null;if(this.target=t.target||t.srcElement,this.a=e,e=t.relatedTarget){if(it){t:{try{Q(e.nodeName);var n=!0;break t}catch(t){}n=!1}n||(e=null)}}else"mouseover"==o?e=t.fromElement:"mouseout"==o&&(e=t.toElement);this.relatedTarget=e,r?(this.clientX=void 0!==r.clientX?r.clientX:r.pageX,this.clientY=void 0!==r.clientY?r.clientY:r.pageY,this.screenX=r.screenX||0,this.screenY=r.screenY||0):(this.clientX=void 0!==t.clientX?t.clientX:t.pageX,this.clientY=void 0!==t.clientY?t.clientY:t.pageY,this.screenX=t.screenX||0,this.screenY=t.screenY||0),this.button=t.button,this.key=t.key||"",this.ctrlKey=t.ctrlKey,this.altKey=t.altKey,this.shiftKey=t.shiftKey,this.metaKey=t.metaKey,this.pointerId=t.pointerId||0,this.pointerType="string"==typeof t.pointerType?t.pointerType:mt[t.pointerType]||"",this.c=t,t.defaultPrevented&&vt.O.b.call(this)}}F(vt,gt);var mt=dt({2:"touch",3:"pen",4:"mouse"});vt.prototype.b=function(){vt.O.b.call(this);var t=this.c;t.preventDefault?t.preventDefault():t.returnValue=!1};var wt="closure_listenable_"+(1e6*Math.random()|0),_t=0;function kt(t,e,o,r,n){this.listener=t,this.proxy=null,this.src=e,this.type=o,this.capture=!!r,this.H=n,this.key=++_t,this.A=this.D=!1}function St(t){t.A=!0,t.listener=null,t.proxy=null,t.src=null,t.H=null}function Mt(t){this.src=t,this.a={},this.b=0}function Bt(t,e){var o=e.type;if(o in t.a){var r,n=t.a[o],i=q(n,e);(r=0<=i)&&Array.prototype.splice.call(n,i,1),r&&(St(e),0==t.a[o].length&&(delete t.a[o],t.b--))}}function Rt(t,e,o,r){for(var n=0;n<t.length;++n){var i=t[n];if(!i.A&&i.listener==e&&i.capture==!!o&&i.H==r)return n}return-1}Mt.prototype.add=function(t,e,o,r,n){var i=t.toString();(t=this.a[i])||(t=this.a[i]=[],this.b++);var s=Rt(t,e,r,n);return-1<s?(e=t[s],o||(e.D=!1)):((e=new kt(e,this.src,i,!!r,n)).D=o,t.push(e)),e},Mt.prototype.remove=function(t,e,o,r){if(!((t=t.toString())in this.a))return!1;var n=this.a[t];return-1<(e=Rt(n,e,o,r))&&(St(n[e]),Array.prototype.splice.call(n,e,1),0==n.length&&(delete this.a[t],this.b--),!0)};var At="closure_lm_"+(1e6*Math.random()|0),Et={};function Vt(t,e,o,r,n){if(r&&r.once)Ot(t,e,o,r,n);else if(Array.isArray(e))for(var i=0;i<e.length;i++)Vt(t,e[i],o,r,n);else o=Nt(o),t&&t[wt]?t.f.add(String(e),o,!1,M(r)?!!r.capture:!!r,n):Ft(t,e,o,!1,r,n)}function Ft(t,e,o,r,n,i){if(!e)throw Error("Invalid event type");var s=M(n)?!!n.capture:!!n,a=xt(t);if(a||(t[At]=a=new Mt(t)),!(o=a.add(e,o,r,s,i)).proxy)if(r=function(){var t=Tt;return function e(o){return t.call(e.src,e.listener,o)}}(),o.proxy=r,r.src=t,r.listener=o,t.addEventListener)bt||(n=s),void 0===n&&(n=!1),t.addEventListener(e.toString(),r,n);else if(t.attachEvent)t.attachEvent(Ct(e.toString()),r);else{if(!t.addListener||!t.removeListener)throw Error("addEventListener and attachEvent are unavailable.");t.addListener(r)}}function Ot(t,e,o,r,n){if(Array.isArray(e))for(var i=0;i<e.length;i++)Ot(t,e[i],o,r,n);else o=Nt(o),t&&t[wt]?t.f.add(String(e),o,!0,M(r)?!!r.capture:!!r,n):Ft(t,e,o,!0,r,n)}function It(t,e,o,r,n){if(Array.isArray(e))for(var i=0;i<e.length;i++)It(t,e[i],o,r,n);else r=M(r)?!!r.capture:!!r,o=Nt(o),t&&t[wt]?t.f.remove(String(e),o,r,n):t&&(t=xt(t))&&(e=t.a[e.toString()],t=-1,e&&(t=Rt(e,o,r,n)),(o=-1<t?e[t]:null)&&jt(o))}function jt(t){if("number"!=typeof t&&t&&!t.A){var e=t.src;if(e&&e[wt])Bt(e.f,t);else{var o=t.type,r=t.proxy;e.removeEventListener?e.removeEventListener(o,r,t.capture):e.detachEvent?e.detachEvent(Ct(o),r):e.addListener&&e.removeListener&&e.removeListener(r),(o=xt(e))?(Bt(o,t),0==o.b&&(o.src=null,e[At]=null)):St(t)}}}function Ct(t){return t in Et?Et[t]:Et[t]="on"+t}function Tt(t,e){if(t.A)t=!0;else{e=new vt(e,this);var o=t.listener,r=t.H||t.src;t.D&&jt(t),t=o.call(r,e)}return t}function xt(t){return(t=t[At])instanceof Mt?t:null}var Pt="__closure_events_fn_"+(1e9*Math.random()>>>0);function Nt(t){return"function"==typeof t?t:(t[Pt]||(t[Pt]=function(e){return t.handleEvent(e)}),t[Pt])}function Dt(){ft.call(this),this.f=new Mt(this),this.U=this}function Ut(t,e){t=t.U;var o=e.type||e;if("string"==typeof e)e=new gt(e,t);else if(e instanceof gt)e.target=e.target||t;else{var r=e;!function(t,e){for(var o,r,n=1;n<arguments.length;n++){for(o in r=arguments[n])t[o]=r[o];for(var i=0;i<Y.length;i++)o=Y[i],Object.prototype.hasOwnProperty.call(r,o)&&(t[o]=r[o])}}(e=new gt(o,t),r)}zt(t=e.a=t,o,!0,e),zt(t,o,!1,e)}function zt(t,e,o,r){if(e=t.f.a[String(e)]){e=e.concat();for(var n=!0,i=0;i<e.length;++i){var s=e[i];if(s&&!s.A&&s.capture==o){var a=s.listener,p=s.H||s.src;s.D&&Bt(t.f,s),n=!1!==a.call(p,r)&&n}}}}F(Dt,ft),Dt.prototype[wt]=!0,Dt.prototype.addEventListener=function(t,e,o,r){Vt(this,t,e,o,r)},Dt.prototype.removeEventListener=function(t,e,o,r){It(this,t,e,o,r)};var Gt=_;function Wt(t,e,o){if("function"==typeof t)o&&(t=V(t,o));else{if(!t||"function"!=typeof t.handleEvent)throw Error("Invalid listener argument");t=V(t.handleEvent,t)}return 2147483647<Number(e)?-1:Gt.setTimeout(t,e||0)}function Lt(t,e){this.name=t,this.value=e}Lt.prototype.toString=function(){return this.name};var qt,Ht,Xt,$t=new Lt("OFF",1/0),Jt=new Lt("SEVERE",1e3),Kt=new Lt("CONFIG",700),Yt=new Lt("FINE",500);function Zt(){this.clear()}function Qt(t,e,o){this.reset(t||$t,e,o,void 0,void 0)}function te(t,e){this.a=null,this.f=[],this.b=(void 0===e?null:e)||null,this.c=[],this.g={getName:function(){return t}}}function ee(t){return t.a?t.a:t.b?ee(t.b):(function(t,e){throw new D("Failure"+(t?": "+t:""),Array.prototype.slice.call(arguments,1))}("Root logger has no level set."),$t)}function oe(){this.entries={};var t=new te("");t.a=Kt,this.entries[""]=t}function re(t,e,o){var r=t.entries[e];if(r)return void 0!==o&&(r.a=o),r;r=re(t,e.substr(0,e.lastIndexOf(".")));var n=new te(e,r);return t.entries[e]=n,r.c.push(n),void 0!==o&&(n.a=o),n}function ne(){return Ht||(Ht=new oe),Ht}function ie(t,e,o){var r;(r=t)&&(r=t&&e)&&(r=(r=e.value)>=(t?ee(re(ne(),t.getName())):$t).value),r&&(e=e||$t,r=re(ne(),t.getName()),"function"==typeof o&&(o=o()),qt||(qt=new Zt),function(t,e){for(;t;)t.f.forEach(function(t){t(e)}),t=t.b}(r,t=new Qt(e,o,t=t.getName())))}function se(t,e){t&&ie(t,Yt,e)}function ae(){}function pe(t){var e;return(e=t.a)||(e={},ce(t)&&(e[0]=!0,e[1]=!0),e=t.a=e),e}function le(){}function ue(t){return(t=ce(t))?new ActiveXObject(t):new XMLHttpRequest}function ce(t){if(!t.b&&"undefined"==typeof XMLHttpRequest&&"undefined"!=typeof ActiveXObject){for(var e=["MSXML2.XMLHTTP.6.0","MSXML2.XMLHTTP.3.0","MSXML2.XMLHTTP","Microsoft.XMLHTTP"],o=0;o<e.length;o++){var r=e[o];try{return new ActiveXObject(r),t.b=r}catch(t){}}throw Error("Could not create ActiveXObject. ActiveX might be disabled, or MSXML might not be installed")}return t.b}function he(t,e){this.b=t[_.Symbol.iterator](),this.c=e,this.f=0}Zt.prototype.clear=function(){},Qt.prototype.reset=function(){},ae.prototype.a=null,F(le,ae),Xt=new le,a(),c(),he.prototype[Symbol.iterator]=function(){return this},he.prototype.next=function(){var t=this.b.next();return{value:t.done?void 0:this.c.call(void 0,t.value,this.f++),done:t.done}},a(),c(),a(),c();var fe="StopIteration"in _?_.StopIteration:{message:"StopIteration",stack:""};function ye(){}function de(t){if(t instanceof be||t instanceof ve||t instanceof me)return t;if("function"==typeof t.next)return new be(function(){return ge(t)});if(a(),c(),"function"==typeof t[Symbol.iterator])return a(),c(),new be(function(){return t[Symbol.iterator]()});if("function"==typeof t.u)return new be(function(){return ge(t.u())});throw Error("Not an iterator or iterable.")}function ge(t){if(!(t instanceof ye))return t;var e=!1;return{next:function(){for(var o;!e;)try{o=t.a();break}catch(t){if(t!==fe)throw t;e=!0}return{value:o,done:e}}}}function be(t){this.b=t}function ve(t){this.b=t}function me(t){be.call(this,function(){return t}),this.f=t}function we(t,e){this.o={},this.j=[],this.B=this.size=0;var o=arguments.length;if(1<o){if(o%2)throw Error("Uneven number of arguments");for(var r=0;r<o;r+=2)this.set(arguments[r],arguments[r+1])}else t&&this.addAll(t)}function _e(t){if(t.size!=t.j.length){for(var e=0,o=0;e<t.j.length;){var r=t.j[e];ke(t.o,r)&&(t.j[o++]=r),e++}t.j.length=o}if(t.size!=t.j.length){var n={};for(o=e=0;e<t.j.length;)ke(n,r=t.j[e])||(t.j[o++]=r,n[r]=1),e++;t.j.length=o}}function ke(t,e){return Object.prototype.hasOwnProperty.call(t,e)}ye.prototype.next=function(){return ye.prototype.a.call(this)},ye.prototype.a=function(){throw fe},ye.prototype.u=function(){return this},a(),c(),be.prototype.u=function(){return new ve(this.b())},be.prototype[Symbol.iterator]=function(){return new me(this.b())},be.prototype.c=function(){return new me(this.b())},a(),c(),v(ve,ye),ve.prototype.a=function(){var t=this.b.next();if(t.done)throw fe;return t.value},ve.prototype.next=function(){return ve.prototype.a.call(this)},ve.prototype[Symbol.iterator]=function(){return new me(this.b)},ve.prototype.c=function(){return new me(this.b)},v(me,be),me.prototype.next=function(){return this.f.next()},(r=we.prototype).G=function(){return _e(this),this.j.concat()},r.has=function(t){return ke(this.o,t)},r.clear=function(){this.o={},this.B=this.size=this.j.length=0},r.remove=function(t){return this.delete(t)},r.delete=function(t){return!!ke(this.o,t)&&(delete this.o[t],--this.size,this.B++,this.j.length>2*this.size&&_e(this),!0)},r.get=function(t,e){return ke(this.o,t)?this.o[t]:e},r.set=function(t,e){ke(this.o,t)||(this.size+=1,this.j.push(t),this.B++),this.o[t]=e},r.addAll=function(t){if(t instanceof we)for(var e=t.G(),o=0;o<e.length;o++)this.set(e[o],t.get(e[o]));else for(e in t)this.set(e,t[e])},r.forEach=function(t,e){for(var o=this.G(),r=0;r<o.length;r++){var n=o[r],i=this.get(n);t.call(e,i,n,this)}},r.clone=function(){return new we(this)},r.keys=function(){return de(this.u(!0)).c()},r.values=function(){return de(this.u(!1)).c()},r.entries=function(){var t=this;return function(t,e){return new he(t,e)}(this.keys(),function(e){return[e,t.get(e)]})},r.u=function(t){_e(this);var e=0,o=this.B,r=this,n=new ye;return n.a=function(){if(o!=r.B)throw Error("The map has changed since the iterator was created");if(e>=r.j.length)throw fe;var n=r.j[e++];return t?n:r.o[n]},n.next=n.a.bind(n),n};var Se=/^(?:([^:/?#.]+):)?(?:\/\/(?:([^\\/?#]*)@)?([^\\/?#]*?)(?::([0-9]+))?(?=[\\/?#]|$))?([^?#]+)?(?:\?([^#]*))?(?:#([\s\S]*))?$/;function Me(t){Dt.call(this),this.headers=new we,this.C=t||null,this.c=!1,this.J=this.a=null,this.P=this.v="",this.g=0,this.l="",this.i=this.N=this.s=this.L=!1,this.h=0,this.w=null,this.m=Be,this.I=this.M=!1}F(Me,Dt);var Be="";Me.prototype.b=re(ne(),"goog.net.XhrIo",void 0).g;var Re=/^https?$/i,Ae=["POST","PUT"];function Ee(t,e){t.c=!1,t.a&&(t.i=!0,t.a.abort(),t.i=!1),t.l=e,t.g=5,Ve(t),Oe(t)}function Ve(t){t.L||(t.L=!0,Ut(t,"complete"),Ut(t,"error"))}function Fe(t){if(t.c&&void 0!==w)if(t.J[1]&&4==je(t)&&2==t.getStatus())se(t.b,Ce(t,"Local request error detected and ignored"));else if(t.s&&4==je(t))Wt(t.R,0,t);else if(Ut(t,"readystatechange"),4==je(t)){se(t.b,Ce(t,"Request complete")),t.c=!1;try{var e,o=t.getStatus();t:switch(o){case 200:case 201:case 202:case 204:case 206:case 304:case 1223:var r=!0;break t;default:r=!1}if(!(e=r)){var n;if(n=0===o){var i=String(t.v).match(Se)[1]||null;if(!i&&_.self&&_.self.location){var s=_.self.location.protocol;i=s.substr(0,s.length-1)}n=!Re.test(i?i.toLowerCase():"")}e=n}if(e)Ut(t,"complete"),Ut(t,"success");else{t.g=6;try{var a=2<je(t)?t.a.statusText:""}catch(e){se(t.b,"Can not get status: "+e.message),a=""}t.l=a+" ["+t.getStatus()+"]",Ve(t)}}finally{Oe(t)}}}function Oe(t){if(t.a){Ie(t);var e=t.a,o=t.J[0]?S:null;t.a=null,t.J=null,Ut(t,"ready");try{e.onreadystatechange=o}catch(e){(t=t.b)&&ie(t,Jt,"Problem encountered resetting onreadystatechange: "+e.message)}}}function Ie(t){t.a&&t.I&&(t.a.ontimeout=null),t.w&&(Gt.clearTimeout(t.w),t.w=null)}function je(t){return t.a?t.a.readyState:0}function Ce(t,e){return e+" ["+t.P+" "+t.v+" "+t.getStatus()+"]"}(r=Me.prototype).T=function(){void 0!==w&&this.a&&(this.l="Timed out after "+this.h+"ms, aborting",this.g=8,se(this.b,Ce(this,this.l)),Ut(this,"timeout"),this.abort(8))},r.abort=function(t){this.a&&this.c&&(se(this.b,Ce(this,"Aborting")),this.c=!1,this.i=!0,this.a.abort(),this.i=!1,this.g=t||7,Ut(this,"complete"),Ut(this,"abort"),Oe(this))},r.R=function(){this.K||(this.N||this.s||this.i?Fe(this):this.W())},r.W=function(){Fe(this)},r.getStatus=function(){try{return 2<je(this)?this.a.status:-1}catch(t){return-1}};var Te={},xe=null;function Pe(){if(!xe){xe={};for(var t="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),e=["+/=","+/","-_=","-_.","-_"],o=0;5>o;o++){var r=t.concat(e[o].split(""));Te[o]=r;for(var n=0;n<r.length;n++){var i=r[n];void 0===xe[i]&&(xe[i]=n)}}}}var Ne=["content-type","grpc-status","grpc-message"];function De(t){this.a=t.Z,this.m=null,this.b=[],this.h=[],this.g=[],this.f=[],this.c=[],this.l=!1,this.i=0,this.s=new U;var e=this;Vt(this.a,"readystatechange",function(){var t=e.a;if(t=t.a?t.a.getResponseHeader("Content-Type"):null){if(0==(t=t.toLowerCase()).lastIndexOf("application/grpc-web-text",0)){t=e.a;try{var o=t.a?t.a.responseText:""}catch(e){se(t.b,"Can not get responseText: "+e.message),o=""}if(o=(t=o||"").length-t.length%4,0==(t=t.substr(e.i,o-e.i)).length)return;e.i=o,t=function(t){var e=t.length,o=3*e/4;o%3?o=Math.floor(o):X("=.",t[e-1])&&(o=X("=.",t[e-2])?o-2:o-1);var r=new Uint8Array(o),n=0;return function(t,e){function o(e){for(;r<t.length;){var o=t.charAt(r++),n=xe[o];if(null!=n)return n;if(!/^[\s\xa0]*$/.test(o))throw Error("Unknown base64 encoding at char: "+o)}return e}Pe();for(var r=0;;){var n=o(-1),i=o(0),s=o(64),a=o(64);if(64===a&&-1===n)break;e(n<<2|i>>4),64!=s&&(e(i<<4&240|s>>2),64!=a&&e(s<<6&192|a))}}(t,function(t){r[n++]=t}),r.subarray(0,n)}(t)}else{if(0!=t.lastIndexOf("application/grpc",0))return void ze(e,new x(2,"Unknown Content-type received."));t=new Uint8Array(function(t){try{if(!t.a)return null;if("response"in t.a)return t.a.response;switch(t.m){case Be:case"text":return t.a.responseText;case"arraybuffer":if("mozResponseArrayBuffer"in t.a)return t.a.mozResponseArrayBuffer}var e=t.b;return e&&ie(e,Jt,"Response type "+t.m+" is not supported on this browser"),null}catch(e){return se(t.b,"Can not get response: "+e.message),null}}(e.a))}o=null;try{o=function(t,e){function o(t){0==t||t==G?a.h=t:W(a,s,p,"invalid frame byte"),a.b=1,a.a=0,a.f=0}function r(t){a.f++,a.a=(a.a<<8)+t,4==a.f&&(a.b=2,a.g=0,"undefined"!=typeof Uint8Array?a.c=new Uint8Array(a.a):a.c=Array(a.a),0==a.a&&i())}function n(t){a.c[a.g++]=t,a.g==a.a&&i()}function i(){var t={};t[a.h]=a.c,a.i.push(t),a.b=z}var s,a=t,p=0;for(s=e instanceof Uint8Array||e instanceof Array?e:new Uint8Array(e);p<s.length;){switch(a.b){case 3:W(a,s,p,"stream already broken");break;case z:o(s[p]);break;case 1:r(s[p]);break;case 2:n(s[p]);break;default:throw Error("unexpected parser state: "+a.b)}a.m++,p++}return t=a.i,a.i=[],0<t.length?t:null}(e.s,t)}catch(t){ze(e,new x(2,"Error in parsing response body"))}if(o)for(t=0;t<o.length;t++){if(0 in o[t]){var r=o[t][0];if(r){var n=!1,i=void 0;try{i=e.m(r),n=!0}catch(t){ze(e,new x(13,"Error when deserializing response data; error: "+t+", response: "+i))}if(n)for(r=i,n=0;n<e.b.length;n++)e.b[n](r)}}if(G in o[t]&&0<o[t][G].length){for(r="",n=0;n<o[t][G].length;n++)r+=String.fromCharCode(o[t][G][n]);for(r=r.trim().split("\r\n"),n={},i=0;i<r.length;i++){var s=r[i].indexOf(":");n[r[i].substring(0,s).trim()]=r[i].substring(s+1).trim()}r=n,n=0,i="","grpc-status"in r&&(n=Number(r["grpc-status"]),delete r["grpc-status"]),"grpc-message"in r&&(i=r["grpc-message"],delete r["grpc-message"]),ze(e,new x(n,i,r))}}}}),Vt(this.a,"complete",function(){var t=e.a.g,o=2,r="",n={};o=function(t){var e={};t=(t.a&&4==je(t)&&t.a.getAllResponseHeaders()||"").split("\r\n");for(var o=0;o<t.length;o++)if(!/^[\s\xa0]*$/.test(t[o])){var r=Z(t[o]),n=r[0];if("string"==typeof(r=r[1])){r=r.trim();var i=e[n]||[];e[n]=i,i.push(r)}}return function(t,e){var o,r={};for(o in t)r[o]=e.call(void 0,t[o],o,t);return r}(e,function(t){return t.join(", ")})}(e.a);var i={};for(s in o)o.hasOwnProperty(s)&&(i[s.toLowerCase()]=o[s]);Object.keys(i).forEach(function(t){Ne.includes(t)||(n[t]=i[t])}),function(t,e){for(var o=0;o<t.g.length;o++)t.g[o](e)}(e,n);var s=-1;if(0!=t){switch(t){case 7:o=10;break;case 8:o=4;break;case 6:o=function(t){switch(t){case 200:return 0;case 400:return 3;case 401:return 16;case 403:return 7;case 404:return 5;case 409:return 10;case 412:return 9;case 429:return 8;case 499:return 1;case 500:default:return 2;case 501:return 12;case 503:return 14;case 504:return 4}}(s=e.a.getStatus());break;default:o=14}10==o&&e.l||(r=function(t){switch(t){case 0:return"No Error";case 1:return"Access denied to content document";case 2:return"File not found";case 3:return"Firefox silently errored";case 4:return"Application custom error";case 5:return"An exception occurred";case 6:return"Http response at 400 or 500 level";case 7:return"Request was aborted";case 8:return"Request timed out";case 9:return"The resource is not available offline";default:return"Unrecognized error code"}}(t),-1!=s&&(r+=", http status code: "+s),ze(e,new x(o,r)))}else t=!1,"grpc-status"in i&&(o=Number(i["grpc-status"]),"grpc-message"in i&&(r=i["grpc-message"]),0!=o&&(ze(e,new x(o,r||"",i)),t=!0)),t||function(t){for(var e=0;e<t.c.length;e++)t.c[e]()}(e)})}function Ue(t,e){-1<(e=t.indexOf(e))&&t.splice(e,1)}function ze(t,e){if(0!=e.code)for(var o=new x(e.code,decodeURIComponent(e.message||""),e.metadata),r=0;r<t.f.length;r++)t.f[r](o);for(e={code:e.code,details:decodeURIComponent(e.message||""),metadata:e.metadata},o=0;o<t.h.length;o++)t.h[o](e)}function Ge(t,e){t=void 0===t?{}:t,this.a=t.format||k("format",t)||"text",this.g=t.aa||k("suppressCorsPreflight",t)||!1,this.f=t.withCredentials||k("withCredentials",t)||!1,this.b=t.$||k("streamInterceptors",t)||[],this.h=t.ba||k("unaryInterceptors",t)||[],this.c=e||null}function We(t,e,o){var r=e.getMethodDescriptor(),n=o+r.getName();(o=t.c?t.c:new Me).M=t.f;var i=new De({Z:o});i.m=r.b;var s=e.getMetadata();for(a in s)o.headers.set(a,s[a]);if("text"==t.a?(o.headers.set("Content-Type","application/grpc-web-text"),o.headers.set("Accept","application/grpc-web-text")):o.headers.set("Content-Type","application/grpc-web+proto"),o.headers.set("X-User-Agent","grpc-web-javascript/0.1"),o.headers.set("X-Grpc-Web","1"),o.headers.has("deadline")){var a=Number(o.headers.get("deadline"));a=Math.ceil(a-(new Date).getTime()),o.headers.delete("deadline"),1/0===a&&(a=0),0<a&&(o.headers.set("grpc-timeout",a+"m"),o.h=Math.max(0,Math.max(1e3,Math.ceil(1.1*a))))}if(t.g){a={};for(var p=h((s=o.headers).keys()),l=p.next();!l.done;l=p.next())a[l=l.value]=s.get(l);o.headers.clear();t:{for(u in a){var u=!1;break t}u=!0}u||(a=function(t){var e="";return function(t,e){for(var o in t)e.call(void 0,t[o],o,t)}(t,function(t,o){e+=o,e+=":",e+=t,e+="\r\n"}),e}(a),"string"==typeof n?(u=encodeURIComponent("$httpHeaders"),(u+=a=null!=a?"="+encodeURIComponent(String(a)):"")&&(0>(a=n.indexOf("#"))&&(a=n.length),0>(s=n.indexOf("?"))||s>a?(s=a,p=""):p=n.substring(s+1,a),a=(n=[n.substr(0,s),p,n.substr(a)])[1],n[1]=u?a?a+"&"+u:u:a,n=n[0]+(n[1]?"?"+n[1]:"")+n[2])):n.a("$httpHeaders",a))}for(r=(e=(0,r.a)(e.getRequestMessage())).length,u=[0,0,0,0],a=new Uint8Array(5+r),s=3;0<=s;s--)u[s]=r%256,r>>>=8;if(a.set(new Uint8Array(u),1),a.set(e,5),e=a,"text"==t.a){var c;for(t=e,void 0===c&&(c=0),Pe(),c=Te[c],e=Array(Math.floor(t.length/3)),r=c[64]||"",u=a=0;a<t.length-2;a+=3){l=t[a];var f=t[a+1];p=t[a+2],s=c[l>>2],l=c[(3&l)<<4|f>>4],f=c[(15&f)<<2|p>>6],p=c[63&p],e[u++]=s+l+f+p}switch(s=0,p=r,t.length-a){case 2:p=c[(15&(s=t[a+1]))<<2]||r;case 1:t=t[a],e[u]=c[t>>2]+c[(3&t)<<4|s>>4]+p+r}e=e.join("")}else"binary"==t.a&&(o.m="arraybuffer");return function(t,e,o){if(t.a)throw Error("[goog.net.XhrIo] Object is active with another request="+t.v+"; newUri="+e);t.v=e,t.l="",t.g=0,t.P="POST",t.L=!1,t.c=!0,t.a=t.C?ue(t.C):ue(Xt),t.J=t.C?pe(t.C):pe(Xt),t.a.onreadystatechange=V(t.R,t);try{se(t.b,Ce(t,"Opening Xhr")),t.N=!0,t.a.open("POST",String(e),!0),t.N=!1}catch(e){return se(t.b,Ce(t,"Error opening Xhr: "+e.message)),void Ee(t,e)}e=o||"";var r=(o=t.headers.clone()).G().find(function(t){return"content-type"==t.toLowerCase()}),n=_.FormData&&e instanceof _.FormData;!(0<=q(Ae,"POST"))||r||n||o.set("Content-Type","application/x-www-form-urlencoded;charset=utf-8"),o.forEach(function(t,e){this.a.setRequestHeader(e,t)},t),t.m&&(t.a.responseType=t.m),"withCredentials"in t.a&&t.a.withCredentials!==t.M&&(t.a.withCredentials=t.M);try{Ie(t),0<t.h&&(t.I=function(t){return rt&&ht()&&"number"==typeof t.timeout&&void 0!==t.ontimeout}(t.a),se(t.b,Ce(t,"Will abort after "+t.h+"ms if incomplete, xhr2 "+t.I)),t.I?(t.a.timeout=t.h,t.a.ontimeout=V(t.T,t)):t.w=Wt(t.T,t.h,t)),se(t.b,Ce(t,"Sending request")),t.s=!0,t.a.send(e),t.s=!1}catch(e){se(t.b,Ce(t,"Send error: "+e.message)),Ee(t,e)}}(o,n,e),i}function Le(t,e,o){var r=!1,n=null,i=!1;t.on("data",function(t){r=!0,n=t}),t.on("error",function(t){0==t.code||i||(i=!0,e(t,null))}),t.on("status",function(t){0==t.code||i?o&&e(null,null,t):(i=!0,e({code:t.code,message:t.details,metadata:t.metadata},null))}),o&&t.on("metadata",function(t){e(null,null,null,t)}),t.on("end",function(){i||(r?o?e(null,n,null,null,!0):e(null,n):e({code:2,message:"Incomplete response"})),o&&e(null,null)})}function qe(t,e){var o=t;return e.forEach(function(t){var e=o;o=function(o){return t.intercept(o,e)}}),o}De.prototype.on=function(t,e){return"data"==t?this.b.push(e):"status"==t?this.h.push(e):"metadata"==t?this.g.push(e):"end"==t?this.c.push(e):"error"==t&&this.f.push(e),this},De.prototype.removeListener=function(t,e){return"data"==t?Ue(this.b,e):"status"==t?Ue(this.h,e):"metadata"==t?Ue(this.g,e):"end"==t?Ue(this.c,e):"error"==t&&Ue(this.f,e),this},De.prototype.cancel=function(){this.l=!0,this.a.abort()},De.prototype.cancel=De.prototype.cancel,De.prototype.removeListener=De.prototype.removeListener,De.prototype.on=De.prototype.on,Ge.prototype.X=function(t,e,o,r,n){var i=this,s=t.substr(0,t.length-r.name.length);return Le(t=qe(function(t){return We(i,t,s)},this.b).call(this,T(r,e,o)),n,!1),new P(t)},Ge.prototype.S=function(t,e,o,r){var n=this,i=t.substr(0,t.length-r.name.length);return qe(function(t){return new Promise(function(e,o){var r,s,a;Le(We(n,t,i),function(n,i,p,l,u){n?o(n):u?a=i:p?s=p:l?r=l:(n=t.getMethodDescriptor(),e(new j(a,n,i=void 0===(i=r)?{}:i,void 0===s?null:s)))},!0)})},this.h).call(this,T(r,e,o)).then(function(t){return t.getResponseMessage()})},Ge.prototype.unaryCall=function(t,e,o,r){return this.S(t,e,o,r)},Ge.prototype.Y=function(t,e,o,r){var n=this,i=t.substr(0,t.length-r.name.length);return qe(function(t){return We(n,t,i)},this.b).call(this,T(r,e,o))},Ge.prototype.serverStreaming=Ge.prototype.Y,Ge.prototype.unaryCall=Ge.prototype.unaryCall,Ge.prototype.thenableCall=Ge.prototype.S,Ge.prototype.rpcCall=Ge.prototype.X,t.exports.CallOptions=O,t.exports.MethodDescriptor=C,t.exports.GrpcWebClientBase=Ge,t.exports.RpcError=x,t.exports.StatusCode={OK:0,CANCELLED:1,UNKNOWN:2,INVALID_ARGUMENT:3,DEADLINE_EXCEEDED:4,NOT_FOUND:5,ALREADY_EXISTS:6,PERMISSION_DENIED:7,UNAUTHENTICATED:16,RESOURCE_EXHAUSTED:8,FAILED_PRECONDITION:9,ABORTED:10,OUT_OF_RANGE:11,UNIMPLEMENTED:12,INTERNAL:13,UNAVAILABLE:14,DATA_LOSS:15},t.exports.MethodType={UNARY:"unary",SERVER_STREAMING:"server_streaming",BIDI_STREAMING:"bidi_streaming"},Gt="undefined"!=typeof globalThis&&globalThis||self},339:function(t,e,o){var r="function"==typeof Object.defineProperties?Object.defineProperty:function(t,e,o){t!=Array.prototype&&t!=Object.prototype&&(t[e]=o.value)},n="undefined"!=typeof window&&window===this?this:void 0!==o.g&&null!=o.g?o.g:this;function i(){i=function(){},n.Symbol||(n.Symbol=p)}function s(t,e){this.a=t,r(this,"description",{configurable:!0,writable:!0,value:e})}s.prototype.toString=function(){return this.a};var a,p=(a=0,function t(e){if(this instanceof t)throw new TypeError("Symbol is not a constructor");return new s("jscomp_symbol_"+(e||"")+"_"+a++,e)});function l(){i();var t=n.Symbol.iterator;t||(t=n.Symbol.iterator=n.Symbol("Symbol.iterator")),"function"!=typeof Array.prototype[t]&&r(Array.prototype,t,{configurable:!0,writable:!0,value:function(){return function(t){return l(),(t={next:t})[n.Symbol.iterator]=function(){return this},t}(function(t){var e=0;return function(){return e<t.length?{done:!1,value:t[e++]}:{done:!0}}}(this))}}),l=function(){}}!function(t,e){if(e){var o=n;t=t.split(".");for(var i=0;i<t.length-1;i++){var s=t[i];s in o||(o[s]={}),o=o[s]}(e=e(i=o[t=t[t.length-1]]))!=i&&null!=e&&r(o,t,{configurable:!0,writable:!0,value:e})}}("Array.prototype.entries",function(t){return t||function(){return function(t,e){l(),t instanceof String&&(t+="");var o=0,r={next:function(){if(o<t.length){var n=o++;return{value:e(n,t[n]),done:!1}}return r.next=function(){return{done:!0,value:void 0}},r.next()}};return r[Symbol.iterator]=function(){return r},r}(this,function(t,e){return[t,e]})}});var u=this||self;function c(t,e,o){t=t.split("."),o=o||u,t[0]in o||void 0===o.execScript||o.execScript("var "+t[0]);for(var r;t.length&&(r=t.shift());)t.length||void 0===e?o=o[r]&&o[r]!==Object.prototype[r]?o[r]:o[r]={}:o[r]=e}function h(t){var e=typeof t;if("object"==e){if(!t)return"null";if(t instanceof Array)return"array";if(t instanceof Object)return e;var o=Object.prototype.toString.call(t);if("[object Window]"==o)return"object";if("[object Array]"==o||"number"==typeof t.length&&void 0!==t.splice&&void 0!==t.propertyIsEnumerable&&!t.propertyIsEnumerable("splice"))return"array";if("[object Function]"==o||void 0!==t.call&&void 0!==t.propertyIsEnumerable&&!t.propertyIsEnumerable("call"))return"function"}else if("function"==e&&void 0===t.call)return"object";return e}function f(t){var e=typeof t;return"object"==e&&null!=t||"function"==e}var y="constructor hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString valueOf".split(" "),d=Array.prototype.forEach?function(t,e){Array.prototype.forEach.call(t,e,void 0)}:function(t,e){for(var o=t.length,r="string"==typeof t?t.split(""):t,n=0;n<o;n++)n in r&&e.call(void 0,r[n],n,t)},g=Array.prototype.map?function(t,e){return Array.prototype.map.call(t,e,void 0)}:function(t,e){for(var o=t.length,r=Array(o),n="string"==typeof t?t.split(""):t,i=0;i<o;i++)i in n&&(r[i]=e.call(void 0,n[i],i,t));return r};function b(t,e,o){return 2>=arguments.length?Array.prototype.slice.call(t,e):Array.prototype.slice.call(t,e,o)}function v(t,e,o,r){var n="Assertion failed";if(o){n+=": "+o;var i=r}else t&&(n+=": "+t,i=e);throw Error(n,i||[])}function m(t,e,o){for(var r=[],n=2;n<arguments.length;++n)r[n-2]=arguments[n];return t||v("",null,e,r),t}function w(t,e){for(var o=[],r=1;r<arguments.length;++r)o[r-1]=arguments[r];throw Error("Failure"+(t?": "+t:""),o)}function _(t,e,o,r){for(var n=[],i=3;i<arguments.length;++i)n[i-3]=arguments[i];t instanceof e||v("Expected instanceof %s but got %s.",[k(e),k(t)],o,n)}function k(t){return t instanceof Function?t.displayName||t.name||"unknown type name":t instanceof Object?t.constructor.displayName||t.constructor.name||Object.prototype.toString.call(t):null===t?"null":typeof t}function S(t,e){if(this.c=t,this.b=e,this.a={},this.arrClean=!0,0<this.c.length){for(t=0;t<this.c.length;t++){var o=(e=this.c[t])[0];this.a[o.toString()]=new A(o,e[1])}this.arrClean=!0}}function M(t){this.a=0,this.b=t}function B(t,e){return t.b?(e.a||(e.a=new t.b(e.value)),e.a):e.value}function R(t){t=t.a;var e,o=[];for(e in t)Object.prototype.hasOwnProperty.call(t,e)&&o.push(e);return o}function A(t,e){this.key=t,this.value=e,this.a=void 0}function E(t){if(8192>=t.length)return String.fromCharCode.apply(null,t);for(var e="",o=0;o<t.length;o+=8192)e+=String.fromCharCode.apply(null,b(t,o,o+8192));return e}c("jspb.Map",S,void 0),S.prototype.g=function(){if(this.arrClean){if(this.b){var t,e=this.a;for(t in e)if(Object.prototype.hasOwnProperty.call(e,t)){var o=e[t].a;o&&o.g()}}}else{for(this.c.length=0,(e=R(this)).sort(),t=0;t<e.length;t++){var r=this.a[e[t]];(o=r.a)&&o.g(),this.c.push([r.key,r.value])}this.arrClean=!0}return this.c},S.prototype.toArray=S.prototype.g,S.prototype.Mc=function(t,e){for(var o=this.g(),r=[],n=0;n<o.length;n++){var i=this.a[o[n][0].toString()];B(this,i);var s=i.a;s?(m(e),r.push([i.key,e(t,s)])):r.push([i.key,i.value])}return r},S.prototype.toObject=S.prototype.Mc,S.fromObject=function(t,e,o){e=new S([],e);for(var r=0;r<t.length;r++){var n=t[r][0],i=o(t[r][1]);e.set(n,i)}return e},M.prototype.next=function(){return this.a<this.b.length?{done:!1,value:this.b[this.a++]}:{done:!0,value:void 0}},"undefined"!=typeof Symbol&&(M.prototype[Symbol.iterator]=function(){return this}),S.prototype.Jb=function(){return R(this).length},S.prototype.getLength=S.prototype.Jb,S.prototype.clear=function(){this.a={},this.arrClean=!1},S.prototype.clear=S.prototype.clear,S.prototype.Cb=function(t){t=t.toString();var e=this.a.hasOwnProperty(t);return delete this.a[t],this.arrClean=!1,e},S.prototype.del=S.prototype.Cb,S.prototype.Eb=function(){var t=[],e=R(this);e.sort();for(var o=0;o<e.length;o++){var r=this.a[e[o]];t.push([r.key,r.value])}return t},S.prototype.getEntryList=S.prototype.Eb,S.prototype.entries=function(){var t=[],e=R(this);e.sort();for(var o=0;o<e.length;o++){var r=this.a[e[o]];t.push([r.key,B(this,r)])}return new M(t)},S.prototype.entries=S.prototype.entries,S.prototype.keys=function(){var t=[],e=R(this);e.sort();for(var o=0;o<e.length;o++)t.push(this.a[e[o]].key);return new M(t)},S.prototype.keys=S.prototype.keys,S.prototype.values=function(){var t=[],e=R(this);e.sort();for(var o=0;o<e.length;o++)t.push(B(this,this.a[e[o]]));return new M(t)},S.prototype.values=S.prototype.values,S.prototype.forEach=function(t,e){var o=R(this);o.sort();for(var r=0;r<o.length;r++){var n=this.a[o[r]];t.call(e,B(this,n),n.key,this)}},S.prototype.forEach=S.prototype.forEach,S.prototype.set=function(t,e){var o=new A(t);return this.b?(o.a=e,o.value=e.g()):o.value=e,this.a[t.toString()]=o,this.arrClean=!1,this},S.prototype.set=S.prototype.set,S.prototype.get=function(t){if(t=this.a[t.toString()])return B(this,t)},S.prototype.get=S.prototype.get,S.prototype.has=function(t){return t.toString()in this.a},S.prototype.has=S.prototype.has,S.prototype.Jc=function(t,e,o,r,n){var i=R(this);i.sort();for(var s=0;s<i.length;s++){var a=this.a[i[s]];e.Va(t),o.call(e,1,a.key),this.b?r.call(e,2,B(this,a),n):r.call(e,2,a.value),e.Ya()}},S.prototype.serializeBinary=S.prototype.Jc,S.deserializeBinary=function(t,e,o,r,n,i,s){for(;e.oa()&&!e.bb();){var a=e.c;1==a?i=o.call(e):2==a&&(t.b?(m(n),s||(s=new t.b),r.call(e,s,n)):s=r.call(e))}m(null!=i),m(null!=s),t.set(i,s)};var V={"\0":"\\0","\b":"\\b","\f":"\\f","\n":"\\n","\r":"\\r","\t":"\\t","\v":"\\x0B",'"':'\\"',"\\":"\\\\","<":"\\u003C"},F={"'":"\\'"},O={},I=null;function j(t,e){void 0===e&&(e=0),T(),e=O[e];for(var o=[],r=0;r<t.length;r+=3){var n=t[r],i=r+1<t.length,s=i?t[r+1]:0,a=r+2<t.length,p=a?t[r+2]:0,l=n>>2;n=(3&n)<<4|s>>4,s=(15&s)<<2|p>>6,p&=63,a||(p=64,i||(s=64)),o.push(e[l],e[n],e[s]||"",e[p]||"")}return o.join("")}function C(t){var e=t.length,o=3*e/4;o%3?o=Math.floor(o):-1!="=.".indexOf(t[e-1])&&(o=-1!="=.".indexOf(t[e-2])?o-2:o-1);var r=new Uint8Array(o),n=0;return function(t,e){function o(e){for(;r<t.length;){var o=t.charAt(r++),n=I[o];if(null!=n)return n;if(!/^[\s\xa0]*$/.test(o))throw Error("Unknown base64 encoding at char: "+o)}return e}T();for(var r=0;;){var n=o(-1),i=o(0),s=o(64),a=o(64);if(64===a&&-1===n)break;e(n<<2|i>>4),64!=s&&(e(i<<4&240|s>>2),64!=a&&e(s<<6&192|a))}}(t,function(t){r[n++]=t}),r.subarray(0,n)}function T(){if(!I){I={};for(var t="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),e=["+/=","+/","-_=","-_.","-_"],o=0;5>o;o++){var r=t.concat(e[o].split(""));O[o]=r;for(var n=0;n<r.length;n++){var i=r[n];void 0===I[i]&&(I[i]=n)}}}}c("jspb.ConstBinaryMessage",function(){},void 0),c("jspb.BinaryMessage",function(){},void 0),c("jspb.BinaryConstants.FieldType",{yb:-1,ee:1,FLOAT:2,ke:3,te:4,je:5,xb:6,wb:7,BOOL:8,re:9,ie:10,le:11,ce:12,se:13,ge:14,me:15,ne:16,oe:17,pe:18,he:30,ve:31},void 0),c("jspb.BinaryConstants.WireType",{yb:-1,ue:0,xb:1,de:2,qe:3,fe:4,wb:5},void 0),c("jspb.BinaryConstants.FieldTypeToWireType",function(t){switch(t){case 5:case 3:case 13:case 4:case 17:case 18:case 8:case 14:case 31:return 0;case 1:case 6:case 16:case 30:return 1;case 9:case 11:case 12:return 2;case 2:case 7:case 15:return 5;default:return-1}},void 0),c("jspb.BinaryConstants.INVALID_FIELD_NUMBER",-1,void 0),c("jspb.BinaryConstants.FLOAT32_EPS",1401298464324817e-60,void 0),c("jspb.BinaryConstants.FLOAT32_MIN",11754943508222875e-54,void 0),c("jspb.BinaryConstants.FLOAT32_MAX",34028234663852886e22,void 0),c("jspb.BinaryConstants.FLOAT64_EPS",5e-324,void 0),c("jspb.BinaryConstants.FLOAT64_MIN",22250738585072014e-324,void 0),c("jspb.BinaryConstants.FLOAT64_MAX",17976931348623157e292,void 0),c("jspb.BinaryConstants.TWO_TO_20",1048576,void 0),c("jspb.BinaryConstants.TWO_TO_23",8388608,void 0),c("jspb.BinaryConstants.TWO_TO_31",2147483648,void 0),c("jspb.BinaryConstants.TWO_TO_32",4294967296,void 0),c("jspb.BinaryConstants.TWO_TO_52",4503599627370496,void 0),c("jspb.BinaryConstants.TWO_TO_63",0x8000000000000000,void 0),c("jspb.BinaryConstants.TWO_TO_64",0x10000000000000000,void 0),c("jspb.BinaryConstants.ZERO_HASH","\0\0\0\0\0\0\0\0",void 0);var x=0,P=0;function N(t){var e=t>>>0;t=Math.floor((t-e)/4294967296)>>>0,x=e,P=t}function D(t){var e=0>t,o=(t=Math.abs(t))>>>0;t=Math.floor((t-o)/4294967296),t>>>=0,e&&(t=~t>>>0,4294967295<(o=(~o>>>0)+1)&&(o=0,4294967295<++t&&(t=0))),x=o,P=t}function U(t){var e=0>t;N(t=2*Math.abs(t)),t=x;var o=P;e&&(0==t?0==o?o=t=4294967295:(o--,t=4294967295):t--),x=t,P=o}function z(t){var e=0>t?1:0;if(0===(t=e?-t:t))0<1/t?x=P=0:(P=0,x=2147483648);else if(isNaN(t))P=0,x=2147483647;else if(34028234663852886e22<t)P=0,x=(e<<31|2139095040)>>>0;else if(11754943508222875e-54>t)t=Math.round(t/Math.pow(2,-149)),P=0,x=(e<<31|t)>>>0;else{var o=Math.floor(Math.log(t)/Math.LN2);t*=Math.pow(2,-o),16777216<=(t=Math.round(8388608*t))&&++o,P=0,x=(e<<31|o+127<<23|8388607&t)>>>0}}function G(t){var e=0>t?1:0;if(0===(t=e?-t:t))P=0<1/t?0:2147483648,x=0;else if(isNaN(t))P=2147483647,x=4294967295;else if(17976931348623157e292<t)P=(e<<31|2146435072)>>>0,x=0;else if(22250738585072014e-324>t)t/=Math.pow(2,-1074),P=(e<<31|t/4294967296)>>>0,x=t>>>0;else{var o=t,r=0;if(2<=o)for(;2<=o&&1023>r;)r++,o/=2;else for(;1>o&&-1022<r;)o*=2,r--;t*=Math.pow(2,-r),P=(e<<31|r+1023<<20|1048576*t&1048575)>>>0,x=4503599627370496*t>>>0}}function W(t){var e=t.charCodeAt(4),o=t.charCodeAt(5),r=t.charCodeAt(6),n=t.charCodeAt(7);x=t.charCodeAt(0)+(t.charCodeAt(1)<<8)+(t.charCodeAt(2)<<16)+(t.charCodeAt(3)<<24)>>>0,P=e+(o<<8)+(r<<16)+(n<<24)>>>0}function L(t,e){return 4294967296*e+(t>>>0)}function q(t,e){var o=2147483648&e;return o&&(e=~e>>>0,0==(t=1+~t>>>0)&&(e=e+1>>>0)),t=L(t,e),o?-t:t}function H(t,e,o){var r=e>>31;return o(t<<1^r,(e<<1|t>>>31)^r)}function X(t,e){return $(t,e,q)}function $(t,e,o){var r=-(1&t);return o((t>>>1|e<<31)^r,e>>>1^r)}function J(t){var e=2*(t>>31)+1,o=t>>>23&255;return t&=8388607,255==o?t?NaN:1/0*e:0==o?e*Math.pow(2,-149)*t:e*Math.pow(2,o-150)*(t+Math.pow(2,23))}function K(t,e){var o=2*(e>>31)+1,r=e>>>20&2047;return t=4294967296*(1048575&e)+t,2047==r?t?NaN:1/0*o:0==r?o*Math.pow(2,-1074)*t:o*Math.pow(2,r-1075)*(t+4503599627370496)}function Y(t,e){return String.fromCharCode(t>>>0&255,t>>>8&255,t>>>16&255,t>>>24&255,e>>>0&255,e>>>8&255,e>>>16&255,e>>>24&255)}function Z(t,e){function o(t,e){return t=t?String(t):"",e?"0000000".slice(t.length)+t:t}if(2097151>=e)return""+L(t,e);var r=(t>>>24|e<<8)>>>0&16777215;return t=(16777215&t)+6777216*r+6710656*(e=e>>16&65535),r+=8147497*e,e*=2,1e7<=t&&(r+=Math.floor(t/1e7),t%=1e7),1e7<=r&&(e+=Math.floor(r/1e7),r%=1e7),o(e,0)+o(r,e)+o(t,1)}function Q(t,e){var o=2147483648&e;return o&&(e=~e+(0==(t=1+~t>>>0)?1:0)>>>0),t=Z(t,e),o?"-"+t:t}function tt(t,e){W(t),t=x;var o=P;return e?Q(t,o):Z(t,o)}function et(t){function e(t,e){for(var o=0;8>o&&(1!==t||0<e);o++)e=t*r[o]+e,r[o]=255&e,e>>>=8}m(0<t.length);var o=!1;"-"===t[0]&&(o=!0,t=t.slice(1));for(var r=[0,0,0,0,0,0,0,0],n=0;n<t.length;n++)e(10,t.charCodeAt(n)-48);return o&&(function(){for(var t=0;8>t;t++)r[t]=255&~r[t]}(),e(1,1)),E(r)}function ot(t){return String.fromCharCode(10>t?48+t:87+t)}function rt(t){return 97<=t?t-97+10:t-48}function nt(t,e,o,r,n){var i=0;if(128>r)for(;e<o&&t[e++]==r;)i++,e+=n;else for(;e<o;){for(var s=r;128<s;){if(t[e++]!=(127&s|128))return i;s>>=7}if(t[e++]!=s)break;i++,e+=n}return i}function it(t){return t.constructor===Uint8Array?t:t.constructor===ArrayBuffer||t.constructor===Array?new Uint8Array(t):t.constructor===String?C(t):t instanceof Uint8Array?new Uint8Array(t.buffer,t.byteOffset,t.byteLength):(w("Type not convertible to Uint8Array."),new Uint8Array(0))}function st(t,e,o){this.b=null,this.a=this.c=this.h=0,this.v=!1,t&&this.H(t,e,o)}c("jspb.utils.getSplit64Low",function(){return x},void 0),c("jspb.utils.getSplit64High",function(){return P},void 0),c("jspb.utils.splitUint64",N,void 0),c("jspb.utils.splitInt64",D,void 0),c("jspb.utils.splitZigzag64",U,void 0),c("jspb.utils.splitFloat32",z,void 0),c("jspb.utils.splitFloat64",G,void 0),c("jspb.utils.splitHash64",W,void 0),c("jspb.utils.joinUint64",L,void 0),c("jspb.utils.joinInt64",q,void 0),c("jspb.utils.toZigzag64",H,void 0),c("jspb.utils.joinZigzag64",X,void 0),c("jspb.utils.fromZigzag64",$,void 0),c("jspb.utils.joinFloat32",J,void 0),c("jspb.utils.joinFloat64",K,void 0),c("jspb.utils.joinHash64",Y,void 0),c("jspb.utils.DIGITS","0123456789abcdef".split(""),void 0),c("jspb.utils.joinUnsignedDecimalString",Z,void 0),c("jspb.utils.joinSignedDecimalString",Q,void 0),c("jspb.utils.hash64ToDecimalString",tt,void 0),c("jspb.utils.hash64ArrayToDecimalStrings",function(t,e){for(var o=Array(t.length),r=0;r<t.length;r++)o[r]=tt(t[r],e);return o},void 0),c("jspb.utils.decimalStringToHash64",et,void 0),c("jspb.utils.splitDecimalString",function(t){W(et(t))},void 0),c("jspb.utils.hash64ToHexString",function(t){var e=Array(18);e[0]="0",e[1]="x";for(var o=0;8>o;o++){var r=t.charCodeAt(7-o);e[2*o+2]=ot(r>>4),e[2*o+3]=ot(15&r)}return e.join("")},void 0),c("jspb.utils.hexStringToHash64",function(t){m(18==(t=t.toLowerCase()).length),m("0"==t[0]),m("x"==t[1]);for(var e="",o=0;8>o;o++)e=String.fromCharCode(16*rt(t.charCodeAt(2*o+2))+rt(t.charCodeAt(2*o+3)))+e;return e},void 0),c("jspb.utils.hash64ToNumber",function(t,e){W(t),t=x;var o=P;return e?q(t,o):L(t,o)},void 0),c("jspb.utils.numberToHash64",function(t){return D(t),Y(x,P)},void 0),c("jspb.utils.countVarints",function(t,e,o){for(var r=0,n=e;n<o;n++)r+=t[n]>>7;return o-e-r},void 0),c("jspb.utils.countVarintFields",function(t,e,o,r){var n=0;if(128>(r*=8))for(;e<o&&t[e++]==r;)for(n++;;){var i=t[e++];if(!(128&i))break}else for(;e<o;){for(i=r;128<i;){if(t[e]!=(127&i|128))return n;e++,i>>=7}if(t[e++]!=i)break;for(n++;128&(i=t[e++]););}return n},void 0),c("jspb.utils.countFixed32Fields",function(t,e,o,r){return nt(t,e,o,8*r+5,4)},void 0),c("jspb.utils.countFixed64Fields",function(t,e,o,r){return nt(t,e,o,8*r+1,8)},void 0),c("jspb.utils.countDelimitedFields",function(t,e,o,r){var n=0;for(r=8*r+2;e<o;){for(var i=r;128<i;){if(t[e++]!=(127&i|128))return n;i>>=7}if(t[e++]!=i)break;n++;for(var s=0,a=1;s+=(127&(i=t[e++]))*a,a*=128,128&i;);e+=s}return n},void 0),c("jspb.utils.debugBytesToTextFormat",function(t){var e='"';if(t){t=it(t);for(var o=0;o<t.length;o++)e+="\\x",16>t[o]&&(e+="0"),e+=t[o].toString(16)}return e+'"'},void 0),c("jspb.utils.debugScalarToTextFormat",function(t){if("string"==typeof t){t=String(t);for(var e=['"'],o=0;o<t.length;o++){var r,n=t.charAt(o),i=n.charCodeAt(0),s=o+1;(r=V[n])||(31<i&&127>i||((i=n)in F?n=F[i]:i in V?n=F[i]=V[i]:(31<(r=i.charCodeAt(0))&&127>r?n=i:(256>r?(n="\\x",(16>r||256<r)&&(n+="0")):(n="\\u",4096>r&&(n+="0")),n+=r.toString(16).toUpperCase()),n=F[i]=n)),r=n),e[s]=r}e.push('"'),t=e.join("")}else t=t.toString();return t},void 0),c("jspb.utils.stringToByteArray",function(t){for(var e=new Uint8Array(t.length),o=0;o<t.length;o++){var r=t.charCodeAt(o);if(255<r)throw Error("Conversion error: string contains codepoint outside of byte range");e[o]=r}return e},void 0),c("jspb.utils.byteSourceToUint8Array",it,void 0),c("jspb.BinaryDecoder",st,void 0);var at=[];function pt(t,e,o){if(at.length){var r=at.pop();return t&&r.H(t,e,o),r}return new st(t,e,o)}function lt(t,e,o){this.a=pt(t,e,o),this.O=this.a.B(),this.b=this.c=-1,this.h=!1,this.v=null}st.getInstanceCacheLength=function(){return at.length},st.alloc=pt,st.prototype.Ca=function(){this.clear(),100>at.length&&at.push(this)},st.prototype.free=st.prototype.Ca,st.prototype.clone=function(){return pt(this.b,this.h,this.c-this.h)},st.prototype.clone=st.prototype.clone,st.prototype.clear=function(){this.b=null,this.a=this.c=this.h=0,this.v=!1},st.prototype.clear=st.prototype.clear,st.prototype.Y=function(){return this.b},st.prototype.getBuffer=st.prototype.Y,st.prototype.H=function(t,e,o){this.b=it(t),this.h=void 0!==e?e:0,this.c=void 0!==o?this.h+o:this.b.length,this.a=this.h},st.prototype.setBlock=st.prototype.H,st.prototype.Db=function(){return this.c},st.prototype.getEnd=st.prototype.Db,st.prototype.setEnd=function(t){this.c=t},st.prototype.setEnd=st.prototype.setEnd,st.prototype.reset=function(){this.a=this.h},st.prototype.reset=st.prototype.reset,st.prototype.B=function(){return this.a},st.prototype.getCursor=st.prototype.B,st.prototype.Ma=function(t){this.a=t},st.prototype.setCursor=st.prototype.Ma,st.prototype.advance=function(t){this.a+=t,m(this.a<=this.c)},st.prototype.advance=st.prototype.advance,st.prototype.ya=function(){return this.a==this.c},st.prototype.atEnd=st.prototype.ya,st.prototype.Qb=function(){return this.a>this.c},st.prototype.pastEnd=st.prototype.Qb,st.prototype.getError=function(){return this.v||0>this.a||this.a>this.c},st.prototype.getError=st.prototype.getError,st.prototype.w=function(t){for(var e=128,o=0,r=0,n=0;4>n&&128<=e;n++)o|=(127&(e=this.b[this.a++]))<<7*n;if(128<=e&&(o|=(127&(e=this.b[this.a++]))<<28,r|=(127&e)>>4),128<=e)for(n=0;5>n&&128<=e;n++)r|=(127&(e=this.b[this.a++]))<<7*n+3;if(128>e)return t(o>>>0,r>>>0);w("Failed to read varint, encoding is invalid."),this.v=!0},st.prototype.readSplitVarint64=st.prototype.w,st.prototype.ea=function(t){return this.w(function(e,o){return $(e,o,t)})},st.prototype.readSplitZigzagVarint64=st.prototype.ea,st.prototype.ta=function(t){var e=this.b,o=this.a;this.a+=8;for(var r=0,n=0,i=o+7;i>=o;i--)r=r<<8|e[i],n=n<<8|e[i+4];return t(r,n)},st.prototype.readSplitFixed64=st.prototype.ta,st.prototype.kb=function(){for(;128&this.b[this.a];)this.a++;this.a++},st.prototype.skipVarint=st.prototype.kb,st.prototype.mb=function(t){for(;128<t;)this.a--,t>>>=7;this.a--},st.prototype.unskipVarint=st.prototype.mb,st.prototype.o=function(){var t=this.b,e=t[this.a],o=127&e;return 128>e?(this.a+=1,m(this.a<=this.c),o):(o|=(127&(e=t[this.a+1]))<<7,128>e?(this.a+=2,m(this.a<=this.c),o):(o|=(127&(e=t[this.a+2]))<<14,128>e?(this.a+=3,m(this.a<=this.c),o):(o|=(127&(e=t[this.a+3]))<<21,128>e?(this.a+=4,m(this.a<=this.c),o):(o|=(15&(e=t[this.a+4]))<<28,128>e?(this.a+=5,m(this.a<=this.c),o>>>0):(this.a+=5,128<=t[this.a++]&&128<=t[this.a++]&&128<=t[this.a++]&&128<=t[this.a++]&&128<=t[this.a++]&&m(!1),m(this.a<=this.c),o)))))},st.prototype.readUnsignedVarint32=st.prototype.o,st.prototype.da=function(){return~~this.o()},st.prototype.readSignedVarint32=st.prototype.da,st.prototype.O=function(){return this.o().toString()},st.prototype.Ea=function(){return this.da().toString()},st.prototype.readSignedVarint32String=st.prototype.Ea,st.prototype.Ia=function(){var t=this.o();return t>>>1^-(1&t)},st.prototype.readZigzagVarint32=st.prototype.Ia,st.prototype.Ga=function(){return this.w(L)},st.prototype.readUnsignedVarint64=st.prototype.Ga,st.prototype.Ha=function(){return this.w(Z)},st.prototype.readUnsignedVarint64String=st.prototype.Ha,st.prototype.sa=function(){return this.w(q)},st.prototype.readSignedVarint64=st.prototype.sa,st.prototype.Fa=function(){return this.w(Q)},st.prototype.readSignedVarint64String=st.prototype.Fa,st.prototype.Ja=function(){return this.w(X)},st.prototype.readZigzagVarint64=st.prototype.Ja,st.prototype.fb=function(){return this.ea(Y)},st.prototype.readZigzagVarintHash64=st.prototype.fb,st.prototype.Ka=function(){return this.ea(Q)},st.prototype.readZigzagVarint64String=st.prototype.Ka,st.prototype.Gc=function(){var t=this.b[this.a];return this.a+=1,m(this.a<=this.c),t},st.prototype.readUint8=st.prototype.Gc,st.prototype.Ec=function(){var t=this.b[this.a],e=this.b[this.a+1];return this.a+=2,m(this.a<=this.c),t|e<<8},st.prototype.readUint16=st.prototype.Ec,st.prototype.m=function(){var t=this.b[this.a],e=this.b[this.a+1],o=this.b[this.a+2],r=this.b[this.a+3];return this.a+=4,m(this.a<=this.c),(t|e<<8|o<<16|r<<24)>>>0},st.prototype.readUint32=st.prototype.m,st.prototype.ga=function(){return L(this.m(),this.m())},st.prototype.readUint64=st.prototype.ga,st.prototype.ha=function(){return Z(this.m(),this.m())},st.prototype.readUint64String=st.prototype.ha,st.prototype.Xb=function(){var t=this.b[this.a];return this.a+=1,m(this.a<=this.c),t<<24>>24},st.prototype.readInt8=st.prototype.Xb,st.prototype.Vb=function(){var t=this.b[this.a],e=this.b[this.a+1];return this.a+=2,m(this.a<=this.c),(t|e<<8)<<16>>16},st.prototype.readInt16=st.prototype.Vb,st.prototype.P=function(){var t=this.b[this.a],e=this.b[this.a+1],o=this.b[this.a+2],r=this.b[this.a+3];return this.a+=4,m(this.a<=this.c),t|e<<8|o<<16|r<<24},st.prototype.readInt32=st.prototype.P,st.prototype.ba=function(){return q(this.m(),this.m())},st.prototype.readInt64=st.prototype.ba,st.prototype.ca=function(){return Q(this.m(),this.m())},st.prototype.readInt64String=st.prototype.ca,st.prototype.aa=function(){return J(this.m())},st.prototype.readFloat=st.prototype.aa,st.prototype.Z=function(){return K(this.m(),this.m())},st.prototype.readDouble=st.prototype.Z,st.prototype.pa=function(){return!!this.b[this.a++]},st.prototype.readBool=st.prototype.pa,st.prototype.ra=function(){return this.da()},st.prototype.readEnum=st.prototype.ra,st.prototype.fa=function(t){var e=this.b,o=this.a;t=o+t;for(var r=[],n="";o<t;){var i=e[o++];if(128>i)r.push(i);else{if(192>i)continue;if(224>i){var s=e[o++];r.push((31&i)<<6|63&s)}else if(240>i){s=e[o++];var a=e[o++];r.push((15&i)<<12|(63&s)<<6|63&a)}else 248>i&&(i=(7&i)<<18|(63&(s=e[o++]))<<12|(63&(a=e[o++]))<<6|63&e[o++],i-=65536,r.push(55296+(i>>10&1023),56320+(1023&i)))}8192<=r.length&&(n+=String.fromCharCode.apply(null,r),r.length=0)}return n+=E(r),this.a=o,n},st.prototype.readString=st.prototype.fa,st.prototype.Dc=function(){var t=this.o();return this.fa(t)},st.prototype.readStringWithLength=st.prototype.Dc,st.prototype.qa=function(t){if(0>t||this.a+t>this.b.length)return this.v=!0,w("Invalid byte length!"),new Uint8Array(0);var e=this.b.subarray(this.a,this.a+t);return this.a+=t,m(this.a<=this.c),e},st.prototype.readBytes=st.prototype.qa,st.prototype.ia=function(){return this.w(Y)},st.prototype.readVarintHash64=st.prototype.ia,st.prototype.$=function(){var t=this.b,e=this.a,o=t[e],r=t[e+1],n=t[e+2],i=t[e+3],s=t[e+4],a=t[e+5],p=t[e+6];return t=t[e+7],this.a+=8,String.fromCharCode(o,r,n,i,s,a,p,t)},st.prototype.readFixedHash64=st.prototype.$,c("jspb.BinaryReader",lt,void 0);var ut=[];function ct(t,e,o){if(ut.length){var r=ut.pop();return t&&r.a.H(t,e,o),r}return new lt(t,e,o)}function ht(t,e){m(2==t.b);var o=t.a.o();o=t.a.B()+o;for(var r=[];t.a.B()<o;)r.push(e.call(t.a));return r}function ft(t,e,o,r,n){this.ma=t,this.Ba=e,this.la=o,this.Na=r,this.na=n}function yt(t,e,o,r,n,i){this.Za=t,this.za=e,this.Aa=o,this.Wa=r,this.Ab=n,this.Nb=i}function dt(){}lt.clearInstanceCache=function(){ut=[]},lt.getInstanceCacheLength=function(){return ut.length},lt.alloc=ct,lt.prototype.zb=ct,lt.prototype.alloc=lt.prototype.zb,lt.prototype.Ca=function(){this.a.clear(),this.b=this.c=-1,this.h=!1,this.v=null,100>ut.length&&ut.push(this)},lt.prototype.free=lt.prototype.Ca,lt.prototype.Fb=function(){return this.O},lt.prototype.getFieldCursor=lt.prototype.Fb,lt.prototype.B=function(){return this.a.B()},lt.prototype.getCursor=lt.prototype.B,lt.prototype.Y=function(){return this.a.Y()},lt.prototype.getBuffer=lt.prototype.Y,lt.prototype.Hb=function(){return this.c},lt.prototype.getFieldNumber=lt.prototype.Hb,lt.prototype.Lb=function(){return this.b},lt.prototype.getWireType=lt.prototype.Lb,lt.prototype.Mb=function(){return 2==this.b},lt.prototype.isDelimited=lt.prototype.Mb,lt.prototype.bb=function(){return 4==this.b},lt.prototype.isEndGroup=lt.prototype.bb,lt.prototype.getError=function(){return this.h||this.a.getError()},lt.prototype.getError=lt.prototype.getError,lt.prototype.H=function(t,e,o){this.a.H(t,e,o),this.b=this.c=-1},lt.prototype.setBlock=lt.prototype.H,lt.prototype.reset=function(){this.a.reset(),this.b=this.c=-1},lt.prototype.reset=lt.prototype.reset,lt.prototype.advance=function(t){this.a.advance(t)},lt.prototype.advance=lt.prototype.advance,lt.prototype.oa=function(){if(this.a.ya())return!1;if(this.getError())return w("Decoder hit an error"),!1;this.O=this.a.B();var t=this.a.o(),e=t>>>3;return 0!=(t&=7)&&5!=t&&1!=t&&2!=t&&3!=t&&4!=t?(w("Invalid wire type: %s (at position %s)",t,this.O),this.h=!0,!1):(this.c=e,this.b=t,!0)},lt.prototype.nextField=lt.prototype.oa,lt.prototype.Oa=function(){this.a.mb(this.c<<3|this.b)},lt.prototype.unskipHeader=lt.prototype.Oa,lt.prototype.Lc=function(){var t=this.c;for(this.Oa();this.oa()&&this.c==t;)this.C();this.a.ya()||this.Oa()},lt.prototype.skipMatchingFields=lt.prototype.Lc,lt.prototype.lb=function(){0!=this.b?(w("Invalid wire type for skipVarintField"),this.C()):this.a.kb()},lt.prototype.skipVarintField=lt.prototype.lb,lt.prototype.gb=function(){if(2!=this.b)w("Invalid wire type for skipDelimitedField"),this.C();else{var t=this.a.o();this.a.advance(t)}},lt.prototype.skipDelimitedField=lt.prototype.gb,lt.prototype.hb=function(){5!=this.b?(w("Invalid wire type for skipFixed32Field"),this.C()):this.a.advance(4)},lt.prototype.skipFixed32Field=lt.prototype.hb,lt.prototype.ib=function(){1!=this.b?(w("Invalid wire type for skipFixed64Field"),this.C()):this.a.advance(8)},lt.prototype.skipFixed64Field=lt.prototype.ib,lt.prototype.jb=function(){for(var t=this.c;;){if(!this.oa()){w("Unmatched start-group tag: stream EOF"),this.h=!0;break}if(4==this.b){this.c!=t&&(w("Unmatched end-group tag"),this.h=!0);break}this.C()}},lt.prototype.skipGroup=lt.prototype.jb,lt.prototype.C=function(){switch(this.b){case 0:this.lb();break;case 1:this.ib();break;case 2:this.gb();break;case 5:this.hb();break;case 3:this.jb();break;default:w("Invalid wire encoding for field.")}},lt.prototype.skipField=lt.prototype.C,lt.prototype.Hc=function(t,e){null===this.v&&(this.v={}),m(!this.v[t]),this.v[t]=e},lt.prototype.registerReadCallback=lt.prototype.Hc,lt.prototype.Ic=function(t){return m(null!==this.v),m(t=this.v[t]),t(this)},lt.prototype.runReadCallback=lt.prototype.Ic,lt.prototype.Yb=function(t,e){m(2==this.b);var o=this.a.c,r=this.a.o();r=this.a.B()+r,this.a.setEnd(r),e(t,this),this.a.Ma(r),this.a.setEnd(o)},lt.prototype.readMessage=lt.prototype.Yb,lt.prototype.Ub=function(t,e,o){m(3==this.b),m(this.c==t),o(e,this),this.h||4==this.b||(w("Group submessage did not end with an END_GROUP tag"),this.h=!0)},lt.prototype.readGroup=lt.prototype.Ub,lt.prototype.Gb=function(){m(2==this.b);var t=this.a.o(),e=this.a.B(),o=e+t;return t=pt(this.a.Y(),e,t),this.a.Ma(o),t},lt.prototype.getFieldDecoder=lt.prototype.Gb,lt.prototype.P=function(){return m(0==this.b),this.a.da()},lt.prototype.readInt32=lt.prototype.P,lt.prototype.Wb=function(){return m(0==this.b),this.a.Ea()},lt.prototype.readInt32String=lt.prototype.Wb,lt.prototype.ba=function(){return m(0==this.b),this.a.sa()},lt.prototype.readInt64=lt.prototype.ba,lt.prototype.ca=function(){return m(0==this.b),this.a.Fa()},lt.prototype.readInt64String=lt.prototype.ca,lt.prototype.m=function(){return m(0==this.b),this.a.o()},lt.prototype.readUint32=lt.prototype.m,lt.prototype.Fc=function(){return m(0==this.b),this.a.O()},lt.prototype.readUint32String=lt.prototype.Fc,lt.prototype.ga=function(){return m(0==this.b),this.a.Ga()},lt.prototype.readUint64=lt.prototype.ga,lt.prototype.ha=function(){return m(0==this.b),this.a.Ha()},lt.prototype.readUint64String=lt.prototype.ha,lt.prototype.zc=function(){return m(0==this.b),this.a.Ia()},lt.prototype.readSint32=lt.prototype.zc,lt.prototype.Ac=function(){return m(0==this.b),this.a.Ja()},lt.prototype.readSint64=lt.prototype.Ac,lt.prototype.Bc=function(){return m(0==this.b),this.a.Ka()},lt.prototype.readSint64String=lt.prototype.Bc,lt.prototype.Rb=function(){return m(5==this.b),this.a.m()},lt.prototype.readFixed32=lt.prototype.Rb,lt.prototype.Sb=function(){return m(1==this.b),this.a.ga()},lt.prototype.readFixed64=lt.prototype.Sb,lt.prototype.Tb=function(){return m(1==this.b),this.a.ha()},lt.prototype.readFixed64String=lt.prototype.Tb,lt.prototype.vc=function(){return m(5==this.b),this.a.P()},lt.prototype.readSfixed32=lt.prototype.vc,lt.prototype.wc=function(){return m(5==this.b),this.a.P().toString()},lt.prototype.readSfixed32String=lt.prototype.wc,lt.prototype.xc=function(){return m(1==this.b),this.a.ba()},lt.prototype.readSfixed64=lt.prototype.xc,lt.prototype.yc=function(){return m(1==this.b),this.a.ca()},lt.prototype.readSfixed64String=lt.prototype.yc,lt.prototype.aa=function(){return m(5==this.b),this.a.aa()},lt.prototype.readFloat=lt.prototype.aa,lt.prototype.Z=function(){return m(1==this.b),this.a.Z()},lt.prototype.readDouble=lt.prototype.Z,lt.prototype.pa=function(){return m(0==this.b),!!this.a.o()},lt.prototype.readBool=lt.prototype.pa,lt.prototype.ra=function(){return m(0==this.b),this.a.sa()},lt.prototype.readEnum=lt.prototype.ra,lt.prototype.fa=function(){m(2==this.b);var t=this.a.o();return this.a.fa(t)},lt.prototype.readString=lt.prototype.fa,lt.prototype.qa=function(){m(2==this.b);var t=this.a.o();return this.a.qa(t)},lt.prototype.readBytes=lt.prototype.qa,lt.prototype.ia=function(){return m(0==this.b),this.a.ia()},lt.prototype.readVarintHash64=lt.prototype.ia,lt.prototype.Cc=function(){return m(0==this.b),this.a.fb()},lt.prototype.readSintHash64=lt.prototype.Cc,lt.prototype.w=function(t){return m(0==this.b),this.a.w(t)},lt.prototype.readSplitVarint64=lt.prototype.w,lt.prototype.ea=function(t){return m(0==this.b),this.a.w(function(e,o){return $(e,o,t)})},lt.prototype.readSplitZigzagVarint64=lt.prototype.ea,lt.prototype.$=function(){return m(1==this.b),this.a.$()},lt.prototype.readFixedHash64=lt.prototype.$,lt.prototype.ta=function(t){return m(1==this.b),this.a.ta(t)},lt.prototype.readSplitFixed64=lt.prototype.ta,lt.prototype.gc=function(){return ht(this,this.a.da)},lt.prototype.readPackedInt32=lt.prototype.gc,lt.prototype.hc=function(){return ht(this,this.a.Ea)},lt.prototype.readPackedInt32String=lt.prototype.hc,lt.prototype.ic=function(){return ht(this,this.a.sa)},lt.prototype.readPackedInt64=lt.prototype.ic,lt.prototype.jc=function(){return ht(this,this.a.Fa)},lt.prototype.readPackedInt64String=lt.prototype.jc,lt.prototype.qc=function(){return ht(this,this.a.o)},lt.prototype.readPackedUint32=lt.prototype.qc,lt.prototype.rc=function(){return ht(this,this.a.O)},lt.prototype.readPackedUint32String=lt.prototype.rc,lt.prototype.sc=function(){return ht(this,this.a.Ga)},lt.prototype.readPackedUint64=lt.prototype.sc,lt.prototype.tc=function(){return ht(this,this.a.Ha)},lt.prototype.readPackedUint64String=lt.prototype.tc,lt.prototype.nc=function(){return ht(this,this.a.Ia)},lt.prototype.readPackedSint32=lt.prototype.nc,lt.prototype.oc=function(){return ht(this,this.a.Ja)},lt.prototype.readPackedSint64=lt.prototype.oc,lt.prototype.pc=function(){return ht(this,this.a.Ka)},lt.prototype.readPackedSint64String=lt.prototype.pc,lt.prototype.bc=function(){return ht(this,this.a.m)},lt.prototype.readPackedFixed32=lt.prototype.bc,lt.prototype.cc=function(){return ht(this,this.a.ga)},lt.prototype.readPackedFixed64=lt.prototype.cc,lt.prototype.dc=function(){return ht(this,this.a.ha)},lt.prototype.readPackedFixed64String=lt.prototype.dc,lt.prototype.kc=function(){return ht(this,this.a.P)},lt.prototype.readPackedSfixed32=lt.prototype.kc,lt.prototype.lc=function(){return ht(this,this.a.ba)},lt.prototype.readPackedSfixed64=lt.prototype.lc,lt.prototype.mc=function(){return ht(this,this.a.ca)},lt.prototype.readPackedSfixed64String=lt.prototype.mc,lt.prototype.fc=function(){return ht(this,this.a.aa)},lt.prototype.readPackedFloat=lt.prototype.fc,lt.prototype.$b=function(){return ht(this,this.a.Z)},lt.prototype.readPackedDouble=lt.prototype.$b,lt.prototype.Zb=function(){return ht(this,this.a.pa)},lt.prototype.readPackedBool=lt.prototype.Zb,lt.prototype.ac=function(){return ht(this,this.a.ra)},lt.prototype.readPackedEnum=lt.prototype.ac,lt.prototype.uc=function(){return ht(this,this.a.ia)},lt.prototype.readPackedVarintHash64=lt.prototype.uc,lt.prototype.ec=function(){return ht(this,this.a.$)},lt.prototype.readPackedFixedHash64=lt.prototype.ec,c("jspb.ExtensionFieldInfo",ft,void 0),c("jspb.ExtensionFieldBinaryInfo",yt,void 0),ft.prototype.F=function(){return!!this.la},ft.prototype.isMessageType=ft.prototype.F,c("jspb.Message",dt,void 0),dt.GENERATE_TO_OBJECT=!0,dt.GENERATE_FROM_OBJECT=!0;var gt="function"==typeof Uint8Array;dt.prototype.Ib=function(){return this.b},dt.prototype.getJsPbMessageId=dt.prototype.Ib,dt.initialize=function(t,e,o,r,n,i){if(t.f=null,e||(e=o?[o]:[]),t.b=o?String(o):void 0,t.D=0===o?-1:0,t.u=e,e=-1,!(o=t.u.length)||(e=o-1,null===(o=t.u[e])||"object"!=typeof o||Array.isArray(o)||gt&&o instanceof Uint8Array)?-1<r?(t.G=Math.max(r,e+1-t.D),t.i=null):t.G=Number.MAX_VALUE:(t.G=e-t.D,t.i=o),t.a={},n)for(r=0;r<n.length;r++)(e=n[r])<t.G?(e+=t.D,t.u[e]=t.u[e]||bt):(vt(t),t.i[e]=t.i[e]||bt);if(i&&i.length)for(r=0;r<i.length;r++)Ft(t,i[r])};var bt=Object.freeze?Object.freeze([]):[];function vt(t){var e=t.G+t.D;t.u[e]||(t.i=t.u[e]={})}function mt(t,e,o){for(var r=[],n=0;n<t.length;n++)r[n]=e.call(t[n],o,t[n]);return r}function wt(t,e){if(e<t.G){e+=t.D;var o=t.u[e];return o===bt?t.u[e]=[]:o}if(t.i)return(o=t.i[e])===bt?t.i[e]=[]:o}function _t(t,e){return null==(t=wt(t,e))?t:+t}function kt(t,e){return null==(t=wt(t,e))?t:!!t}function St(t){return null==t||"string"==typeof t?t:gt&&t instanceof Uint8Array?j(t):(w("Cannot coerce to b64 string: "+h(t)),null)}function Mt(t){return null==t||t instanceof Uint8Array?t:"string"==typeof t?C(t):(w("Cannot coerce to Uint8Array: "+h(t)),null)}function Bt(t){if(t&&1<t.length){var e=h(t[0]);d(t,function(t){h(t)!=e&&w("Inconsistent type in JSPB repeated field array. Got "+h(t)+" expected "+e)})}}function Rt(t,e,o){return null==(t=wt(t,e))?o:t}function At(t,e,o){return _(t,dt),e<t.G?t.u[e+t.D]=o:(vt(t),t.i[e]=o),t}function Et(t,e,o,r){return _(t,dt),o!==r?At(t,e,o):e<t.G?t.u[e+t.D]=null:(vt(t),delete t.i[e]),t}function Vt(t,e,o,r){return _(t,dt),(o=Ft(t,o))&&o!==e&&void 0!==r&&(t.f&&o in t.f&&(t.f[o]=void 0),At(t,o,void 0)),At(t,e,r)}function Ft(t,e){for(var o,r,n=0;n<e.length;n++){var i=e[n],s=wt(t,i);null!=s&&(o=i,r=s,At(t,i,void 0))}return o?(At(t,o,r),o):0}function Ot(t,e,o){if(t.f||(t.f={}),!t.f[o]){for(var r=wt(t,o),n=[],i=0;i<r.length;i++)n[i]=new e(r[i]);t.f[o]=n}}function It(t){if(t.f)for(var e in t.f){var o=t.f[e];if(Array.isArray(o))for(var r=0;r<o.length;r++)o[r]&&o[r].g();else o&&o.g()}}function jt(t,e){t=t||{},e=e||{};var o,r={};for(o in t)r[o]=0;for(o in e)r[o]=0;for(o in r)if(!Ct(t[o],e[o]))return!1;return!0}function Ct(t,e){if(t==e)return!0;if(!f(t)||!f(e))return!!("number"==typeof t&&isNaN(t)||"number"==typeof e&&isNaN(e))&&String(t)==String(e);if(t.constructor!=e.constructor)return!1;if(gt&&t.constructor===Uint8Array){if(t.length!=e.length)return!1;for(var o=0;o<t.length;o++)if(t[o]!=e[o])return!1;return!0}if(t.constructor===Array){var r=void 0,n=void 0,i=Math.max(t.length,e.length);for(o=0;o<i;o++){var s=t[o],a=e[o];if(s&&s.constructor==Object&&(m(void 0===r),m(o===t.length-1),r=s,s=void 0),a&&a.constructor==Object&&(m(void 0===n),m(o===e.length-1),n=a,a=void 0),!Ct(s,a))return!1}return!r&&!n||jt(r=r||{},n=n||{})}if(t.constructor===Object)return jt(t,e);throw Error("Invalid type in JSPB array")}function Tt(t){return new t.constructor(xt(t.g()))}function xt(t){if(Array.isArray(t)){for(var e=Array(t.length),o=0;o<t.length;o++){var r=t[o];null!=r&&(e[o]="object"==typeof r?xt(m(r)):r)}return e}if(gt&&t instanceof Uint8Array)return new Uint8Array(t);for(o in e={},t)null!=(r=t[o])&&(e[o]="object"==typeof r?xt(m(r)):r);return e}dt.toObjectList=mt,dt.toObjectExtension=function(t,e,o,r,n){for(var i in o){var s=o[i],a=r.call(t,s);if(null!=a){for(var p in s.Ba)if(s.Ba.hasOwnProperty(p))break;e[p]=s.Na?s.na?mt(a,s.Na,n):s.Na(n,a):a}}},dt.serializeBinaryExtensions=function(t,e,o,r){for(var n in o){var i=o[n],s=i.Za;if(!i.Aa)throw Error("Message extension present that was generated without binary serialization support");var a=r.call(t,s);if(null!=a)if(s.F()){if(!i.Wa)throw Error("Message extension present holding submessage without binary support enabled, and message is being serialized to binary format");i.Aa.call(e,s.ma,a,i.Wa)}else i.Aa.call(e,s.ma,a)}},dt.readBinaryExtension=function(t,e,o,r,n){var i=o[e.c];if(i){if(o=i.Za,!i.za)throw Error("Deserializing extension whose generated code does not support binary format");if(o.F()){var s=new o.la;i.za.call(e,s,i.Ab)}else s=i.za.call(e);o.na&&!i.Nb?(e=r.call(t,o))?e.push(s):n.call(t,o,[s]):n.call(t,o,s)}else e.C()},dt.getField=wt,dt.getRepeatedField=function(t,e){return wt(t,e)},dt.getOptionalFloatingPointField=_t,dt.getBooleanField=kt,dt.getRepeatedFloatingPointField=function(t,e){var o=wt(t,e);if(t.a||(t.a={}),!t.a[e]){for(var r=0;r<o.length;r++)o[r]=+o[r];t.a[e]=!0}return o},dt.getRepeatedBooleanField=function(t,e){var o=wt(t,e);if(t.a||(t.a={}),!t.a[e]){for(var r=0;r<o.length;r++)o[r]=!!o[r];t.a[e]=!0}return o},dt.bytesAsB64=St,dt.bytesAsU8=Mt,dt.bytesListAsB64=function(t){return Bt(t),t.length&&"string"!=typeof t[0]?g(t,St):t},dt.bytesListAsU8=function(t){return Bt(t),!t.length||t[0]instanceof Uint8Array?t:g(t,Mt)},dt.getFieldWithDefault=Rt,dt.getBooleanFieldWithDefault=function(t,e,o){return null==(t=kt(t,e))?o:t},dt.getFloatingPointFieldWithDefault=function(t,e,o){return null==(t=_t(t,e))?o:t},dt.getFieldProto3=Rt,dt.getMapField=function(t,e,o,r){if(t.f||(t.f={}),e in t.f)return t.f[e];var n=wt(t,e);if(!n){if(o)return;At(t,e,n=[])}return t.f[e]=new S(n,r)},dt.setField=At,dt.setProto3IntField=function(t,e,o){return Et(t,e,o,0)},dt.setProto3FloatField=function(t,e,o){return Et(t,e,o,0)},dt.setProto3BooleanField=function(t,e,o){return Et(t,e,o,!1)},dt.setProto3StringField=function(t,e,o){return Et(t,e,o,"")},dt.setProto3BytesField=function(t,e,o){return Et(t,e,o,"")},dt.setProto3EnumField=function(t,e,o){return Et(t,e,o,0)},dt.setProto3StringIntField=function(t,e,o){return Et(t,e,o,"0")},dt.addToRepeatedField=function(t,e,o,r){return _(t,dt),e=wt(t,e),null!=r?e.splice(r,0,o):e.push(o),t},dt.setOneofField=Vt,dt.computeOneofCase=Ft,dt.getWrapperField=function(t,e,o,r){if(t.f||(t.f={}),!t.f[o]){var n=wt(t,o);(r||n)&&(t.f[o]=new e(n))}return t.f[o]},dt.getRepeatedWrapperField=function(t,e,o){return Ot(t,e,o),(e=t.f[o])==bt&&(e=t.f[o]=[]),e},dt.setWrapperField=function(t,e,o){_(t,dt),t.f||(t.f={});var r=o?o.g():o;return t.f[e]=o,At(t,e,r)},dt.setOneofWrapperField=function(t,e,o,r){_(t,dt),t.f||(t.f={});var n=r?r.g():r;return t.f[e]=r,Vt(t,e,o,n)},dt.setRepeatedWrapperField=function(t,e,o){_(t,dt),t.f||(t.f={}),o=o||[];for(var r=[],n=0;n<o.length;n++)r[n]=o[n].g();return t.f[e]=o,At(t,e,r)},dt.addToRepeatedWrapperField=function(t,e,o,r,n){Ot(t,r,e);var i=t.f[e];return i||(i=t.f[e]=[]),o=o||new r,t=wt(t,e),null!=n?(i.splice(n,0,o),t.splice(n,0,o.g())):(i.push(o),t.push(o.g())),o},dt.toMap=function(t,e,o,r){for(var n={},i=0;i<t.length;i++)n[e.call(t[i])]=o?o.call(t[i],r,t[i]):t[i];return n},dt.prototype.g=function(){return It(this),this.u},dt.prototype.toArray=dt.prototype.g,dt.prototype.toString=function(){return It(this),this.u.toString()},dt.prototype.getExtension=function(t){if(this.i){this.f||(this.f={});var e=t.ma;if(t.na){if(t.F())return this.f[e]||(this.f[e]=g(this.i[e]||[],function(e){return new t.la(e)})),this.f[e]}else if(t.F())return!this.f[e]&&this.i[e]&&(this.f[e]=new t.la(this.i[e])),this.f[e];return this.i[e]}},dt.prototype.getExtension=dt.prototype.getExtension,dt.prototype.Kc=function(t,e){this.f||(this.f={}),vt(this);var o=t.ma;return t.na?(e=e||[],t.F()?(this.f[o]=e,this.i[o]=g(e,function(t){return t.g()})):this.i[o]=e):t.F()?(this.f[o]=e,this.i[o]=e?e.g():e):this.i[o]=e,this},dt.prototype.setExtension=dt.prototype.Kc,dt.difference=function(t,e){if(!(t instanceof e.constructor))throw Error("Messages have different types.");var o=t.g();e=e.g();var r=[],n=0,i=o.length>e.length?o.length:e.length;for(t.b&&(r[0]=t.b,n=1);n<i;n++)Ct(o[n],e[n])||(r[n]=e[n]);return new t.constructor(r)},dt.equals=function(t,e){return t==e||!(!t||!e)&&t instanceof e.constructor&&Ct(t.g(),e.g())},dt.compareExtensions=jt,dt.compareFields=Ct,dt.prototype.Bb=function(){return Tt(this)},dt.prototype.cloneMessage=dt.prototype.Bb,dt.prototype.clone=function(){return Tt(this)},dt.prototype.clone=dt.prototype.clone,dt.clone=function(t){return Tt(t)},dt.copyInto=function(t,e){_(t,dt),_(e,dt),m(t.constructor==e.constructor,"Copy source and target message should have the same type."),t=Tt(t);for(var o=e.g(),r=t.g(),n=o.length=0;n<r.length;n++)o[n]=r[n];e.f=t.f,e.i=t.i},dt.registerMessageType=function(t,e){e.we=t};var Pt={dump:function(t){return _(t,dt,"jspb.Message instance expected"),m(t.getExtension,"Only unobfuscated and unoptimized compilation modes supported."),Pt.X(t)}};function Nt(){this.a=[]}function Dt(t,e){this.lo=t,this.hi=e}function Ut(t,e){var o=65535&t,r=65535&e,n=e>>>16;for(e=o*r+65536*(o*n&65535)+65536*((t>>>=16)*r&65535),o=t*n+(o*n>>>16)+(t*r>>>16);4294967296<=e;)e-=4294967296,o+=1;return new Dt(e>>>0,o>>>0)}function zt(t){for(var e=new Dt(0,0),o=new Dt(0,0),r=0;r<t.length;r++){if("0">t[r]||"9"<t[r])return null;o.lo=parseInt(t[r],10),e=e.eb(10).add(o)}return e}function Gt(t,e){this.lo=t,this.hi=e}function Wt(t){var e=0<t.length&&"-"==t[0];return e&&(t=t.substring(1)),null===(t=zt(t))?null:(e&&(t=new Dt(0,0).sub(t)),new Gt(t.lo,t.hi))}function Lt(){this.c=[],this.b=0,this.a=new Nt,this.h=[]}function qt(t,e){var o=t.a.end();t.c.push(o),t.c.push(e),t.b+=o.length+e.length}function Ht(t,e){return $t(t,e,2),e=t.a.end(),t.c.push(e),t.b+=e.length,e.push(t.b),e}function Xt(t,e){var o=e.pop();for(m(0<=(o=t.b+t.a.length()-o));127<o;)e.push(127&o|128),o>>>=7,t.b++;e.push(o),t.b++}function $t(t,e,o){m(1<=e&&e==Math.floor(e)),t.a.j(8*e+o)}function Jt(t,e,o){null!=o&&($t(t,e,0),t.a.j(o))}function Kt(t,e,o){null!=o&&($t(t,e,0),t.a.M(o))}c("jspb.debug.dump",Pt.dump,void 0),Pt.X=function(t){var e=h(t);if("number"==e||"string"==e||"boolean"==e||"null"==e||"undefined"==e||"undefined"!=typeof Uint8Array&&t instanceof Uint8Array)return t;if("array"==e)return function(t,e,o){for(var r=[],n=2;n<arguments.length;++n)r[n-2]=arguments[n];Array.isArray(t)||v("Expected array but got %s: %s.",[h(t),t],e,r)}(t),g(t,Pt.X);if(t instanceof S){for(var o={},r=(t=t.entries()).next();!r.done;r=t.next())o[r.value[0]]=Pt.X(r.value[1]);return o}_(t,dt,"Only messages expected: "+t);var n={$name:(e=t.constructor).name||e.displayName};for(a in e.prototype){var i=/^get([A-Z]\w*)/.exec(a);if(i&&"getExtension"!=a&&"getJsPbMessageId"!=a){var s="has"+i[1];t[s]&&!t[s]()||(s=t[a](),n[Pt.$a(i[1])]=Pt.X(s))}}if(t.extensionObject_)return n.$extensions="Recursive dumping of extensions not supported in compiled code. Switch to uncompiled or dump extension object directly",n;for(r in e.extensions)if(/^\d+$/.test(r)){s=e.extensions[r];var a=t.getExtension(s);i=void 0,s=s.Ba;var p=[],l=0;for(i in s)p[l++]=i;i=p[0],null!=a&&(o||(o=n.$extensions={}),o[Pt.$a(i)]=Pt.X(a))}return n},Pt.$a=function(t){return t.replace(/^[A-Z]/,function(t){return t.toLowerCase()})},c("jspb.BinaryEncoder",Nt,void 0),Nt.prototype.length=function(){return this.a.length},Nt.prototype.length=Nt.prototype.length,Nt.prototype.end=function(){var t=this.a;return this.a=[],t},Nt.prototype.end=Nt.prototype.end,Nt.prototype.l=function(t,e){for(m(t==Math.floor(t)),m(e==Math.floor(e)),m(0<=t&&4294967296>t),m(0<=e&&4294967296>e);0<e||127<t;)this.a.push(127&t|128),t=(t>>>7|e<<25)>>>0,e>>>=7;this.a.push(t)},Nt.prototype.writeSplitVarint64=Nt.prototype.l,Nt.prototype.A=function(t,e){m(t==Math.floor(t)),m(e==Math.floor(e)),m(0<=t&&4294967296>t),m(0<=e&&4294967296>e),this.s(t),this.s(e)},Nt.prototype.writeSplitFixed64=Nt.prototype.A,Nt.prototype.j=function(t){for(m(t==Math.floor(t)),m(0<=t&&4294967296>t);127<t;)this.a.push(127&t|128),t>>>=7;this.a.push(t)},Nt.prototype.writeUnsignedVarint32=Nt.prototype.j,Nt.prototype.M=function(t){if(m(t==Math.floor(t)),m(-2147483648<=t&&2147483648>t),0<=t)this.j(t);else{for(var e=0;9>e;e++)this.a.push(127&t|128),t>>=7;this.a.push(1)}},Nt.prototype.writeSignedVarint32=Nt.prototype.M,Nt.prototype.va=function(t){m(t==Math.floor(t)),m(0<=t&&0x10000000000000000>t),D(t),this.l(x,P)},Nt.prototype.writeUnsignedVarint64=Nt.prototype.va,Nt.prototype.ua=function(t){m(t==Math.floor(t)),m(-0x8000000000000000<=t&&0x8000000000000000>t),D(t),this.l(x,P)},Nt.prototype.writeSignedVarint64=Nt.prototype.ua,Nt.prototype.wa=function(t){m(t==Math.floor(t)),m(-2147483648<=t&&2147483648>t),this.j((t<<1^t>>31)>>>0)},Nt.prototype.writeZigzagVarint32=Nt.prototype.wa,Nt.prototype.xa=function(t){m(t==Math.floor(t)),m(-0x8000000000000000<=t&&0x8000000000000000>t),U(t),this.l(x,P)},Nt.prototype.writeZigzagVarint64=Nt.prototype.xa,Nt.prototype.Ta=function(t){this.W(et(t))},Nt.prototype.writeZigzagVarint64String=Nt.prototype.Ta,Nt.prototype.W=function(t){var e=this;W(t),H(x,P,function(t,o){e.l(t>>>0,o>>>0)})},Nt.prototype.writeZigzagVarintHash64=Nt.prototype.W,Nt.prototype.be=function(t){m(t==Math.floor(t)),m(0<=t&&256>t),this.a.push(t>>>0&255)},Nt.prototype.writeUint8=Nt.prototype.be,Nt.prototype.ae=function(t){m(t==Math.floor(t)),m(0<=t&&65536>t),this.a.push(t>>>0&255),this.a.push(t>>>8&255)},Nt.prototype.writeUint16=Nt.prototype.ae,Nt.prototype.s=function(t){m(t==Math.floor(t)),m(0<=t&&4294967296>t),this.a.push(t>>>0&255),this.a.push(t>>>8&255),this.a.push(t>>>16&255),this.a.push(t>>>24&255)},Nt.prototype.writeUint32=Nt.prototype.s,Nt.prototype.V=function(t){m(t==Math.floor(t)),m(0<=t&&0x10000000000000000>t),N(t),this.s(x),this.s(P)},Nt.prototype.writeUint64=Nt.prototype.V,Nt.prototype.Qc=function(t){m(t==Math.floor(t)),m(-128<=t&&128>t),this.a.push(t>>>0&255)},Nt.prototype.writeInt8=Nt.prototype.Qc,Nt.prototype.Pc=function(t){m(t==Math.floor(t)),m(-32768<=t&&32768>t),this.a.push(t>>>0&255),this.a.push(t>>>8&255)},Nt.prototype.writeInt16=Nt.prototype.Pc,Nt.prototype.S=function(t){m(t==Math.floor(t)),m(-2147483648<=t&&2147483648>t),this.a.push(t>>>0&255),this.a.push(t>>>8&255),this.a.push(t>>>16&255),this.a.push(t>>>24&255)},Nt.prototype.writeInt32=Nt.prototype.S,Nt.prototype.T=function(t){m(t==Math.floor(t)),m(-0x8000000000000000<=t&&0x8000000000000000>t),D(t),this.A(x,P)},Nt.prototype.writeInt64=Nt.prototype.T,Nt.prototype.ka=function(t){m(t==Math.floor(t)),m(-0x8000000000000000<=+t&&0x8000000000000000>+t),W(et(t)),this.A(x,P)},Nt.prototype.writeInt64String=Nt.prototype.ka,Nt.prototype.L=function(t){m(1/0===t||-1/0===t||isNaN(t)||-34028234663852886e22<=t&&34028234663852886e22>=t),z(t),this.s(x)},Nt.prototype.writeFloat=Nt.prototype.L,Nt.prototype.J=function(t){m(1/0===t||-1/0===t||isNaN(t)||-17976931348623157e292<=t&&17976931348623157e292>=t),G(t),this.s(x),this.s(P)},Nt.prototype.writeDouble=Nt.prototype.J,Nt.prototype.I=function(t){m("boolean"==typeof t||"number"==typeof t),this.a.push(t?1:0)},Nt.prototype.writeBool=Nt.prototype.I,Nt.prototype.R=function(t){m(t==Math.floor(t)),m(-2147483648<=t&&2147483648>t),this.M(t)},Nt.prototype.writeEnum=Nt.prototype.R,Nt.prototype.ja=function(t){this.a.push.apply(this.a,t)},Nt.prototype.writeBytes=Nt.prototype.ja,Nt.prototype.N=function(t){W(t),this.l(x,P)},Nt.prototype.writeVarintHash64=Nt.prototype.N,Nt.prototype.K=function(t){W(t),this.s(x),this.s(P)},Nt.prototype.writeFixedHash64=Nt.prototype.K,Nt.prototype.U=function(t){var e=this.a.length;!function(t,e,o){for(var r=[],n=2;n<arguments.length;++n)r[n-2]=arguments[n];"string"!=typeof t&&v("Expected string but got %s: %s.",[h(t),t],e,r)}(t);for(var o=0;o<t.length;o++){var r=t.charCodeAt(o);if(128>r)this.a.push(r);else if(2048>r)this.a.push(r>>6|192),this.a.push(63&r|128);else if(65536>r)if(55296<=r&&56319>=r&&o+1<t.length){var n=t.charCodeAt(o+1);56320<=n&&57343>=n&&(r=1024*(r-55296)+n-56320+65536,this.a.push(r>>18|240),this.a.push(r>>12&63|128),this.a.push(r>>6&63|128),this.a.push(63&r|128),o++)}else this.a.push(r>>12|224),this.a.push(r>>6&63|128),this.a.push(63&r|128)}return this.a.length-e},Nt.prototype.writeString=Nt.prototype.U,c("jspb.arith.UInt64",Dt,void 0),Dt.prototype.cmp=function(t){return this.hi<t.hi||this.hi==t.hi&&this.lo<t.lo?-1:this.hi==t.hi&&this.lo==t.lo?0:1},Dt.prototype.cmp=Dt.prototype.cmp,Dt.prototype.La=function(){return new Dt((this.lo>>>1|(1&this.hi)<<31)>>>0,this.hi>>>1>>>0)},Dt.prototype.rightShift=Dt.prototype.La,Dt.prototype.Da=function(){return new Dt(this.lo<<1>>>0,(this.hi<<1|this.lo>>>31)>>>0)},Dt.prototype.leftShift=Dt.prototype.Da,Dt.prototype.cb=function(){return!!(2147483648&this.hi)},Dt.prototype.msb=Dt.prototype.cb,Dt.prototype.Ob=function(){return!!(1&this.lo)},Dt.prototype.lsb=Dt.prototype.Ob,Dt.prototype.Ua=function(){return 0==this.lo&&0==this.hi},Dt.prototype.zero=Dt.prototype.Ua,Dt.prototype.add=function(t){return new Dt((this.lo+t.lo&4294967295)>>>0>>>0,((this.hi+t.hi&4294967295)>>>0)+(4294967296<=this.lo+t.lo?1:0)>>>0)},Dt.prototype.add=Dt.prototype.add,Dt.prototype.sub=function(t){return new Dt((this.lo-t.lo&4294967295)>>>0>>>0,((this.hi-t.hi&4294967295)>>>0)-(0>this.lo-t.lo?1:0)>>>0)},Dt.prototype.sub=Dt.prototype.sub,Dt.mul32x32=Ut,Dt.prototype.eb=function(t){var e=Ut(this.lo,t);return(t=Ut(this.hi,t)).hi=t.lo,t.lo=0,e.add(t)},Dt.prototype.mul=Dt.prototype.eb,Dt.prototype.Xa=function(t){if(0==t)return[];var e=new Dt(0,0),o=new Dt(this.lo,this.hi);t=new Dt(t,0);for(var r=new Dt(1,0);!t.cb();)t=t.Da(),r=r.Da();for(;!r.Ua();)0>=t.cmp(o)&&(e=e.add(r),o=o.sub(t)),t=t.La(),r=r.La();return[e,o]},Dt.prototype.div=Dt.prototype.Xa,Dt.prototype.toString=function(){for(var t="",e=this;!e.Ua();){var o=(e=e.Xa(10))[0];t=e[1].lo+t,e=o}return""==t&&(t="0"),t},Dt.prototype.toString=Dt.prototype.toString,Dt.fromString=zt,Dt.prototype.clone=function(){return new Dt(this.lo,this.hi)},Dt.prototype.clone=Dt.prototype.clone,c("jspb.arith.Int64",Gt,void 0),Gt.prototype.add=function(t){return new Gt((this.lo+t.lo&4294967295)>>>0>>>0,((this.hi+t.hi&4294967295)>>>0)+(4294967296<=this.lo+t.lo?1:0)>>>0)},Gt.prototype.add=Gt.prototype.add,Gt.prototype.sub=function(t){return new Gt((this.lo-t.lo&4294967295)>>>0>>>0,((this.hi-t.hi&4294967295)>>>0)-(0>this.lo-t.lo?1:0)>>>0)},Gt.prototype.sub=Gt.prototype.sub,Gt.prototype.clone=function(){return new Gt(this.lo,this.hi)},Gt.prototype.clone=Gt.prototype.clone,Gt.prototype.toString=function(){var t=!!(2147483648&this.hi),e=new Dt(this.lo,this.hi);return t&&(e=new Dt(0,0).sub(e)),(t?"-":"")+e.toString()},Gt.prototype.toString=Gt.prototype.toString,Gt.fromString=Wt,c("jspb.BinaryWriter",Lt,void 0),Lt.prototype.pb=function(t,e,o){qt(this,t.subarray(e,o))},Lt.prototype.writeSerializedMessage=Lt.prototype.pb,Lt.prototype.Pb=function(t,e,o){null!=t&&null!=e&&null!=o&&this.pb(t,e,o)},Lt.prototype.maybeWriteSerializedMessage=Lt.prototype.Pb,Lt.prototype.reset=function(){this.c=[],this.a.end(),this.b=0,this.h=[]},Lt.prototype.reset=Lt.prototype.reset,Lt.prototype.ab=function(){m(0==this.h.length);for(var t=new Uint8Array(this.b+this.a.length()),e=this.c,o=e.length,r=0,n=0;n<o;n++){var i=e[n];t.set(i,r),r+=i.length}return e=this.a.end(),t.set(e,r),m((r+=e.length)==t.length),this.c=[t],t},Lt.prototype.getResultBuffer=Lt.prototype.ab,Lt.prototype.Kb=function(t){return j(this.ab(),t)},Lt.prototype.getResultBase64String=Lt.prototype.Kb,Lt.prototype.Va=function(t){this.h.push(Ht(this,t))},Lt.prototype.beginSubMessage=Lt.prototype.Va,Lt.prototype.Ya=function(){m(0<=this.h.length),Xt(this,this.h.pop())},Lt.prototype.endSubMessage=Lt.prototype.Ya,Lt.prototype.Nc=function(t,e,o){switch(t){case 1:this.J(e,o);break;case 2:this.L(e,o);break;case 3:this.T(e,o);break;case 4:this.V(e,o);break;case 5:this.S(e,o);break;case 6:this.Qa(e,o);break;case 7:this.Pa(e,o);break;case 8:this.I(e,o);break;case 9:this.U(e,o);break;case 10:w("Group field type not supported in writeAny()");break;case 11:w("Message field type not supported in writeAny()");break;case 12:this.ja(e,o);break;case 13:this.s(e,o);break;case 14:this.R(e,o);break;case 15:this.Ra(e,o);break;case 16:this.Sa(e,o);break;case 17:this.rb(e,o);break;case 18:this.sb(e,o);break;case 30:this.K(e,o);break;case 31:this.N(e,o);break;default:w("Invalid field type in writeAny()")}},Lt.prototype.writeAny=Lt.prototype.Nc,Lt.prototype.S=function(t,e){null!=e&&(m(-2147483648<=e&&2147483648>e),Kt(this,t,e))},Lt.prototype.writeInt32=Lt.prototype.S,Lt.prototype.ob=function(t,e){null!=e&&(m(-2147483648<=(e=parseInt(e,10))&&2147483648>e),Kt(this,t,e))},Lt.prototype.writeInt32String=Lt.prototype.ob,Lt.prototype.T=function(t,e){null!=e&&(m(-0x8000000000000000<=e&&0x8000000000000000>e),null!=e&&($t(this,t,0),this.a.ua(e)))},Lt.prototype.writeInt64=Lt.prototype.T,Lt.prototype.ka=function(t,e){null!=e&&(e=Wt(e),$t(this,t,0),this.a.l(e.lo,e.hi))},Lt.prototype.writeInt64String=Lt.prototype.ka,Lt.prototype.s=function(t,e){null!=e&&(m(0<=e&&4294967296>e),Jt(this,t,e))},Lt.prototype.writeUint32=Lt.prototype.s,Lt.prototype.ub=function(t,e){null!=e&&(m(0<=(e=parseInt(e,10))&&4294967296>e),Jt(this,t,e))},Lt.prototype.writeUint32String=Lt.prototype.ub,Lt.prototype.V=function(t,e){null!=e&&(m(0<=e&&0x10000000000000000>e),null!=e&&($t(this,t,0),this.a.va(e)))},Lt.prototype.writeUint64=Lt.prototype.V,Lt.prototype.vb=function(t,e){null!=e&&(e=zt(e),$t(this,t,0),this.a.l(e.lo,e.hi))},Lt.prototype.writeUint64String=Lt.prototype.vb,Lt.prototype.rb=function(t,e){null!=e&&(m(-2147483648<=e&&2147483648>e),null!=e&&($t(this,t,0),this.a.wa(e)))},Lt.prototype.writeSint32=Lt.prototype.rb,Lt.prototype.sb=function(t,e){null!=e&&(m(-0x8000000000000000<=e&&0x8000000000000000>e),null!=e&&($t(this,t,0),this.a.xa(e)))},Lt.prototype.writeSint64=Lt.prototype.sb,Lt.prototype.$d=function(t,e){null!=e&&null!=e&&($t(this,t,0),this.a.W(e))},Lt.prototype.writeSintHash64=Lt.prototype.$d,Lt.prototype.Zd=function(t,e){null!=e&&null!=e&&($t(this,t,0),this.a.Ta(e))},Lt.prototype.writeSint64String=Lt.prototype.Zd,Lt.prototype.Pa=function(t,e){null!=e&&(m(0<=e&&4294967296>e),$t(this,t,5),this.a.s(e))},Lt.prototype.writeFixed32=Lt.prototype.Pa,Lt.prototype.Qa=function(t,e){null!=e&&(m(0<=e&&0x10000000000000000>e),$t(this,t,1),this.a.V(e))},Lt.prototype.writeFixed64=Lt.prototype.Qa,Lt.prototype.nb=function(t,e){null!=e&&(e=zt(e),$t(this,t,1),this.a.A(e.lo,e.hi))},Lt.prototype.writeFixed64String=Lt.prototype.nb,Lt.prototype.Ra=function(t,e){null!=e&&(m(-2147483648<=e&&2147483648>e),$t(this,t,5),this.a.S(e))},Lt.prototype.writeSfixed32=Lt.prototype.Ra,Lt.prototype.Sa=function(t,e){null!=e&&(m(-0x8000000000000000<=e&&0x8000000000000000>e),$t(this,t,1),this.a.T(e))},Lt.prototype.writeSfixed64=Lt.prototype.Sa,Lt.prototype.qb=function(t,e){null!=e&&(e=Wt(e),$t(this,t,1),this.a.A(e.lo,e.hi))},Lt.prototype.writeSfixed64String=Lt.prototype.qb,Lt.prototype.L=function(t,e){null!=e&&($t(this,t,5),this.a.L(e))},Lt.prototype.writeFloat=Lt.prototype.L,Lt.prototype.J=function(t,e){null!=e&&($t(this,t,1),this.a.J(e))},Lt.prototype.writeDouble=Lt.prototype.J,Lt.prototype.I=function(t,e){null!=e&&(m("boolean"==typeof e||"number"==typeof e),$t(this,t,0),this.a.I(e))},Lt.prototype.writeBool=Lt.prototype.I,Lt.prototype.R=function(t,e){null!=e&&(m(-2147483648<=e&&2147483648>e),$t(this,t,0),this.a.M(e))},Lt.prototype.writeEnum=Lt.prototype.R,Lt.prototype.U=function(t,e){null!=e&&(t=Ht(this,t),this.a.U(e),Xt(this,t))},Lt.prototype.writeString=Lt.prototype.U,Lt.prototype.ja=function(t,e){null!=e&&(e=it(e),$t(this,t,2),this.a.j(e.length),qt(this,e))},Lt.prototype.writeBytes=Lt.prototype.ja,Lt.prototype.Rc=function(t,e,o){null!=e&&(t=Ht(this,t),o(e,this),Xt(this,t))},Lt.prototype.writeMessage=Lt.prototype.Rc,Lt.prototype.Sc=function(t,e,o){null!=e&&($t(this,1,3),$t(this,2,0),this.a.M(t),t=Ht(this,3),o(e,this),Xt(this,t),$t(this,1,4))},Lt.prototype.writeMessageSet=Lt.prototype.Sc,Lt.prototype.Oc=function(t,e,o){null!=e&&($t(this,t,3),o(e,this),$t(this,t,4))},Lt.prototype.writeGroup=Lt.prototype.Oc,Lt.prototype.K=function(t,e){null!=e&&(m(8==e.length),$t(this,t,1),this.a.K(e))},Lt.prototype.writeFixedHash64=Lt.prototype.K,Lt.prototype.N=function(t,e){null!=e&&(m(8==e.length),$t(this,t,0),this.a.N(e))},Lt.prototype.writeVarintHash64=Lt.prototype.N,Lt.prototype.A=function(t,e,o){$t(this,t,1),this.a.A(e,o)},Lt.prototype.writeSplitFixed64=Lt.prototype.A,Lt.prototype.l=function(t,e,o){$t(this,t,0),this.a.l(e,o)},Lt.prototype.writeSplitVarint64=Lt.prototype.l,Lt.prototype.tb=function(t,e,o){$t(this,t,0);var r=this.a;H(e,o,function(t,e){r.l(t>>>0,e>>>0)})},Lt.prototype.writeSplitZigzagVarint64=Lt.prototype.tb,Lt.prototype.Ed=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)Kt(this,t,e[o])},Lt.prototype.writeRepeatedInt32=Lt.prototype.Ed,Lt.prototype.Fd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.ob(t,e[o])},Lt.prototype.writeRepeatedInt32String=Lt.prototype.Fd,Lt.prototype.Gd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++){var r=e[o];null!=r&&($t(this,t,0),this.a.ua(r))}},Lt.prototype.writeRepeatedInt64=Lt.prototype.Gd,Lt.prototype.Qd=function(t,e,o,r){if(null!=e)for(var n=0;n<e.length;n++)this.A(t,o(e[n]),r(e[n]))},Lt.prototype.writeRepeatedSplitFixed64=Lt.prototype.Qd,Lt.prototype.Rd=function(t,e,o,r){if(null!=e)for(var n=0;n<e.length;n++)this.l(t,o(e[n]),r(e[n]))},Lt.prototype.writeRepeatedSplitVarint64=Lt.prototype.Rd,Lt.prototype.Sd=function(t,e,o,r){if(null!=e)for(var n=0;n<e.length;n++)this.tb(t,o(e[n]),r(e[n]))},Lt.prototype.writeRepeatedSplitZigzagVarint64=Lt.prototype.Sd,Lt.prototype.Hd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.ka(t,e[o])},Lt.prototype.writeRepeatedInt64String=Lt.prototype.Hd,Lt.prototype.Ud=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)Jt(this,t,e[o])},Lt.prototype.writeRepeatedUint32=Lt.prototype.Ud,Lt.prototype.Vd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.ub(t,e[o])},Lt.prototype.writeRepeatedUint32String=Lt.prototype.Vd,Lt.prototype.Wd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++){var r=e[o];null!=r&&($t(this,t,0),this.a.va(r))}},Lt.prototype.writeRepeatedUint64=Lt.prototype.Wd,Lt.prototype.Xd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.vb(t,e[o])},Lt.prototype.writeRepeatedUint64String=Lt.prototype.Xd,Lt.prototype.Md=function(t,e){if(null!=e)for(var o=0;o<e.length;o++){var r=e[o];null!=r&&($t(this,t,0),this.a.wa(r))}},Lt.prototype.writeRepeatedSint32=Lt.prototype.Md,Lt.prototype.Nd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++){var r=e[o];null!=r&&($t(this,t,0),this.a.xa(r))}},Lt.prototype.writeRepeatedSint64=Lt.prototype.Nd,Lt.prototype.Od=function(t,e){if(null!=e)for(var o=0;o<e.length;o++){var r=e[o];null!=r&&($t(this,t,0),this.a.Ta(r))}},Lt.prototype.writeRepeatedSint64String=Lt.prototype.Od,Lt.prototype.Pd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++){var r=e[o];null!=r&&($t(this,t,0),this.a.W(r))}},Lt.prototype.writeRepeatedSintHash64=Lt.prototype.Pd,Lt.prototype.yd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.Pa(t,e[o])},Lt.prototype.writeRepeatedFixed32=Lt.prototype.yd,Lt.prototype.zd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.Qa(t,e[o])},Lt.prototype.writeRepeatedFixed64=Lt.prototype.zd,Lt.prototype.Ad=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.nb(t,e[o])},Lt.prototype.writeRepeatedFixed64String=Lt.prototype.Ad,Lt.prototype.Jd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.Ra(t,e[o])},Lt.prototype.writeRepeatedSfixed32=Lt.prototype.Jd,Lt.prototype.Kd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.Sa(t,e[o])},Lt.prototype.writeRepeatedSfixed64=Lt.prototype.Kd,Lt.prototype.Ld=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.qb(t,e[o])},Lt.prototype.writeRepeatedSfixed64String=Lt.prototype.Ld,Lt.prototype.Cd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.L(t,e[o])},Lt.prototype.writeRepeatedFloat=Lt.prototype.Cd,Lt.prototype.wd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.J(t,e[o])},Lt.prototype.writeRepeatedDouble=Lt.prototype.wd,Lt.prototype.ud=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.I(t,e[o])},Lt.prototype.writeRepeatedBool=Lt.prototype.ud,Lt.prototype.xd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.R(t,e[o])},Lt.prototype.writeRepeatedEnum=Lt.prototype.xd,Lt.prototype.Td=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.U(t,e[o])},Lt.prototype.writeRepeatedString=Lt.prototype.Td,Lt.prototype.vd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.ja(t,e[o])},Lt.prototype.writeRepeatedBytes=Lt.prototype.vd,Lt.prototype.Id=function(t,e,o){if(null!=e)for(var r=0;r<e.length;r++){var n=Ht(this,t);o(e[r],this),Xt(this,n)}},Lt.prototype.writeRepeatedMessage=Lt.prototype.Id,Lt.prototype.Dd=function(t,e,o){if(null!=e)for(var r=0;r<e.length;r++)$t(this,t,3),o(e[r],this),$t(this,t,4)},Lt.prototype.writeRepeatedGroup=Lt.prototype.Dd,Lt.prototype.Bd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.K(t,e[o])},Lt.prototype.writeRepeatedFixedHash64=Lt.prototype.Bd,Lt.prototype.Yd=function(t,e){if(null!=e)for(var o=0;o<e.length;o++)this.N(t,e[o])},Lt.prototype.writeRepeatedVarintHash64=Lt.prototype.Yd,Lt.prototype.ad=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.M(e[o]);Xt(this,t)}},Lt.prototype.writePackedInt32=Lt.prototype.ad,Lt.prototype.bd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.M(parseInt(e[o],10));Xt(this,t)}},Lt.prototype.writePackedInt32String=Lt.prototype.bd,Lt.prototype.cd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.ua(e[o]);Xt(this,t)}},Lt.prototype.writePackedInt64=Lt.prototype.cd,Lt.prototype.md=function(t,e,o,r){if(null!=e){t=Ht(this,t);for(var n=0;n<e.length;n++)this.a.A(o(e[n]),r(e[n]));Xt(this,t)}},Lt.prototype.writePackedSplitFixed64=Lt.prototype.md,Lt.prototype.nd=function(t,e,o,r){if(null!=e){t=Ht(this,t);for(var n=0;n<e.length;n++)this.a.l(o(e[n]),r(e[n]));Xt(this,t)}},Lt.prototype.writePackedSplitVarint64=Lt.prototype.nd,Lt.prototype.od=function(t,e,o,r){if(null!=e){t=Ht(this,t);for(var n=this.a,i=0;i<e.length;i++)H(o(e[i]),r(e[i]),function(t,e){n.l(t>>>0,e>>>0)});Xt(this,t)}},Lt.prototype.writePackedSplitZigzagVarint64=Lt.prototype.od,Lt.prototype.dd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++){var r=Wt(e[o]);this.a.l(r.lo,r.hi)}Xt(this,t)}},Lt.prototype.writePackedInt64String=Lt.prototype.dd,Lt.prototype.pd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.j(e[o]);Xt(this,t)}},Lt.prototype.writePackedUint32=Lt.prototype.pd,Lt.prototype.qd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.j(parseInt(e[o],10));Xt(this,t)}},Lt.prototype.writePackedUint32String=Lt.prototype.qd,Lt.prototype.rd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.va(e[o]);Xt(this,t)}},Lt.prototype.writePackedUint64=Lt.prototype.rd,Lt.prototype.sd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++){var r=zt(e[o]);this.a.l(r.lo,r.hi)}Xt(this,t)}},Lt.prototype.writePackedUint64String=Lt.prototype.sd,Lt.prototype.hd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.wa(e[o]);Xt(this,t)}},Lt.prototype.writePackedSint32=Lt.prototype.hd,Lt.prototype.jd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.xa(e[o]);Xt(this,t)}},Lt.prototype.writePackedSint64=Lt.prototype.jd,Lt.prototype.kd=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.W(et(e[o]));Xt(this,t)}},Lt.prototype.writePackedSint64String=Lt.prototype.kd,Lt.prototype.ld=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.W(e[o]);Xt(this,t)}},Lt.prototype.writePackedSintHash64=Lt.prototype.ld,Lt.prototype.Wc=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(4*e.length),t=0;t<e.length;t++)this.a.s(e[t])},Lt.prototype.writePackedFixed32=Lt.prototype.Wc,Lt.prototype.Xc=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(8*e.length),t=0;t<e.length;t++)this.a.V(e[t])},Lt.prototype.writePackedFixed64=Lt.prototype.Xc,Lt.prototype.Yc=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(8*e.length),t=0;t<e.length;t++){var o=zt(e[t]);this.a.A(o.lo,o.hi)}},Lt.prototype.writePackedFixed64String=Lt.prototype.Yc,Lt.prototype.ed=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(4*e.length),t=0;t<e.length;t++)this.a.S(e[t])},Lt.prototype.writePackedSfixed32=Lt.prototype.ed,Lt.prototype.fd=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(8*e.length),t=0;t<e.length;t++)this.a.T(e[t])},Lt.prototype.writePackedSfixed64=Lt.prototype.fd,Lt.prototype.gd=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(8*e.length),t=0;t<e.length;t++)this.a.ka(e[t])},Lt.prototype.writePackedSfixed64String=Lt.prototype.gd,Lt.prototype.$c=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(4*e.length),t=0;t<e.length;t++)this.a.L(e[t])},Lt.prototype.writePackedFloat=Lt.prototype.$c,Lt.prototype.Uc=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(8*e.length),t=0;t<e.length;t++)this.a.J(e[t])},Lt.prototype.writePackedDouble=Lt.prototype.Uc,Lt.prototype.Tc=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(e.length),t=0;t<e.length;t++)this.a.I(e[t])},Lt.prototype.writePackedBool=Lt.prototype.Tc,Lt.prototype.Vc=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.R(e[o]);Xt(this,t)}},Lt.prototype.writePackedEnum=Lt.prototype.Vc,Lt.prototype.Zc=function(t,e){if(null!=e&&e.length)for($t(this,t,2),this.a.j(8*e.length),t=0;t<e.length;t++)this.a.K(e[t])},Lt.prototype.writePackedFixedHash64=Lt.prototype.Zc,Lt.prototype.td=function(t,e){if(null!=e&&e.length){t=Ht(this,t);for(var o=0;o<e.length;o++)this.a.N(e[o]);Xt(this,t)}},Lt.prototype.writePackedVarintHash64=Lt.prototype.td,e.debug=Pt,e.Map=S,e.Message=dt,e.BinaryReader=lt,e.BinaryWriter=Lt,e.ExtensionFieldInfo=ft,e.ExtensionFieldBinaryInfo=yt,e.exportSymbol=function(t,e,o){c(t,e,o)},e.inherits=function(t,e){function o(){}o.prototype=e.prototype,t.prototype=new o,t.prototype.constructor=t},e.object={extend:function(t,e){for(var o,r,n=1;n<arguments.length;n++){for(o in r=arguments[n])t[o]=r[o];for(var i=0;i<y.length;i++)o=y[i],Object.prototype.hasOwnProperty.call(r,o)&&(t[o]=r[o])}}},e.typeOf=h},653:(t,e,o)=>{var r=o(339),n=r,i="undefined"!=typeof globalThis&&globalThis||"undefined"!=typeof window&&window||void 0!==i&&i||"undefined"!=typeof self&&self||function(){return this}.call(null)||Function("return this")();n.exportSymbol("proto.google.protobuf.Any",null,i),proto.google.protobuf.Any=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.Any,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.Any.displayName="proto.google.protobuf.Any"),r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.Any.prototype.toObject=function(t){return proto.google.protobuf.Any.toObject(t,this)},proto.google.protobuf.Any.toObject=function(t,e){var o={typeUrl:r.Message.getFieldWithDefault(e,1,""),value:e.getValue_asB64()};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.Any.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.Any;return proto.google.protobuf.Any.deserializeBinaryFromReader(o,e)},proto.google.protobuf.Any.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)switch(e.getFieldNumber()){case 1:var o=e.readString();t.setTypeUrl(o);break;case 2:o=e.readBytes(),t.setValue(o);break;default:e.skipField()}return t},proto.google.protobuf.Any.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.Any.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.Any.serializeBinaryToWriter=function(t,e){var o=void 0;(o=t.getTypeUrl()).length>0&&e.writeString(1,o),(o=t.getValue_asU8()).length>0&&e.writeBytes(2,o)},proto.google.protobuf.Any.prototype.getTypeUrl=function(){return r.Message.getFieldWithDefault(this,1,"")},proto.google.protobuf.Any.prototype.setTypeUrl=function(t){return r.Message.setProto3StringField(this,1,t)},proto.google.protobuf.Any.prototype.getValue=function(){return r.Message.getFieldWithDefault(this,2,"")},proto.google.protobuf.Any.prototype.getValue_asB64=function(){return r.Message.bytesAsB64(this.getValue())},proto.google.protobuf.Any.prototype.getValue_asU8=function(){return r.Message.bytesAsU8(this.getValue())},proto.google.protobuf.Any.prototype.setValue=function(t){return r.Message.setProto3BytesField(this,2,t)},n.object.extend(e,proto.google.protobuf),proto.google.protobuf.Any.prototype.getTypeName=function(){return this.getTypeUrl().split("/").pop()},proto.google.protobuf.Any.prototype.pack=function(t,e,o){o||(o="type.googleapis.com/"),"/"!=o.substr(-1)?this.setTypeUrl(o+"/"+e):this.setTypeUrl(o+e),this.setValue(t)},proto.google.protobuf.Any.prototype.unpack=function(t,e){return this.getTypeName()==e?t(this.getValue_asU8()):null}},845:(t,e,o)=>{var r=o(339),n=r,i="undefined"!=typeof globalThis&&globalThis||"undefined"!=typeof window&&window||void 0!==i&&i||"undefined"!=typeof self&&self||function(){return this}.call(null)||Function("return this")();n.exportSymbol("proto.google.protobuf.BoolValue",null,i),n.exportSymbol("proto.google.protobuf.BytesValue",null,i),n.exportSymbol("proto.google.protobuf.DoubleValue",null,i),n.exportSymbol("proto.google.protobuf.FloatValue",null,i),n.exportSymbol("proto.google.protobuf.Int32Value",null,i),n.exportSymbol("proto.google.protobuf.Int64Value",null,i),n.exportSymbol("proto.google.protobuf.StringValue",null,i),n.exportSymbol("proto.google.protobuf.UInt32Value",null,i),n.exportSymbol("proto.google.protobuf.UInt64Value",null,i),proto.google.protobuf.DoubleValue=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.DoubleValue,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.DoubleValue.displayName="proto.google.protobuf.DoubleValue"),proto.google.protobuf.FloatValue=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.FloatValue,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.FloatValue.displayName="proto.google.protobuf.FloatValue"),proto.google.protobuf.Int64Value=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.Int64Value,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.Int64Value.displayName="proto.google.protobuf.Int64Value"),proto.google.protobuf.UInt64Value=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.UInt64Value,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.UInt64Value.displayName="proto.google.protobuf.UInt64Value"),proto.google.protobuf.Int32Value=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.Int32Value,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.Int32Value.displayName="proto.google.protobuf.Int32Value"),proto.google.protobuf.UInt32Value=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.UInt32Value,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.UInt32Value.displayName="proto.google.protobuf.UInt32Value"),proto.google.protobuf.BoolValue=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.BoolValue,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.BoolValue.displayName="proto.google.protobuf.BoolValue"),proto.google.protobuf.StringValue=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.StringValue,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.StringValue.displayName="proto.google.protobuf.StringValue"),proto.google.protobuf.BytesValue=function(t){r.Message.initialize(this,t,0,-1,null,null)},n.inherits(proto.google.protobuf.BytesValue,r.Message),n.DEBUG&&!COMPILED&&(proto.google.protobuf.BytesValue.displayName="proto.google.protobuf.BytesValue"),r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.DoubleValue.prototype.toObject=function(t){return proto.google.protobuf.DoubleValue.toObject(t,this)},proto.google.protobuf.DoubleValue.toObject=function(t,e){var o={value:r.Message.getFloatingPointFieldWithDefault(e,1,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.DoubleValue.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.DoubleValue;return proto.google.protobuf.DoubleValue.deserializeBinaryFromReader(o,e)},proto.google.protobuf.DoubleValue.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readDouble();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.DoubleValue.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.DoubleValue.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.DoubleValue.serializeBinaryToWriter=function(t,e){var o;0!==(o=t.getValue())&&e.writeDouble(1,o)},proto.google.protobuf.DoubleValue.prototype.getValue=function(){return r.Message.getFloatingPointFieldWithDefault(this,1,0)},proto.google.protobuf.DoubleValue.prototype.setValue=function(t){return r.Message.setProto3FloatField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.FloatValue.prototype.toObject=function(t){return proto.google.protobuf.FloatValue.toObject(t,this)},proto.google.protobuf.FloatValue.toObject=function(t,e){var o={value:r.Message.getFloatingPointFieldWithDefault(e,1,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.FloatValue.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.FloatValue;return proto.google.protobuf.FloatValue.deserializeBinaryFromReader(o,e)},proto.google.protobuf.FloatValue.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readFloat();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.FloatValue.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.FloatValue.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.FloatValue.serializeBinaryToWriter=function(t,e){var o;0!==(o=t.getValue())&&e.writeFloat(1,o)},proto.google.protobuf.FloatValue.prototype.getValue=function(){return r.Message.getFloatingPointFieldWithDefault(this,1,0)},proto.google.protobuf.FloatValue.prototype.setValue=function(t){return r.Message.setProto3FloatField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.Int64Value.prototype.toObject=function(t){return proto.google.protobuf.Int64Value.toObject(t,this)},proto.google.protobuf.Int64Value.toObject=function(t,e){var o={value:r.Message.getFieldWithDefault(e,1,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.Int64Value.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.Int64Value;return proto.google.protobuf.Int64Value.deserializeBinaryFromReader(o,e)},proto.google.protobuf.Int64Value.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readInt64();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.Int64Value.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.Int64Value.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.Int64Value.serializeBinaryToWriter=function(t,e){var o;0!==(o=t.getValue())&&e.writeInt64(1,o)},proto.google.protobuf.Int64Value.prototype.getValue=function(){return r.Message.getFieldWithDefault(this,1,0)},proto.google.protobuf.Int64Value.prototype.setValue=function(t){return r.Message.setProto3IntField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.UInt64Value.prototype.toObject=function(t){return proto.google.protobuf.UInt64Value.toObject(t,this)},proto.google.protobuf.UInt64Value.toObject=function(t,e){var o={value:r.Message.getFieldWithDefault(e,1,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.UInt64Value.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.UInt64Value;return proto.google.protobuf.UInt64Value.deserializeBinaryFromReader(o,e)},proto.google.protobuf.UInt64Value.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readUint64();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.UInt64Value.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.UInt64Value.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.UInt64Value.serializeBinaryToWriter=function(t,e){var o;0!==(o=t.getValue())&&e.writeUint64(1,o)},proto.google.protobuf.UInt64Value.prototype.getValue=function(){return r.Message.getFieldWithDefault(this,1,0)},proto.google.protobuf.UInt64Value.prototype.setValue=function(t){return r.Message.setProto3IntField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.Int32Value.prototype.toObject=function(t){return proto.google.protobuf.Int32Value.toObject(t,this)},proto.google.protobuf.Int32Value.toObject=function(t,e){var o={value:r.Message.getFieldWithDefault(e,1,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.Int32Value.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.Int32Value;return proto.google.protobuf.Int32Value.deserializeBinaryFromReader(o,e)},proto.google.protobuf.Int32Value.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readInt32();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.Int32Value.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.Int32Value.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.Int32Value.serializeBinaryToWriter=function(t,e){var o;0!==(o=t.getValue())&&e.writeInt32(1,o)},proto.google.protobuf.Int32Value.prototype.getValue=function(){return r.Message.getFieldWithDefault(this,1,0)},proto.google.protobuf.Int32Value.prototype.setValue=function(t){return r.Message.setProto3IntField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.UInt32Value.prototype.toObject=function(t){return proto.google.protobuf.UInt32Value.toObject(t,this)},proto.google.protobuf.UInt32Value.toObject=function(t,e){var o={value:r.Message.getFieldWithDefault(e,1,0)};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.UInt32Value.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.UInt32Value;return proto.google.protobuf.UInt32Value.deserializeBinaryFromReader(o,e)},proto.google.protobuf.UInt32Value.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readUint32();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.UInt32Value.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.UInt32Value.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.UInt32Value.serializeBinaryToWriter=function(t,e){var o;0!==(o=t.getValue())&&e.writeUint32(1,o)},proto.google.protobuf.UInt32Value.prototype.getValue=function(){return r.Message.getFieldWithDefault(this,1,0)},proto.google.protobuf.UInt32Value.prototype.setValue=function(t){return r.Message.setProto3IntField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.BoolValue.prototype.toObject=function(t){return proto.google.protobuf.BoolValue.toObject(t,this)},proto.google.protobuf.BoolValue.toObject=function(t,e){var o={value:r.Message.getBooleanFieldWithDefault(e,1,!1)};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.BoolValue.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.BoolValue;return proto.google.protobuf.BoolValue.deserializeBinaryFromReader(o,e)},proto.google.protobuf.BoolValue.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readBool();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.BoolValue.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.BoolValue.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.BoolValue.serializeBinaryToWriter=function(t,e){var o;(o=t.getValue())&&e.writeBool(1,o)},proto.google.protobuf.BoolValue.prototype.getValue=function(){return r.Message.getBooleanFieldWithDefault(this,1,!1)},proto.google.protobuf.BoolValue.prototype.setValue=function(t){return r.Message.setProto3BooleanField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.StringValue.prototype.toObject=function(t){return proto.google.protobuf.StringValue.toObject(t,this)},proto.google.protobuf.StringValue.toObject=function(t,e){var o={value:r.Message.getFieldWithDefault(e,1,"")};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.StringValue.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.StringValue;return proto.google.protobuf.StringValue.deserializeBinaryFromReader(o,e)},proto.google.protobuf.StringValue.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readString();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.StringValue.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.StringValue.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.StringValue.serializeBinaryToWriter=function(t,e){var o;(o=t.getValue()).length>0&&e.writeString(1,o)},proto.google.protobuf.StringValue.prototype.getValue=function(){return r.Message.getFieldWithDefault(this,1,"")},proto.google.protobuf.StringValue.prototype.setValue=function(t){return r.Message.setProto3StringField(this,1,t)},r.Message.GENERATE_TO_OBJECT&&(proto.google.protobuf.BytesValue.prototype.toObject=function(t){return proto.google.protobuf.BytesValue.toObject(t,this)},proto.google.protobuf.BytesValue.toObject=function(t,e){var o={value:e.getValue_asB64()};return t&&(o.$jspbMessageInstance=e),o}),proto.google.protobuf.BytesValue.deserializeBinary=function(t){var e=new r.BinaryReader(t),o=new proto.google.protobuf.BytesValue;return proto.google.protobuf.BytesValue.deserializeBinaryFromReader(o,e)},proto.google.protobuf.BytesValue.deserializeBinaryFromReader=function(t,e){for(;e.nextField()&&!e.isEndGroup();)if(1===e.getFieldNumber()){var o=e.readBytes();t.setValue(o)}else e.skipField();return t},proto.google.protobuf.BytesValue.prototype.serializeBinary=function(){var t=new r.BinaryWriter;return proto.google.protobuf.BytesValue.serializeBinaryToWriter(this,t),t.getResultBuffer()},proto.google.protobuf.BytesValue.serializeBinaryToWriter=function(t,e){var o;(o=t.getValue_asU8()).length>0&&e.writeBytes(1,o)},proto.google.protobuf.BytesValue.prototype.getValue=function(){return r.Message.getFieldWithDefault(this,1,"")},proto.google.protobuf.BytesValue.prototype.getValue_asB64=function(){return r.Message.bytesAsB64(this.getValue())},proto.google.protobuf.BytesValue.prototype.getValue_asU8=function(){return r.Message.bytesAsU8(this.getValue())},proto.google.protobuf.BytesValue.prototype.setValue=function(t){return r.Message.setProto3BytesField(this,1,t)},n.object.extend(e,proto.google.protobuf)}},e={};function o(r){var n=e[r];if(void 0!==n)return n.exports;var i=e[r]={exports:{}};return t[r].call(i.exports,i,i.exports,o),i.exports}o.g=function(){if("object"==typeof globalThis)return globalThis;try{return this||new Function("return this")()}catch(t){if("object"==typeof window)return window}}(),(()=>{"use strict";var t=o(154),e=o(20),r=o(33),n=o(653),i=o(845);const s=new class{constructor(o,n,i){this.methodDescriptorGetState=new t.MethodDescriptor("/monsterclicker_viewmodels_protos.GameViewModelService/GetState",t.MethodType.UNARY,e.Empty,r.GameViewModelState,t=>t.serializeBinary(),r.GameViewModelState.deserializeBinary),this.methodDescriptorSubscribeToPropertyChanges=new t.MethodDescriptor("/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges",t.MethodType.SERVER_STREAMING,r.SubscribeRequest,r.PropertyChangeNotification,t=>t.serializeBinary(),r.PropertyChangeNotification.deserializeBinary),this.methodDescriptorUpdatePropertyValue=new t.MethodDescriptor("/monsterclicker_viewmodels_protos.GameViewModelService/UpdatePropertyValue",t.MethodType.UNARY,r.UpdatePropertyValueRequest,e.Empty,t=>t.serializeBinary(),e.Empty.deserializeBinary),this.methodDescriptorAttackMonster=new t.MethodDescriptor("/monsterclicker_viewmodels_protos.GameViewModelService/AttackMonster",t.MethodType.UNARY,r.AttackMonsterRequest,r.AttackMonsterResponse,t=>t.serializeBinary(),r.AttackMonsterResponse.deserializeBinary),this.methodDescriptorResetGame=new t.MethodDescriptor("/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame",t.MethodType.UNARY,r.ResetGameRequest,r.ResetGameResponse,t=>t.serializeBinary(),r.ResetGameResponse.deserializeBinary),this.methodDescriptorSpecialAttackAsync=new t.MethodDescriptor("/monsterclicker_viewmodels_protos.GameViewModelService/SpecialAttackAsync",t.MethodType.UNARY,r.SpecialAttackAsyncRequest,r.SpecialAttackAsyncResponse,t=>t.serializeBinary(),r.SpecialAttackAsyncResponse.deserializeBinary),this.methodDescriptorPing=new t.MethodDescriptor("/monsterclicker_viewmodels_protos.GameViewModelService/Ping",t.MethodType.UNARY,e.Empty,r.ConnectionStatusResponse,t=>t.serializeBinary(),r.ConnectionStatusResponse.deserializeBinary),i||(i={}),n||(n={}),i.format="text",this.client_=new t.GrpcWebClientBase(i),this.hostname_=o.replace(/\/+$/,""),this.credentials_=n,this.options_=i}getState(t,e,o){return void 0!==o?this.client_.rpcCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/GetState",t,e||{},this.methodDescriptorGetState,o):this.client_.unaryCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/GetState",t,e||{},this.methodDescriptorGetState)}subscribeToPropertyChanges(t,e){return this.client_.serverStreaming(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges",t,e||{},this.methodDescriptorSubscribeToPropertyChanges)}updatePropertyValue(t,e,o){return void 0!==o?this.client_.rpcCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/UpdatePropertyValue",t,e||{},this.methodDescriptorUpdatePropertyValue,o):this.client_.unaryCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/UpdatePropertyValue",t,e||{},this.methodDescriptorUpdatePropertyValue)}attackMonster(t,e,o){return void 0!==o?this.client_.rpcCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/AttackMonster",t,e||{},this.methodDescriptorAttackMonster,o):this.client_.unaryCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/AttackMonster",t,e||{},this.methodDescriptorAttackMonster)}resetGame(t,e,o){return void 0!==o?this.client_.rpcCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame",t,e||{},this.methodDescriptorResetGame,o):this.client_.unaryCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame",t,e||{},this.methodDescriptorResetGame)}specialAttackAsync(t,e,o){return void 0!==o?this.client_.rpcCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/SpecialAttackAsync",t,e||{},this.methodDescriptorSpecialAttackAsync,o):this.client_.unaryCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/SpecialAttackAsync",t,e||{},this.methodDescriptorSpecialAttackAsync)}ping(t,e,o){return void 0!==o?this.client_.rpcCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/Ping",t,e||{},this.methodDescriptorPing,o):this.client_.unaryCall(this.hostname_+"/monsterclicker_viewmodels_protos.GameViewModelService/Ping",t,e||{},this.methodDescriptorPing)}}("http://localhost:50052"),a=new class{constructor(t){this.connectionStatus="Unknown",this.grpcClient=t}async initializeRemote(){const t=await this.grpcClient.getState(new e.Empty);this.monsterName=t.monster_name,this.monsterMaxHealth=t.monster_max_health,this.monsterCurrentHealth=t.monster_current_health,this.playerDamage=t.player_damage,this.gameMessage=t.game_message,this.isMonsterDefeated=t.is_monster_defeated,this.canUseSpecialAttack=t.can_use_special_attack,this.isSpecialAttackOnCooldown=t.is_special_attack_on_cooldown,this.connectionStatus="Connected"}async refreshState(){const t=await this.grpcClient.getState(new e.Empty);this.monsterName=t.monster_name,this.monsterMaxHealth=t.monster_max_health,this.monsterCurrentHealth=t.monster_current_health,this.playerDamage=t.player_damage,this.gameMessage=t.game_message,this.isMonsterDefeated=t.is_monster_defeated,this.canUseSpecialAttack=t.can_use_special_attack,this.isSpecialAttackOnCooldown=t.is_special_attack_on_cooldown}async updatePropertyValue(t,e){const o=new r.UpdatePropertyValueRequest;o.setPropertyName(t),o.setNewValue(this.createAnyValue(e)),await this.grpcClient.updatePropertyValue(o)}createAnyValue(t){const e=new n.Any;if("string"==typeof t){const o=new i.StringValue;o.setValue(t),e.pack(o.serializeBinary(),"google.protobuf.StringValue")}else if("number"==typeof t&&Number.isInteger(t)){const o=new i.Int32Value;o.setValue(t),e.pack(o.serializeBinary(),"google.protobuf.Int32Value")}else{if("boolean"!=typeof t)throw new Error("Unsupported value type");{const o=new i.BoolValue;o.setValue(t),e.pack(o.serializeBinary(),"google.protobuf.BoolValue")}}return e}async attackMonster(){const t=new r.AttackMonsterRequest;await this.grpcClient.attackMonster(t)}async specialAttackAsync(){const t=new r.SpecialAttackAsyncRequest;await this.grpcClient.specialAttackAsync(t)}async resetGame(){const t=new r.ResetGameRequest;await this.grpcClient.resetGame(t)}}(s);async function p(){document.getElementById("monster-name").textContent=a.monsterName;const t=document.getElementById("monster-health");t.max=a.monsterMaxHealth,t.value=a.monsterCurrentHealth,document.getElementById("health-text").textContent=`${a.monsterCurrentHealth} / ${a.monsterMaxHealth}`,document.getElementById("game-message").textContent=a.gameMessage,document.getElementById("connection-status").textContent=a.connectionStatus,document.getElementById("attack-btn").disabled=a.isMonsterDefeated,document.getElementById("special-btn").disabled=!a.canUseSpecialAttack||a.isMonsterDefeated||a.isSpecialAttackOnCooldown,document.getElementById("cooldown-text").style.display=a.isSpecialAttackOnCooldown?"block":"none"}document.addEventListener("DOMContentLoaded",()=>{!async function(){try{await a.initializeRemote(),document.getElementById("loading").style.display="none",document.getElementById("game-container").style.display="block",await p()}catch(t){document.getElementById("loading").textContent="Failed to initialize.",console.error(t)}}(),document.getElementById("attack-btn").addEventListener("click",async()=>{await a.attackMonster(),await a.refreshState(),await p()}),document.getElementById("special-btn").addEventListener("click",async()=>{await a.specialAttackAsync(),await a.refreshState(),await p()}),document.getElementById("newgame-btn").addEventListener("click",async()=>{await a.resetGame(),await a.refreshState(),await p()})})})()})();
+/******/ (() => { // webpackBootstrap
+/******/ 	var __webpack_modules__ = ({
+
+/***/ "./node_modules/google-protobuf/google-protobuf.js":
+/*!*********************************************************!*\
+  !*** ./node_modules/google-protobuf/google-protobuf.js ***!
+  \*********************************************************/
+/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
+
+/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+var aa="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){a!=Array.prototype&&a!=Object.prototype&&(a[b]=c.value)},e="undefined"!=typeof window&&window===this?this:"undefined"!=typeof __webpack_require__.g&&null!=__webpack_require__.g?__webpack_require__.g:this;function ba(a,b){if(b){var c=e;a=a.split(".");for(var d=0;d<a.length-1;d++){var f=a[d];f in c||(c[f]={});c=c[f]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&aa(c,a,{configurable:!0,writable:!0,value:b})}}
+function ca(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}function da(){da=function(){};e.Symbol||(e.Symbol=ea)}function fa(a,b){this.a=a;aa(this,"description",{configurable:!0,writable:!0,value:b})}fa.prototype.toString=function(){return this.a};var ea=function(){function a(c){if(this instanceof a)throw new TypeError("Symbol is not a constructor");return new fa("jscomp_symbol_"+(c||"")+"_"+b++,c)}var b=0;return a}();
+function ha(){da();var a=e.Symbol.iterator;a||(a=e.Symbol.iterator=e.Symbol("Symbol.iterator"));"function"!=typeof Array.prototype[a]&&aa(Array.prototype,a,{configurable:!0,writable:!0,value:function(){return ia(ca(this))}});ha=function(){}}function ia(a){ha();a={next:a};a[e.Symbol.iterator]=function(){return this};return a}
+function ja(a,b){ha();a instanceof String&&(a+="");var c=0,d={next:function(){if(c<a.length){var f=c++;return{value:b(f,a[f]),done:!1}}d.next=function(){return{done:!0,value:void 0}};return d.next()}};d[Symbol.iterator]=function(){return d};return d}ba("Array.prototype.entries",function(a){return a?a:function(){return ja(this,function(b,c){return[b,c]})}});var ka=this||self;
+function g(a,b,c){a=a.split(".");c=c||ka;a[0]in c||"undefined"==typeof c.execScript||c.execScript("var "+a[0]);for(var d;a.length&&(d=a.shift());)a.length||void 0===b?c[d]&&c[d]!==Object.prototype[d]?c=c[d]:c=c[d]={}:c[d]=b}
+function k(a){var b=typeof a;if("object"==b)if(a){if(a instanceof Array)return"array";if(a instanceof Object)return b;var c=Object.prototype.toString.call(a);if("[object Window]"==c)return"object";if("[object Array]"==c||"number"==typeof a.length&&"undefined"!=typeof a.splice&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("splice"))return"array";if("[object Function]"==c||"undefined"!=typeof a.call&&"undefined"!=typeof a.propertyIsEnumerable&&!a.propertyIsEnumerable("call"))return"function"}else return"null";
+else if("function"==b&&"undefined"==typeof a.call)return"object";return b}function la(a){var b=typeof a;return"object"==b&&null!=a||"function"==b}function ma(a,b,c){g(a,b,c)}function na(a,b){function c(){}c.prototype=b.prototype;a.prototype=new c;a.prototype.constructor=a};var oa="constructor hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString valueOf".split(" ");function pa(a,b){for(var c,d,f=1;f<arguments.length;f++){d=arguments[f];for(c in d)a[c]=d[c];for(var h=0;h<oa.length;h++)c=oa[h],Object.prototype.hasOwnProperty.call(d,c)&&(a[c]=d[c])}};var qa=Array.prototype.forEach?function(a,b){Array.prototype.forEach.call(a,b,void 0)}:function(a,b){for(var c=a.length,d="string"===typeof a?a.split(""):a,f=0;f<c;f++)f in d&&b.call(void 0,d[f],f,a)},l=Array.prototype.map?function(a,b){return Array.prototype.map.call(a,b,void 0)}:function(a,b){for(var c=a.length,d=Array(c),f="string"===typeof a?a.split(""):a,h=0;h<c;h++)h in f&&(d[h]=b.call(void 0,f[h],h,a));return d};
+function ra(a,b,c){return 2>=arguments.length?Array.prototype.slice.call(a,b):Array.prototype.slice.call(a,b,c)};function sa(a,b,c,d){var f="Assertion failed";if(c){f+=": "+c;var h=d}else a&&(f+=": "+a,h=b);throw Error(f,h||[]);}function n(a,b,c){for(var d=[],f=2;f<arguments.length;++f)d[f-2]=arguments[f];a||sa("",null,b,d);return a}function ta(a,b,c){for(var d=[],f=2;f<arguments.length;++f)d[f-2]=arguments[f];"string"!==typeof a&&sa("Expected string but got %s: %s.",[k(a),a],b,d)}
+function ua(a,b,c){for(var d=[],f=2;f<arguments.length;++f)d[f-2]=arguments[f];Array.isArray(a)||sa("Expected array but got %s: %s.",[k(a),a],b,d)}function p(a,b){for(var c=[],d=1;d<arguments.length;++d)c[d-1]=arguments[d];throw Error("Failure"+(a?": "+a:""),c);}function q(a,b,c,d){for(var f=[],h=3;h<arguments.length;++h)f[h-3]=arguments[h];a instanceof b||sa("Expected instanceof %s but got %s.",[va(b),va(a)],c,f)}
+function va(a){return a instanceof Function?a.displayName||a.name||"unknown type name":a instanceof Object?a.constructor.displayName||a.constructor.name||Object.prototype.toString.call(a):null===a?"null":typeof a};function r(a,b){this.c=a;this.b=b;this.a={};this.arrClean=!0;if(0<this.c.length){for(a=0;a<this.c.length;a++){b=this.c[a];var c=b[0];this.a[c.toString()]=new wa(c,b[1])}this.arrClean=!0}}g("jspb.Map",r,void 0);
+r.prototype.g=function(){if(this.arrClean){if(this.b){var a=this.a,b;for(b in a)if(Object.prototype.hasOwnProperty.call(a,b)){var c=a[b].a;c&&c.g()}}}else{this.c.length=0;a=u(this);a.sort();for(b=0;b<a.length;b++){var d=this.a[a[b]];(c=d.a)&&c.g();this.c.push([d.key,d.value])}this.arrClean=!0}return this.c};r.prototype.toArray=r.prototype.g;
+r.prototype.Mc=function(a,b){for(var c=this.g(),d=[],f=0;f<c.length;f++){var h=this.a[c[f][0].toString()];v(this,h);var m=h.a;m?(n(b),d.push([h.key,b(a,m)])):d.push([h.key,h.value])}return d};r.prototype.toObject=r.prototype.Mc;r.fromObject=function(a,b,c){b=new r([],b);for(var d=0;d<a.length;d++){var f=a[d][0],h=c(a[d][1]);b.set(f,h)}return b};function w(a){this.a=0;this.b=a}w.prototype.next=function(){return this.a<this.b.length?{done:!1,value:this.b[this.a++]}:{done:!0,value:void 0}};
+"undefined"!=typeof Symbol&&(w.prototype[Symbol.iterator]=function(){return this});r.prototype.Jb=function(){return u(this).length};r.prototype.getLength=r.prototype.Jb;r.prototype.clear=function(){this.a={};this.arrClean=!1};r.prototype.clear=r.prototype.clear;r.prototype.Cb=function(a){a=a.toString();var b=this.a.hasOwnProperty(a);delete this.a[a];this.arrClean=!1;return b};r.prototype.del=r.prototype.Cb;
+r.prototype.Eb=function(){var a=[],b=u(this);b.sort();for(var c=0;c<b.length;c++){var d=this.a[b[c]];a.push([d.key,d.value])}return a};r.prototype.getEntryList=r.prototype.Eb;r.prototype.entries=function(){var a=[],b=u(this);b.sort();for(var c=0;c<b.length;c++){var d=this.a[b[c]];a.push([d.key,v(this,d)])}return new w(a)};r.prototype.entries=r.prototype.entries;r.prototype.keys=function(){var a=[],b=u(this);b.sort();for(var c=0;c<b.length;c++)a.push(this.a[b[c]].key);return new w(a)};
+r.prototype.keys=r.prototype.keys;r.prototype.values=function(){var a=[],b=u(this);b.sort();for(var c=0;c<b.length;c++)a.push(v(this,this.a[b[c]]));return new w(a)};r.prototype.values=r.prototype.values;r.prototype.forEach=function(a,b){var c=u(this);c.sort();for(var d=0;d<c.length;d++){var f=this.a[c[d]];a.call(b,v(this,f),f.key,this)}};r.prototype.forEach=r.prototype.forEach;
+r.prototype.set=function(a,b){var c=new wa(a);this.b?(c.a=b,c.value=b.g()):c.value=b;this.a[a.toString()]=c;this.arrClean=!1;return this};r.prototype.set=r.prototype.set;function v(a,b){return a.b?(b.a||(b.a=new a.b(b.value)),b.a):b.value}r.prototype.get=function(a){if(a=this.a[a.toString()])return v(this,a)};r.prototype.get=r.prototype.get;r.prototype.has=function(a){return a.toString()in this.a};r.prototype.has=r.prototype.has;
+r.prototype.Jc=function(a,b,c,d,f){var h=u(this);h.sort();for(var m=0;m<h.length;m++){var t=this.a[h[m]];b.Va(a);c.call(b,1,t.key);this.b?d.call(b,2,v(this,t),f):d.call(b,2,t.value);b.Ya()}};r.prototype.serializeBinary=r.prototype.Jc;r.deserializeBinary=function(a,b,c,d,f,h,m){for(;b.oa()&&!b.bb();){var t=b.c;1==t?h=c.call(b):2==t&&(a.b?(n(f),m||(m=new a.b),d.call(b,m,f)):m=d.call(b))}n(void 0!=h);n(void 0!=m);a.set(h,m)};
+function u(a){a=a.a;var b=[],c;for(c in a)Object.prototype.hasOwnProperty.call(a,c)&&b.push(c);return b}function wa(a,b){this.key=a;this.value=b;this.a=void 0};function xa(a){if(8192>=a.length)return String.fromCharCode.apply(null,a);for(var b="",c=0;c<a.length;c+=8192)b+=String.fromCharCode.apply(null,ra(a,c,c+8192));return b};var ya={"\x00":"\\0","\b":"\\b","\f":"\\f","\n":"\\n","\r":"\\r","\t":"\\t","\x0B":"\\x0B",'"':'\\"',"\\":"\\\\","<":"\\u003C"},za={"'":"\\'"};var Aa={},x=null;function Ba(a,b){void 0===b&&(b=0);Ca();b=Aa[b];for(var c=[],d=0;d<a.length;d+=3){var f=a[d],h=d+1<a.length,m=h?a[d+1]:0,t=d+2<a.length,B=t?a[d+2]:0,M=f>>2;f=(f&3)<<4|m>>4;m=(m&15)<<2|B>>6;B&=63;t||(B=64,h||(m=64));c.push(b[M],b[f],b[m]||"",b[B]||"")}return c.join("")}function Da(a){var b=a.length,c=3*b/4;c%3?c=Math.floor(c):-1!="=.".indexOf(a[b-1])&&(c=-1!="=.".indexOf(a[b-2])?c-2:c-1);var d=new Uint8Array(c),f=0;Ea(a,function(h){d[f++]=h});return d.subarray(0,f)}
+function Ea(a,b){function c(B){for(;d<a.length;){var M=a.charAt(d++),La=x[M];if(null!=La)return La;if(!/^[\s\xa0]*$/.test(M))throw Error("Unknown base64 encoding at char: "+M);}return B}Ca();for(var d=0;;){var f=c(-1),h=c(0),m=c(64),t=c(64);if(64===t&&-1===f)break;b(f<<2|h>>4);64!=m&&(b(h<<4&240|m>>2),64!=t&&b(m<<6&192|t))}}
+function Ca(){if(!x){x={};for(var a="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),b=["+/=","+/","-_=","-_.","-_"],c=0;5>c;c++){var d=a.concat(b[c].split(""));Aa[c]=d;for(var f=0;f<d.length;f++){var h=d[f];void 0===x[h]&&(x[h]=f)}}}};g("jspb.ConstBinaryMessage",function(){},void 0);g("jspb.BinaryMessage",function(){},void 0);g("jspb.BinaryConstants.FieldType",{yb:-1,ee:1,FLOAT:2,ke:3,te:4,je:5,xb:6,wb:7,BOOL:8,re:9,ie:10,le:11,ce:12,se:13,ge:14,me:15,ne:16,oe:17,pe:18,he:30,ve:31},void 0);g("jspb.BinaryConstants.WireType",{yb:-1,ue:0,xb:1,de:2,qe:3,fe:4,wb:5},void 0);
+g("jspb.BinaryConstants.FieldTypeToWireType",function(a){switch(a){case 5:case 3:case 13:case 4:case 17:case 18:case 8:case 14:case 31:return 0;case 1:case 6:case 16:case 30:return 1;case 9:case 11:case 12:return 2;case 2:case 7:case 15:return 5;default:return-1}},void 0);g("jspb.BinaryConstants.INVALID_FIELD_NUMBER",-1,void 0);g("jspb.BinaryConstants.FLOAT32_EPS",1.401298464324817E-45,void 0);g("jspb.BinaryConstants.FLOAT32_MIN",1.1754943508222875E-38,void 0);
+g("jspb.BinaryConstants.FLOAT32_MAX",3.4028234663852886E38,void 0);g("jspb.BinaryConstants.FLOAT64_EPS",4.9E-324,void 0);g("jspb.BinaryConstants.FLOAT64_MIN",2.2250738585072014E-308,void 0);g("jspb.BinaryConstants.FLOAT64_MAX",1.7976931348623157E308,void 0);g("jspb.BinaryConstants.TWO_TO_20",1048576,void 0);g("jspb.BinaryConstants.TWO_TO_23",8388608,void 0);g("jspb.BinaryConstants.TWO_TO_31",2147483648,void 0);g("jspb.BinaryConstants.TWO_TO_32",4294967296,void 0);
+g("jspb.BinaryConstants.TWO_TO_52",4503599627370496,void 0);g("jspb.BinaryConstants.TWO_TO_63",0x7fffffffffffffff,void 0);g("jspb.BinaryConstants.TWO_TO_64",1.8446744073709552E19,void 0);g("jspb.BinaryConstants.ZERO_HASH","\x00\x00\x00\x00\x00\x00\x00\x00",void 0);var y=0,z=0;g("jspb.utils.getSplit64Low",function(){return y},void 0);g("jspb.utils.getSplit64High",function(){return z},void 0);function Fa(a){var b=a>>>0;a=Math.floor((a-b)/4294967296)>>>0;y=b;z=a}g("jspb.utils.splitUint64",Fa,void 0);function A(a){var b=0>a;a=Math.abs(a);var c=a>>>0;a=Math.floor((a-c)/4294967296);a>>>=0;b&&(a=~a>>>0,c=(~c>>>0)+1,4294967295<c&&(c=0,a++,4294967295<a&&(a=0)));y=c;z=a}g("jspb.utils.splitInt64",A,void 0);
+function Ga(a){var b=0>a;a=2*Math.abs(a);Fa(a);a=y;var c=z;b&&(0==a?0==c?c=a=4294967295:(c--,a=4294967295):a--);y=a;z=c}g("jspb.utils.splitZigzag64",Ga,void 0);
+function Ha(a){var b=0>a?1:0;a=b?-a:a;if(0===a)0<1/a?y=z=0:(z=0,y=2147483648);else if(isNaN(a))z=0,y=2147483647;else if(3.4028234663852886E38<a)z=0,y=(b<<31|2139095040)>>>0;else if(1.1754943508222875E-38>a)a=Math.round(a/Math.pow(2,-149)),z=0,y=(b<<31|a)>>>0;else{var c=Math.floor(Math.log(a)/Math.LN2);a*=Math.pow(2,-c);a=Math.round(8388608*a);16777216<=a&&++c;z=0;y=(b<<31|c+127<<23|a&8388607)>>>0}}g("jspb.utils.splitFloat32",Ha,void 0);
+function Ia(a){var b=0>a?1:0;a=b?-a:a;if(0===a)z=0<1/a?0:2147483648,y=0;else if(isNaN(a))z=2147483647,y=4294967295;else if(1.7976931348623157E308<a)z=(b<<31|2146435072)>>>0,y=0;else if(2.2250738585072014E-308>a)a/=Math.pow(2,-1074),z=(b<<31|a/4294967296)>>>0,y=a>>>0;else{var c=a,d=0;if(2<=c)for(;2<=c&&1023>d;)d++,c/=2;else for(;1>c&&-1022<d;)c*=2,d--;a*=Math.pow(2,-d);z=(b<<31|d+1023<<20|1048576*a&1048575)>>>0;y=4503599627370496*a>>>0}}g("jspb.utils.splitFloat64",Ia,void 0);
+function C(a){var b=a.charCodeAt(4),c=a.charCodeAt(5),d=a.charCodeAt(6),f=a.charCodeAt(7);y=a.charCodeAt(0)+(a.charCodeAt(1)<<8)+(a.charCodeAt(2)<<16)+(a.charCodeAt(3)<<24)>>>0;z=b+(c<<8)+(d<<16)+(f<<24)>>>0}g("jspb.utils.splitHash64",C,void 0);function D(a,b){return 4294967296*b+(a>>>0)}g("jspb.utils.joinUint64",D,void 0);function E(a,b){var c=b&2147483648;c&&(a=~a+1>>>0,b=~b>>>0,0==a&&(b=b+1>>>0));a=D(a,b);return c?-a:a}g("jspb.utils.joinInt64",E,void 0);
+function Ja(a,b,c){var d=b>>31;return c(a<<1^d,(b<<1|a>>>31)^d)}g("jspb.utils.toZigzag64",Ja,void 0);function Ka(a,b){return Ma(a,b,E)}g("jspb.utils.joinZigzag64",Ka,void 0);function Ma(a,b,c){var d=-(a&1);return c((a>>>1|b<<31)^d,b>>>1^d)}g("jspb.utils.fromZigzag64",Ma,void 0);function Na(a){var b=2*(a>>31)+1,c=a>>>23&255;a&=8388607;return 255==c?a?NaN:Infinity*b:0==c?b*Math.pow(2,-149)*a:b*Math.pow(2,c-150)*(a+Math.pow(2,23))}g("jspb.utils.joinFloat32",Na,void 0);
+function Oa(a,b){var c=2*(b>>31)+1,d=b>>>20&2047;a=4294967296*(b&1048575)+a;return 2047==d?a?NaN:Infinity*c:0==d?c*Math.pow(2,-1074)*a:c*Math.pow(2,d-1075)*(a+4503599627370496)}g("jspb.utils.joinFloat64",Oa,void 0);function Pa(a,b){return String.fromCharCode(a>>>0&255,a>>>8&255,a>>>16&255,a>>>24&255,b>>>0&255,b>>>8&255,b>>>16&255,b>>>24&255)}g("jspb.utils.joinHash64",Pa,void 0);g("jspb.utils.DIGITS","0123456789abcdef".split(""),void 0);
+function F(a,b){function c(f,h){f=f?String(f):"";return h?"0000000".slice(f.length)+f:f}if(2097151>=b)return""+D(a,b);var d=(a>>>24|b<<8)>>>0&16777215;b=b>>16&65535;a=(a&16777215)+6777216*d+6710656*b;d+=8147497*b;b*=2;1E7<=a&&(d+=Math.floor(a/1E7),a%=1E7);1E7<=d&&(b+=Math.floor(d/1E7),d%=1E7);return c(b,0)+c(d,b)+c(a,1)}g("jspb.utils.joinUnsignedDecimalString",F,void 0);function G(a,b){var c=b&2147483648;c&&(a=~a+1>>>0,b=~b+(0==a?1:0)>>>0);a=F(a,b);return c?"-"+a:a}
+g("jspb.utils.joinSignedDecimalString",G,void 0);function Qa(a,b){C(a);a=y;var c=z;return b?G(a,c):F(a,c)}g("jspb.utils.hash64ToDecimalString",Qa,void 0);g("jspb.utils.hash64ArrayToDecimalStrings",function(a,b){for(var c=Array(a.length),d=0;d<a.length;d++)c[d]=Qa(a[d],b);return c},void 0);
+function H(a){function b(m,t){for(var B=0;8>B&&(1!==m||0<t);B++)t=m*f[B]+t,f[B]=t&255,t>>>=8}function c(){for(var m=0;8>m;m++)f[m]=~f[m]&255}n(0<a.length);var d=!1;"-"===a[0]&&(d=!0,a=a.slice(1));for(var f=[0,0,0,0,0,0,0,0],h=0;h<a.length;h++)b(10,a.charCodeAt(h)-48);d&&(c(),b(1,1));return xa(f)}g("jspb.utils.decimalStringToHash64",H,void 0);g("jspb.utils.splitDecimalString",function(a){C(H(a))},void 0);function Ra(a){return String.fromCharCode(10>a?48+a:87+a)}
+function Sa(a){return 97<=a?a-97+10:a-48}g("jspb.utils.hash64ToHexString",function(a){var b=Array(18);b[0]="0";b[1]="x";for(var c=0;8>c;c++){var d=a.charCodeAt(7-c);b[2*c+2]=Ra(d>>4);b[2*c+3]=Ra(d&15)}return b.join("")},void 0);g("jspb.utils.hexStringToHash64",function(a){a=a.toLowerCase();n(18==a.length);n("0"==a[0]);n("x"==a[1]);for(var b="",c=0;8>c;c++)b=String.fromCharCode(16*Sa(a.charCodeAt(2*c+2))+Sa(a.charCodeAt(2*c+3)))+b;return b},void 0);
+g("jspb.utils.hash64ToNumber",function(a,b){C(a);a=y;var c=z;return b?E(a,c):D(a,c)},void 0);g("jspb.utils.numberToHash64",function(a){A(a);return Pa(y,z)},void 0);g("jspb.utils.countVarints",function(a,b,c){for(var d=0,f=b;f<c;f++)d+=a[f]>>7;return c-b-d},void 0);
+g("jspb.utils.countVarintFields",function(a,b,c,d){var f=0;d*=8;if(128>d)for(;b<c&&a[b++]==d;)for(f++;;){var h=a[b++];if(0==(h&128))break}else for(;b<c;){for(h=d;128<h;){if(a[b]!=(h&127|128))return f;b++;h>>=7}if(a[b++]!=h)break;for(f++;h=a[b++],0!=(h&128););}return f},void 0);function Ta(a,b,c,d,f){var h=0;if(128>d)for(;b<c&&a[b++]==d;)h++,b+=f;else for(;b<c;){for(var m=d;128<m;){if(a[b++]!=(m&127|128))return h;m>>=7}if(a[b++]!=m)break;h++;b+=f}return h}
+g("jspb.utils.countFixed32Fields",function(a,b,c,d){return Ta(a,b,c,8*d+5,4)},void 0);g("jspb.utils.countFixed64Fields",function(a,b,c,d){return Ta(a,b,c,8*d+1,8)},void 0);g("jspb.utils.countDelimitedFields",function(a,b,c,d){var f=0;for(d=8*d+2;b<c;){for(var h=d;128<h;){if(a[b++]!=(h&127|128))return f;h>>=7}if(a[b++]!=h)break;f++;for(var m=0,t=1;h=a[b++],m+=(h&127)*t,t*=128,0!=(h&128););b+=m}return f},void 0);
+g("jspb.utils.debugBytesToTextFormat",function(a){var b='"';if(a){a=Ua(a);for(var c=0;c<a.length;c++)b+="\\x",16>a[c]&&(b+="0"),b+=a[c].toString(16)}return b+'"'},void 0);
+g("jspb.utils.debugScalarToTextFormat",function(a){if("string"===typeof a){a=String(a);for(var b=['"'],c=0;c<a.length;c++){var d=a.charAt(c),f=d.charCodeAt(0),h=c+1,m;if(!(m=ya[d])){if(!(31<f&&127>f))if(f=d,f in za)d=za[f];else if(f in ya)d=za[f]=ya[f];else{m=f.charCodeAt(0);if(31<m&&127>m)d=f;else{if(256>m){if(d="\\x",16>m||256<m)d+="0"}else d="\\u",4096>m&&(d+="0");d+=m.toString(16).toUpperCase()}d=za[f]=d}m=d}b[h]=m}b.push('"');a=b.join("")}else a=a.toString();return a},void 0);
+g("jspb.utils.stringToByteArray",function(a){for(var b=new Uint8Array(a.length),c=0;c<a.length;c++){var d=a.charCodeAt(c);if(255<d)throw Error("Conversion error: string contains codepoint outside of byte range");b[c]=d}return b},void 0);
+function Ua(a){if(a.constructor===Uint8Array)return a;if(a.constructor===ArrayBuffer)return new Uint8Array(a);if(a.constructor===Array)return new Uint8Array(a);if(a.constructor===String)return Da(a);if(a instanceof Uint8Array)return new Uint8Array(a.buffer,a.byteOffset,a.byteLength);p("Type not convertible to Uint8Array.");return new Uint8Array(0)}g("jspb.utils.byteSourceToUint8Array",Ua,void 0);function I(a,b,c){this.b=null;this.a=this.c=this.h=0;this.v=!1;a&&this.H(a,b,c)}g("jspb.BinaryDecoder",I,void 0);var Va=[];I.getInstanceCacheLength=function(){return Va.length};function Wa(a,b,c){if(Va.length){var d=Va.pop();a&&d.H(a,b,c);return d}return new I(a,b,c)}I.alloc=Wa;I.prototype.Ca=function(){this.clear();100>Va.length&&Va.push(this)};I.prototype.free=I.prototype.Ca;I.prototype.clone=function(){return Wa(this.b,this.h,this.c-this.h)};I.prototype.clone=I.prototype.clone;
+I.prototype.clear=function(){this.b=null;this.a=this.c=this.h=0;this.v=!1};I.prototype.clear=I.prototype.clear;I.prototype.Y=function(){return this.b};I.prototype.getBuffer=I.prototype.Y;I.prototype.H=function(a,b,c){this.b=Ua(a);this.h=void 0!==b?b:0;this.c=void 0!==c?this.h+c:this.b.length;this.a=this.h};I.prototype.setBlock=I.prototype.H;I.prototype.Db=function(){return this.c};I.prototype.getEnd=I.prototype.Db;I.prototype.setEnd=function(a){this.c=a};I.prototype.setEnd=I.prototype.setEnd;
+I.prototype.reset=function(){this.a=this.h};I.prototype.reset=I.prototype.reset;I.prototype.B=function(){return this.a};I.prototype.getCursor=I.prototype.B;I.prototype.Ma=function(a){this.a=a};I.prototype.setCursor=I.prototype.Ma;I.prototype.advance=function(a){this.a+=a;n(this.a<=this.c)};I.prototype.advance=I.prototype.advance;I.prototype.ya=function(){return this.a==this.c};I.prototype.atEnd=I.prototype.ya;I.prototype.Qb=function(){return this.a>this.c};I.prototype.pastEnd=I.prototype.Qb;
+I.prototype.getError=function(){return this.v||0>this.a||this.a>this.c};I.prototype.getError=I.prototype.getError;I.prototype.w=function(a){for(var b=128,c=0,d=0,f=0;4>f&&128<=b;f++)b=this.b[this.a++],c|=(b&127)<<7*f;128<=b&&(b=this.b[this.a++],c|=(b&127)<<28,d|=(b&127)>>4);if(128<=b)for(f=0;5>f&&128<=b;f++)b=this.b[this.a++],d|=(b&127)<<7*f+3;if(128>b)return a(c>>>0,d>>>0);p("Failed to read varint, encoding is invalid.");this.v=!0};I.prototype.readSplitVarint64=I.prototype.w;
+I.prototype.ea=function(a){return this.w(function(b,c){return Ma(b,c,a)})};I.prototype.readSplitZigzagVarint64=I.prototype.ea;I.prototype.ta=function(a){var b=this.b,c=this.a;this.a+=8;for(var d=0,f=0,h=c+7;h>=c;h--)d=d<<8|b[h],f=f<<8|b[h+4];return a(d,f)};I.prototype.readSplitFixed64=I.prototype.ta;I.prototype.kb=function(){for(;this.b[this.a]&128;)this.a++;this.a++};I.prototype.skipVarint=I.prototype.kb;I.prototype.mb=function(a){for(;128<a;)this.a--,a>>>=7;this.a--};I.prototype.unskipVarint=I.prototype.mb;
+I.prototype.o=function(){var a=this.b;var b=a[this.a];var c=b&127;if(128>b)return this.a+=1,n(this.a<=this.c),c;b=a[this.a+1];c|=(b&127)<<7;if(128>b)return this.a+=2,n(this.a<=this.c),c;b=a[this.a+2];c|=(b&127)<<14;if(128>b)return this.a+=3,n(this.a<=this.c),c;b=a[this.a+3];c|=(b&127)<<21;if(128>b)return this.a+=4,n(this.a<=this.c),c;b=a[this.a+4];c|=(b&15)<<28;if(128>b)return this.a+=5,n(this.a<=this.c),c>>>0;this.a+=5;128<=a[this.a++]&&128<=a[this.a++]&&128<=a[this.a++]&&128<=a[this.a++]&&128<=
+a[this.a++]&&n(!1);n(this.a<=this.c);return c};I.prototype.readUnsignedVarint32=I.prototype.o;I.prototype.da=function(){return~~this.o()};I.prototype.readSignedVarint32=I.prototype.da;I.prototype.O=function(){return this.o().toString()};I.prototype.Ea=function(){return this.da().toString()};I.prototype.readSignedVarint32String=I.prototype.Ea;I.prototype.Ia=function(){var a=this.o();return a>>>1^-(a&1)};I.prototype.readZigzagVarint32=I.prototype.Ia;I.prototype.Ga=function(){return this.w(D)};
+I.prototype.readUnsignedVarint64=I.prototype.Ga;I.prototype.Ha=function(){return this.w(F)};I.prototype.readUnsignedVarint64String=I.prototype.Ha;I.prototype.sa=function(){return this.w(E)};I.prototype.readSignedVarint64=I.prototype.sa;I.prototype.Fa=function(){return this.w(G)};I.prototype.readSignedVarint64String=I.prototype.Fa;I.prototype.Ja=function(){return this.w(Ka)};I.prototype.readZigzagVarint64=I.prototype.Ja;I.prototype.fb=function(){return this.ea(Pa)};
+I.prototype.readZigzagVarintHash64=I.prototype.fb;I.prototype.Ka=function(){return this.ea(G)};I.prototype.readZigzagVarint64String=I.prototype.Ka;I.prototype.Gc=function(){var a=this.b[this.a];this.a+=1;n(this.a<=this.c);return a};I.prototype.readUint8=I.prototype.Gc;I.prototype.Ec=function(){var a=this.b[this.a],b=this.b[this.a+1];this.a+=2;n(this.a<=this.c);return a<<0|b<<8};I.prototype.readUint16=I.prototype.Ec;
+I.prototype.m=function(){var a=this.b[this.a],b=this.b[this.a+1],c=this.b[this.a+2],d=this.b[this.a+3];this.a+=4;n(this.a<=this.c);return(a<<0|b<<8|c<<16|d<<24)>>>0};I.prototype.readUint32=I.prototype.m;I.prototype.ga=function(){var a=this.m(),b=this.m();return D(a,b)};I.prototype.readUint64=I.prototype.ga;I.prototype.ha=function(){var a=this.m(),b=this.m();return F(a,b)};I.prototype.readUint64String=I.prototype.ha;
+I.prototype.Xb=function(){var a=this.b[this.a];this.a+=1;n(this.a<=this.c);return a<<24>>24};I.prototype.readInt8=I.prototype.Xb;I.prototype.Vb=function(){var a=this.b[this.a],b=this.b[this.a+1];this.a+=2;n(this.a<=this.c);return(a<<0|b<<8)<<16>>16};I.prototype.readInt16=I.prototype.Vb;I.prototype.P=function(){var a=this.b[this.a],b=this.b[this.a+1],c=this.b[this.a+2],d=this.b[this.a+3];this.a+=4;n(this.a<=this.c);return a<<0|b<<8|c<<16|d<<24};I.prototype.readInt32=I.prototype.P;
+I.prototype.ba=function(){var a=this.m(),b=this.m();return E(a,b)};I.prototype.readInt64=I.prototype.ba;I.prototype.ca=function(){var a=this.m(),b=this.m();return G(a,b)};I.prototype.readInt64String=I.prototype.ca;I.prototype.aa=function(){var a=this.m();return Na(a,0)};I.prototype.readFloat=I.prototype.aa;I.prototype.Z=function(){var a=this.m(),b=this.m();return Oa(a,b)};I.prototype.readDouble=I.prototype.Z;I.prototype.pa=function(){return!!this.b[this.a++]};I.prototype.readBool=I.prototype.pa;
+I.prototype.ra=function(){return this.da()};I.prototype.readEnum=I.prototype.ra;
+I.prototype.fa=function(a){var b=this.b,c=this.a;a=c+a;for(var d=[],f="";c<a;){var h=b[c++];if(128>h)d.push(h);else if(192>h)continue;else if(224>h){var m=b[c++];d.push((h&31)<<6|m&63)}else if(240>h){m=b[c++];var t=b[c++];d.push((h&15)<<12|(m&63)<<6|t&63)}else if(248>h){m=b[c++];t=b[c++];var B=b[c++];h=(h&7)<<18|(m&63)<<12|(t&63)<<6|B&63;h-=65536;d.push((h>>10&1023)+55296,(h&1023)+56320)}8192<=d.length&&(f+=String.fromCharCode.apply(null,d),d.length=0)}f+=xa(d);this.a=c;return f};
+I.prototype.readString=I.prototype.fa;I.prototype.Dc=function(){var a=this.o();return this.fa(a)};I.prototype.readStringWithLength=I.prototype.Dc;I.prototype.qa=function(a){if(0>a||this.a+a>this.b.length)return this.v=!0,p("Invalid byte length!"),new Uint8Array(0);var b=this.b.subarray(this.a,this.a+a);this.a+=a;n(this.a<=this.c);return b};I.prototype.readBytes=I.prototype.qa;I.prototype.ia=function(){return this.w(Pa)};I.prototype.readVarintHash64=I.prototype.ia;
+I.prototype.$=function(){var a=this.b,b=this.a,c=a[b],d=a[b+1],f=a[b+2],h=a[b+3],m=a[b+4],t=a[b+5],B=a[b+6];a=a[b+7];this.a+=8;return String.fromCharCode(c,d,f,h,m,t,B,a)};I.prototype.readFixedHash64=I.prototype.$;function J(a,b,c){this.a=Wa(a,b,c);this.O=this.a.B();this.b=this.c=-1;this.h=!1;this.v=null}g("jspb.BinaryReader",J,void 0);var K=[];J.clearInstanceCache=function(){K=[]};J.getInstanceCacheLength=function(){return K.length};function Xa(a,b,c){if(K.length){var d=K.pop();a&&d.a.H(a,b,c);return d}return new J(a,b,c)}J.alloc=Xa;J.prototype.zb=Xa;J.prototype.alloc=J.prototype.zb;J.prototype.Ca=function(){this.a.clear();this.b=this.c=-1;this.h=!1;this.v=null;100>K.length&&K.push(this)};
+J.prototype.free=J.prototype.Ca;J.prototype.Fb=function(){return this.O};J.prototype.getFieldCursor=J.prototype.Fb;J.prototype.B=function(){return this.a.B()};J.prototype.getCursor=J.prototype.B;J.prototype.Y=function(){return this.a.Y()};J.prototype.getBuffer=J.prototype.Y;J.prototype.Hb=function(){return this.c};J.prototype.getFieldNumber=J.prototype.Hb;J.prototype.Lb=function(){return this.b};J.prototype.getWireType=J.prototype.Lb;J.prototype.Mb=function(){return 2==this.b};
+J.prototype.isDelimited=J.prototype.Mb;J.prototype.bb=function(){return 4==this.b};J.prototype.isEndGroup=J.prototype.bb;J.prototype.getError=function(){return this.h||this.a.getError()};J.prototype.getError=J.prototype.getError;J.prototype.H=function(a,b,c){this.a.H(a,b,c);this.b=this.c=-1};J.prototype.setBlock=J.prototype.H;J.prototype.reset=function(){this.a.reset();this.b=this.c=-1};J.prototype.reset=J.prototype.reset;J.prototype.advance=function(a){this.a.advance(a)};J.prototype.advance=J.prototype.advance;
+J.prototype.oa=function(){if(this.a.ya())return!1;if(this.getError())return p("Decoder hit an error"),!1;this.O=this.a.B();var a=this.a.o(),b=a>>>3;a&=7;if(0!=a&&5!=a&&1!=a&&2!=a&&3!=a&&4!=a)return p("Invalid wire type: %s (at position %s)",a,this.O),this.h=!0,!1;this.c=b;this.b=a;return!0};J.prototype.nextField=J.prototype.oa;J.prototype.Oa=function(){this.a.mb(this.c<<3|this.b)};J.prototype.unskipHeader=J.prototype.Oa;
+J.prototype.Lc=function(){var a=this.c;for(this.Oa();this.oa()&&this.c==a;)this.C();this.a.ya()||this.Oa()};J.prototype.skipMatchingFields=J.prototype.Lc;J.prototype.lb=function(){0!=this.b?(p("Invalid wire type for skipVarintField"),this.C()):this.a.kb()};J.prototype.skipVarintField=J.prototype.lb;J.prototype.gb=function(){if(2!=this.b)p("Invalid wire type for skipDelimitedField"),this.C();else{var a=this.a.o();this.a.advance(a)}};J.prototype.skipDelimitedField=J.prototype.gb;
+J.prototype.hb=function(){5!=this.b?(p("Invalid wire type for skipFixed32Field"),this.C()):this.a.advance(4)};J.prototype.skipFixed32Field=J.prototype.hb;J.prototype.ib=function(){1!=this.b?(p("Invalid wire type for skipFixed64Field"),this.C()):this.a.advance(8)};J.prototype.skipFixed64Field=J.prototype.ib;J.prototype.jb=function(){var a=this.c;do{if(!this.oa()){p("Unmatched start-group tag: stream EOF");this.h=!0;break}if(4==this.b){this.c!=a&&(p("Unmatched end-group tag"),this.h=!0);break}this.C()}while(1)};
+J.prototype.skipGroup=J.prototype.jb;J.prototype.C=function(){switch(this.b){case 0:this.lb();break;case 1:this.ib();break;case 2:this.gb();break;case 5:this.hb();break;case 3:this.jb();break;default:p("Invalid wire encoding for field.")}};J.prototype.skipField=J.prototype.C;J.prototype.Hc=function(a,b){null===this.v&&(this.v={});n(!this.v[a]);this.v[a]=b};J.prototype.registerReadCallback=J.prototype.Hc;J.prototype.Ic=function(a){n(null!==this.v);a=this.v[a];n(a);return a(this)};
+J.prototype.runReadCallback=J.prototype.Ic;J.prototype.Yb=function(a,b){n(2==this.b);var c=this.a.c,d=this.a.o();d=this.a.B()+d;this.a.setEnd(d);b(a,this);this.a.Ma(d);this.a.setEnd(c)};J.prototype.readMessage=J.prototype.Yb;J.prototype.Ub=function(a,b,c){n(3==this.b);n(this.c==a);c(b,this);this.h||4==this.b||(p("Group submessage did not end with an END_GROUP tag"),this.h=!0)};J.prototype.readGroup=J.prototype.Ub;
+J.prototype.Gb=function(){n(2==this.b);var a=this.a.o(),b=this.a.B(),c=b+a;a=Wa(this.a.Y(),b,a);this.a.Ma(c);return a};J.prototype.getFieldDecoder=J.prototype.Gb;J.prototype.P=function(){n(0==this.b);return this.a.da()};J.prototype.readInt32=J.prototype.P;J.prototype.Wb=function(){n(0==this.b);return this.a.Ea()};J.prototype.readInt32String=J.prototype.Wb;J.prototype.ba=function(){n(0==this.b);return this.a.sa()};J.prototype.readInt64=J.prototype.ba;J.prototype.ca=function(){n(0==this.b);return this.a.Fa()};
+J.prototype.readInt64String=J.prototype.ca;J.prototype.m=function(){n(0==this.b);return this.a.o()};J.prototype.readUint32=J.prototype.m;J.prototype.Fc=function(){n(0==this.b);return this.a.O()};J.prototype.readUint32String=J.prototype.Fc;J.prototype.ga=function(){n(0==this.b);return this.a.Ga()};J.prototype.readUint64=J.prototype.ga;J.prototype.ha=function(){n(0==this.b);return this.a.Ha()};J.prototype.readUint64String=J.prototype.ha;J.prototype.zc=function(){n(0==this.b);return this.a.Ia()};
+J.prototype.readSint32=J.prototype.zc;J.prototype.Ac=function(){n(0==this.b);return this.a.Ja()};J.prototype.readSint64=J.prototype.Ac;J.prototype.Bc=function(){n(0==this.b);return this.a.Ka()};J.prototype.readSint64String=J.prototype.Bc;J.prototype.Rb=function(){n(5==this.b);return this.a.m()};J.prototype.readFixed32=J.prototype.Rb;J.prototype.Sb=function(){n(1==this.b);return this.a.ga()};J.prototype.readFixed64=J.prototype.Sb;J.prototype.Tb=function(){n(1==this.b);return this.a.ha()};
+J.prototype.readFixed64String=J.prototype.Tb;J.prototype.vc=function(){n(5==this.b);return this.a.P()};J.prototype.readSfixed32=J.prototype.vc;J.prototype.wc=function(){n(5==this.b);return this.a.P().toString()};J.prototype.readSfixed32String=J.prototype.wc;J.prototype.xc=function(){n(1==this.b);return this.a.ba()};J.prototype.readSfixed64=J.prototype.xc;J.prototype.yc=function(){n(1==this.b);return this.a.ca()};J.prototype.readSfixed64String=J.prototype.yc;
+J.prototype.aa=function(){n(5==this.b);return this.a.aa()};J.prototype.readFloat=J.prototype.aa;J.prototype.Z=function(){n(1==this.b);return this.a.Z()};J.prototype.readDouble=J.prototype.Z;J.prototype.pa=function(){n(0==this.b);return!!this.a.o()};J.prototype.readBool=J.prototype.pa;J.prototype.ra=function(){n(0==this.b);return this.a.sa()};J.prototype.readEnum=J.prototype.ra;J.prototype.fa=function(){n(2==this.b);var a=this.a.o();return this.a.fa(a)};J.prototype.readString=J.prototype.fa;
+J.prototype.qa=function(){n(2==this.b);var a=this.a.o();return this.a.qa(a)};J.prototype.readBytes=J.prototype.qa;J.prototype.ia=function(){n(0==this.b);return this.a.ia()};J.prototype.readVarintHash64=J.prototype.ia;J.prototype.Cc=function(){n(0==this.b);return this.a.fb()};J.prototype.readSintHash64=J.prototype.Cc;J.prototype.w=function(a){n(0==this.b);return this.a.w(a)};J.prototype.readSplitVarint64=J.prototype.w;
+J.prototype.ea=function(a){n(0==this.b);return this.a.w(function(b,c){return Ma(b,c,a)})};J.prototype.readSplitZigzagVarint64=J.prototype.ea;J.prototype.$=function(){n(1==this.b);return this.a.$()};J.prototype.readFixedHash64=J.prototype.$;J.prototype.ta=function(a){n(1==this.b);return this.a.ta(a)};J.prototype.readSplitFixed64=J.prototype.ta;function L(a,b){n(2==a.b);var c=a.a.o();c=a.a.B()+c;for(var d=[];a.a.B()<c;)d.push(b.call(a.a));return d}J.prototype.gc=function(){return L(this,this.a.da)};
+J.prototype.readPackedInt32=J.prototype.gc;J.prototype.hc=function(){return L(this,this.a.Ea)};J.prototype.readPackedInt32String=J.prototype.hc;J.prototype.ic=function(){return L(this,this.a.sa)};J.prototype.readPackedInt64=J.prototype.ic;J.prototype.jc=function(){return L(this,this.a.Fa)};J.prototype.readPackedInt64String=J.prototype.jc;J.prototype.qc=function(){return L(this,this.a.o)};J.prototype.readPackedUint32=J.prototype.qc;J.prototype.rc=function(){return L(this,this.a.O)};
+J.prototype.readPackedUint32String=J.prototype.rc;J.prototype.sc=function(){return L(this,this.a.Ga)};J.prototype.readPackedUint64=J.prototype.sc;J.prototype.tc=function(){return L(this,this.a.Ha)};J.prototype.readPackedUint64String=J.prototype.tc;J.prototype.nc=function(){return L(this,this.a.Ia)};J.prototype.readPackedSint32=J.prototype.nc;J.prototype.oc=function(){return L(this,this.a.Ja)};J.prototype.readPackedSint64=J.prototype.oc;J.prototype.pc=function(){return L(this,this.a.Ka)};
+J.prototype.readPackedSint64String=J.prototype.pc;J.prototype.bc=function(){return L(this,this.a.m)};J.prototype.readPackedFixed32=J.prototype.bc;J.prototype.cc=function(){return L(this,this.a.ga)};J.prototype.readPackedFixed64=J.prototype.cc;J.prototype.dc=function(){return L(this,this.a.ha)};J.prototype.readPackedFixed64String=J.prototype.dc;J.prototype.kc=function(){return L(this,this.a.P)};J.prototype.readPackedSfixed32=J.prototype.kc;J.prototype.lc=function(){return L(this,this.a.ba)};
+J.prototype.readPackedSfixed64=J.prototype.lc;J.prototype.mc=function(){return L(this,this.a.ca)};J.prototype.readPackedSfixed64String=J.prototype.mc;J.prototype.fc=function(){return L(this,this.a.aa)};J.prototype.readPackedFloat=J.prototype.fc;J.prototype.$b=function(){return L(this,this.a.Z)};J.prototype.readPackedDouble=J.prototype.$b;J.prototype.Zb=function(){return L(this,this.a.pa)};J.prototype.readPackedBool=J.prototype.Zb;J.prototype.ac=function(){return L(this,this.a.ra)};
+J.prototype.readPackedEnum=J.prototype.ac;J.prototype.uc=function(){return L(this,this.a.ia)};J.prototype.readPackedVarintHash64=J.prototype.uc;J.prototype.ec=function(){return L(this,this.a.$)};J.prototype.readPackedFixedHash64=J.prototype.ec;function Ya(a,b,c,d,f){this.ma=a;this.Ba=b;this.la=c;this.Na=d;this.na=f}g("jspb.ExtensionFieldInfo",Ya,void 0);function Za(a,b,c,d,f,h){this.Za=a;this.za=b;this.Aa=c;this.Wa=d;this.Ab=f;this.Nb=h}g("jspb.ExtensionFieldBinaryInfo",Za,void 0);Ya.prototype.F=function(){return!!this.la};Ya.prototype.isMessageType=Ya.prototype.F;function N(){}g("jspb.Message",N,void 0);N.GENERATE_TO_OBJECT=!0;N.GENERATE_FROM_OBJECT=!0;var $a="function"==typeof Uint8Array;N.prototype.Ib=function(){return this.b};
+N.prototype.getJsPbMessageId=N.prototype.Ib;
+N.initialize=function(a,b,c,d,f,h){a.f=null;b||(b=c?[c]:[]);a.b=c?String(c):void 0;a.D=0===c?-1:0;a.u=b;a:{c=a.u.length;b=-1;if(c&&(b=c-1,c=a.u[b],!(null===c||"object"!=typeof c||Array.isArray(c)||$a&&c instanceof Uint8Array))){a.G=b-a.D;a.i=c;break a}-1<d?(a.G=Math.max(d,b+1-a.D),a.i=null):a.G=Number.MAX_VALUE}a.a={};if(f)for(d=0;d<f.length;d++)b=f[d],b<a.G?(b+=a.D,a.u[b]=a.u[b]||ab):(bb(a),a.i[b]=a.i[b]||ab);if(h&&h.length)for(d=0;d<h.length;d++)cb(a,h[d])};
+var ab=Object.freeze?Object.freeze([]):[];function bb(a){var b=a.G+a.D;a.u[b]||(a.i=a.u[b]={})}function db(a,b,c){for(var d=[],f=0;f<a.length;f++)d[f]=b.call(a[f],c,a[f]);return d}N.toObjectList=db;N.toObjectExtension=function(a,b,c,d,f){for(var h in c){var m=c[h],t=d.call(a,m);if(null!=t){for(var B in m.Ba)if(m.Ba.hasOwnProperty(B))break;b[B]=m.Na?m.na?db(t,m.Na,f):m.Na(f,t):t}}};
+N.serializeBinaryExtensions=function(a,b,c,d){for(var f in c){var h=c[f],m=h.Za;if(!h.Aa)throw Error("Message extension present that was generated without binary serialization support");var t=d.call(a,m);if(null!=t)if(m.F())if(h.Wa)h.Aa.call(b,m.ma,t,h.Wa);else throw Error("Message extension present holding submessage without binary support enabled, and message is being serialized to binary format");else h.Aa.call(b,m.ma,t)}};
+N.readBinaryExtension=function(a,b,c,d,f){var h=c[b.c];if(h){c=h.Za;if(!h.za)throw Error("Deserializing extension whose generated code does not support binary format");if(c.F()){var m=new c.la;h.za.call(b,m,h.Ab)}else m=h.za.call(b);c.na&&!h.Nb?(b=d.call(a,c))?b.push(m):f.call(a,c,[m]):f.call(a,c,m)}else b.C()};function O(a,b){if(b<a.G){b+=a.D;var c=a.u[b];return c===ab?a.u[b]=[]:c}if(a.i)return c=a.i[b],c===ab?a.i[b]=[]:c}N.getField=O;N.getRepeatedField=function(a,b){return O(a,b)};
+function eb(a,b){a=O(a,b);return null==a?a:+a}N.getOptionalFloatingPointField=eb;function fb(a,b){a=O(a,b);return null==a?a:!!a}N.getBooleanField=fb;N.getRepeatedFloatingPointField=function(a,b){var c=O(a,b);a.a||(a.a={});if(!a.a[b]){for(var d=0;d<c.length;d++)c[d]=+c[d];a.a[b]=!0}return c};N.getRepeatedBooleanField=function(a,b){var c=O(a,b);a.a||(a.a={});if(!a.a[b]){for(var d=0;d<c.length;d++)c[d]=!!c[d];a.a[b]=!0}return c};
+function gb(a){if(null==a||"string"===typeof a)return a;if($a&&a instanceof Uint8Array)return Ba(a);p("Cannot coerce to b64 string: "+k(a));return null}N.bytesAsB64=gb;function hb(a){if(null==a||a instanceof Uint8Array)return a;if("string"===typeof a)return Da(a);p("Cannot coerce to Uint8Array: "+k(a));return null}N.bytesAsU8=hb;N.bytesListAsB64=function(a){ib(a);return a.length&&"string"!==typeof a[0]?l(a,gb):a};N.bytesListAsU8=function(a){ib(a);return!a.length||a[0]instanceof Uint8Array?a:l(a,hb)};
+function ib(a){if(a&&1<a.length){var b=k(a[0]);qa(a,function(c){k(c)!=b&&p("Inconsistent type in JSPB repeated field array. Got "+k(c)+" expected "+b)})}}function jb(a,b,c){a=O(a,b);return null==a?c:a}N.getFieldWithDefault=jb;N.getBooleanFieldWithDefault=function(a,b,c){a=fb(a,b);return null==a?c:a};N.getFloatingPointFieldWithDefault=function(a,b,c){a=eb(a,b);return null==a?c:a};N.getFieldProto3=jb;
+N.getMapField=function(a,b,c,d){a.f||(a.f={});if(b in a.f)return a.f[b];var f=O(a,b);if(!f){if(c)return;f=[];P(a,b,f)}return a.f[b]=new r(f,d)};function P(a,b,c){q(a,N);b<a.G?a.u[b+a.D]=c:(bb(a),a.i[b]=c);return a}N.setField=P;N.setProto3IntField=function(a,b,c){return Q(a,b,c,0)};N.setProto3FloatField=function(a,b,c){return Q(a,b,c,0)};N.setProto3BooleanField=function(a,b,c){return Q(a,b,c,!1)};N.setProto3StringField=function(a,b,c){return Q(a,b,c,"")};
+N.setProto3BytesField=function(a,b,c){return Q(a,b,c,"")};N.setProto3EnumField=function(a,b,c){return Q(a,b,c,0)};N.setProto3StringIntField=function(a,b,c){return Q(a,b,c,"0")};function Q(a,b,c,d){q(a,N);c!==d?P(a,b,c):b<a.G?a.u[b+a.D]=null:(bb(a),delete a.i[b]);return a}N.addToRepeatedField=function(a,b,c,d){q(a,N);b=O(a,b);void 0!=d?b.splice(d,0,c):b.push(c);return a};function kb(a,b,c,d){q(a,N);(c=cb(a,c))&&c!==b&&void 0!==d&&(a.f&&c in a.f&&(a.f[c]=void 0),P(a,c,void 0));return P(a,b,d)}
+N.setOneofField=kb;function cb(a,b){for(var c,d,f=0;f<b.length;f++){var h=b[f],m=O(a,h);null!=m&&(c=h,d=m,P(a,h,void 0))}return c?(P(a,c,d),c):0}N.computeOneofCase=cb;N.getWrapperField=function(a,b,c,d){a.f||(a.f={});if(!a.f[c]){var f=O(a,c);if(d||f)a.f[c]=new b(f)}return a.f[c]};N.getRepeatedWrapperField=function(a,b,c){lb(a,b,c);b=a.f[c];b==ab&&(b=a.f[c]=[]);return b};function lb(a,b,c){a.f||(a.f={});if(!a.f[c]){for(var d=O(a,c),f=[],h=0;h<d.length;h++)f[h]=new b(d[h]);a.f[c]=f}}
+N.setWrapperField=function(a,b,c){q(a,N);a.f||(a.f={});var d=c?c.g():c;a.f[b]=c;return P(a,b,d)};N.setOneofWrapperField=function(a,b,c,d){q(a,N);a.f||(a.f={});var f=d?d.g():d;a.f[b]=d;return kb(a,b,c,f)};N.setRepeatedWrapperField=function(a,b,c){q(a,N);a.f||(a.f={});c=c||[];for(var d=[],f=0;f<c.length;f++)d[f]=c[f].g();a.f[b]=c;return P(a,b,d)};
+N.addToRepeatedWrapperField=function(a,b,c,d,f){lb(a,d,b);var h=a.f[b];h||(h=a.f[b]=[]);c=c?c:new d;a=O(a,b);void 0!=f?(h.splice(f,0,c),a.splice(f,0,c.g())):(h.push(c),a.push(c.g()));return c};N.toMap=function(a,b,c,d){for(var f={},h=0;h<a.length;h++)f[b.call(a[h])]=c?c.call(a[h],d,a[h]):a[h];return f};function mb(a){if(a.f)for(var b in a.f){var c=a.f[b];if(Array.isArray(c))for(var d=0;d<c.length;d++)c[d]&&c[d].g();else c&&c.g()}}N.prototype.g=function(){mb(this);return this.u};
+N.prototype.toArray=N.prototype.g;N.prototype.toString=function(){mb(this);return this.u.toString()};N.prototype.getExtension=function(a){if(this.i){this.f||(this.f={});var b=a.ma;if(a.na){if(a.F())return this.f[b]||(this.f[b]=l(this.i[b]||[],function(c){return new a.la(c)})),this.f[b]}else if(a.F())return!this.f[b]&&this.i[b]&&(this.f[b]=new a.la(this.i[b])),this.f[b];return this.i[b]}};N.prototype.getExtension=N.prototype.getExtension;
+N.prototype.Kc=function(a,b){this.f||(this.f={});bb(this);var c=a.ma;a.na?(b=b||[],a.F()?(this.f[c]=b,this.i[c]=l(b,function(d){return d.g()})):this.i[c]=b):a.F()?(this.f[c]=b,this.i[c]=b?b.g():b):this.i[c]=b;return this};N.prototype.setExtension=N.prototype.Kc;N.difference=function(a,b){if(!(a instanceof b.constructor))throw Error("Messages have different types.");var c=a.g();b=b.g();var d=[],f=0,h=c.length>b.length?c.length:b.length;a.b&&(d[0]=a.b,f=1);for(;f<h;f++)nb(c[f],b[f])||(d[f]=b[f]);return new a.constructor(d)};
+N.equals=function(a,b){return a==b||!(!a||!b)&&a instanceof b.constructor&&nb(a.g(),b.g())};function ob(a,b){a=a||{};b=b||{};var c={},d;for(d in a)c[d]=0;for(d in b)c[d]=0;for(d in c)if(!nb(a[d],b[d]))return!1;return!0}N.compareExtensions=ob;
+function nb(a,b){if(a==b)return!0;if(!la(a)||!la(b))return"number"===typeof a&&isNaN(a)||"number"===typeof b&&isNaN(b)?String(a)==String(b):!1;if(a.constructor!=b.constructor)return!1;if($a&&a.constructor===Uint8Array){if(a.length!=b.length)return!1;for(var c=0;c<a.length;c++)if(a[c]!=b[c])return!1;return!0}if(a.constructor===Array){var d=void 0,f=void 0,h=Math.max(a.length,b.length);for(c=0;c<h;c++){var m=a[c],t=b[c];m&&m.constructor==Object&&(n(void 0===d),n(c===a.length-1),d=m,m=void 0);t&&t.constructor==
+Object&&(n(void 0===f),n(c===b.length-1),f=t,t=void 0);if(!nb(m,t))return!1}return d||f?(d=d||{},f=f||{},ob(d,f)):!0}if(a.constructor===Object)return ob(a,b);throw Error("Invalid type in JSPB array");}N.compareFields=nb;N.prototype.Bb=function(){return pb(this)};N.prototype.cloneMessage=N.prototype.Bb;N.prototype.clone=function(){return pb(this)};N.prototype.clone=N.prototype.clone;N.clone=function(a){return pb(a)};function pb(a){return new a.constructor(qb(a.g()))}
+N.copyInto=function(a,b){q(a,N);q(b,N);n(a.constructor==b.constructor,"Copy source and target message should have the same type.");a=pb(a);for(var c=b.g(),d=a.g(),f=c.length=0;f<d.length;f++)c[f]=d[f];b.f=a.f;b.i=a.i};function qb(a){if(Array.isArray(a)){for(var b=Array(a.length),c=0;c<a.length;c++){var d=a[c];null!=d&&(b[c]="object"==typeof d?qb(n(d)):d)}return b}if($a&&a instanceof Uint8Array)return new Uint8Array(a);b={};for(c in a)d=a[c],null!=d&&(b[c]="object"==typeof d?qb(n(d)):d);return b}
+N.registerMessageType=function(a,b){b.we=a};var R={dump:function(a){q(a,N,"jspb.Message instance expected");n(a.getExtension,"Only unobfuscated and unoptimized compilation modes supported.");return R.X(a)}};g("jspb.debug.dump",R.dump,void 0);
+R.X=function(a){var b=k(a);if("number"==b||"string"==b||"boolean"==b||"null"==b||"undefined"==b||"undefined"!==typeof Uint8Array&&a instanceof Uint8Array)return a;if("array"==b)return ua(a),l(a,R.X);if(a instanceof r){var c={};a=a.entries();for(var d=a.next();!d.done;d=a.next())c[d.value[0]]=R.X(d.value[1]);return c}q(a,N,"Only messages expected: "+a);b=a.constructor;var f={$name:b.name||b.displayName};for(t in b.prototype){var h=/^get([A-Z]\w*)/.exec(t);if(h&&"getExtension"!=t&&"getJsPbMessageId"!=
+t){var m="has"+h[1];if(!a[m]||a[m]())m=a[t](),f[R.$a(h[1])]=R.X(m)}}if(a.extensionObject_)return f.$extensions="Recursive dumping of extensions not supported in compiled code. Switch to uncompiled or dump extension object directly",f;for(d in b.extensions)if(/^\d+$/.test(d)){m=b.extensions[d];var t=a.getExtension(m);h=void 0;m=m.Ba;var B=[],M=0;for(h in m)B[M++]=h;h=B[0];null!=t&&(c||(c=f.$extensions={}),c[R.$a(h)]=R.X(t))}return f};R.$a=function(a){return a.replace(/^[A-Z]/,function(b){return b.toLowerCase()})};function S(){this.a=[]}g("jspb.BinaryEncoder",S,void 0);S.prototype.length=function(){return this.a.length};S.prototype.length=S.prototype.length;S.prototype.end=function(){var a=this.a;this.a=[];return a};S.prototype.end=S.prototype.end;S.prototype.l=function(a,b){n(a==Math.floor(a));n(b==Math.floor(b));n(0<=a&&4294967296>a);for(n(0<=b&&4294967296>b);0<b||127<a;)this.a.push(a&127|128),a=(a>>>7|b<<25)>>>0,b>>>=7;this.a.push(a)};S.prototype.writeSplitVarint64=S.prototype.l;
+S.prototype.A=function(a,b){n(a==Math.floor(a));n(b==Math.floor(b));n(0<=a&&4294967296>a);n(0<=b&&4294967296>b);this.s(a);this.s(b)};S.prototype.writeSplitFixed64=S.prototype.A;S.prototype.j=function(a){n(a==Math.floor(a));for(n(0<=a&&4294967296>a);127<a;)this.a.push(a&127|128),a>>>=7;this.a.push(a)};S.prototype.writeUnsignedVarint32=S.prototype.j;S.prototype.M=function(a){n(a==Math.floor(a));n(-2147483648<=a&&2147483648>a);if(0<=a)this.j(a);else{for(var b=0;9>b;b++)this.a.push(a&127|128),a>>=7;this.a.push(1)}};
+S.prototype.writeSignedVarint32=S.prototype.M;S.prototype.va=function(a){n(a==Math.floor(a));n(0<=a&&1.8446744073709552E19>a);A(a);this.l(y,z)};S.prototype.writeUnsignedVarint64=S.prototype.va;S.prototype.ua=function(a){n(a==Math.floor(a));n(-9223372036854775808<=a&&0x7fffffffffffffff>a);A(a);this.l(y,z)};S.prototype.writeSignedVarint64=S.prototype.ua;S.prototype.wa=function(a){n(a==Math.floor(a));n(-2147483648<=a&&2147483648>a);this.j((a<<1^a>>31)>>>0)};S.prototype.writeZigzagVarint32=S.prototype.wa;
+S.prototype.xa=function(a){n(a==Math.floor(a));n(-9223372036854775808<=a&&0x7fffffffffffffff>a);Ga(a);this.l(y,z)};S.prototype.writeZigzagVarint64=S.prototype.xa;S.prototype.Ta=function(a){this.W(H(a))};S.prototype.writeZigzagVarint64String=S.prototype.Ta;S.prototype.W=function(a){var b=this;C(a);Ja(y,z,function(c,d){b.l(c>>>0,d>>>0)})};S.prototype.writeZigzagVarintHash64=S.prototype.W;S.prototype.be=function(a){n(a==Math.floor(a));n(0<=a&&256>a);this.a.push(a>>>0&255)};S.prototype.writeUint8=S.prototype.be;
+S.prototype.ae=function(a){n(a==Math.floor(a));n(0<=a&&65536>a);this.a.push(a>>>0&255);this.a.push(a>>>8&255)};S.prototype.writeUint16=S.prototype.ae;S.prototype.s=function(a){n(a==Math.floor(a));n(0<=a&&4294967296>a);this.a.push(a>>>0&255);this.a.push(a>>>8&255);this.a.push(a>>>16&255);this.a.push(a>>>24&255)};S.prototype.writeUint32=S.prototype.s;S.prototype.V=function(a){n(a==Math.floor(a));n(0<=a&&1.8446744073709552E19>a);Fa(a);this.s(y);this.s(z)};S.prototype.writeUint64=S.prototype.V;
+S.prototype.Qc=function(a){n(a==Math.floor(a));n(-128<=a&&128>a);this.a.push(a>>>0&255)};S.prototype.writeInt8=S.prototype.Qc;S.prototype.Pc=function(a){n(a==Math.floor(a));n(-32768<=a&&32768>a);this.a.push(a>>>0&255);this.a.push(a>>>8&255)};S.prototype.writeInt16=S.prototype.Pc;S.prototype.S=function(a){n(a==Math.floor(a));n(-2147483648<=a&&2147483648>a);this.a.push(a>>>0&255);this.a.push(a>>>8&255);this.a.push(a>>>16&255);this.a.push(a>>>24&255)};S.prototype.writeInt32=S.prototype.S;
+S.prototype.T=function(a){n(a==Math.floor(a));n(-9223372036854775808<=a&&0x7fffffffffffffff>a);A(a);this.A(y,z)};S.prototype.writeInt64=S.prototype.T;S.prototype.ka=function(a){n(a==Math.floor(a));n(-9223372036854775808<=+a&&0x7fffffffffffffff>+a);C(H(a));this.A(y,z)};S.prototype.writeInt64String=S.prototype.ka;S.prototype.L=function(a){n(Infinity===a||-Infinity===a||isNaN(a)||-3.4028234663852886E38<=a&&3.4028234663852886E38>=a);Ha(a);this.s(y)};S.prototype.writeFloat=S.prototype.L;
+S.prototype.J=function(a){n(Infinity===a||-Infinity===a||isNaN(a)||-1.7976931348623157E308<=a&&1.7976931348623157E308>=a);Ia(a);this.s(y);this.s(z)};S.prototype.writeDouble=S.prototype.J;S.prototype.I=function(a){n("boolean"===typeof a||"number"===typeof a);this.a.push(a?1:0)};S.prototype.writeBool=S.prototype.I;S.prototype.R=function(a){n(a==Math.floor(a));n(-2147483648<=a&&2147483648>a);this.M(a)};S.prototype.writeEnum=S.prototype.R;S.prototype.ja=function(a){this.a.push.apply(this.a,a)};
+S.prototype.writeBytes=S.prototype.ja;S.prototype.N=function(a){C(a);this.l(y,z)};S.prototype.writeVarintHash64=S.prototype.N;S.prototype.K=function(a){C(a);this.s(y);this.s(z)};S.prototype.writeFixedHash64=S.prototype.K;
+S.prototype.U=function(a){var b=this.a.length;ta(a);for(var c=0;c<a.length;c++){var d=a.charCodeAt(c);if(128>d)this.a.push(d);else if(2048>d)this.a.push(d>>6|192),this.a.push(d&63|128);else if(65536>d)if(55296<=d&&56319>=d&&c+1<a.length){var f=a.charCodeAt(c+1);56320<=f&&57343>=f&&(d=1024*(d-55296)+f-56320+65536,this.a.push(d>>18|240),this.a.push(d>>12&63|128),this.a.push(d>>6&63|128),this.a.push(d&63|128),c++)}else this.a.push(d>>12|224),this.a.push(d>>6&63|128),this.a.push(d&63|128)}return this.a.length-
+b};S.prototype.writeString=S.prototype.U;function T(a,b){this.lo=a;this.hi=b}g("jspb.arith.UInt64",T,void 0);T.prototype.cmp=function(a){return this.hi<a.hi||this.hi==a.hi&&this.lo<a.lo?-1:this.hi==a.hi&&this.lo==a.lo?0:1};T.prototype.cmp=T.prototype.cmp;T.prototype.La=function(){return new T((this.lo>>>1|(this.hi&1)<<31)>>>0,this.hi>>>1>>>0)};T.prototype.rightShift=T.prototype.La;T.prototype.Da=function(){return new T(this.lo<<1>>>0,(this.hi<<1|this.lo>>>31)>>>0)};T.prototype.leftShift=T.prototype.Da;
+T.prototype.cb=function(){return!!(this.hi&2147483648)};T.prototype.msb=T.prototype.cb;T.prototype.Ob=function(){return!!(this.lo&1)};T.prototype.lsb=T.prototype.Ob;T.prototype.Ua=function(){return 0==this.lo&&0==this.hi};T.prototype.zero=T.prototype.Ua;T.prototype.add=function(a){return new T((this.lo+a.lo&4294967295)>>>0>>>0,((this.hi+a.hi&4294967295)>>>0)+(4294967296<=this.lo+a.lo?1:0)>>>0)};T.prototype.add=T.prototype.add;
+T.prototype.sub=function(a){return new T((this.lo-a.lo&4294967295)>>>0>>>0,((this.hi-a.hi&4294967295)>>>0)-(0>this.lo-a.lo?1:0)>>>0)};T.prototype.sub=T.prototype.sub;function rb(a,b){var c=a&65535;a>>>=16;var d=b&65535,f=b>>>16;b=c*d+65536*(c*f&65535)+65536*(a*d&65535);for(c=a*f+(c*f>>>16)+(a*d>>>16);4294967296<=b;)b-=4294967296,c+=1;return new T(b>>>0,c>>>0)}T.mul32x32=rb;T.prototype.eb=function(a){var b=rb(this.lo,a);a=rb(this.hi,a);a.hi=a.lo;a.lo=0;return b.add(a)};T.prototype.mul=T.prototype.eb;
+T.prototype.Xa=function(a){if(0==a)return[];var b=new T(0,0),c=new T(this.lo,this.hi);a=new T(a,0);for(var d=new T(1,0);!a.cb();)a=a.Da(),d=d.Da();for(;!d.Ua();)0>=a.cmp(c)&&(b=b.add(d),c=c.sub(a)),a=a.La(),d=d.La();return[b,c]};T.prototype.div=T.prototype.Xa;T.prototype.toString=function(){for(var a="",b=this;!b.Ua();){b=b.Xa(10);var c=b[0];a=b[1].lo+a;b=c}""==a&&(a="0");return a};T.prototype.toString=T.prototype.toString;
+function U(a){for(var b=new T(0,0),c=new T(0,0),d=0;d<a.length;d++){if("0">a[d]||"9"<a[d])return null;c.lo=parseInt(a[d],10);b=b.eb(10).add(c)}return b}T.fromString=U;T.prototype.clone=function(){return new T(this.lo,this.hi)};T.prototype.clone=T.prototype.clone;function V(a,b){this.lo=a;this.hi=b}g("jspb.arith.Int64",V,void 0);V.prototype.add=function(a){return new V((this.lo+a.lo&4294967295)>>>0>>>0,((this.hi+a.hi&4294967295)>>>0)+(4294967296<=this.lo+a.lo?1:0)>>>0)};V.prototype.add=V.prototype.add;
+V.prototype.sub=function(a){return new V((this.lo-a.lo&4294967295)>>>0>>>0,((this.hi-a.hi&4294967295)>>>0)-(0>this.lo-a.lo?1:0)>>>0)};V.prototype.sub=V.prototype.sub;V.prototype.clone=function(){return new V(this.lo,this.hi)};V.prototype.clone=V.prototype.clone;V.prototype.toString=function(){var a=0!=(this.hi&2147483648),b=new T(this.lo,this.hi);a&&(b=(new T(0,0)).sub(b));return(a?"-":"")+b.toString()};V.prototype.toString=V.prototype.toString;
+function sb(a){var b=0<a.length&&"-"==a[0];b&&(a=a.substring(1));a=U(a);if(null===a)return null;b&&(a=(new T(0,0)).sub(a));return new V(a.lo,a.hi)}V.fromString=sb;function W(){this.c=[];this.b=0;this.a=new S;this.h=[]}g("jspb.BinaryWriter",W,void 0);function tb(a,b){var c=a.a.end();a.c.push(c);a.c.push(b);a.b+=c.length+b.length}function X(a,b){Y(a,b,2);b=a.a.end();a.c.push(b);a.b+=b.length;b.push(a.b);return b}function Z(a,b){var c=b.pop();c=a.b+a.a.length()-c;for(n(0<=c);127<c;)b.push(c&127|128),c>>>=7,a.b++;b.push(c);a.b++}W.prototype.pb=function(a,b,c){tb(this,a.subarray(b,c))};W.prototype.writeSerializedMessage=W.prototype.pb;
+W.prototype.Pb=function(a,b,c){null!=a&&null!=b&&null!=c&&this.pb(a,b,c)};W.prototype.maybeWriteSerializedMessage=W.prototype.Pb;W.prototype.reset=function(){this.c=[];this.a.end();this.b=0;this.h=[]};W.prototype.reset=W.prototype.reset;W.prototype.ab=function(){n(0==this.h.length);for(var a=new Uint8Array(this.b+this.a.length()),b=this.c,c=b.length,d=0,f=0;f<c;f++){var h=b[f];a.set(h,d);d+=h.length}b=this.a.end();a.set(b,d);d+=b.length;n(d==a.length);this.c=[a];return a};
+W.prototype.getResultBuffer=W.prototype.ab;W.prototype.Kb=function(a){return Ba(this.ab(),a)};W.prototype.getResultBase64String=W.prototype.Kb;W.prototype.Va=function(a){this.h.push(X(this,a))};W.prototype.beginSubMessage=W.prototype.Va;W.prototype.Ya=function(){n(0<=this.h.length);Z(this,this.h.pop())};W.prototype.endSubMessage=W.prototype.Ya;function Y(a,b,c){n(1<=b&&b==Math.floor(b));a.a.j(8*b+c)}
+W.prototype.Nc=function(a,b,c){switch(a){case 1:this.J(b,c);break;case 2:this.L(b,c);break;case 3:this.T(b,c);break;case 4:this.V(b,c);break;case 5:this.S(b,c);break;case 6:this.Qa(b,c);break;case 7:this.Pa(b,c);break;case 8:this.I(b,c);break;case 9:this.U(b,c);break;case 10:p("Group field type not supported in writeAny()");break;case 11:p("Message field type not supported in writeAny()");break;case 12:this.ja(b,c);break;case 13:this.s(b,c);break;case 14:this.R(b,c);break;case 15:this.Ra(b,c);break;
+case 16:this.Sa(b,c);break;case 17:this.rb(b,c);break;case 18:this.sb(b,c);break;case 30:this.K(b,c);break;case 31:this.N(b,c);break;default:p("Invalid field type in writeAny()")}};W.prototype.writeAny=W.prototype.Nc;function ub(a,b,c){null!=c&&(Y(a,b,0),a.a.j(c))}function vb(a,b,c){null!=c&&(Y(a,b,0),a.a.M(c))}W.prototype.S=function(a,b){null!=b&&(n(-2147483648<=b&&2147483648>b),vb(this,a,b))};W.prototype.writeInt32=W.prototype.S;
+W.prototype.ob=function(a,b){null!=b&&(b=parseInt(b,10),n(-2147483648<=b&&2147483648>b),vb(this,a,b))};W.prototype.writeInt32String=W.prototype.ob;W.prototype.T=function(a,b){null!=b&&(n(-9223372036854775808<=b&&0x7fffffffffffffff>b),null!=b&&(Y(this,a,0),this.a.ua(b)))};W.prototype.writeInt64=W.prototype.T;W.prototype.ka=function(a,b){null!=b&&(b=sb(b),Y(this,a,0),this.a.l(b.lo,b.hi))};W.prototype.writeInt64String=W.prototype.ka;
+W.prototype.s=function(a,b){null!=b&&(n(0<=b&&4294967296>b),ub(this,a,b))};W.prototype.writeUint32=W.prototype.s;W.prototype.ub=function(a,b){null!=b&&(b=parseInt(b,10),n(0<=b&&4294967296>b),ub(this,a,b))};W.prototype.writeUint32String=W.prototype.ub;W.prototype.V=function(a,b){null!=b&&(n(0<=b&&1.8446744073709552E19>b),null!=b&&(Y(this,a,0),this.a.va(b)))};W.prototype.writeUint64=W.prototype.V;W.prototype.vb=function(a,b){null!=b&&(b=U(b),Y(this,a,0),this.a.l(b.lo,b.hi))};
+W.prototype.writeUint64String=W.prototype.vb;W.prototype.rb=function(a,b){null!=b&&(n(-2147483648<=b&&2147483648>b),null!=b&&(Y(this,a,0),this.a.wa(b)))};W.prototype.writeSint32=W.prototype.rb;W.prototype.sb=function(a,b){null!=b&&(n(-9223372036854775808<=b&&0x7fffffffffffffff>b),null!=b&&(Y(this,a,0),this.a.xa(b)))};W.prototype.writeSint64=W.prototype.sb;W.prototype.$d=function(a,b){null!=b&&null!=b&&(Y(this,a,0),this.a.W(b))};W.prototype.writeSintHash64=W.prototype.$d;
+W.prototype.Zd=function(a,b){null!=b&&null!=b&&(Y(this,a,0),this.a.Ta(b))};W.prototype.writeSint64String=W.prototype.Zd;W.prototype.Pa=function(a,b){null!=b&&(n(0<=b&&4294967296>b),Y(this,a,5),this.a.s(b))};W.prototype.writeFixed32=W.prototype.Pa;W.prototype.Qa=function(a,b){null!=b&&(n(0<=b&&1.8446744073709552E19>b),Y(this,a,1),this.a.V(b))};W.prototype.writeFixed64=W.prototype.Qa;W.prototype.nb=function(a,b){null!=b&&(b=U(b),Y(this,a,1),this.a.A(b.lo,b.hi))};W.prototype.writeFixed64String=W.prototype.nb;
+W.prototype.Ra=function(a,b){null!=b&&(n(-2147483648<=b&&2147483648>b),Y(this,a,5),this.a.S(b))};W.prototype.writeSfixed32=W.prototype.Ra;W.prototype.Sa=function(a,b){null!=b&&(n(-9223372036854775808<=b&&0x7fffffffffffffff>b),Y(this,a,1),this.a.T(b))};W.prototype.writeSfixed64=W.prototype.Sa;W.prototype.qb=function(a,b){null!=b&&(b=sb(b),Y(this,a,1),this.a.A(b.lo,b.hi))};W.prototype.writeSfixed64String=W.prototype.qb;W.prototype.L=function(a,b){null!=b&&(Y(this,a,5),this.a.L(b))};
+W.prototype.writeFloat=W.prototype.L;W.prototype.J=function(a,b){null!=b&&(Y(this,a,1),this.a.J(b))};W.prototype.writeDouble=W.prototype.J;W.prototype.I=function(a,b){null!=b&&(n("boolean"===typeof b||"number"===typeof b),Y(this,a,0),this.a.I(b))};W.prototype.writeBool=W.prototype.I;W.prototype.R=function(a,b){null!=b&&(n(-2147483648<=b&&2147483648>b),Y(this,a,0),this.a.M(b))};W.prototype.writeEnum=W.prototype.R;W.prototype.U=function(a,b){null!=b&&(a=X(this,a),this.a.U(b),Z(this,a))};
+W.prototype.writeString=W.prototype.U;W.prototype.ja=function(a,b){null!=b&&(b=Ua(b),Y(this,a,2),this.a.j(b.length),tb(this,b))};W.prototype.writeBytes=W.prototype.ja;W.prototype.Rc=function(a,b,c){null!=b&&(a=X(this,a),c(b,this),Z(this,a))};W.prototype.writeMessage=W.prototype.Rc;W.prototype.Sc=function(a,b,c){null!=b&&(Y(this,1,3),Y(this,2,0),this.a.M(a),a=X(this,3),c(b,this),Z(this,a),Y(this,1,4))};W.prototype.writeMessageSet=W.prototype.Sc;
+W.prototype.Oc=function(a,b,c){null!=b&&(Y(this,a,3),c(b,this),Y(this,a,4))};W.prototype.writeGroup=W.prototype.Oc;W.prototype.K=function(a,b){null!=b&&(n(8==b.length),Y(this,a,1),this.a.K(b))};W.prototype.writeFixedHash64=W.prototype.K;W.prototype.N=function(a,b){null!=b&&(n(8==b.length),Y(this,a,0),this.a.N(b))};W.prototype.writeVarintHash64=W.prototype.N;W.prototype.A=function(a,b,c){Y(this,a,1);this.a.A(b,c)};W.prototype.writeSplitFixed64=W.prototype.A;
+W.prototype.l=function(a,b,c){Y(this,a,0);this.a.l(b,c)};W.prototype.writeSplitVarint64=W.prototype.l;W.prototype.tb=function(a,b,c){Y(this,a,0);var d=this.a;Ja(b,c,function(f,h){d.l(f>>>0,h>>>0)})};W.prototype.writeSplitZigzagVarint64=W.prototype.tb;W.prototype.Ed=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)vb(this,a,b[c])};W.prototype.writeRepeatedInt32=W.prototype.Ed;W.prototype.Fd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.ob(a,b[c])};
+W.prototype.writeRepeatedInt32String=W.prototype.Fd;W.prototype.Gd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++){var d=b[c];null!=d&&(Y(this,a,0),this.a.ua(d))}};W.prototype.writeRepeatedInt64=W.prototype.Gd;W.prototype.Qd=function(a,b,c,d){if(null!=b)for(var f=0;f<b.length;f++)this.A(a,c(b[f]),d(b[f]))};W.prototype.writeRepeatedSplitFixed64=W.prototype.Qd;W.prototype.Rd=function(a,b,c,d){if(null!=b)for(var f=0;f<b.length;f++)this.l(a,c(b[f]),d(b[f]))};
+W.prototype.writeRepeatedSplitVarint64=W.prototype.Rd;W.prototype.Sd=function(a,b,c,d){if(null!=b)for(var f=0;f<b.length;f++)this.tb(a,c(b[f]),d(b[f]))};W.prototype.writeRepeatedSplitZigzagVarint64=W.prototype.Sd;W.prototype.Hd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.ka(a,b[c])};W.prototype.writeRepeatedInt64String=W.prototype.Hd;W.prototype.Ud=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)ub(this,a,b[c])};W.prototype.writeRepeatedUint32=W.prototype.Ud;
+W.prototype.Vd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.ub(a,b[c])};W.prototype.writeRepeatedUint32String=W.prototype.Vd;W.prototype.Wd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++){var d=b[c];null!=d&&(Y(this,a,0),this.a.va(d))}};W.prototype.writeRepeatedUint64=W.prototype.Wd;W.prototype.Xd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.vb(a,b[c])};W.prototype.writeRepeatedUint64String=W.prototype.Xd;
+W.prototype.Md=function(a,b){if(null!=b)for(var c=0;c<b.length;c++){var d=b[c];null!=d&&(Y(this,a,0),this.a.wa(d))}};W.prototype.writeRepeatedSint32=W.prototype.Md;W.prototype.Nd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++){var d=b[c];null!=d&&(Y(this,a,0),this.a.xa(d))}};W.prototype.writeRepeatedSint64=W.prototype.Nd;W.prototype.Od=function(a,b){if(null!=b)for(var c=0;c<b.length;c++){var d=b[c];null!=d&&(Y(this,a,0),this.a.Ta(d))}};W.prototype.writeRepeatedSint64String=W.prototype.Od;
+W.prototype.Pd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++){var d=b[c];null!=d&&(Y(this,a,0),this.a.W(d))}};W.prototype.writeRepeatedSintHash64=W.prototype.Pd;W.prototype.yd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.Pa(a,b[c])};W.prototype.writeRepeatedFixed32=W.prototype.yd;W.prototype.zd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.Qa(a,b[c])};W.prototype.writeRepeatedFixed64=W.prototype.zd;
+W.prototype.Ad=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.nb(a,b[c])};W.prototype.writeRepeatedFixed64String=W.prototype.Ad;W.prototype.Jd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.Ra(a,b[c])};W.prototype.writeRepeatedSfixed32=W.prototype.Jd;W.prototype.Kd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.Sa(a,b[c])};W.prototype.writeRepeatedSfixed64=W.prototype.Kd;W.prototype.Ld=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.qb(a,b[c])};
+W.prototype.writeRepeatedSfixed64String=W.prototype.Ld;W.prototype.Cd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.L(a,b[c])};W.prototype.writeRepeatedFloat=W.prototype.Cd;W.prototype.wd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.J(a,b[c])};W.prototype.writeRepeatedDouble=W.prototype.wd;W.prototype.ud=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.I(a,b[c])};W.prototype.writeRepeatedBool=W.prototype.ud;
+W.prototype.xd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.R(a,b[c])};W.prototype.writeRepeatedEnum=W.prototype.xd;W.prototype.Td=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.U(a,b[c])};W.prototype.writeRepeatedString=W.prototype.Td;W.prototype.vd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.ja(a,b[c])};W.prototype.writeRepeatedBytes=W.prototype.vd;W.prototype.Id=function(a,b,c){if(null!=b)for(var d=0;d<b.length;d++){var f=X(this,a);c(b[d],this);Z(this,f)}};
+W.prototype.writeRepeatedMessage=W.prototype.Id;W.prototype.Dd=function(a,b,c){if(null!=b)for(var d=0;d<b.length;d++)Y(this,a,3),c(b[d],this),Y(this,a,4)};W.prototype.writeRepeatedGroup=W.prototype.Dd;W.prototype.Bd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.K(a,b[c])};W.prototype.writeRepeatedFixedHash64=W.prototype.Bd;W.prototype.Yd=function(a,b){if(null!=b)for(var c=0;c<b.length;c++)this.N(a,b[c])};W.prototype.writeRepeatedVarintHash64=W.prototype.Yd;
+W.prototype.ad=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.M(b[c]);Z(this,a)}};W.prototype.writePackedInt32=W.prototype.ad;W.prototype.bd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.M(parseInt(b[c],10));Z(this,a)}};W.prototype.writePackedInt32String=W.prototype.bd;W.prototype.cd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.ua(b[c]);Z(this,a)}};W.prototype.writePackedInt64=W.prototype.cd;
+W.prototype.md=function(a,b,c,d){if(null!=b){a=X(this,a);for(var f=0;f<b.length;f++)this.a.A(c(b[f]),d(b[f]));Z(this,a)}};W.prototype.writePackedSplitFixed64=W.prototype.md;W.prototype.nd=function(a,b,c,d){if(null!=b){a=X(this,a);for(var f=0;f<b.length;f++)this.a.l(c(b[f]),d(b[f]));Z(this,a)}};W.prototype.writePackedSplitVarint64=W.prototype.nd;W.prototype.od=function(a,b,c,d){if(null!=b){a=X(this,a);for(var f=this.a,h=0;h<b.length;h++)Ja(c(b[h]),d(b[h]),function(m,t){f.l(m>>>0,t>>>0)});Z(this,a)}};
+W.prototype.writePackedSplitZigzagVarint64=W.prototype.od;W.prototype.dd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++){var d=sb(b[c]);this.a.l(d.lo,d.hi)}Z(this,a)}};W.prototype.writePackedInt64String=W.prototype.dd;W.prototype.pd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.j(b[c]);Z(this,a)}};W.prototype.writePackedUint32=W.prototype.pd;
+W.prototype.qd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.j(parseInt(b[c],10));Z(this,a)}};W.prototype.writePackedUint32String=W.prototype.qd;W.prototype.rd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.va(b[c]);Z(this,a)}};W.prototype.writePackedUint64=W.prototype.rd;W.prototype.sd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++){var d=U(b[c]);this.a.l(d.lo,d.hi)}Z(this,a)}};
+W.prototype.writePackedUint64String=W.prototype.sd;W.prototype.hd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.wa(b[c]);Z(this,a)}};W.prototype.writePackedSint32=W.prototype.hd;W.prototype.jd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.xa(b[c]);Z(this,a)}};W.prototype.writePackedSint64=W.prototype.jd;W.prototype.kd=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.W(H(b[c]));Z(this,a)}};
+W.prototype.writePackedSint64String=W.prototype.kd;W.prototype.ld=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.W(b[c]);Z(this,a)}};W.prototype.writePackedSintHash64=W.prototype.ld;W.prototype.Wc=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(4*b.length),a=0;a<b.length;a++)this.a.s(b[a])};W.prototype.writePackedFixed32=W.prototype.Wc;W.prototype.Xc=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(8*b.length),a=0;a<b.length;a++)this.a.V(b[a])};
+W.prototype.writePackedFixed64=W.prototype.Xc;W.prototype.Yc=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(8*b.length),a=0;a<b.length;a++){var c=U(b[a]);this.a.A(c.lo,c.hi)}};W.prototype.writePackedFixed64String=W.prototype.Yc;W.prototype.ed=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(4*b.length),a=0;a<b.length;a++)this.a.S(b[a])};W.prototype.writePackedSfixed32=W.prototype.ed;
+W.prototype.fd=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(8*b.length),a=0;a<b.length;a++)this.a.T(b[a])};W.prototype.writePackedSfixed64=W.prototype.fd;W.prototype.gd=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(8*b.length),a=0;a<b.length;a++)this.a.ka(b[a])};W.prototype.writePackedSfixed64String=W.prototype.gd;W.prototype.$c=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(4*b.length),a=0;a<b.length;a++)this.a.L(b[a])};W.prototype.writePackedFloat=W.prototype.$c;
+W.prototype.Uc=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(8*b.length),a=0;a<b.length;a++)this.a.J(b[a])};W.prototype.writePackedDouble=W.prototype.Uc;W.prototype.Tc=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(b.length),a=0;a<b.length;a++)this.a.I(b[a])};W.prototype.writePackedBool=W.prototype.Tc;W.prototype.Vc=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.R(b[c]);Z(this,a)}};W.prototype.writePackedEnum=W.prototype.Vc;
+W.prototype.Zc=function(a,b){if(null!=b&&b.length)for(Y(this,a,2),this.a.j(8*b.length),a=0;a<b.length;a++)this.a.K(b[a])};W.prototype.writePackedFixedHash64=W.prototype.Zc;W.prototype.td=function(a,b){if(null!=b&&b.length){a=X(this,a);for(var c=0;c<b.length;c++)this.a.N(b[c]);Z(this,a)}};W.prototype.writePackedVarintHash64=W.prototype.td; true&&(exports.debug=R,exports.Map=r,exports.Message=N,exports.BinaryReader=J,exports.BinaryWriter=W,exports.ExtensionFieldInfo=Ya,exports.ExtensionFieldBinaryInfo=Za,exports.exportSymbol=ma,exports.inherits=na,exports.object={extend:pa},exports.typeOf=k);
+
+
+/***/ }),
+
+/***/ "./node_modules/google-protobuf/google/protobuf/any_pb.js":
+/*!****************************************************************!*\
+  !*** ./node_modules/google-protobuf/google/protobuf/any_pb.js ***!
+  \****************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+// source: google/protobuf/any.proto
+/**
+ * @fileoverview
+ * @enhanceable
+ * @suppress {missingRequire} reports error on implicit type usages.
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
+ * @public
+ */
+// GENERATED CODE -- DO NOT EDIT!
+/* eslint-disable */
+// @ts-nocheck
+
+var jspb = __webpack_require__(/*! google-protobuf */ "./node_modules/google-protobuf/google-protobuf.js");
+var goog = jspb;
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
+
+goog.exportSymbol('proto.google.protobuf.Any', null, global);
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.Any = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.Any, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.Any.displayName = 'proto.google.protobuf.Any';
+}
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.Any.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.Any.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.Any} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Any.toObject = function(includeInstance, msg) {
+  var f, obj = {
+typeUrl: jspb.Message.getFieldWithDefault(msg, 1, ""),
+value: msg.getValue_asB64()
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.Any}
+ */
+proto.google.protobuf.Any.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.Any;
+  return proto.google.protobuf.Any.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.Any} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.Any}
+ */
+proto.google.protobuf.Any.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setTypeUrl(value);
+      break;
+    case 2:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.Any.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.Any.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.Any} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Any.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getTypeUrl();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getValue_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      2,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string type_url = 1;
+ * @return {string}
+ */
+proto.google.protobuf.Any.prototype.getTypeUrl = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.google.protobuf.Any} returns this
+ */
+proto.google.protobuf.Any.prototype.setTypeUrl = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional bytes value = 2;
+ * @return {!(string|Uint8Array)}
+ */
+proto.google.protobuf.Any.prototype.getValue = function() {
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * optional bytes value = 2;
+ * This is a type-conversion wrapper around `getValue()`
+ * @return {string}
+ */
+proto.google.protobuf.Any.prototype.getValue_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getValue()));
+};
+
+
+/**
+ * optional bytes value = 2;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getValue()`
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.Any.prototype.getValue_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getValue()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.google.protobuf.Any} returns this
+ */
+proto.google.protobuf.Any.prototype.setValue = function(value) {
+  return jspb.Message.setProto3BytesField(this, 2, value);
+};
+
+
+goog.object.extend(exports, proto.google.protobuf);
+/* This code will be inserted into generated code for
+ * google/protobuf/any.proto. */
+
+/**
+ * Returns the type name contained in this instance, if any.
+ * @return {string|undefined}
+ */
+proto.google.protobuf.Any.prototype.getTypeName = function() {
+  return this.getTypeUrl().split('/').pop();
+};
+
+
+/**
+ * Packs the given message instance into this Any.
+ * For binary format usage only.
+ * @param {!Uint8Array} serialized The serialized data to pack.
+ * @param {string} name The type name of this message object.
+ * @param {string=} opt_typeUrlPrefix the type URL prefix.
+ */
+proto.google.protobuf.Any.prototype.pack = function(serialized, name,
+                                                    opt_typeUrlPrefix) {
+  if (!opt_typeUrlPrefix) {
+    opt_typeUrlPrefix = 'type.googleapis.com/';
+  }
+
+  if (opt_typeUrlPrefix.substr(-1) != '/') {
+    this.setTypeUrl(opt_typeUrlPrefix + '/' + name);
+  } else {
+    this.setTypeUrl(opt_typeUrlPrefix + name);
+  }
+
+  this.setValue(serialized);
+};
+
+
+/**
+ * @template T
+ * Unpacks this Any into the given message object.
+ * @param {function(Uint8Array):T} deserialize Function that will deserialize
+ *     the binary data properly.
+ * @param {string} name The expected type name of this message object.
+ * @return {?T} If the name matched the expected name, returns the deserialized
+ *     object, otherwise returns null.
+ */
+proto.google.protobuf.Any.prototype.unpack = function(deserialize, name) {
+  if (this.getTypeName() == name) {
+    return deserialize(this.getValue_asU8());
+  } else {
+    return null;
+  }
+};
+
+
+/***/ }),
+
+/***/ "./node_modules/google-protobuf/google/protobuf/empty_pb.js":
+/*!******************************************************************!*\
+  !*** ./node_modules/google-protobuf/google/protobuf/empty_pb.js ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+// source: google/protobuf/empty.proto
+/**
+ * @fileoverview
+ * @enhanceable
+ * @suppress {missingRequire} reports error on implicit type usages.
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
+ * @public
+ */
+// GENERATED CODE -- DO NOT EDIT!
+/* eslint-disable */
+// @ts-nocheck
+
+var jspb = __webpack_require__(/*! google-protobuf */ "./node_modules/google-protobuf/google-protobuf.js");
+var goog = jspb;
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
+
+goog.exportSymbol('proto.google.protobuf.Empty', null, global);
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.Empty = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.Empty, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.Empty.displayName = 'proto.google.protobuf.Empty';
+}
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.Empty.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.Empty.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.Empty} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Empty.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.Empty}
+ */
+proto.google.protobuf.Empty.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.Empty;
+  return proto.google.protobuf.Empty.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.Empty} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.Empty}
+ */
+proto.google.protobuf.Empty.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.Empty.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.Empty.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.Empty} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Empty.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+goog.object.extend(exports, proto.google.protobuf);
+
+
+/***/ }),
+
+/***/ "./node_modules/google-protobuf/google/protobuf/wrappers_pb.js":
+/*!*********************************************************************!*\
+  !*** ./node_modules/google-protobuf/google/protobuf/wrappers_pb.js ***!
+  \*********************************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+// source: google/protobuf/wrappers.proto
+/**
+ * @fileoverview
+ * @enhanceable
+ * @suppress {missingRequire} reports error on implicit type usages.
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
+ * @public
+ */
+// GENERATED CODE -- DO NOT EDIT!
+/* eslint-disable */
+// @ts-nocheck
+
+var jspb = __webpack_require__(/*! google-protobuf */ "./node_modules/google-protobuf/google-protobuf.js");
+var goog = jspb;
+var global =
+    (typeof globalThis !== 'undefined' && globalThis) ||
+    (typeof window !== 'undefined' && window) ||
+    (typeof global !== 'undefined' && global) ||
+    (typeof self !== 'undefined' && self) ||
+    (function () { return this; }).call(null) ||
+    Function('return this')();
+
+goog.exportSymbol('proto.google.protobuf.BoolValue', null, global);
+goog.exportSymbol('proto.google.protobuf.BytesValue', null, global);
+goog.exportSymbol('proto.google.protobuf.DoubleValue', null, global);
+goog.exportSymbol('proto.google.protobuf.FloatValue', null, global);
+goog.exportSymbol('proto.google.protobuf.Int32Value', null, global);
+goog.exportSymbol('proto.google.protobuf.Int64Value', null, global);
+goog.exportSymbol('proto.google.protobuf.StringValue', null, global);
+goog.exportSymbol('proto.google.protobuf.UInt32Value', null, global);
+goog.exportSymbol('proto.google.protobuf.UInt64Value', null, global);
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.DoubleValue = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.DoubleValue, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.DoubleValue.displayName = 'proto.google.protobuf.DoubleValue';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.FloatValue = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.FloatValue, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.FloatValue.displayName = 'proto.google.protobuf.FloatValue';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.Int64Value = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.Int64Value, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.Int64Value.displayName = 'proto.google.protobuf.Int64Value';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.UInt64Value = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.UInt64Value, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.UInt64Value.displayName = 'proto.google.protobuf.UInt64Value';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.Int32Value = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.Int32Value, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.Int32Value.displayName = 'proto.google.protobuf.Int32Value';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.UInt32Value = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.UInt32Value, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.UInt32Value.displayName = 'proto.google.protobuf.UInt32Value';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.BoolValue = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.BoolValue, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.BoolValue.displayName = 'proto.google.protobuf.BoolValue';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.StringValue = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.StringValue, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.StringValue.displayName = 'proto.google.protobuf.StringValue';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.google.protobuf.BytesValue = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.google.protobuf.BytesValue, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.google.protobuf.BytesValue.displayName = 'proto.google.protobuf.BytesValue';
+}
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.DoubleValue.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.DoubleValue.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.DoubleValue} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.DoubleValue.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.DoubleValue}
+ */
+proto.google.protobuf.DoubleValue.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.DoubleValue;
+  return proto.google.protobuf.DoubleValue.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.DoubleValue} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.DoubleValue}
+ */
+proto.google.protobuf.DoubleValue.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readDouble());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.DoubleValue.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.DoubleValue.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.DoubleValue} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.DoubleValue.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f !== 0.0) {
+    writer.writeDouble(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional double value = 1;
+ * @return {number}
+ */
+proto.google.protobuf.DoubleValue.prototype.getValue = function() {
+  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 1, 0.0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.google.protobuf.DoubleValue} returns this
+ */
+proto.google.protobuf.DoubleValue.prototype.setValue = function(value) {
+  return jspb.Message.setProto3FloatField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.FloatValue.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.FloatValue.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.FloatValue} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.FloatValue.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getFloatingPointFieldWithDefault(msg, 1, 0.0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.FloatValue}
+ */
+proto.google.protobuf.FloatValue.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.FloatValue;
+  return proto.google.protobuf.FloatValue.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.FloatValue} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.FloatValue}
+ */
+proto.google.protobuf.FloatValue.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readFloat());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.FloatValue.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.FloatValue.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.FloatValue} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.FloatValue.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f !== 0.0) {
+    writer.writeFloat(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional float value = 1;
+ * @return {number}
+ */
+proto.google.protobuf.FloatValue.prototype.getValue = function() {
+  return /** @type {number} */ (jspb.Message.getFloatingPointFieldWithDefault(this, 1, 0.0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.google.protobuf.FloatValue} returns this
+ */
+proto.google.protobuf.FloatValue.prototype.setValue = function(value) {
+  return jspb.Message.setProto3FloatField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.Int64Value.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.Int64Value.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.Int64Value} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Int64Value.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getFieldWithDefault(msg, 1, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.Int64Value}
+ */
+proto.google.protobuf.Int64Value.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.Int64Value;
+  return proto.google.protobuf.Int64Value.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.Int64Value} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.Int64Value}
+ */
+proto.google.protobuf.Int64Value.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readInt64());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.Int64Value.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.Int64Value.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.Int64Value} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Int64Value.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f !== 0) {
+    writer.writeInt64(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional int64 value = 1;
+ * @return {number}
+ */
+proto.google.protobuf.Int64Value.prototype.getValue = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.google.protobuf.Int64Value} returns this
+ */
+proto.google.protobuf.Int64Value.prototype.setValue = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.UInt64Value.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.UInt64Value.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.UInt64Value} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.UInt64Value.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getFieldWithDefault(msg, 1, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.UInt64Value}
+ */
+proto.google.protobuf.UInt64Value.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.UInt64Value;
+  return proto.google.protobuf.UInt64Value.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.UInt64Value} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.UInt64Value}
+ */
+proto.google.protobuf.UInt64Value.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readUint64());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.UInt64Value.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.UInt64Value.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.UInt64Value} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.UInt64Value.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f !== 0) {
+    writer.writeUint64(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional uint64 value = 1;
+ * @return {number}
+ */
+proto.google.protobuf.UInt64Value.prototype.getValue = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.google.protobuf.UInt64Value} returns this
+ */
+proto.google.protobuf.UInt64Value.prototype.setValue = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.Int32Value.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.Int32Value.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.Int32Value} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Int32Value.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getFieldWithDefault(msg, 1, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.Int32Value}
+ */
+proto.google.protobuf.Int32Value.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.Int32Value;
+  return proto.google.protobuf.Int32Value.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.Int32Value} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.Int32Value}
+ */
+proto.google.protobuf.Int32Value.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.Int32Value.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.Int32Value.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.Int32Value} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.Int32Value.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional int32 value = 1;
+ * @return {number}
+ */
+proto.google.protobuf.Int32Value.prototype.getValue = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.google.protobuf.Int32Value} returns this
+ */
+proto.google.protobuf.Int32Value.prototype.setValue = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.UInt32Value.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.UInt32Value.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.UInt32Value} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.UInt32Value.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getFieldWithDefault(msg, 1, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.UInt32Value}
+ */
+proto.google.protobuf.UInt32Value.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.UInt32Value;
+  return proto.google.protobuf.UInt32Value.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.UInt32Value} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.UInt32Value}
+ */
+proto.google.protobuf.UInt32Value.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {number} */ (reader.readUint32());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.UInt32Value.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.UInt32Value.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.UInt32Value} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.UInt32Value.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f !== 0) {
+    writer.writeUint32(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional uint32 value = 1;
+ * @return {number}
+ */
+proto.google.protobuf.UInt32Value.prototype.getValue = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.google.protobuf.UInt32Value} returns this
+ */
+proto.google.protobuf.UInt32Value.prototype.setValue = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.BoolValue.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.BoolValue.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.BoolValue} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.BoolValue.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getBooleanFieldWithDefault(msg, 1, false)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.BoolValue}
+ */
+proto.google.protobuf.BoolValue.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.BoolValue;
+  return proto.google.protobuf.BoolValue.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.BoolValue} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.BoolValue}
+ */
+proto.google.protobuf.BoolValue.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.BoolValue.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.BoolValue.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.BoolValue} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.BoolValue.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f) {
+    writer.writeBool(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional bool value = 1;
+ * @return {boolean}
+ */
+proto.google.protobuf.BoolValue.prototype.getValue = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 1, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.google.protobuf.BoolValue} returns this
+ */
+proto.google.protobuf.BoolValue.prototype.setValue = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.StringValue.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.StringValue.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.StringValue} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.StringValue.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: jspb.Message.getFieldWithDefault(msg, 1, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.StringValue}
+ */
+proto.google.protobuf.StringValue.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.StringValue;
+  return proto.google.protobuf.StringValue.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.StringValue} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.StringValue}
+ */
+proto.google.protobuf.StringValue.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.StringValue.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.StringValue.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.StringValue} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.StringValue.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string value = 1;
+ * @return {string}
+ */
+proto.google.protobuf.StringValue.prototype.getValue = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.google.protobuf.StringValue} returns this
+ */
+proto.google.protobuf.StringValue.prototype.setValue = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.google.protobuf.BytesValue.prototype.toObject = function(opt_includeInstance) {
+  return proto.google.protobuf.BytesValue.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.google.protobuf.BytesValue} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.BytesValue.toObject = function(includeInstance, msg) {
+  var f, obj = {
+value: msg.getValue_asB64()
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.google.protobuf.BytesValue}
+ */
+proto.google.protobuf.BytesValue.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.google.protobuf.BytesValue;
+  return proto.google.protobuf.BytesValue.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.google.protobuf.BytesValue} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.google.protobuf.BytesValue}
+ */
+proto.google.protobuf.BytesValue.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {!Uint8Array} */ (reader.readBytes());
+      msg.setValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.BytesValue.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.google.protobuf.BytesValue.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.google.protobuf.BytesValue} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.google.protobuf.BytesValue.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getValue_asU8();
+  if (f.length > 0) {
+    writer.writeBytes(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional bytes value = 1;
+ * @return {!(string|Uint8Array)}
+ */
+proto.google.protobuf.BytesValue.prototype.getValue = function() {
+  return /** @type {!(string|Uint8Array)} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * optional bytes value = 1;
+ * This is a type-conversion wrapper around `getValue()`
+ * @return {string}
+ */
+proto.google.protobuf.BytesValue.prototype.getValue_asB64 = function() {
+  return /** @type {string} */ (jspb.Message.bytesAsB64(
+      this.getValue()));
+};
+
+
+/**
+ * optional bytes value = 1;
+ * Note that Uint8Array is not supported on all browsers.
+ * @see http://caniuse.com/Uint8Array
+ * This is a type-conversion wrapper around `getValue()`
+ * @return {!Uint8Array}
+ */
+proto.google.protobuf.BytesValue.prototype.getValue_asU8 = function() {
+  return /** @type {!Uint8Array} */ (jspb.Message.bytesAsU8(
+      this.getValue()));
+};
+
+
+/**
+ * @param {!(string|Uint8Array)} value
+ * @return {!proto.google.protobuf.BytesValue} returns this
+ */
+proto.google.protobuf.BytesValue.prototype.setValue = function(value) {
+  return jspb.Message.setProto3BytesField(this, 1, value);
+};
+
+
+goog.object.extend(exports, proto.google.protobuf);
+
+
+/***/ }),
+
+/***/ "./node_modules/grpc-web/index.js":
+/*!****************************************!*\
+  !*** ./node_modules/grpc-web/index.js ***!
+  \****************************************/
+/***/ (function(module, __unused_webpack_exports, __webpack_require__) {
+
+/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+var n;function aa(a){var b=0;return function(){return b<a.length?{done:!1,value:a[b++]}:{done:!0}}}var ba="function"==typeof Object.defineProperties?Object.defineProperty:function(a,b,c){a!=Array.prototype&&a!=Object.prototype&&(a[b]=c.value)};function ca(a){a=["object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof __webpack_require__.g&&__webpack_require__.g,a];for(var b=0;b<a.length;++b){var c=a[b];if(c&&c.Math==Math)return c}throw Error("Cannot find global object");}var r=ca(this);
+function t(){t=function(){};r.Symbol||(r.Symbol=da)}function ea(a,b){this.a=a;ba(this,"description",{configurable:!0,writable:!0,value:b})}ea.prototype.toString=function(){return this.a};var da=function(){function a(c){if(this instanceof a)throw new TypeError("Symbol is not a constructor");return new ea("jscomp_symbol_"+(c||"")+"_"+b++,c)}var b=0;return a}();
+function u(){t();var a=r.Symbol.iterator;a||(a=r.Symbol.iterator=r.Symbol("Symbol.iterator"));"function"!=typeof Array.prototype[a]&&ba(Array.prototype,a,{configurable:!0,writable:!0,value:function(){return fa(aa(this))}});u=function(){}}function fa(a){u();a={next:a};a[r.Symbol.iterator]=function(){return this};return a}function ha(a){var b="undefined"!=typeof Symbol&&Symbol.iterator&&a[Symbol.iterator];return b?b.call(a):{next:aa(a)}}
+var ia="function"==typeof Object.create?Object.create:function(a){function b(){}b.prototype=a;return new b},ja;if("function"==typeof Object.setPrototypeOf)ja=Object.setPrototypeOf;else{var ka;a:{var la={V:!0},ma={};try{ma.__proto__=la;ka=ma.V;break a}catch(a){}ka=!1}ja=ka?function(a,b){a.__proto__=b;if(a.__proto__!==b)throw new TypeError(a+" is not extensible");return a}:null}var na=ja;
+function oa(a,b){a.prototype=ia(b.prototype);a.prototype.constructor=a;if(na)na(a,b);else for(var c in b)if("prototype"!=c)if(Object.defineProperties){var d=Object.getOwnPropertyDescriptor(b,c);d&&Object.defineProperty(a,c,d)}else a[c]=b[c];a.O=b.prototype}
+function pa(a,b){u();a instanceof String&&(a+="");var c=0,d={next:function(){if(c<a.length){var f=c++;return{value:b(f,a[f]),done:!1}}d.next=function(){return{done:!0,value:void 0}};return d.next()}};d[Symbol.iterator]=function(){return d};return d}function v(a,b){if(b){var c=r;a=a.split(".");for(var d=0;d<a.length-1;d++){var f=a[d];f in c||(c[f]={});c=c[f]}a=a[a.length-1];d=c[a];b=b(d);b!=d&&null!=b&&ba(c,a,{configurable:!0,writable:!0,value:b})}}
+v("Array.prototype.keys",function(a){return a?a:function(){return pa(this,function(b){return b})}});v("Array.prototype.find",function(a){return a?a:function(b,c){a:{var d=this;d instanceof String&&(d=String(d));for(var f=d.length,g=0;g<f;g++){var e=d[g];if(b.call(c,e,g,d)){b=e;break a}}b=void 0}return b}});v("Object.is",function(a){return a?a:function(b,c){return b===c?0!==b||1/b===1/c:b!==b&&c!==c}});
+v("Array.prototype.includes",function(a){return a?a:function(b,c){var d=this;d instanceof String&&(d=String(d));var f=d.length;c=c||0;for(0>c&&(c=Math.max(c+f,0));c<f;c++){var g=d[c];if(g===b||Object.is(g,b))return!0}return!1}});
+v("Promise",function(a){function b(e){this.b=0;this.c=void 0;this.a=[];var h=this.f();try{e(h.resolve,h.reject)}catch(k){h.reject(k)}}function c(){this.a=null}function d(e){return e instanceof b?e:new b(function(h){h(e)})}if(a)return a;c.prototype.b=function(e){if(null==this.a){this.a=[];var h=this;this.c(function(){h.g()})}this.a.push(e)};var f=r.setTimeout;c.prototype.c=function(e){f(e,0)};c.prototype.g=function(){for(;this.a&&this.a.length;){var e=this.a;this.a=[];for(var h=0;h<e.length;++h){var k=
+e[h];e[h]=null;try{k()}catch(l){this.f(l)}}}this.a=null};c.prototype.f=function(e){this.c(function(){throw e;})};b.prototype.f=function(){function e(l){return function(m){k||(k=!0,l.call(h,m))}}var h=this,k=!1;return{resolve:e(this.s),reject:e(this.g)}};b.prototype.s=function(e){if(e===this)this.g(new TypeError("A Promise cannot resolve to itself"));else if(e instanceof b)this.v(e);else{a:switch(typeof e){case "object":var h=null!=e;break a;case "function":h=!0;break a;default:h=!1}h?this.m(e):this.h(e)}};
+b.prototype.m=function(e){var h=void 0;try{h=e.then}catch(k){this.g(k);return}"function"==typeof h?this.w(h,e):this.h(e)};b.prototype.g=function(e){this.i(2,e)};b.prototype.h=function(e){this.i(1,e)};b.prototype.i=function(e,h){if(0!=this.b)throw Error("Cannot settle("+e+", "+h+"): Promise already settled in state"+this.b);this.b=e;this.c=h;this.l()};b.prototype.l=function(){if(null!=this.a){for(var e=0;e<this.a.length;++e)g.b(this.a[e]);this.a=null}};var g=new c;b.prototype.v=function(e){var h=this.f();
+e.F(h.resolve,h.reject)};b.prototype.w=function(e,h){var k=this.f();try{e.call(h,k.resolve,k.reject)}catch(l){k.reject(l)}};b.prototype.then=function(e,h){function k(q,w){return"function"==typeof q?function(A){try{l(q(A))}catch(L){m(L)}}:w}var l,m,p=new b(function(q,w){l=q;m=w});this.F(k(e,l),k(h,m));return p};b.prototype.catch=function(e){return this.then(void 0,e)};b.prototype.F=function(e,h){function k(){switch(l.b){case 1:e(l.c);break;case 2:h(l.c);break;default:throw Error("Unexpected state: "+
+l.b);}}var l=this;null==this.a?g.b(k):this.a.push(k)};b.resolve=d;b.reject=function(e){return new b(function(h,k){k(e)})};b.race=function(e){return new b(function(h,k){for(var l=ha(e),m=l.next();!m.done;m=l.next())d(m.value).F(h,k)})};b.all=function(e){var h=ha(e),k=h.next();return k.done?d([]):new b(function(l,m){function p(A){return function(L){q[A]=L;w--;0==w&&l(q)}}var q=[],w=0;do q.push(void 0),w++,d(k.value).F(p(q.length-1),m),k=h.next();while(!k.done)})};return b});var qa=qa||{},x=this||self;
+function y(a,b){a=a.split(".");b=b||x;for(var c=0;c<a.length;c++)if(b=b[a[c]],null==b)return null;return b}function ra(){}function sa(a){var b=typeof a;return"object"==b&&null!=a||"function"==b}var ta="closure_uid_"+(1E9*Math.random()>>>0),ua=0;function va(a,b,c){return a.call.apply(a.bind,arguments)}
+function wa(a,b,c){if(!a)throw Error();if(2<arguments.length){var d=Array.prototype.slice.call(arguments,2);return function(){var f=Array.prototype.slice.call(arguments);Array.prototype.unshift.apply(f,d);return a.apply(b,f)}}return function(){return a.apply(b,arguments)}}function z(a,b,c){Function.prototype.bind&&-1!=Function.prototype.bind.toString().indexOf("native code")?z=va:z=wa;return z.apply(null,arguments)}
+function B(a,b){function c(){}c.prototype=b.prototype;a.O=b.prototype;a.prototype=new c;a.prototype.constructor=a};function xa(a){this.a=a||{}}xa.prototype.get=function(a){return this.a[a]};xa.prototype.G=function(){return Object.keys(this.a)};function C(a,b,c,d){this.f=a;this.c=b;this.b=c;this.a=d}C.prototype.getRequestMessage=function(){return this.f};C.prototype.getMethodDescriptor=function(){return this.c};C.prototype.getMetadata=function(){return this.b};C.prototype.getCallOptions=function(){return this.a};function D(a,b,c,d){c=void 0===c?{}:c;this.c=a;this.a=c;this.b=b;this.f=void 0===d?null:d}D.prototype.getResponseMessage=function(){return this.c};D.prototype.getMetadata=function(){return this.a};D.prototype.getMethodDescriptor=function(){return this.b};D.prototype.getStatus=function(){return this.f};function ya(a,b,c,d,f,g){this.name=a;this.a=f;this.b=g}function za(a,b,c){c=void 0===c?{}:c;var d=void 0===d?new xa:d;return new C(b,a,c,d)}ya.prototype.getName=function(){return this.name};ya.prototype.getName=ya.prototype.getName;function Aa(a){switch(a){case 200:return 0;case 400:return 3;case 401:return 16;case 403:return 7;case 404:return 5;case 409:return 10;case 412:return 9;case 429:return 8;case 499:return 1;case 500:return 2;case 501:return 12;case 503:return 14;case 504:return 4;default:return 2}}
+function Ba(a){switch(a){case 0:return"OK";case 1:return"CANCELLED";case 2:return"UNKNOWN";case 3:return"INVALID_ARGUMENT";case 4:return"DEADLINE_EXCEEDED";case 5:return"NOT_FOUND";case 6:return"ALREADY_EXISTS";case 7:return"PERMISSION_DENIED";case 16:return"UNAUTHENTICATED";case 8:return"RESOURCE_EXHAUSTED";case 9:return"FAILED_PRECONDITION";case 10:return"ABORTED";case 11:return"OUT_OF_RANGE";case 12:return"UNIMPLEMENTED";case 13:return"INTERNAL";case 14:return"UNAVAILABLE";case 15:return"DATA_LOSS";
+default:return""}};function E(a,b,c){c=void 0===c?{}:c;b=Error.call(this,b);this.message=b.message;"stack"in b&&(this.stack=b.stack);this.code=a;this.metadata=c}oa(E,Error);E.prototype.toString=function(){var a="RpcError("+(Ba(this.code)||String(this.code))+")";this.message&&(a+=": "+this.message);return a};E.prototype.name="RpcError";function Ca(a){this.a=a}Ca.prototype.on=function(a,b){return"data"==a||"error"==a?this:this.a.on(a,b)};Ca.prototype.removeListener=function(a,b){return this.a.removeListener(a,b)};Ca.prototype.cancel=function(){this.a.cancel()};function Da(a){switch(a){case 0:return"No Error";case 1:return"Access denied to content document";case 2:return"File not found";case 3:return"Firefox silently errored";case 4:return"Application custom error";case 5:return"An exception occurred";case 6:return"Http response at 400 or 500 level";case 7:return"Request was aborted";case 8:return"Request timed out";case 9:return"The resource is not available offline";default:return"Unrecognized error code"}};function F(a){if(Error.captureStackTrace)Error.captureStackTrace(this,F);else{var b=Error().stack;b&&(this.stack=b)}a&&(this.message=String(a))}B(F,Error);F.prototype.name="CustomError";function Ea(a,b){a=a.split("%s");for(var c="",d=a.length-1,f=0;f<d;f++)c+=a[f]+(f<b.length?b[f]:"%s");F.call(this,c+a[d])}B(Ea,F);Ea.prototype.name="AssertionError";function Fa(a,b){throw new Ea("Failure"+(a?": "+a:""),Array.prototype.slice.call(arguments,1));};function Ga(){this.l=null;this.i=[];this.m=0;this.b=Ha;this.f=this.a=this.h=0;this.c=null;this.g=0}
+function Ia(a,b){function c(l){l==Ja?e.h=l:l==G?e.h=l:Ka(e,h,k,"invalid frame byte");e.b=La;e.a=0;e.f=0}function d(l){e.f++;e.a=(e.a<<8)+l;4==e.f&&(e.b=Ma,e.g=0,"undefined"!==typeof Uint8Array?e.c=new Uint8Array(e.a):e.c=Array(e.a),0==e.a&&g())}function f(l){e.c[e.g++]=l;e.g==e.a&&g()}function g(){var l={};l[e.h]=e.c;e.i.push(l);e.b=Ha}var e=a,h,k=0;for(b instanceof Uint8Array||b instanceof Array?h=b:h=new Uint8Array(b);k<h.length;){switch(e.b){case Na:Ka(e,h,k,"stream already broken");break;case Ha:c(h[k]);
+break;case La:d(h[k]);break;case Ma:f(h[k]);break;default:throw Error("unexpected parser state: "+e.b);}e.m++;k++}a=e.i;e.i=[];return 0<a.length?a:null}var Ha=0,La=1,Ma=2,Na=3,Ja=0,G=128;function Ka(a,b,c,d){a.b=Na;a.l="The stream is broken @"+a.m+"/"+c+". Error: "+d+". With input:\n"+b;throw Error(a.l);};var Oa=Array.prototype.indexOf?function(a,b){return Array.prototype.indexOf.call(a,b,void 0)}:function(a,b){if("string"===typeof a)return"string"!==typeof b||1!=b.length?-1:a.indexOf(b,0);for(var c=0;c<a.length;c++)if(c in a&&a[c]===b)return c;return-1};var Pa=String.prototype.trim?function(a){return a.trim()}:function(a){return/^[\s\xa0]*([\s\S]*?)[\s\xa0]*$/.exec(a)[1]};function H(a,b){return-1!=a.indexOf(b)}function Qa(a,b){return a<b?-1:a>b?1:0};var I;a:{var Ra=x.navigator;if(Ra){var Sa=Ra.userAgent;if(Sa){I=Sa;break a}}I=""};function Ta(a,b){for(var c in a)b.call(void 0,a[c],c,a)}function Ua(a,b){var c={},d;for(d in a)c[d]=b.call(void 0,a[d],d,a);return c}var Va="constructor hasOwnProperty isPrototypeOf propertyIsEnumerable toLocaleString toString valueOf".split(" ");function Wa(a,b){for(var c,d,f=1;f<arguments.length;f++){d=arguments[f];for(c in d)a[c]=d[c];for(var g=0;g<Va.length;g++)c=Va[g],Object.prototype.hasOwnProperty.call(d,c)&&(a[c]=d[c])}};function Xa(a){var b=1;a=a.split(":");for(var c=[];0<b&&a.length;)c.push(a.shift()),b--;a.length&&c.push(a.join(":"));return c};function Ya(a){Ya[" "](a);return a}Ya[" "]=ra;function Za(a){var b=$a;return Object.prototype.hasOwnProperty.call(b,9)?b[9]:b[9]=a(9)};var ab=H(I,"Opera"),bb=H(I,"Trident")||H(I,"MSIE"),cb=H(I,"Edge"),db=H(I,"Gecko")&&!(H(I.toLowerCase(),"webkit")&&!H(I,"Edge"))&&!(H(I,"Trident")||H(I,"MSIE"))&&!H(I,"Edge"),eb=H(I.toLowerCase(),"webkit")&&!H(I,"Edge"),fb;
+a:{var gb="",hb=function(){var a=I;if(db)return/rv:([^\);]+)(\)|;)/.exec(a);if(cb)return/Edge\/([\d\.]+)/.exec(a);if(bb)return/\b(?:MSIE|rv)[: ]([^\);]+)(\)|;)/.exec(a);if(eb)return/WebKit\/(\S+)/.exec(a);if(ab)return/(?:Version)[ \/]?(\S+)/.exec(a)}();hb&&(gb=hb?hb[1]:"");if(bb){var ib,jb=x.document;ib=jb?jb.documentMode:void 0;if(null!=ib&&ib>parseFloat(gb)){fb=String(ib);break a}}fb=gb}var $a={};
+function kb(){return Za(function(){for(var a=0,b=Pa(String(fb)).split("."),c=Pa("9").split("."),d=Math.max(b.length,c.length),f=0;0==a&&f<d;f++){var g=b[f]||"",e=c[f]||"";do{g=/(\d*)(\D*)(.*)/.exec(g)||["","","",""];e=/(\d*)(\D*)(.*)/.exec(e)||["","","",""];if(0==g[0].length&&0==e[0].length)break;a=Qa(0==g[1].length?0:parseInt(g[1],10),0==e[1].length?0:parseInt(e[1],10))||Qa(0==g[2].length,0==e[2].length)||Qa(g[2],e[2]);g=g[3];e=e[3]}while(0==a)}return 0<=a})};function lb(){0!=mb&&(Object.prototype.hasOwnProperty.call(this,ta)&&this[ta]||(this[ta]=++ua));this.K=this.K}var mb=0;lb.prototype.K=!1;var nb=Object.freeze||function(a){return a};function J(a,b){this.type=a;this.a=this.target=b;this.defaultPrevented=!1}J.prototype.b=function(){this.defaultPrevented=!0};var ob=function(){if(!x.addEventListener||!Object.defineProperty)return!1;var a=!1,b=Object.defineProperty({},"passive",{get:function(){a=!0}});try{x.addEventListener("test",ra,b),x.removeEventListener("test",ra,b)}catch(c){}return a}();function K(a,b){J.call(this,a?a.type:"");this.relatedTarget=this.a=this.target=null;this.button=this.screenY=this.screenX=this.clientY=this.clientX=0;this.key="";this.metaKey=this.shiftKey=this.altKey=this.ctrlKey=!1;this.pointerId=0;this.pointerType="";this.c=null;if(a){var c=this.type=a.type,d=a.changedTouches&&a.changedTouches.length?a.changedTouches[0]:null;this.target=a.target||a.srcElement;this.a=b;if(b=a.relatedTarget){if(db){a:{try{Ya(b.nodeName);var f=!0;break a}catch(g){}f=!1}f||(b=null)}}else"mouseover"==
+c?b=a.fromElement:"mouseout"==c&&(b=a.toElement);this.relatedTarget=b;d?(this.clientX=void 0!==d.clientX?d.clientX:d.pageX,this.clientY=void 0!==d.clientY?d.clientY:d.pageY,this.screenX=d.screenX||0,this.screenY=d.screenY||0):(this.clientX=void 0!==a.clientX?a.clientX:a.pageX,this.clientY=void 0!==a.clientY?a.clientY:a.pageY,this.screenX=a.screenX||0,this.screenY=a.screenY||0);this.button=a.button;this.key=a.key||"";this.ctrlKey=a.ctrlKey;this.altKey=a.altKey;this.shiftKey=a.shiftKey;this.metaKey=
+a.metaKey;this.pointerId=a.pointerId||0;this.pointerType="string"===typeof a.pointerType?a.pointerType:pb[a.pointerType]||"";this.c=a;a.defaultPrevented&&K.O.b.call(this)}}B(K,J);var pb=nb({2:"touch",3:"pen",4:"mouse"});K.prototype.b=function(){K.O.b.call(this);var a=this.c;a.preventDefault?a.preventDefault():a.returnValue=!1};var M="closure_listenable_"+(1E6*Math.random()|0);var qb=0;function rb(a,b,c,d,f){this.listener=a;this.proxy=null;this.src=b;this.type=c;this.capture=!!d;this.H=f;this.key=++qb;this.A=this.D=!1}function sb(a){a.A=!0;a.listener=null;a.proxy=null;a.src=null;a.H=null};function tb(a){this.src=a;this.a={};this.b=0}tb.prototype.add=function(a,b,c,d,f){var g=a.toString();a=this.a[g];a||(a=this.a[g]=[],this.b++);var e=ub(a,b,d,f);-1<e?(b=a[e],c||(b.D=!1)):(b=new rb(b,this.src,g,!!d,f),b.D=c,a.push(b));return b};tb.prototype.remove=function(a,b,c,d){a=a.toString();if(!(a in this.a))return!1;var f=this.a[a];b=ub(f,b,c,d);return-1<b?(sb(f[b]),Array.prototype.splice.call(f,b,1),0==f.length&&(delete this.a[a],this.b--),!0):!1};
+function vb(a,b){var c=b.type;if(c in a.a){var d=a.a[c],f=Oa(d,b),g;(g=0<=f)&&Array.prototype.splice.call(d,f,1);g&&(sb(b),0==a.a[c].length&&(delete a.a[c],a.b--))}}function ub(a,b,c,d){for(var f=0;f<a.length;++f){var g=a[f];if(!g.A&&g.listener==b&&g.capture==!!c&&g.H==d)return f}return-1};var wb="closure_lm_"+(1E6*Math.random()|0),xb={},yb=0;function zb(a,b,c,d,f){if(d&&d.once)Ab(a,b,c,d,f);else if(Array.isArray(b))for(var g=0;g<b.length;g++)zb(a,b[g],c,d,f);else c=Bb(c),a&&a[M]?a.f.add(String(b),c,!1,sa(d)?!!d.capture:!!d,f):Cb(a,b,c,!1,d,f)}
+function Cb(a,b,c,d,f,g){if(!b)throw Error("Invalid event type");var e=sa(f)?!!f.capture:!!f,h=Db(a);h||(a[wb]=h=new tb(a));c=h.add(b,c,d,e,g);if(!c.proxy){d=Eb();c.proxy=d;d.src=a;d.listener=c;if(a.addEventListener)ob||(f=e),void 0===f&&(f=!1),a.addEventListener(b.toString(),d,f);else if(a.attachEvent)a.attachEvent(Fb(b.toString()),d);else if(a.addListener&&a.removeListener)a.addListener(d);else throw Error("addEventListener and attachEvent are unavailable.");yb++}}
+function Eb(){function a(c){return b.call(a.src,a.listener,c)}var b=Gb;return a}function Ab(a,b,c,d,f){if(Array.isArray(b))for(var g=0;g<b.length;g++)Ab(a,b[g],c,d,f);else c=Bb(c),a&&a[M]?a.f.add(String(b),c,!0,sa(d)?!!d.capture:!!d,f):Cb(a,b,c,!0,d,f)}function Hb(a,b,c,d,f){if(Array.isArray(b))for(var g=0;g<b.length;g++)Hb(a,b[g],c,d,f);else(d=sa(d)?!!d.capture:!!d,c=Bb(c),a&&a[M])?a.f.remove(String(b),c,d,f):a&&(a=Db(a))&&(b=a.a[b.toString()],a=-1,b&&(a=ub(b,c,d,f)),(c=-1<a?b[a]:null)&&Ib(c))}
+function Ib(a){if("number"!==typeof a&&a&&!a.A){var b=a.src;if(b&&b[M])vb(b.f,a);else{var c=a.type,d=a.proxy;b.removeEventListener?b.removeEventListener(c,d,a.capture):b.detachEvent?b.detachEvent(Fb(c),d):b.addListener&&b.removeListener&&b.removeListener(d);yb--;(c=Db(b))?(vb(c,a),0==c.b&&(c.src=null,b[wb]=null)):sb(a)}}}function Fb(a){return a in xb?xb[a]:xb[a]="on"+a}function Gb(a,b){if(a.A)a=!0;else{b=new K(b,this);var c=a.listener,d=a.H||a.src;a.D&&Ib(a);a=c.call(d,b)}return a}
+function Db(a){a=a[wb];return a instanceof tb?a:null}var Jb="__closure_events_fn_"+(1E9*Math.random()>>>0);function Bb(a){if("function"===typeof a)return a;a[Jb]||(a[Jb]=function(b){return a.handleEvent(b)});return a[Jb]};function N(){lb.call(this);this.f=new tb(this);this.U=this}B(N,lb);N.prototype[M]=!0;N.prototype.addEventListener=function(a,b,c,d){zb(this,a,b,c,d)};N.prototype.removeEventListener=function(a,b,c,d){Hb(this,a,b,c,d)};function O(a,b){a=a.U;var c=b.type||b;if("string"===typeof b)b=new J(b,a);else if(b instanceof J)b.target=b.target||a;else{var d=b;b=new J(c,a);Wa(b,d)}a=b.a=a;Kb(a,c,!0,b);Kb(a,c,!1,b)}
+function Kb(a,b,c,d){if(b=a.f.a[String(b)]){b=b.concat();for(var f=!0,g=0;g<b.length;++g){var e=b[g];if(e&&!e.A&&e.capture==c){var h=e.listener,k=e.H||e.src;e.D&&vb(a.f,e);f=!1!==h.call(k,d)&&f}}}};var Lb=x;function Mb(a,b,c){if("function"===typeof a)c&&(a=z(a,c));else if(a&&"function"==typeof a.handleEvent)a=z(a.handleEvent,a);else throw Error("Invalid listener argument");return 2147483647<Number(b)?-1:Lb.setTimeout(a,b||0)};function Nb(a,b){this.name=a;this.value=b}Nb.prototype.toString=function(){return this.name};var Ob=new Nb("OFF",Infinity),Pb=new Nb("SEVERE",1E3),Qb=new Nb("CONFIG",700),Rb=new Nb("FINE",500);function Tb(){this.clear()}var Ub;Tb.prototype.clear=function(){};function Vb(a,b,c){this.reset(a||Ob,b,c,void 0,void 0)}Vb.prototype.reset=function(){};function Wb(a,b){this.a=null;this.f=[];this.b=(void 0===b?null:b)||null;this.c=[];this.g={getName:function(){return a}}}
+function Xb(a){if(a.a)return a.a;if(a.b)return Xb(a.b);Fa("Root logger has no level set.");return Ob}function Yb(a,b){for(;a;)a.f.forEach(function(c){c(b)}),a=a.b}function Zb(){this.entries={};var a=new Wb("");a.a=Qb;this.entries[""]=a}var $b;function ac(a,b,c){var d=a.entries[b];if(d)return void 0!==c&&(d.a=c),d;d=ac(a,b.substr(0,b.lastIndexOf(".")));var f=new Wb(b,d);a.entries[b]=f;d.c.push(f);void 0!==c&&(f.a=c);return f}function bc(){$b||($b=new Zb);return $b}
+function cc(a,b,c){var d;if(d=a)if(d=a&&b){d=b.value;var f=a?Xb(ac(bc(),a.getName())):Ob;d=d>=f.value}d&&(b=b||Ob,d=ac(bc(),a.getName()),"function"===typeof c&&(c=c()),Ub||(Ub=new Tb),a=a.getName(),a=new Vb(b,c,a),Yb(d,a))}function P(a,b){a&&cc(a,Rb,b)};function dc(){}dc.prototype.a=null;function ec(a){var b;(b=a.a)||(b={},fc(a)&&(b[0]=!0,b[1]=!0),b=a.a=b);return b};var gc;function hc(){}B(hc,dc);function ic(a){return(a=fc(a))?new ActiveXObject(a):new XMLHttpRequest}function fc(a){if(!a.b&&"undefined"==typeof XMLHttpRequest&&"undefined"!=typeof ActiveXObject){for(var b=["MSXML2.XMLHTTP.6.0","MSXML2.XMLHTTP.3.0","MSXML2.XMLHTTP","Microsoft.XMLHTTP"],c=0;c<b.length;c++){var d=b[c];try{return new ActiveXObject(d),a.b=d}catch(f){}}throw Error("Could not create ActiveXObject. ActiveX might be disabled, or MSXML might not be installed");}return a.b}gc=new hc;t();u();function jc(a,b){this.b=a[x.Symbol.iterator]();this.c=b;this.f=0}jc.prototype[Symbol.iterator]=function(){return this};jc.prototype.next=function(){var a=this.b.next();return{value:a.done?void 0:this.c.call(void 0,a.value,this.f++),done:a.done}};function kc(a,b){return new jc(a,b)}t();u();t();u();var lc="StopIteration"in x?x.StopIteration:{message:"StopIteration",stack:""};function Q(){}Q.prototype.next=function(){return Q.prototype.a.call(this)};Q.prototype.a=function(){throw lc;};Q.prototype.u=function(){return this};function mc(a){if(a instanceof R||a instanceof S||a instanceof T)return a;if("function"==typeof a.next)return new R(function(){return nc(a)});t();u();if("function"==typeof a[Symbol.iterator])return t(),u(),new R(function(){return a[Symbol.iterator]()});if("function"==typeof a.u)return new R(function(){return nc(a.u())});throw Error("Not an iterator or iterable.");}
+function nc(a){if(!(a instanceof Q))return a;var b=!1;return{next:function(){for(var c;!b;)try{c=a.a();break}catch(d){if(d!==lc)throw d;b=!0}return{value:c,done:b}}}}t();u();function R(a){this.b=a}R.prototype.u=function(){return new S(this.b())};R.prototype[Symbol.iterator]=function(){return new T(this.b())};R.prototype.c=function(){return new T(this.b())};t();u();function S(a){this.b=a}oa(S,Q);S.prototype.a=function(){var a=this.b.next();if(a.done)throw lc;return a.value};S.prototype.next=function(){return S.prototype.a.call(this)};
+S.prototype[Symbol.iterator]=function(){return new T(this.b)};S.prototype.c=function(){return new T(this.b)};function T(a){R.call(this,function(){return a});this.f=a}oa(T,R);T.prototype.next=function(){return this.f.next()};function oc(a,b){this.o={};this.j=[];this.B=this.size=0;var c=arguments.length;if(1<c){if(c%2)throw Error("Uneven number of arguments");for(var d=0;d<c;d+=2)this.set(arguments[d],arguments[d+1])}else a&&this.addAll(a)}n=oc.prototype;n.G=function(){pc(this);return this.j.concat()};n.has=function(a){return U(this.o,a)};n.clear=function(){this.o={};this.B=this.size=this.j.length=0};n.remove=function(a){return this.delete(a)};
+n.delete=function(a){return U(this.o,a)?(delete this.o[a],--this.size,this.B++,this.j.length>2*this.size&&pc(this),!0):!1};function pc(a){if(a.size!=a.j.length){for(var b=0,c=0;b<a.j.length;){var d=a.j[b];U(a.o,d)&&(a.j[c++]=d);b++}a.j.length=c}if(a.size!=a.j.length){var f={};for(c=b=0;b<a.j.length;)d=a.j[b],U(f,d)||(a.j[c++]=d,f[d]=1),b++;a.j.length=c}}n.get=function(a,b){return U(this.o,a)?this.o[a]:b};n.set=function(a,b){U(this.o,a)||(this.size+=1,this.j.push(a),this.B++);this.o[a]=b};
+n.addAll=function(a){if(a instanceof oc)for(var b=a.G(),c=0;c<b.length;c++)this.set(b[c],a.get(b[c]));else for(b in a)this.set(b,a[b])};n.forEach=function(a,b){for(var c=this.G(),d=0;d<c.length;d++){var f=c[d],g=this.get(f);a.call(b,g,f,this)}};n.clone=function(){return new oc(this)};n.keys=function(){return mc(this.u(!0)).c()};n.values=function(){return mc(this.u(!1)).c()};n.entries=function(){var a=this;return kc(this.keys(),function(b){return[b,a.get(b)]})};
+n.u=function(a){pc(this);var b=0,c=this.B,d=this,f=new Q;f.a=function(){if(c!=d.B)throw Error("The map has changed since the iterator was created");if(b>=d.j.length)throw lc;var g=d.j[b++];return a?g:d.o[g]};f.next=f.a.bind(f);return f};function U(a,b){return Object.prototype.hasOwnProperty.call(a,b)};var qc=/^(?:([^:/?#.]+):)?(?:\/\/(?:([^\\/?#]*)@)?([^\\/?#]*?)(?::([0-9]+))?(?=[\\/?#]|$))?([^?#]+)?(?:\?([^#]*))?(?:#([\s\S]*))?$/;function rc(a){N.call(this);this.headers=new oc;this.C=a||null;this.c=!1;this.J=this.a=null;this.P=this.v="";this.g=0;this.l="";this.i=this.N=this.s=this.L=!1;this.h=0;this.w=null;this.m=sc;this.I=this.M=!1}B(rc,N);var sc="";rc.prototype.b=ac(bc(),"goog.net.XhrIo",void 0).g;var tc=/^https?$/i,uc=["POST","PUT"];
+function vc(a,b,c){if(a.a)throw Error("[goog.net.XhrIo] Object is active with another request="+a.v+"; newUri="+b);a.v=b;a.l="";a.g=0;a.P="POST";a.L=!1;a.c=!0;a.a=a.C?ic(a.C):ic(gc);a.J=a.C?ec(a.C):ec(gc);a.a.onreadystatechange=z(a.R,a);try{P(a.b,V(a,"Opening Xhr")),a.N=!0,a.a.open("POST",String(b),!0),a.N=!1}catch(g){P(a.b,V(a,"Error opening Xhr: "+g.message));wc(a,g);return}b=c||"";c=a.headers.clone();var d=c.G().find(function(g){return"content-type"==g.toLowerCase()}),f=x.FormData&&b instanceof
+x.FormData;!(0<=Oa(uc,"POST"))||d||f||c.set("Content-Type","application/x-www-form-urlencoded;charset=utf-8");c.forEach(function(g,e){this.a.setRequestHeader(e,g)},a);a.m&&(a.a.responseType=a.m);"withCredentials"in a.a&&a.a.withCredentials!==a.M&&(a.a.withCredentials=a.M);try{xc(a),0<a.h&&(a.I=yc(a.a),P(a.b,V(a,"Will abort after "+a.h+"ms if incomplete, xhr2 "+a.I)),a.I?(a.a.timeout=a.h,a.a.ontimeout=z(a.T,a)):a.w=Mb(a.T,a.h,a)),P(a.b,V(a,"Sending request")),a.s=!0,a.a.send(b),a.s=!1}catch(g){P(a.b,
+V(a,"Send error: "+g.message)),wc(a,g)}}function yc(a){return bb&&kb()&&"number"===typeof a.timeout&&void 0!==a.ontimeout}n=rc.prototype;n.T=function(){"undefined"!=typeof qa&&this.a&&(this.l="Timed out after "+this.h+"ms, aborting",this.g=8,P(this.b,V(this,this.l)),O(this,"timeout"),this.abort(8))};function wc(a,b){a.c=!1;a.a&&(a.i=!0,a.a.abort(),a.i=!1);a.l=b;a.g=5;zc(a);Ac(a)}function zc(a){a.L||(a.L=!0,O(a,"complete"),O(a,"error"))}
+n.abort=function(a){this.a&&this.c&&(P(this.b,V(this,"Aborting")),this.c=!1,this.i=!0,this.a.abort(),this.i=!1,this.g=a||7,O(this,"complete"),O(this,"abort"),Ac(this))};n.R=function(){this.K||(this.N||this.s||this.i?Bc(this):this.W())};n.W=function(){Bc(this)};
+function Bc(a){if(a.c&&"undefined"!=typeof qa)if(a.J[1]&&4==W(a)&&2==a.getStatus())P(a.b,V(a,"Local request error detected and ignored"));else if(a.s&&4==W(a))Mb(a.R,0,a);else if(O(a,"readystatechange"),4==W(a)){P(a.b,V(a,"Request complete"));a.c=!1;try{var b=a.getStatus();a:switch(b){case 200:case 201:case 202:case 204:case 206:case 304:case 1223:var c=!0;break a;default:c=!1}var d;if(!(d=c)){var f;if(f=0===b){var g=String(a.v).match(qc)[1]||null;if(!g&&x.self&&x.self.location){var e=x.self.location.protocol;
+g=e.substr(0,e.length-1)}f=!tc.test(g?g.toLowerCase():"")}d=f}if(d)O(a,"complete"),O(a,"success");else{a.g=6;try{var h=2<W(a)?a.a.statusText:""}catch(k){P(a.b,"Can not get status: "+k.message),h=""}a.l=h+" ["+a.getStatus()+"]";zc(a)}}finally{Ac(a)}}}function Ac(a){if(a.a){xc(a);var b=a.a,c=a.J[0]?ra:null;a.a=null;a.J=null;O(a,"ready");try{b.onreadystatechange=c}catch(d){(a=a.b)&&cc(a,Pb,"Problem encountered resetting onreadystatechange: "+d.message)}}}
+function xc(a){a.a&&a.I&&(a.a.ontimeout=null);a.w&&(Lb.clearTimeout(a.w),a.w=null)}function W(a){return a.a?a.a.readyState:0}n.getStatus=function(){try{return 2<W(this)?this.a.status:-1}catch(a){return-1}};
+function Cc(a){try{if(!a.a)return null;if("response"in a.a)return a.a.response;switch(a.m){case sc:case "text":return a.a.responseText;case "arraybuffer":if("mozResponseArrayBuffer"in a.a)return a.a.mozResponseArrayBuffer}var b=a.b;b&&cc(b,Pb,"Response type "+a.m+" is not supported on this browser");return null}catch(c){return P(a.b,"Can not get response: "+c.message),null}}
+function Dc(a){var b={};a=(a.a&&4==W(a)?a.a.getAllResponseHeaders()||"":"").split("\r\n");for(var c=0;c<a.length;c++)if(!/^[\s\xa0]*$/.test(a[c])){var d=Xa(a[c]),f=d[0];d=d[1];if("string"===typeof d){d=d.trim();var g=b[f]||[];b[f]=g;g.push(d)}}return Ua(b,function(e){return e.join(", ")})}function V(a,b){return b+" ["+a.P+" "+a.v+" "+a.getStatus()+"]"};var Ec={},Fc=null;function Gc(a){var b=a.length,c=3*b/4;c%3?c=Math.floor(c):H("=.",a[b-1])&&(c=H("=.",a[b-2])?c-2:c-1);var d=new Uint8Array(c),f=0;Hc(a,function(g){d[f++]=g});return d.subarray(0,f)}
+function Hc(a,b){function c(k){for(;d<a.length;){var l=a.charAt(d++),m=Fc[l];if(null!=m)return m;if(!/^[\s\xa0]*$/.test(l))throw Error("Unknown base64 encoding at char: "+l);}return k}Ic();for(var d=0;;){var f=c(-1),g=c(0),e=c(64),h=c(64);if(64===h&&-1===f)break;b(f<<2|g>>4);64!=e&&(b(g<<4&240|e>>2),64!=h&&b(e<<6&192|h))}}
+function Ic(){if(!Fc){Fc={};for(var a="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789".split(""),b=["+/=","+/","-_=","-_.","-_"],c=0;5>c;c++){var d=a.concat(b[c].split(""));Ec[c]=d;for(var f=0;f<d.length;f++){var g=d[f];void 0===Fc[g]&&(Fc[g]=f)}}}};var Jc=["content-type","grpc-status","grpc-message"];
+function X(a){this.a=a.Z;this.m=null;this.b=[];this.h=[];this.g=[];this.f=[];this.c=[];this.l=!1;this.i=0;this.s=new Ga;var b=this;zb(this.a,"readystatechange",function(){var c=b.a;if(c=c.a?c.a.getResponseHeader("Content-Type"):null){c=c.toLowerCase();if(0==c.lastIndexOf("application/grpc-web-text",0)){c=b.a;try{var d=c.a?c.a.responseText:""}catch(k){P(c.b,"Can not get responseText: "+k.message),d=""}c=d||"";d=c.length-c.length%4;c=c.substr(b.i,d-b.i);if(0==c.length)return;b.i=d;c=Gc(c)}else if(0==
+c.lastIndexOf("application/grpc",0))c=new Uint8Array(Cc(b.a));else{Y(b,new E(2,"Unknown Content-type received."));return}d=null;try{d=Ia(b.s,c)}catch(k){Y(b,new E(2,"Error in parsing response body"))}if(d)for(c=0;c<d.length;c++){if(Ja in d[c]){var f=d[c][Ja];if(f){var g=!1,e=void 0;try{e=b.m(f),g=!0}catch(k){Y(b,new E(13,"Error when deserializing response data; error: "+k+(", response: "+e)))}if(g)for(f=e,g=0;g<b.b.length;g++)b.b[g](f)}}if(G in d[c]&&0<d[c][G].length){f="";for(g=0;g<d[c][G].length;g++)f+=
+String.fromCharCode(d[c][G][g]);f=f.trim().split("\r\n");g={};for(e=0;e<f.length;e++){var h=f[e].indexOf(":");g[f[e].substring(0,h).trim()]=f[e].substring(h+1).trim()}f=g;g=0;e="";"grpc-status"in f&&(g=Number(f["grpc-status"]),delete f["grpc-status"]);"grpc-message"in f&&(e=f["grpc-message"],delete f["grpc-message"]);Y(b,new E(g,e,f))}}}});zb(this.a,"complete",function(){var c=b.a.g,d=2,f="",g={};d=Dc(b.a);var e={};for(h in d)d.hasOwnProperty(h)&&(e[h.toLowerCase()]=d[h]);Object.keys(e).forEach(function(k){Jc.includes(k)||
+(g[k]=e[k])});Kc(b,g);var h=-1;if(0!=c){switch(c){case 7:d=10;break;case 8:d=4;break;case 6:h=b.a.getStatus();d=Aa(h);break;default:d=14}10==d&&b.l||(f=Da(c),-1!=h&&(f+=", http status code: "+h),Y(b,new E(d,f)))}else c=!1,"grpc-status"in e&&(d=Number(e["grpc-status"]),"grpc-message"in e&&(f=e["grpc-message"]),0!=d&&(Y(b,new E(d,f||"",e)),c=!0)),c||Lc(b)})}
+X.prototype.on=function(a,b){"data"==a?this.b.push(b):"status"==a?this.h.push(b):"metadata"==a?this.g.push(b):"end"==a?this.c.push(b):"error"==a&&this.f.push(b);return this};function Mc(a,b){b=a.indexOf(b);-1<b&&a.splice(b,1)}X.prototype.removeListener=function(a,b){"data"==a?Mc(this.b,b):"status"==a?Mc(this.h,b):"metadata"==a?Mc(this.g,b):"end"==a?Mc(this.c,b):"error"==a&&Mc(this.f,b);return this};X.prototype.cancel=function(){this.l=!0;this.a.abort()};
+function Y(a,b){if(0!=b.code)for(var c=new E(b.code,decodeURIComponent(b.message||""),b.metadata),d=0;d<a.f.length;d++)a.f[d](c);b={code:b.code,details:decodeURIComponent(b.message||""),metadata:b.metadata};for(c=0;c<a.h.length;c++)a.h[c](b)}function Kc(a,b){for(var c=0;c<a.g.length;c++)a.g[c](b)}function Lc(a){for(var b=0;b<a.c.length;b++)a.c[b]()}X.prototype.cancel=X.prototype.cancel;X.prototype.removeListener=X.prototype.removeListener;X.prototype.on=X.prototype.on;function Nc(a){var b="";Ta(a,function(c,d){b+=d;b+=":";b+=c;b+="\r\n"});return b};function Z(a,b){a=void 0===a?{}:a;this.a=a.format||y("format",a)||"text";this.g=a.aa||y("suppressCorsPreflight",a)||!1;this.f=a.withCredentials||y("withCredentials",a)||!1;this.b=a.$||y("streamInterceptors",a)||[];this.h=a.ba||y("unaryInterceptors",a)||[];this.c=b||null}Z.prototype.X=function(a,b,c,d,f){var g=this,e=a.substr(0,a.length-d.name.length);a=Oc(function(h){return Pc(g,h,e)},this.b).call(this,za(d,b,c));Qc(a,f,!1);return new Ca(a)};
+Z.prototype.S=function(a,b,c,d){var f=this,g=a.substr(0,a.length-d.name.length);return Oc(function(e){return new Promise(function(h,k){var l=Pc(f,e,g),m,p,q;Qc(l,function(w,A,L,Sb,Rc){w?k(w):Rc?q=A:L?p=L:Sb?m=Sb:(w=e.getMethodDescriptor(),A=m,A=void 0===A?{}:A,h(new D(q,w,A,void 0===p?null:p)))},!0)})},this.h).call(this,za(d,b,c)).then(function(e){return e.getResponseMessage()})};Z.prototype.unaryCall=function(a,b,c,d){return this.S(a,b,c,d)};
+Z.prototype.Y=function(a,b,c,d){var f=this,g=a.substr(0,a.length-d.name.length);return Oc(function(e){return Pc(f,e,g)},this.b).call(this,za(d,b,c))};
+function Pc(a,b,c){var d=b.getMethodDescriptor(),f=c+d.getName();c=a.c?a.c:new rc;c.M=a.f;var g=new X({Z:c});g.m=d.b;var e=b.getMetadata();for(h in e)c.headers.set(h,e[h]);"text"==a.a?(c.headers.set("Content-Type","application/grpc-web-text"),c.headers.set("Accept","application/grpc-web-text")):c.headers.set("Content-Type","application/grpc-web+proto");c.headers.set("X-User-Agent","grpc-web-javascript/0.1");c.headers.set("X-Grpc-Web","1");if(c.headers.has("deadline")){var h=Number(c.headers.get("deadline"));
+h=Math.ceil(h-(new Date).getTime());c.headers.delete("deadline");Infinity===h&&(h=0);0<h&&(c.headers.set("grpc-timeout",h+"m"),c.h=Math.max(0,Math.max(1E3,Math.ceil(1.1*h))))}if(a.g){e=c.headers;h={};for(var k=ha(e.keys()),l=k.next();!l.done;l=k.next())l=l.value,h[l]=e.get(l);c.headers.clear();b:{for(m in h){var m=!1;break b}m=!0}if(!m)if(h=Nc(h),"string"===typeof f){if(m=encodeURIComponent("$httpHeaders"),h=null!=h?"="+encodeURIComponent(String(h)):"",m+=h)h=f.indexOf("#"),0>h&&(h=f.length),e=f.indexOf("?"),
+0>e||e>h?(e=h,k=""):k=f.substring(e+1,h),f=[f.substr(0,e),k,f.substr(h)],h=f[1],f[1]=m?h?h+"&"+m:m:h,f=f[0]+(f[1]?"?"+f[1]:"")+f[2]}else f.a("$httpHeaders",h)}b=(0,d.a)(b.getRequestMessage());d=b.length;m=[0,0,0,0];h=new Uint8Array(5+d);for(e=3;0<=e;e--)m[e]=d%256,d>>>=8;h.set(new Uint8Array(m),1);h.set(b,5);b=h;if("text"==a.a){a=b;var p;void 0===p&&(p=0);Ic();p=Ec[p];b=Array(Math.floor(a.length/3));d=p[64]||"";for(m=h=0;h<a.length-2;h+=3){l=a[h];var q=a[h+1];k=a[h+2];e=p[l>>2];l=p[(l&3)<<4|q>>4];
+q=p[(q&15)<<2|k>>6];k=p[k&63];b[m++]=e+l+q+k}e=0;k=d;switch(a.length-h){case 2:e=a[h+1],k=p[(e&15)<<2]||d;case 1:a=a[h],b[m]=p[a>>2]+p[(a&3)<<4|e>>4]+k+d}b=b.join("")}else"binary"==a.a&&(c.m="arraybuffer");vc(c,f,b);return g}
+function Qc(a,b,c){var d=!1,f=null,g=!1;a.on("data",function(e){d=!0;f=e});a.on("error",function(e){0==e.code||g||(g=!0,b(e,null))});a.on("status",function(e){0==e.code||g?c&&b(null,null,e):(g=!0,b({code:e.code,message:e.details,metadata:e.metadata},null))});if(c)a.on("metadata",function(e){b(null,null,null,e)});a.on("end",function(){g||(d?c?b(null,f,null,null,!0):b(null,f):b({code:2,message:"Incomplete response"}));c&&b(null,null)})}
+function Oc(a,b){var c=a;b.forEach(function(d){var f=c;c=function(g){return d.intercept(g,f)}});return c}Z.prototype.serverStreaming=Z.prototype.Y;Z.prototype.unaryCall=Z.prototype.unaryCall;Z.prototype.thenableCall=Z.prototype.S;Z.prototype.rpcCall=Z.prototype.X;module.exports.CallOptions=xa;module.exports.MethodDescriptor=ya;module.exports.GrpcWebClientBase=Z;module.exports.RpcError=E;module.exports.StatusCode={OK:0,CANCELLED:1,UNKNOWN:2,INVALID_ARGUMENT:3,DEADLINE_EXCEEDED:4,NOT_FOUND:5,ALREADY_EXISTS:6,PERMISSION_DENIED:7,UNAUTHENTICATED:16,RESOURCE_EXHAUSTED:8,FAILED_PRECONDITION:9,ABORTED:10,OUT_OF_RANGE:11,UNIMPLEMENTED:12,INTERNAL:13,UNAVAILABLE:14,DATA_LOSS:15};module.exports.MethodType={UNARY:"unary",SERVER_STREAMING:"server_streaming",BIDI_STREAMING:"bidi_streaming"};
+Lb="undefined"!==typeof globalThis&&globalThis||self;
+
+
+/***/ }),
+
+/***/ "./wwwroot/GameViewModelRemoteClient.ts":
+/*!**********************************************!*\
+  !*** ./wwwroot/GameViewModelRemoteClient.ts ***!
+  \**********************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   GameViewModelRemoteClient: () => (/* binding */ GameViewModelRemoteClient)
+/* harmony export */ });
+/* harmony import */ var _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelService_pb */ "./wwwroot/generated/GameViewModelService_pb.js");
+/* harmony import */ var _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! google-protobuf/google/protobuf/empty_pb */ "./node_modules/google-protobuf/google/protobuf/empty_pb.js");
+/* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! google-protobuf/google/protobuf/any_pb */ "./node_modules/google-protobuf/google/protobuf/any_pb.js");
+/* harmony import */ var google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! google-protobuf/google/protobuf/wrappers_pb */ "./node_modules/google-protobuf/google/protobuf/wrappers_pb.js");
+/* harmony import */ var google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__);
+
+
+
+
+class GameViewModelRemoteClient {
+    constructor(grpcClient) {
+        this.connectionStatus = 'Unknown';
+        this.grpcClient = grpcClient;
+    }
+    async initializeRemote() {
+        const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
+        this.monsterName = state['monster_name'];
+        this.monsterMaxHealth = state['monster_max_health'];
+        this.monsterCurrentHealth = state['monster_current_health'];
+        this.playerDamage = state['player_damage'];
+        this.gameMessage = state['game_message'];
+        this.isMonsterDefeated = state['is_monster_defeated'];
+        this.canUseSpecialAttack = state['can_use_special_attack'];
+        this.isSpecialAttackOnCooldown = state['is_special_attack_on_cooldown'];
+        this.connectionStatus = 'Connected';
+    }
+    async refreshState() {
+        const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
+        this.monsterName = state['monster_name'];
+        this.monsterMaxHealth = state['monster_max_health'];
+        this.monsterCurrentHealth = state['monster_current_health'];
+        this.playerDamage = state['player_damage'];
+        this.gameMessage = state['game_message'];
+        this.isMonsterDefeated = state['is_monster_defeated'];
+        this.canUseSpecialAttack = state['can_use_special_attack'];
+        this.isSpecialAttackOnCooldown = state['is_special_attack_on_cooldown'];
+    }
+    async updatePropertyValue(propertyName, value) {
+        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
+        req.setPropertyName(propertyName);
+        req.setNewValue(this.createAnyValue(value));
+        await this.grpcClient.updatePropertyValue(req);
+    }
+    createAnyValue(value) {
+        const anyVal = new google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any();
+        if (typeof value === 'string') {
+            const wrapper = new google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.StringValue();
+            wrapper.setValue(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
+        }
+        else if (typeof value === 'number' && Number.isInteger(value)) {
+            const wrapper = new google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.Int32Value();
+            wrapper.setValue(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+        }
+        else if (typeof value === 'boolean') {
+            const wrapper = new google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.BoolValue();
+            wrapper.setValue(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.BoolValue');
+        }
+        else {
+            throw new Error('Unsupported value type');
+        }
+        return anyVal;
+    }
+    async attackMonster() {
+        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.AttackMonsterRequest();
+        await this.grpcClient.attackMonster(req);
+    }
+    async specialAttackAsync() {
+        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.SpecialAttackAsyncRequest();
+        await this.grpcClient.specialAttackAsync(req);
+    }
+    async resetGame() {
+        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.ResetGameRequest();
+        await this.grpcClient.resetGame(req);
+    }
+}
+
+
+/***/ }),
+
+/***/ "./wwwroot/generated/GameViewModelServiceServiceClientPb.ts":
+/*!******************************************************************!*\
+  !*** ./wwwroot/generated/GameViewModelServiceServiceClientPb.ts ***!
+  \******************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   GameViewModelServiceClient: () => (/* binding */ GameViewModelServiceClient)
+/* harmony export */ });
+/* harmony import */ var grpc_web__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! grpc-web */ "./node_modules/grpc-web/index.js");
+/* harmony import */ var grpc_web__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(grpc_web__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! google-protobuf/google/protobuf/empty_pb */ "./node_modules/google-protobuf/google/protobuf/empty_pb.js");
+/* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./GameViewModelService_pb */ "./wwwroot/generated/GameViewModelService_pb.js");
+/* harmony import */ var _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__);
+/**
+ * @fileoverview gRPC-Web generated client stub for monsterclicker_viewmodels_protos
+ * @enhanceable
+ * @public
+ */
+// Code generated by protoc-gen-grpc-web. DO NOT EDIT.
+// versions:
+// 	protoc-gen-grpc-web v1.5.0
+// 	protoc              v3.20.3
+// source: GameViewModelService.proto
+/* eslint-disable */
+// @ts-nocheck
+
+ // proto import: "google/protobuf/empty.proto"
+ // proto import: "GameViewModelService.proto"
+class GameViewModelServiceClient {
+    constructor(hostname, credentials, options) {
+        this.methodDescriptorGetState = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodDescriptor('/monsterclicker_viewmodels_protos.GameViewModelService/GetState', grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodType.UNARY, google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.GameViewModelState, (request) => {
+            return request.serializeBinary();
+        }, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.GameViewModelState.deserializeBinary);
+        this.methodDescriptorSubscribeToPropertyChanges = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodDescriptor('/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges', grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodType.SERVER_STREAMING, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.SubscribeRequest, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.PropertyChangeNotification, (request) => {
+            return request.serializeBinary();
+        }, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.PropertyChangeNotification.deserializeBinary);
+        this.methodDescriptorUpdatePropertyValue = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodDescriptor('/monsterclicker_viewmodels_protos.GameViewModelService/UpdatePropertyValue', grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodType.UNARY, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.UpdatePropertyValueRequest, google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty, (request) => {
+            return request.serializeBinary();
+        }, google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty.deserializeBinary);
+        this.methodDescriptorAttackMonster = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodDescriptor('/monsterclicker_viewmodels_protos.GameViewModelService/AttackMonster', grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodType.UNARY, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.AttackMonsterRequest, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.AttackMonsterResponse, (request) => {
+            return request.serializeBinary();
+        }, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.AttackMonsterResponse.deserializeBinary);
+        this.methodDescriptorResetGame = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodDescriptor('/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame', grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodType.UNARY, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.ResetGameRequest, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.ResetGameResponse, (request) => {
+            return request.serializeBinary();
+        }, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.ResetGameResponse.deserializeBinary);
+        this.methodDescriptorSpecialAttackAsync = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodDescriptor('/monsterclicker_viewmodels_protos.GameViewModelService/SpecialAttackAsync', grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodType.UNARY, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.SpecialAttackAsyncRequest, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.SpecialAttackAsyncResponse, (request) => {
+            return request.serializeBinary();
+        }, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.SpecialAttackAsyncResponse.deserializeBinary);
+        this.methodDescriptorPing = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodDescriptor('/monsterclicker_viewmodels_protos.GameViewModelService/Ping', grpc_web__WEBPACK_IMPORTED_MODULE_0__.MethodType.UNARY, google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.ConnectionStatusResponse, (request) => {
+            return request.serializeBinary();
+        }, _GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_2__.ConnectionStatusResponse.deserializeBinary);
+        if (!options)
+            options = {};
+        if (!credentials)
+            credentials = {};
+        options['format'] = 'text';
+        this.client_ = new grpc_web__WEBPACK_IMPORTED_MODULE_0__.GrpcWebClientBase(options);
+        this.hostname_ = hostname.replace(/\/+$/, '');
+        this.credentials_ = credentials;
+        this.options_ = options;
+    }
+    getState(request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/monsterclicker_viewmodels_protos.GameViewModelService/GetState', request, metadata || {}, this.methodDescriptorGetState, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/monsterclicker_viewmodels_protos.GameViewModelService/GetState', request, metadata || {}, this.methodDescriptorGetState);
+    }
+    subscribeToPropertyChanges(request, metadata) {
+        return this.client_.serverStreaming(this.hostname_ +
+            '/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges', request, metadata || {}, this.methodDescriptorSubscribeToPropertyChanges);
+    }
+    updatePropertyValue(request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/monsterclicker_viewmodels_protos.GameViewModelService/UpdatePropertyValue', request, metadata || {}, this.methodDescriptorUpdatePropertyValue, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/monsterclicker_viewmodels_protos.GameViewModelService/UpdatePropertyValue', request, metadata || {}, this.methodDescriptorUpdatePropertyValue);
+    }
+    attackMonster(request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/monsterclicker_viewmodels_protos.GameViewModelService/AttackMonster', request, metadata || {}, this.methodDescriptorAttackMonster, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/monsterclicker_viewmodels_protos.GameViewModelService/AttackMonster', request, metadata || {}, this.methodDescriptorAttackMonster);
+    }
+    resetGame(request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame', request, metadata || {}, this.methodDescriptorResetGame, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame', request, metadata || {}, this.methodDescriptorResetGame);
+    }
+    specialAttackAsync(request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/monsterclicker_viewmodels_protos.GameViewModelService/SpecialAttackAsync', request, metadata || {}, this.methodDescriptorSpecialAttackAsync, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/monsterclicker_viewmodels_protos.GameViewModelService/SpecialAttackAsync', request, metadata || {}, this.methodDescriptorSpecialAttackAsync);
+    }
+    ping(request, metadata, callback) {
+        if (callback !== undefined) {
+            return this.client_.rpcCall(this.hostname_ +
+                '/monsterclicker_viewmodels_protos.GameViewModelService/Ping', request, metadata || {}, this.methodDescriptorPing, callback);
+        }
+        return this.client_.unaryCall(this.hostname_ +
+            '/monsterclicker_viewmodels_protos.GameViewModelService/Ping', request, metadata || {}, this.methodDescriptorPing);
+    }
+}
+
+
+/***/ }),
+
+/***/ "./wwwroot/generated/GameViewModelService_pb.js":
+/*!******************************************************!*\
+  !*** ./wwwroot/generated/GameViewModelService_pb.js ***!
+  \******************************************************/
+/***/ ((__unused_webpack_module, exports, __webpack_require__) => {
+
+// source: GameViewModelService.proto
+/**
+ * @fileoverview
+ * @enhanceable
+ * @suppress {missingRequire} reports error on implicit type usages.
+ * @suppress {messageConventions} JS Compiler reports an error if a variable or
+ *     field starts with 'MSG_' and isn't a translatable message.
+ * @public
+ */
+// GENERATED CODE -- DO NOT EDIT!
+/* eslint-disable */
+// @ts-nocheck
+
+var jspb = __webpack_require__(/*! google-protobuf */ "./node_modules/google-protobuf/google-protobuf.js");
+var goog = jspb;
+var global = (function() { return this || window || global || self || Function('return this')(); }).call(null);
+
+var google_protobuf_any_pb = __webpack_require__(/*! google-protobuf/google/protobuf/any_pb.js */ "./node_modules/google-protobuf/google/protobuf/any_pb.js");
+goog.object.extend(proto, google_protobuf_any_pb);
+var google_protobuf_empty_pb = __webpack_require__(/*! google-protobuf/google/protobuf/empty_pb.js */ "./node_modules/google-protobuf/google/protobuf/empty_pb.js");
+goog.object.extend(proto, google_protobuf_empty_pb);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.AttackMonsterRequest', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.AttackMonsterResponse', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.ConnectionStatus', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.GameViewModelState', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.PropertyChangeNotification', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.ResetGameRequest', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.ResetGameResponse', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.SubscribeRequest', null, global);
+goog.exportSymbol('proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest', null, global);
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.GameViewModelState, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.GameViewModelState.displayName = 'proto.monsterclicker_viewmodels_protos.GameViewModelState';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.PropertyChangeNotification, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.displayName = 'proto.monsterclicker_viewmodels_protos.PropertyChangeNotification';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.displayName = 'proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.AttackMonsterRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.displayName = 'proto.monsterclicker_viewmodels_protos.AttackMonsterRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.AttackMonsterResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.displayName = 'proto.monsterclicker_viewmodels_protos.AttackMonsterResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.ResetGameRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.ResetGameRequest.displayName = 'proto.monsterclicker_viewmodels_protos.ResetGameRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.ResetGameResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.ResetGameResponse.displayName = 'proto.monsterclicker_viewmodels_protos.ResetGameResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.displayName = 'proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.displayName = 'proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.SubscribeRequest, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.SubscribeRequest.displayName = 'proto.monsterclicker_viewmodels_protos.SubscribeRequest';
+}
+/**
+ * Generated by JsPbCodeGenerator.
+ * @param {Array=} opt_data Optional initial data array, typically from a
+ * server response, or constructed directly in Javascript. The array is used
+ * in place and becomes part of the constructed object. It is not cloned.
+ * If no data is provided, the constructed object will be empty, but still
+ * valid.
+ * @extends {jspb.Message}
+ * @constructor
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse = function(opt_data) {
+  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+};
+goog.inherits(proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse, jspb.Message);
+if (goog.DEBUG && !COMPILED) {
+  /**
+   * @public
+   * @override
+   */
+  proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.displayName = 'proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse';
+}
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.GameViewModelState.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.GameViewModelState} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    canUseSpecialAttack: jspb.Message.getBooleanFieldWithDefault(msg, 1, false),
+    gameMessage: jspb.Message.getFieldWithDefault(msg, 2, ""),
+    isMonsterDefeated: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
+    isSpecialAttackOnCooldown: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
+    monsterCurrentHealth: jspb.Message.getFieldWithDefault(msg, 5, 0),
+    monsterMaxHealth: jspb.Message.getFieldWithDefault(msg, 6, 0),
+    monsterName: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    playerDamage: jspb.Message.getFieldWithDefault(msg, 8, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.GameViewModelState;
+  return proto.monsterclicker_viewmodels_protos.GameViewModelState.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.GameViewModelState} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setCanUseSpecialAttack(value);
+      break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setGameMessage(value);
+      break;
+    case 3:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setIsMonsterDefeated(value);
+      break;
+    case 4:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setIsSpecialAttackOnCooldown(value);
+      break;
+    case 5:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setMonsterCurrentHealth(value);
+      break;
+    case 6:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setMonsterMaxHealth(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setMonsterName(value);
+      break;
+    case 8:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setPlayerDamage(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.GameViewModelState.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.GameViewModelState} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getCanUseSpecialAttack();
+  if (f) {
+    writer.writeBool(
+      1,
+      f
+    );
+  }
+  f = message.getGameMessage();
+  if (f.length > 0) {
+    writer.writeString(
+      2,
+      f
+    );
+  }
+  f = message.getIsMonsterDefeated();
+  if (f) {
+    writer.writeBool(
+      3,
+      f
+    );
+  }
+  f = message.getIsSpecialAttackOnCooldown();
+  if (f) {
+    writer.writeBool(
+      4,
+      f
+    );
+  }
+  f = message.getMonsterCurrentHealth();
+  if (f !== 0) {
+    writer.writeInt32(
+      5,
+      f
+    );
+  }
+  f = message.getMonsterMaxHealth();
+  if (f !== 0) {
+    writer.writeInt32(
+      6,
+      f
+    );
+  }
+  f = message.getMonsterName();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
+      f
+    );
+  }
+  f = message.getPlayerDamage();
+  if (f !== 0) {
+    writer.writeInt32(
+      8,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional bool can_use_special_attack = 1;
+ * @return {boolean}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getCanUseSpecialAttack = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 1, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setCanUseSpecialAttack = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 1, value);
+};
+
+
+/**
+ * optional string game_message = 2;
+ * @return {string}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getGameMessage = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setGameMessage = function(value) {
+  return jspb.Message.setProto3StringField(this, 2, value);
+};
+
+
+/**
+ * optional bool is_monster_defeated = 3;
+ * @return {boolean}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getIsMonsterDefeated = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setIsMonsterDefeated = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 3, value);
+};
+
+
+/**
+ * optional bool is_special_attack_on_cooldown = 4;
+ * @return {boolean}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getIsSpecialAttackOnCooldown = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setIsSpecialAttackOnCooldown = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 4, value);
+};
+
+
+/**
+ * optional int32 monster_current_health = 5;
+ * @return {number}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getMonsterCurrentHealth = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 5, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setMonsterCurrentHealth = function(value) {
+  return jspb.Message.setProto3IntField(this, 5, value);
+};
+
+
+/**
+ * optional int32 monster_max_health = 6;
+ * @return {number}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getMonsterMaxHealth = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 6, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setMonsterMaxHealth = function(value) {
+  return jspb.Message.setProto3IntField(this, 6, value);
+};
+
+
+/**
+ * optional string monster_name = 7;
+ * @return {string}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getMonsterName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setMonsterName = function(value) {
+  return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * optional int32 player_damage = 8;
+ * @return {number}
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.getPlayerDamage = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 8, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.monsterclicker_viewmodels_protos.GameViewModelState} returns this
+ */
+proto.monsterclicker_viewmodels_protos.GameViewModelState.prototype.setPlayerDamage = function(value) {
+  return jspb.Message.setProto3IntField(this, 8, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    propertyName: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    newValue: (f = msg.getNewValue()) && google_protobuf_any_pb.Any.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification}
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.PropertyChangeNotification;
+  return proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification}
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPropertyName(value);
+      break;
+    case 2:
+      var value = new google_protobuf_any_pb.Any;
+      reader.readMessage(value,google_protobuf_any_pb.Any.deserializeBinaryFromReader);
+      msg.setNewValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getPropertyName();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getNewValue();
+  if (f != null) {
+    writer.writeMessage(
+      2,
+      f,
+      google_protobuf_any_pb.Any.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional string property_name = 1;
+ * @return {string}
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.getPropertyName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification} returns this
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.setPropertyName = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional google.protobuf.Any new_value = 2;
+ * @return {?proto.google.protobuf.Any}
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.getNewValue = function() {
+  return /** @type{?proto.google.protobuf.Any} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_any_pb.Any, 2));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Any|undefined} value
+ * @return {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification} returns this
+*/
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.setNewValue = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.monsterclicker_viewmodels_protos.PropertyChangeNotification} returns this
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.clearNewValue = function() {
+  return this.setNewValue(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.monsterclicker_viewmodels_protos.PropertyChangeNotification.prototype.hasNewValue = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    propertyName: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    newValue: (f = msg.getNewValue()) && google_protobuf_any_pb.Any.toObject(includeInstance, f)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest}
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest;
+  return proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest}
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPropertyName(value);
+      break;
+    case 2:
+      var value = new google_protobuf_any_pb.Any;
+      reader.readMessage(value,google_protobuf_any_pb.Any.deserializeBinaryFromReader);
+      msg.setNewValue(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getPropertyName();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+  f = message.getNewValue();
+  if (f != null) {
+    writer.writeMessage(
+      2,
+      f,
+      google_protobuf_any_pb.Any.serializeBinaryToWriter
+    );
+  }
+};
+
+
+/**
+ * optional string property_name = 1;
+ * @return {string}
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.getPropertyName = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest} returns this
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.setPropertyName = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional google.protobuf.Any new_value = 2;
+ * @return {?proto.google.protobuf.Any}
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.getNewValue = function() {
+  return /** @type{?proto.google.protobuf.Any} */ (
+    jspb.Message.getWrapperField(this, google_protobuf_any_pb.Any, 2));
+};
+
+
+/**
+ * @param {?proto.google.protobuf.Any|undefined} value
+ * @return {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest} returns this
+*/
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.setNewValue = function(value) {
+  return jspb.Message.setWrapperField(this, 2, value);
+};
+
+
+/**
+ * Clears the message field making it undefined.
+ * @return {!proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest} returns this
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.clearNewValue = function() {
+  return this.setNewValue(undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.monsterclicker_viewmodels_protos.UpdatePropertyValueRequest.prototype.hasNewValue = function() {
+  return jspb.Message.getField(this, 2) != null;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.AttackMonsterRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.AttackMonsterRequest}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.AttackMonsterRequest;
+  return proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.AttackMonsterRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.AttackMonsterRequest}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.AttackMonsterRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.AttackMonsterResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.AttackMonsterResponse}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.AttackMonsterResponse;
+  return proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.AttackMonsterResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.AttackMonsterResponse}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.AttackMonsterResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.AttackMonsterResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.ResetGameRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.ResetGameRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.ResetGameRequest}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.ResetGameRequest;
+  return proto.monsterclicker_viewmodels_protos.ResetGameRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.ResetGameRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.ResetGameRequest}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.ResetGameRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.ResetGameRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.ResetGameResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.ResetGameResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.ResetGameResponse}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.ResetGameResponse;
+  return proto.monsterclicker_viewmodels_protos.ResetGameResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.ResetGameResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.ResetGameResponse}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.ResetGameResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.ResetGameResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.ResetGameResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest;
+  return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse;
+  return proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.SpecialAttackAsyncResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.SubscribeRequest.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.SubscribeRequest} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    clientId: jspb.Message.getFieldWithDefault(msg, 1, "")
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.SubscribeRequest}
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.SubscribeRequest;
+  return proto.monsterclicker_viewmodels_protos.SubscribeRequest.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.SubscribeRequest} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.SubscribeRequest}
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setClientId(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.SubscribeRequest.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.SubscribeRequest} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getClientId();
+  if (f.length > 0) {
+    writer.writeString(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional string client_id = 1;
+ * @return {string}
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.getClientId = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.monsterclicker_viewmodels_protos.SubscribeRequest} returns this
+ */
+proto.monsterclicker_viewmodels_protos.SubscribeRequest.prototype.setClientId = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+
+
+
+if (jspb.Message.GENERATE_TO_OBJECT) {
+/**
+ * Creates an object representation of this proto.
+ * Field names that are reserved in JavaScript and will be renamed to pb_name.
+ * Optional fields that are not set will be set to undefined.
+ * To access a reserved field use, foo.pb_<name>, eg, foo.pb_default.
+ * For the list of reserved names please see:
+ *     net/proto2/compiler/js/internal/generator.cc#kKeyword.
+ * @param {boolean=} opt_includeInstance Deprecated. whether to include the
+ *     JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @return {!Object}
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.toObject = function(opt_includeInstance) {
+  return proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.toObject(opt_includeInstance, this);
+};
+
+
+/**
+ * Static version of the {@see toObject} method.
+ * @param {boolean|undefined} includeInstance Deprecated. Whether to include
+ *     the JSPB instance for transitional soy proto support:
+ *     http://goto/soy-param-migration
+ * @param {!proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse} msg The msg instance to transform.
+ * @return {!Object}
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.toObject = function(includeInstance, msg) {
+  var f, obj = {
+    status: jspb.Message.getFieldWithDefault(msg, 1, 0)
+  };
+
+  if (includeInstance) {
+    obj.$jspbMessageInstance = msg;
+  }
+  return obj;
+};
+}
+
+
+/**
+ * Deserializes binary data (in protobuf wire format).
+ * @param {jspb.ByteSource} bytes The bytes to deserialize.
+ * @return {!proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse}
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.deserializeBinary = function(bytes) {
+  var reader = new jspb.BinaryReader(bytes);
+  var msg = new proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse;
+  return proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.deserializeBinaryFromReader(msg, reader);
+};
+
+
+/**
+ * Deserializes binary data (in protobuf wire format) from the
+ * given reader into the given message object.
+ * @param {!proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse} msg The message object to deserialize into.
+ * @param {!jspb.BinaryReader} reader The BinaryReader to use.
+ * @return {!proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse}
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.deserializeBinaryFromReader = function(msg, reader) {
+  while (reader.nextField()) {
+    if (reader.isEndGroup()) {
+      break;
+    }
+    var field = reader.getFieldNumber();
+    switch (field) {
+    case 1:
+      var value = /** @type {!proto.monsterclicker_viewmodels_protos.ConnectionStatus} */ (reader.readEnum());
+      msg.setStatus(value);
+      break;
+    default:
+      reader.skipField();
+      break;
+    }
+  }
+  return msg;
+};
+
+
+/**
+ * Serializes the message to binary data (in protobuf wire format).
+ * @return {!Uint8Array}
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.serializeBinary = function() {
+  var writer = new jspb.BinaryWriter();
+  proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.serializeBinaryToWriter(this, writer);
+  return writer.getResultBuffer();
+};
+
+
+/**
+ * Serializes the given message to binary data (in protobuf wire
+ * format), writing to the given BinaryWriter.
+ * @param {!proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse} message
+ * @param {!jspb.BinaryWriter} writer
+ * @suppress {unusedLocalVariables} f is only used for nested messages
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.serializeBinaryToWriter = function(message, writer) {
+  var f = undefined;
+  f = message.getStatus();
+  if (f !== 0.0) {
+    writer.writeEnum(
+      1,
+      f
+    );
+  }
+};
+
+
+/**
+ * optional ConnectionStatus status = 1;
+ * @return {!proto.monsterclicker_viewmodels_protos.ConnectionStatus}
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.getStatus = function() {
+  return /** @type {!proto.monsterclicker_viewmodels_protos.ConnectionStatus} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
+};
+
+
+/**
+ * @param {!proto.monsterclicker_viewmodels_protos.ConnectionStatus} value
+ * @return {!proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse} returns this
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatusResponse.prototype.setStatus = function(value) {
+  return jspb.Message.setProto3EnumField(this, 1, value);
+};
+
+
+/**
+ * @enum {number}
+ */
+proto.monsterclicker_viewmodels_protos.ConnectionStatus = {
+  UNKNOWN: 0,
+  CONNECTED: 1,
+  DISCONNECTED: 2
+};
+
+goog.object.extend(exports, proto.monsterclicker_viewmodels_protos);
+
+
+/***/ })
+
+/******/ 	});
+/************************************************************************/
+/******/ 	// The module cache
+/******/ 	var __webpack_module_cache__ = {};
+/******/ 	
+/******/ 	// The require function
+/******/ 	function __webpack_require__(moduleId) {
+/******/ 		// Check if module is in cache
+/******/ 		var cachedModule = __webpack_module_cache__[moduleId];
+/******/ 		if (cachedModule !== undefined) {
+/******/ 			return cachedModule.exports;
+/******/ 		}
+/******/ 		// Create a new module (and put it into the cache)
+/******/ 		var module = __webpack_module_cache__[moduleId] = {
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
+/******/ 			exports: {}
+/******/ 		};
+/******/ 	
+/******/ 		// Execute the module function
+/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	
+/******/ 		// Return the exports of the module
+/******/ 		return module.exports;
+/******/ 	}
+/******/ 	
+/************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__webpack_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__webpack_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__webpack_require__.o(definition, key) && !__webpack_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/global */
+/******/ 	(() => {
+/******/ 		__webpack_require__.g = (function() {
+/******/ 			if (typeof globalThis === 'object') return globalThis;
+/******/ 			try {
+/******/ 				return this || new Function('return this')();
+/******/ 			} catch (e) {
+/******/ 				if (typeof window === 'object') return window;
+/******/ 			}
+/******/ 		})();
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__webpack_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/************************************************************************/
+var __webpack_exports__ = {};
+// This entry needs to be wrapped in an IIFE because it needs to be in strict mode.
+(() => {
+"use strict";
+/*!************************!*\
+  !*** ./wwwroot/app.ts ***!
+  \************************/
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _generated_GameViewModelServiceServiceClientPb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelServiceServiceClientPb */ "./wwwroot/generated/GameViewModelServiceServiceClientPb.ts");
+/* harmony import */ var _GameViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./GameViewModelRemoteClient */ "./wwwroot/GameViewModelRemoteClient.ts");
+
+
+const grpcHost = 'http://localhost:50052';
+const grpcClient = new _generated_GameViewModelServiceServiceClientPb__WEBPACK_IMPORTED_MODULE_0__.GameViewModelServiceClient(grpcHost);
+const vm = new _GameViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.GameViewModelRemoteClient(grpcClient);
+async function render() {
+    document.getElementById('monster-name').textContent = vm.monsterName;
+    const health = document.getElementById('monster-health');
+    health.max = vm.monsterMaxHealth;
+    health.value = vm.monsterCurrentHealth;
+    document.getElementById('health-text').textContent = `${vm.monsterCurrentHealth} / ${vm.monsterMaxHealth}`;
+    document.getElementById('game-message').textContent = vm.gameMessage;
+    document.getElementById('connection-status').textContent = vm.connectionStatus;
+    const attackBtn = document.getElementById('attack-btn');
+    attackBtn.disabled = vm.isMonsterDefeated;
+    const specialBtn = document.getElementById('special-btn');
+    specialBtn.disabled = !vm.canUseSpecialAttack || vm.isMonsterDefeated || vm.isSpecialAttackOnCooldown;
+    const cd = document.getElementById('cooldown-text');
+    cd.style.display = vm.isSpecialAttackOnCooldown ? 'block' : 'none';
+}
+async function init() {
+    try {
+        await vm.initializeRemote();
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        await render();
+    }
+    catch (err) {
+        document.getElementById('loading').textContent = 'Failed to initialize.';
+        console.error(err);
+    }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    init();
+    document.getElementById('attack-btn').addEventListener('click', async () => {
+        await vm.attackMonster();
+        await vm.refreshState();
+        await render();
+    });
+    document.getElementById('special-btn').addEventListener('click', async () => {
+        await vm.specialAttackAsync();
+        await vm.refreshState();
+        await render();
+    });
+    document.getElementById('newgame-btn').addEventListener('click', async () => {
+        await vm.resetGame();
+        await vm.refreshState();
+        await render();
+    });
+});
+
+})();
+
+/******/ })()
+;
 //# sourceMappingURL=bundle.js.map
