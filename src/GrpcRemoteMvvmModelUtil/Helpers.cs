@@ -26,8 +26,18 @@ namespace GrpcRemoteMvvmModelUtil
                 return true;
 
             var shortName = attributeData.AttributeClass?.Name;
-            var trimmed = Path.GetFileNameWithoutExtension(fullyQualifiedAttributeName);
-            return shortName == trimmed || shortName == fullyQualifiedAttributeName;
+            if (shortName == null)
+                return false;
+
+            var targetShort = fullyQualifiedAttributeName.Split('.').Last();
+            if (targetShort.EndsWith("Attribute"))
+                targetShort = targetShort.Substring(0, targetShort.Length - "Attribute".Length);
+
+            var simpleName = shortName;
+            if (simpleName.EndsWith("Attribute"))
+                simpleName = simpleName.Substring(0, simpleName.Length - "Attribute".Length);
+
+            return simpleName == targetShort || shortName == targetShort || shortName == fullyQualifiedAttributeName;
         }
     }
 }
