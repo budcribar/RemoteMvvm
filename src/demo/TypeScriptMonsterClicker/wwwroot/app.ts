@@ -1,11 +1,8 @@
-import { grpc } from '@improbable-eng/grpc-web';
-import { GameViewModelServiceClient } from './generated/GameViewModelService_pb_service';
+import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
 import { GameViewModelRemoteClient } from './GameViewModelRemoteClient';
 
 const grpcHost = 'http://localhost:50052';
-const grpcClient = new GameViewModelServiceClient(grpcHost, {
-    transport: grpc.CrossBrowserHttpTransport({ withCredentials: false })
-});
+const grpcClient = new GameViewModelServiceClient(grpcHost);
 const vm = new GameViewModelRemoteClient(grpcClient);
 
 async function render() {
