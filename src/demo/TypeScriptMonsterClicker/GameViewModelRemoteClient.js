@@ -97,45 +97,6 @@ class GameViewModelRemoteClient {
         }
         return anyVal;
     }
-    attackMonster() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const req = new GameViewModelService_pb_1.AttackMonsterRequest();
-            yield new Promise((resolve, reject) => {
-                this.grpcClient.attackMonster(req, (err) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve();
-                });
-            });
-        });
-    }
-    specialAttackAsync() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const req = new GameViewModelService_pb_1.SpecialAttackAsyncRequest();
-            yield new Promise((resolve, reject) => {
-                this.grpcClient.specialAttackAsync(req, (err) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve();
-                });
-            });
-        });
-    }
-    resetGame() {
-        return __awaiter(this, void 0, void 0, function* () {
-            const req = new GameViewModelService_pb_1.ResetGameRequest();
-            yield new Promise((resolve, reject) => {
-                this.grpcClient.resetGame(req, (err) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve();
-                });
-            });
-        });
-    }
 }
 exports.GameViewModelRemoteClient = GameViewModelRemoteClient;
 //# sourceMappingURL=GameViewModelRemoteClient.js.map
