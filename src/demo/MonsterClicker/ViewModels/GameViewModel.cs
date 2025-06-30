@@ -80,28 +80,33 @@ namespace MonsterClicker.ViewModels
 
             IsSpecialAttackOnCooldown = true; // Setter will trigger PropertyChanged & CanExecuteChanged
 
-            GameMessage = "Charging special attack...";
-            await Task.Delay(750);
-
-            int specialDamage = PlayerDamage * 3;
-            MonsterCurrentHealth -= specialDamage; // Setter will trigger PropertyChanged & CanExecuteChanged
-
-            if (MonsterCurrentHealth <= 0)
+            try
             {
-                MonsterCurrentHealth = 0;
-                GameMessage = $"Critical Hit! {MonsterName} obliterated for {specialDamage} damage!";
-                IsMonsterDefeated = true; // Setter will trigger PropertyChanged & CanExecuteChanged
+                GameMessage = "Charging special attack...";
+                await Task.Delay(750);
+
+                int specialDamage = PlayerDamage * 3;
+                MonsterCurrentHealth -= specialDamage; // Setter will trigger PropertyChanged & CanExecuteChanged
+
+                if (MonsterCurrentHealth <= 0)
+                {
+                    MonsterCurrentHealth = 0;
+                    GameMessage = $"Critical Hit! {MonsterName} obliterated for {specialDamage} damage!";
+                    IsMonsterDefeated = true; // Setter will trigger PropertyChanged & CanExecuteChanged
+                }
+                else
+                {
+                    GameMessage = $"Special Attack hit {MonsterName} for {specialDamage} damage!";
+                }
+
+                GameMessage = $"Special Attack on cooldown for {SpecialAttackCooldownSeconds} seconds...";
+                await Task.Delay(TimeSpan.FromSeconds(SpecialAttackCooldownSeconds));
             }
-            else
+            finally
             {
-                GameMessage = $"Special Attack hit {MonsterName} for {specialDamage} damage!";
+                IsSpecialAttackOnCooldown = false; // Setter will trigger PropertyChanged & CanExecuteChanged
+                GameMessage = "Special Attack ready!";
             }
-
-            GameMessage = $"Special Attack on cooldown for {SpecialAttackCooldownSeconds} seconds...";
-            await Task.Delay(TimeSpan.FromSeconds(SpecialAttackCooldownSeconds));
-
-            IsSpecialAttackOnCooldown = false; // Setter will trigger PropertyChanged & CanExecuteChanged
-            GameMessage = "Special Attack ready!";
         }
 
 
