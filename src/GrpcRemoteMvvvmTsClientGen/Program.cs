@@ -125,7 +125,7 @@ namespace GrpcRemoteMvvmTsClientGen
         {
             var sb = new System.Text.StringBuilder();
             sb.AppendLine($"// Auto-generated TypeScript client for {vmName}");
-            sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}_pb_service';");
+            sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb';");
             var requestTypes = string.Join(", ", commands.Select(c => c.MethodName + "Request").Distinct());
             if (!string.IsNullOrWhiteSpace(requestTypes))
             {
@@ -153,11 +153,7 @@ namespace GrpcRemoteMvvmTsClientGen
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    async initializeRemote(): Promise<void> {");
-            sb.AppendLine($"        const state = await new Promise<{vmName}State>((resolve, reject) => {{");
-            sb.AppendLine("            this.grpcClient.getState(new Empty(), (err, res) => {");
-            sb.AppendLine("                if (err) reject(err); else resolve(res!);");
-            sb.AppendLine("            });");
-            sb.AppendLine("        });");
+            sb.AppendLine($"        const state = await this.grpcClient.getState(new Empty());");
             foreach (var prop in properties)
             {
                 sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any)['{ToSnakeCase(prop.Name)}'];");
@@ -167,11 +163,7 @@ namespace GrpcRemoteMvvmTsClientGen
             sb.AppendLine();
             // Method to refresh state without altering connection status
             sb.AppendLine("    async refreshState(): Promise<void> {");
-            sb.AppendLine($"        const state = await new Promise<{vmName}State>((resolve, reject) => {{");
-            sb.AppendLine("            this.grpcClient.getState(new Empty(), (err, res) => {");
-            sb.AppendLine("                if (err) reject(err); else resolve(res!);");
-            sb.AppendLine("            });");
-            sb.AppendLine("        });");
+            sb.AppendLine($"        const state = await this.grpcClient.getState(new Empty());");
             foreach (var prop in properties)
             {
                 sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any)['{ToSnakeCase(prop.Name)}'];");
@@ -182,11 +174,7 @@ namespace GrpcRemoteMvvmTsClientGen
             sb.AppendLine("        const req = new UpdatePropertyValueRequest();");
             sb.AppendLine("        req.setPropertyName(propertyName);");
             sb.AppendLine("        req.setNewValue(this.createAnyValue(value));");
-            sb.AppendLine("        await new Promise<void>((resolve, reject) => {");
-            sb.AppendLine("            this.grpcClient.updatePropertyValue(req, (err) => {");
-            sb.AppendLine("                if (err) reject(err); else resolve();");
-            sb.AppendLine("            });");
-            sb.AppendLine("        });");
+            sb.AppendLine("        await this.grpcClient.updatePropertyValue(req);");
             sb.AppendLine("    }");
             sb.AppendLine();
             sb.AppendLine("    private createAnyValue(value: any): Any {");
@@ -219,11 +207,7 @@ namespace GrpcRemoteMvvmTsClientGen
                 {
                     sb.AppendLine($"        (req as any)['{ToSnakeCase(p.Name)}'] = {ToCamelCase(p.Name)};");
                 }
-                sb.AppendLine("        await new Promise<void>((resolve, reject) => {");
-                sb.AppendLine($"            this.grpcClient.{ToCamelCase(cmd.MethodName)}(req, (err) => {{");
-                sb.AppendLine("                if (err) reject(err); else resolve();");
-                sb.AppendLine("            });");
-                sb.AppendLine("        });");
+                sb.AppendLine($"        await this.grpcClient.{ToCamelCase(cmd.MethodName)}(req);");
                 sb.AppendLine("    }");
             }
             sb.AppendLine("}");

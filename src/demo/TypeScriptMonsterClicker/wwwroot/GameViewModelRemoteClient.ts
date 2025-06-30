@@ -1,5 +1,5 @@
 // Auto-generated TypeScript client for GameViewModel
-import { GameViewModelServiceClient } from './generated/GameViewModelService_pb_service';
+import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
 import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest } from './generated/GameViewModelService_pb';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
@@ -23,11 +23,7 @@ export class GameViewModelRemoteClient {
     }
 
     async initializeRemote(): Promise<void> {
-        const state = await new Promise<GameViewModelState>((resolve, reject) => {
-            this.grpcClient.getState(new Empty(), (err, res) => {
-                if (err) reject(err); else resolve(res!);
-            });
-        });
+        const state = await this.grpcClient.getState(new Empty());
         this.monsterName = (state as any)['monster_name'];
         this.monsterMaxHealth = (state as any)['monster_max_health'];
         this.monsterCurrentHealth = (state as any)['monster_current_health'];
@@ -40,11 +36,7 @@ export class GameViewModelRemoteClient {
     }
 
     async refreshState(): Promise<void> {
-        const state = await new Promise<GameViewModelState>((resolve, reject) => {
-            this.grpcClient.getState(new Empty(), (err, res) => {
-                if (err) reject(err); else resolve(res!);
-            });
-        });
+        const state = await this.grpcClient.getState(new Empty());
         this.monsterName = (state as any)['monster_name'];
         this.monsterMaxHealth = (state as any)['monster_max_health'];
         this.monsterCurrentHealth = (state as any)['monster_current_health'];
@@ -59,11 +51,7 @@ export class GameViewModelRemoteClient {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
-        await new Promise<void>((resolve, reject) => {
-            this.grpcClient.updatePropertyValue(req, (err) => {
-                if (err) reject(err); else resolve();
-            });
-        });
+        await this.grpcClient.updatePropertyValue(req);
     }
 
     private createAnyValue(value: any): Any {
@@ -88,26 +76,14 @@ export class GameViewModelRemoteClient {
 
     async attackMonster(): Promise<void> {
         const req = new AttackMonsterRequest();
-        await new Promise<void>((resolve, reject) => {
-            this.grpcClient.attackMonster(req, (err) => {
-                if (err) reject(err); else resolve();
-            });
-        });
+        await this.grpcClient.attackMonster(req);
     }
     async specialAttackAsync(): Promise<void> {
         const req = new SpecialAttackAsyncRequest();
-        await new Promise<void>((resolve, reject) => {
-            this.grpcClient.specialAttackAsync(req, (err) => {
-                if (err) reject(err); else resolve();
-            });
-        });
+        await this.grpcClient.specialAttackAsync(req);
     }
     async resetGame(): Promise<void> {
         const req = new ResetGameRequest();
-        await new Promise<void>((resolve, reject) => {
-            this.grpcClient.resetGame(req, (err) => {
-                if (err) reject(err); else resolve();
-            });
-        });
+        await this.grpcClient.resetGame(req);
     }
 }
