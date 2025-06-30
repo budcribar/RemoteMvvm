@@ -21,14 +21,7 @@ class GameViewModelRemoteClient {
     }
     initializeRemote() {
         return __awaiter(this, void 0, void 0, function* () {
-            const state = yield new Promise((resolve, reject) => {
-                this.grpcClient.getState(new empty_pb_1.Empty(), (err, res) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve(res);
-                });
-            });
+            const state = yield this.grpcClient.getState(new empty_pb_1.Empty());
             this.monsterName = state['monster_name'];
             this.monsterMaxHealth = state['monster_max_health'];
             this.monsterCurrentHealth = state['monster_current_health'];
@@ -42,14 +35,7 @@ class GameViewModelRemoteClient {
     }
     refreshState() {
         return __awaiter(this, void 0, void 0, function* () {
-            const state = yield new Promise((resolve, reject) => {
-                this.grpcClient.getState(new empty_pb_1.Empty(), (err, res) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve(res);
-                });
-            });
+            const state = yield this.grpcClient.getState(new empty_pb_1.Empty());
             this.monsterName = state['monster_name'];
             this.monsterMaxHealth = state['monster_max_health'];
             this.monsterCurrentHealth = state['monster_current_health'];
@@ -65,14 +51,7 @@ class GameViewModelRemoteClient {
             const req = new GameViewModelService_pb_1.UpdatePropertyValueRequest();
             req.setPropertyName(propertyName);
             req.setNewValue(this.createAnyValue(value));
-            yield new Promise((resolve, reject) => {
-                this.grpcClient.updatePropertyValue(req, (err) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve();
-                });
-            });
+            yield this.grpcClient.updatePropertyValue(req);
         });
     }
     createAnyValue(value) {
@@ -100,40 +79,19 @@ class GameViewModelRemoteClient {
     attackMonster() {
         return __awaiter(this, void 0, void 0, function* () {
             const req = new GameViewModelService_pb_1.AttackMonsterRequest();
-            yield new Promise((resolve, reject) => {
-                this.grpcClient.attackMonster(req, (err) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve();
-                });
-            });
+            yield this.grpcClient.attackMonster(req);
         });
     }
     specialAttackAsync() {
         return __awaiter(this, void 0, void 0, function* () {
             const req = new GameViewModelService_pb_1.SpecialAttackAsyncRequest();
-            yield new Promise((resolve, reject) => {
-                this.grpcClient.specialAttackAsync(req, (err) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve();
-                });
-            });
+            yield this.grpcClient.specialAttackAsync(req);
         });
     }
     resetGame() {
         return __awaiter(this, void 0, void 0, function* () {
             const req = new GameViewModelService_pb_1.ResetGameRequest();
-            yield new Promise((resolve, reject) => {
-                this.grpcClient.resetGame(req, (err) => {
-                    if (err)
-                        reject(err);
-                    else
-                        resolve();
-                });
-            });
+            yield this.grpcClient.resetGame(req);
         });
     }
 }
