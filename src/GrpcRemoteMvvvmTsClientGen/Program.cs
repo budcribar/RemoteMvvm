@@ -156,7 +156,7 @@ namespace GrpcRemoteMvvmTsClientGen
             sb.AppendLine($"        const state = await this.grpcClient.getState(new Empty());");
             foreach (var prop in properties)
             {
-                sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any)['{ToSnakeCase(prop.Name)}'];");
+                sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any).get{prop.Name}();");
             }
             sb.AppendLine("        this.connectionStatus = 'Connected';");
             sb.AppendLine("    }");
@@ -166,7 +166,7 @@ namespace GrpcRemoteMvvmTsClientGen
             sb.AppendLine($"        const state = await this.grpcClient.getState(new Empty());");
             foreach (var prop in properties)
             {
-                sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any)['{ToSnakeCase(prop.Name)}'];");
+                sb.AppendLine($"        this.{ToCamelCase(prop.Name)} = (state as any).get{prop.Name}();");
             }
             sb.AppendLine("    }");
             sb.AppendLine();
@@ -205,7 +205,7 @@ namespace GrpcRemoteMvvmTsClientGen
                 sb.AppendLine($"        const req = new {reqType}();");
                 foreach (var p in cmd.Parameters)
                 {
-                    sb.AppendLine($"        (req as any)['{ToSnakeCase(p.Name)}'] = {ToCamelCase(p.Name)};");
+                    sb.AppendLine($"        req.set{ToPascalCase(p.Name)}({ToCamelCase(p.Name)});");
                 }
                 sb.AppendLine($"        await this.grpcClient.{ToCamelCase(cmd.MethodName)}(req);");
                 sb.AppendLine("    }");
@@ -230,6 +230,12 @@ namespace GrpcRemoteMvvmTsClientGen
         {
             if (string.IsNullOrEmpty(s) || char.IsLower(s[0])) return s;
             return char.ToLowerInvariant(s[0]) + s.Substring(1);
+        }
+
+        static string ToPascalCase(string s)
+        {
+            if (string.IsNullOrEmpty(s)) return s;
+            return char.ToUpperInvariant(s[0]) + s.Substring(1);
         }
 
         static string ToSnakeCase(string s)
