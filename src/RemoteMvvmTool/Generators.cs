@@ -32,16 +32,33 @@ public static class Generators
             body.AppendLine($"message {c.MethodName}Request {{}}");
             body.AppendLine($"message {c.MethodName}Response {{}}");
         }
+
+        body.AppendLine();
+        body.AppendLine("message SubscribeRequest {");
+        body.AppendLine("  string client_id = 1;");
+        body.AppendLine("}");
+
+        body.AppendLine();
+        body.AppendLine("enum ConnectionStatus {");
+        body.AppendLine("  UNKNOWN = 0;");
+        body.AppendLine("  CONNECTED = 1;");
+        body.AppendLine("  DISCONNECTED = 2;");
+        body.AppendLine("}");
+
+        body.AppendLine();
+        body.AppendLine("message ConnectionStatusResponse {");
+        body.AppendLine("  ConnectionStatus status = 1;");
+        body.AppendLine("}");
         body.AppendLine();
         body.AppendLine("service " + serviceName + " {");
         body.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmName}State);");
         body.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
-        body.AppendLine($"  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);");
+        body.AppendLine($"  rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);");
         foreach (var c in cmds)
         {
             body.AppendLine($"  rpc {c.MethodName} ({c.MethodName}Request) returns ({c.MethodName}Response);");
         }
-        body.AppendLine("  rpc Ping (google.protobuf.Empty) returns (google.protobuf.Empty);");
+        body.AppendLine("  rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);");
         body.AppendLine("}");
 
         var final = new StringBuilder();
