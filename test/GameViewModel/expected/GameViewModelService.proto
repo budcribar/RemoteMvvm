@@ -71,6 +71,7 @@ service GameViewModelService {
   rpc GetState (google.protobuf.Empty) returns (GameViewModelState);
   rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);
   rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
+  rpc SubscribeToPropertyChanges (google.protobuf.Empty) returns (stream PropertyChangeNotification);
   rpc AttackMonster (AttackMonsterRequest) returns (AttackMonsterResponse);
   rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
   rpc SpecialAttackAsync (SpecialAttackAsyncRequest) returns (SpecialAttackAsyncResponse);

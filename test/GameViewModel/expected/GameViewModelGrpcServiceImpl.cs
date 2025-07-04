@@ -20,7 +20,7 @@ using System.Windows.Threading; // For Dispatcher
 namespace MonsterClicker.GrpcServices
 {
     public partial class GameViewModelGrpcServiceImpl : MonsterClicker.ViewModels.Protos.GameViewModelService.GameViewModelServiceBase
-    {
+  {
         public static event System.EventHandler<int>? ClientCountChanged;
         private static int _clientCount = -1;
         public static int ClientCount
@@ -120,8 +120,8 @@ namespace MonsterClicker.GrpcServices
                 state.IsSpecialAttackOnCooldown = propValue;
             }
             catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property IsSpecialAttackOnCooldown to state.IsSpecialAttackOnCooldown: " + ex.Message); }
-            return Task.FromResult(state);
-        }
+    return Task.FromResult(state);
+  }
 
         public override async Task SubscribeToPropertyChanges(MonsterClicker.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
         {

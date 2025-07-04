@@ -12,14 +12,14 @@ export class GameViewModelRemoteClient {
     private pingIntervalId?: any;
     private changeCallbacks: Array<() => void> = [];
 
-    monsterName: any;
-    monsterMaxHealth: any;
-    monsterCurrentHealth: any;
-    playerDamage: any;
-    gameMessage: any;
-    isMonsterDefeated: any;
-    canUseSpecialAttack: any;
-    isSpecialAttackOnCooldown: any;
+  monsterName: any;
+  monsterMaxHealth: any;
+  monsterCurrentHealth: any;
+  playerDamage: any;
+  gameMessage: any;
+  isMonsterDefeated: any;
+  canUseSpecialAttack: any;
+  isSpecialAttackOnCooldown: any;
     connectionStatus: string = 'Unknown';
 
     addChangeListener(cb: () => void): void {

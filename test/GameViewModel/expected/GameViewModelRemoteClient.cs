@@ -287,7 +287,7 @@ namespace MonsterClicker.RemoteClients
         }
 
         public void Dispose()
-        {
+{
             if (_isDisposed) return;
             _isDisposed = true;
             Debug.WriteLine("[GameViewModelRemoteClient] Disposing...");
