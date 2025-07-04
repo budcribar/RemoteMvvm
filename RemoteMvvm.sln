@@ -34,6 +34,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrpcRemoteMvvmModelUtil", "
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "TypeScriptMonsterClicker", "src\demo\TypeScriptMonsterClicker\TypeScriptMonsterClicker.esproj", "{7F84A14F-D16E-AA0A-0252-1BCF79CD5AB6}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{388C6387-F030-4CD9-BBDC-490B3CE21464}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMvvmTool", "src\RemoteMvvmTool\RemoteMvvmTool.csproj", "{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -78,11 +82,18 @@ Global
 		{7F84A14F-D16E-AA0A-0252-1BCF79CD5AB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7F84A14F-D16E-AA0A-0252-1BCF79CD5AB6}.Release|Any CPU.Build.0 = Release|Any CPU
 		{7F84A14F-D16E-AA0A-0252-1BCF79CD5AB6}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {012EEB0A-22C5-4971-A229-3CC35E554B71}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A} = {388C6387-F030-4CD9-BBDC-490B3CE21464}
 	EndGlobalSection
 EndGlobal
