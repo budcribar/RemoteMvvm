@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
+using PeakSWC.Mvvm.Remote;
 
 public class Program
 {
