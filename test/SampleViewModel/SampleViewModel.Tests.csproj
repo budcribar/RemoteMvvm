@@ -12,6 +12,7 @@
   <ItemGroup>
     <Compile Remove="expected/*.cs" />
     <None Include="expected/*.cs" />
+	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <ProjectReference Include="../../src/RemoteMvvmTool/RemoteMvvmTool.csproj" />
     <ProjectReference Include="../../src/GrpcRemoteMvvmModelUtil/GrpcRemoteMvvmModelUtil.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.13.0" />

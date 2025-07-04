@@ -22,6 +22,10 @@ namespace GrpcRemoteMvvmModelUtil
             var syntaxTrees = new List<SyntaxTree>();
             foreach (var filePath in viewModelFiles)
             {
+                if (!File.Exists(filePath))
+                {
+                    throw new FileNotFoundException($"ViewModel file not found: {filePath}");
+                }
                 var fileContent = await File.ReadAllTextAsync(filePath);
                 syntaxTrees.Add(CSharpSyntaxTree.ParseText(fileContent, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest), path: filePath));
             }
@@ -55,7 +59,9 @@ namespace GrpcRemoteMvvmModelUtil
                             string? attrFqn = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
                             string? attrShortName = attr.AttributeClass?.Name;
                             if (attrFqn == generateGrpcRemoteAttributeFullName ||
-                                (attr.AttributeClass != null && !attr.AttributeClass.IsUnboundGenericType && attrFqn == null && attrShortName == Path.GetFileNameWithoutExtension(generateGrpcRemoteAttributeFullName)))
+                                (attr.AttributeClass != null && !attr.AttributeClass.IsUnboundGenericType && attrFqn == null && attrShortName == Path.GetFileNameWithoutExtension(generateGrpcRemoteAttributeFullName))
+                                //|| attrShortName == Path.GetExtension(generateGrpcRemoteAttributeFullName)[1..] // TODO hack
+                                )
                             {
                                 mainViewModelSymbol = classSymbol;
                                 originalVmName = classSymbol.Name;

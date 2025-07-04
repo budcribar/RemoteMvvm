@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "RemoteMvvmTool": {
+      "commandName": "Project",
+      "commandLineArgs": "GameViewModel.cs\r\n"
+    }
+  }
+}
