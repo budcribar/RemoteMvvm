@@ -4,9 +4,36 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using GrpcRemoteMvvmModelUtil;
+using System.Diagnostics;
 
 public class GenerationTests
 {
+    static void AssertFileEqual(string expectedPath, string actualPath)
+    {
+        var expected = File.ReadAllText(expectedPath).Trim().Replace("\r\n","\n");
+        var actual = File.ReadAllText(actualPath).Trim().Replace("\r\n","\n");
+        if(expected != actual)
+        {
+            var actualDir = Path.Combine(Path.GetDirectoryName(expectedPath)!, "..", "actual");
+            Directory.CreateDirectory(actualDir);
+            var destPath = Path.Combine(actualDir, Path.GetFileName(expectedPath));
+            File.Copy(actualPath, destPath, true);
+            try
+            {
+                var psi = new ProcessStartInfo("git", $"--no-pager diff --no-index \"{expectedPath}\" \"{destPath}\"")
+                {
+                    UseShellExecute = false
+                };
+                var p = Process.Start(psi);
+                p?.WaitForExit();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex);
+            }
+            Assert.Equal(expected, actual);
+        }
+    }
     static async Task<(string vmName, string[] outputs)> GenerateAsync(string outputDir)
     {
         Directory.CreateDirectory(outputDir);
@@ -52,7 +79,7 @@ public class GenerationTests
         {
             var generatedPath = Path.Combine(tempDir, Path.GetFileName(expected));
             Assert.True(File.Exists(generatedPath), $"Expected output {generatedPath} not found");
-            Assert.Equal(File.ReadAllText(expected).Trim().Replace("\r\n","\n"), File.ReadAllText(generatedPath).Trim().Replace("\r\n","\n"));
+            AssertFileEqual(expected, generatedPath);
         }
     }
 }
