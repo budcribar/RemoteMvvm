@@ -8,6 +8,18 @@ using GrpcRemoteMvvmModelUtil;
 
 public class Program
 {
+    static List<string> LoadDefaultRefs()
+    {
+        var list = new List<string>();
+        string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+        if (tpa != null)
+        {
+            foreach (var p in tpa.Split(Path.PathSeparator))
+                if (!string.IsNullOrEmpty(p) && File.Exists(p)) list.Add(p);
+        }
+        return list;
+    }
+
     public static async Task<int> Main(string[] args)
     {
         var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts");
@@ -29,12 +41,15 @@ public class Program
 
             Directory.CreateDirectory(output);
 
+            var refs = LoadDefaultRefs();
+            refs.Add(typeof(GenerateGrpcRemoteAttribute).Assembly.Location);
+
             var result = await ViewModelAnalyzer.AnalyzeAsync(
                 vms,
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
                 "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute",
-                new List<string>());
+                refs);
 
             if (result.ViewModelSymbol == null)
             {
