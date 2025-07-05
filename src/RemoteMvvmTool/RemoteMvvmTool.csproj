@@ -7,6 +7,7 @@
     <ToolCommandName>remotemvvm</ToolCommandName>
     <PackageId>RemoteMvvm</PackageId>
     <Version>0.0.1</Version>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <ItemGroup>
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
@@ -22,6 +23,7 @@
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
   <Target Name="InstallTool" AfterTargets="Build">
-    <Exec Command="dotnet tool install --global --add-source $(OutputPath) $(PackageId) --version $(Version) || dotnet tool update --global --add-source $(OutputPath) $(PackageId) --version $(Version)" />
+    <Exec Command="dotnet tool uninstall --global $(PackageId)" ContinueOnError="true" />
+    <Exec Command="dotnet tool install --global --add-source $(OutputPath) $(PackageId) --version $(Version)" />
   </Target>
 </Project>
