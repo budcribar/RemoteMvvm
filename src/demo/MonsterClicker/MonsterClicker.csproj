@@ -55,8 +55,23 @@
 		</MvvmViewModelProtoSource>
 	</ItemGroup>
 
-	<ItemGroup>
-		<Folder Include="protos\" />
-	</ItemGroup>
+  <ItemGroup>
+    <Folder Include="protos\" />
+  </ItemGroup>
+
+  <!-- Run RemoteMvvmTool when the ViewModel or generated files change -->
+  <ItemGroup>
+    <RemoteMvvmViewModel Include="ViewModels\GameViewModel.cs" />
+    <RemoteGenerated Include="RemoteGenerated\**\*" />
+  </ItemGroup>
+
+  <Target Name="RunRemoteMvvmTool"
+          Inputs="@(RemoteMvvmViewModel)"
+          Outputs="@(RemoteGenerated)">
+    <Exec Command="dotnet run --project ..\..\RemoteMvvmTool\RemoteMvvmTool.csproj --output \&quot;$(ProjectDir)RemoteGenerated\&quot; @(RemoteMvvmViewModel->'\"%(FullPath)\"')" />
+  </Target>
+
+  <Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
 
 </Project>
+
