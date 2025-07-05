@@ -17,7 +17,9 @@ namespace GrpcRemoteMvvmModelUtil
             string generateGrpcRemoteAttributeFullName,
             IEnumerable<string> referencePaths,
             string? attributeSourceContent = null,
-            string? attributeSourcePath = null)
+            string? attributeSourcePath = null,
+            string observableObjectFullName = "CommunityToolkit.Mvvm.ComponentModel.ObservableObject",
+            bool requireGenerateAttribute = true)
         {
             var syntaxTrees = new List<SyntaxTree>();
             foreach (var filePath in viewModelFiles)
@@ -54,19 +56,31 @@ namespace GrpcRemoteMvvmModelUtil
                 {
                     if (semanticModel.GetDeclaredSymbol(classSyntax) is INamedTypeSymbol classSymbol)
                     {
-                        foreach (var attr in classSymbol.GetAttributes())
+                        bool match = false;
+                        if (requireGenerateAttribute)
                         {
-                            string? attrFqn = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                            string? attrShortName = attr.AttributeClass?.Name;
-                            if (attrFqn == generateGrpcRemoteAttributeFullName ||
-                                (attr.AttributeClass != null && !attr.AttributeClass.IsUnboundGenericType && attrFqn == null && attrShortName == Path.GetFileNameWithoutExtension(generateGrpcRemoteAttributeFullName))
-                                //|| attrShortName == Path.GetExtension(generateGrpcRemoteAttributeFullName)[1..] // TODO hack
-                                )
+                            foreach (var attr in classSymbol.GetAttributes())
                             {
-                                mainViewModelSymbol = classSymbol;
-                                originalVmName = classSymbol.Name;
-                                break;
+                                string? attrFqn = attr.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+                                string? attrShortName = attr.AttributeClass?.Name;
+                                if (attrFqn == generateGrpcRemoteAttributeFullName ||
+                                    (attr.AttributeClass != null && !attr.AttributeClass.IsUnboundGenericType && attrFqn == null && attrShortName == Path.GetFileNameWithoutExtension(generateGrpcRemoteAttributeFullName)))
+                                {
+                                    match = true;
+                                    break;
+                                }
                             }
+                        }
+                        else
+                        {
+                            match = Helpers.InheritsFrom(classSymbol, observableObjectFullName);
+                        }
+
+                        if (match)
+                        {
+                            mainViewModelSymbol = classSymbol;
+                            originalVmName = classSymbol.Name;
+                            break;
                         }
                     }
                     if (mainViewModelSymbol != null) break;

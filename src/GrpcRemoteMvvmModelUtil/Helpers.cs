@@ -39,5 +39,17 @@ namespace GrpcRemoteMvvmModelUtil
 
             return simpleName == targetShort || shortName == targetShort || shortName == fullyQualifiedAttributeName;
         }
+
+        public static bool InheritsFrom(INamedTypeSymbol? typeSymbol, string baseTypeFullName)
+        {
+            while (typeSymbol != null && typeSymbol.SpecialType != SpecialType.System_Object)
+            {
+                var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+                if (fqn == baseTypeFullName)
+                    return true;
+                typeSymbol = typeSymbol.BaseType;
+            }
+            return false;
+        }
     }
 }
