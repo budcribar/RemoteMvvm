@@ -21,4 +21,7 @@
     <ProjectReference Include="../GrpcRemoteMvvmModelUtil/GrpcRemoteMvvmModelUtil.csproj" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
+  <Target Name="InstallTool" AfterTargets="Build">
+    <Exec Command="dotnet tool install --global --add-source $(OutputPath) $(PackageId) --version $(Version) || dotnet tool update --global --add-source $(OutputPath) $(PackageId) --version $(Version)" />
+  </Target>
 </Project>
