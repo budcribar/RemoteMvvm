@@ -23,7 +23,8 @@ public class Program
     public static async Task<int> Main(string[] args)
     {
         var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts");
-        var outputOption = new Option<string>("--output", () => "generated", "Output directory");
+        var outputOption = new Option<string>("--output", () => "generated", "Output directory for generated code files");
+        var protoOutputOption = new Option<string>("--protoOutput", () => "protos", "Directory for generated .proto file");
         var vmArgument = new Argument<List<string>>("viewmodels", "ViewModel .cs files") { Arity = ArgumentArity.OneOrMore };
         var protoNsOption = new Option<string>("--protoNamespace", () => "Generated.Protos", "C# namespace for generated proto types");
         var serviceNameOption = new Option<string?>("--serviceName", description: "gRPC service name");
@@ -34,10 +35,11 @@ public class Program
         root.AddOption(outputOption);
         root.AddArgument(vmArgument);
         root.AddOption(protoNsOption);
+        root.AddOption(protoOutputOption);
         root.AddOption(serviceNameOption);
         root.AddOption(clientNsOption);
 
-        root.SetHandler(async (generate, output, vms, protoNs, serviceNameOpt, clientNsOpt) =>
+        root.SetHandler(async (generate, output, protoOutput, vms, protoNs, serviceNameOpt, clientNsOpt) =>
         {
             var gens = generate.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             bool genProto = gens.Contains("proto") || gens.Contains("all");
@@ -46,6 +48,7 @@ public class Program
             bool genTs = gens.Contains("ts") || gens.Contains("all") || gens.Contains("tsclient");
 
             Directory.CreateDirectory(output);
+            Directory.CreateDirectory(protoOutput);
 
             var refs = LoadDefaultRefs();
 
@@ -75,7 +78,7 @@ public class Program
             if (genProto)
             {
                 var proto = Generators.GenerateProto(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
-                await File.WriteAllTextAsync(Path.Combine(output, serviceName + ".proto"), proto);
+                await File.WriteAllTextAsync(Path.Combine(protoOutput, serviceName + ".proto"), proto);
             }
             if (genTs)
             {
@@ -92,7 +95,7 @@ public class Program
                 var client = Generators.GenerateClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.cs"), client);
             }
-        }, generateOption, outputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
+        }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
 
         return await root.InvokeAsync(args);
     }
