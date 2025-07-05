@@ -2,8 +2,9 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 
 using Grpc.Net.Client.Web;
-
-
+using MonsterClicker; // For NetworkConfig
+using MonsterClicker.ViewModels.Protos; // For GameViewModelService
+using MonsterClicker.ViewModels.RemoteClients; // For GameViewModelRemoteClient
 namespace BlazorMonsterClicker
 {
     public class Program

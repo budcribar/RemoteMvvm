@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 /test/GameViewModel/actual
 src/demo/MonsterClicker/RemoteGenerated/
+obj/
