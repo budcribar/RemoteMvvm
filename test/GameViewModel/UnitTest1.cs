@@ -39,22 +39,27 @@ namespace GameViewModel
                 Assert.Equal(normExpected, normActual);
             }
         }
+        static System.Collections.Generic.List<string> LoadDefaultRefs()
+        {
+            var list = new System.Collections.Generic.List<string>();
+            string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+            if (tpa != null)
+            {
+                foreach (var p in tpa.Split(Path.PathSeparator))
+                    if (!string.IsNullOrEmpty(p) && File.Exists(p)) list.Add(p);
+            }
+            return list;
+        }
+
         private static async Task<(string Proto, string Server, string Client, string Ts)> GenerateAsync()
         {
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
             string vmFile = Path.Combine(root, "src", "demo", "MonsterClicker", "ViewModels", "GameViewModel.cs");
-            string attrSource = await File.ReadAllTextAsync(Path.Combine(root, "src", "GrpcRemoteMvvmGenerator", "attributes", "GenerateGrpcRemoteAttribute.cs"));
-            var references = new[]
-            {
-                typeof(object).GetTypeInfo().Assembly.Location,
-                typeof(Console).GetTypeInfo().Assembly.Location,
-                typeof(CommunityToolkit.Mvvm.ComponentModel.ObservableObject).Assembly.Location
-            };
+            var references = LoadDefaultRefs();
             var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-                references,
-                attrSource);
+                references);
             Assert.NotNull(sym);
             const string protoNs = "MonsterClicker.ViewModels.Protos";
             const string serviceName = "GameViewModelService";
