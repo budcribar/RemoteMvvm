@@ -30,7 +30,17 @@
 
   <ItemGroup>
     <None Include="expected/*" />
-    <Compile Remove="expected/*.cs" />
+	  <None Include="actual/*" />
+    <Compile Remove="actual\**" />
+    <Compile Remove="expected/**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="expected\GameViewModelRemoteClient.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="expected\GameViewModelRemoteClient.ts" />
   </ItemGroup>
 
 </Project>
