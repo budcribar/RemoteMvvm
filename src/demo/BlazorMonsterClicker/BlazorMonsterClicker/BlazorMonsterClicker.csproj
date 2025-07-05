@@ -14,20 +14,15 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
+		
 		<PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.16" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.16" PrivateAssets="all" />
 		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
-		
-
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-
-		<!--<PackageReference Include="Grpc.Tools" Version="2.72.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>-->
-
-
+	
 		
 		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
