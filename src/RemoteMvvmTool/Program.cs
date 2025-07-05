@@ -58,12 +58,12 @@ public class Program
                 return;
             }
 
-            var protoNamespace = result.ViewModelSymbol.GetAttributes()
-                .First(a => a.AttributeClass?.Name.Contains("GenerateGrpcRemote") == true)
-                .ConstructorArguments[0].Value?.ToString() ?? "Generated.Protos";
-            var serviceName = result.ViewModelSymbol.GetAttributes()
-                .First(a => a.AttributeClass?.Name.Contains("GenerateGrpcRemote") == true)
-                .ConstructorArguments[1].Value?.ToString() ?? result.ViewModelName + "Service";
+            var attr = result.ViewModelSymbol.GetAttributes()
+                .First(a => a.AttributeClass?.Name.Contains("GenerateGrpcRemote") == true);
+            var protoNamespace = attr.ConstructorArguments[0].Value?.ToString() ?? "Generated.Protos";
+            var serviceName = attr.ConstructorArguments[1].Value?.ToString() ?? result.ViewModelName + "Service";
+            var clientNamespace = attr.NamedArguments.FirstOrDefault(kv => kv.Key == "ClientProxyNamespace").Value.Value?.ToString()
+                ?? result.ViewModelSymbol.ContainingNamespace.ToDisplayString() + ".RemoteClients";
 
             if (genProto)
             {
@@ -82,7 +82,7 @@ public class Program
             }
             if (genClient)
             {
-                var client = Generators.GenerateClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
+                var client = Generators.GenerateClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.cs"), client);
             }
         }, generateOption, outputOption, vmArgument);
