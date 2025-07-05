@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
-using PeakSWC.Mvvm.Remote;
 
 public class Program
 {
@@ -26,13 +25,19 @@ public class Program
         var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts");
         var outputOption = new Option<string>("--output", () => "generated", "Output directory");
         var vmArgument = new Argument<List<string>>("viewmodels", "ViewModel .cs files") { Arity = ArgumentArity.OneOrMore };
+        var protoNsOption = new Option<string>("--protoNamespace", () => "Generated.Protos", "C# namespace for generated proto types");
+        var serviceNameOption = new Option<string?>("--serviceName", description: "gRPC service name");
+        var clientNsOption = new Option<string?>("--clientNamespace", description: "Namespace for generated client proxy");
 
         var root = new RootCommand("RemoteMvvm generation tool");
         root.AddOption(generateOption);
         root.AddOption(outputOption);
         root.AddArgument(vmArgument);
+        root.AddOption(protoNsOption);
+        root.AddOption(serviceNameOption);
+        root.AddOption(clientNsOption);
 
-        root.SetHandler(async (generate, output, vms) =>
+        root.SetHandler(async (generate, output, vms, protoNs, serviceNameOpt, clientNsOpt) =>
         {
             var gens = generate.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             bool genProto = gens.Contains("proto") || gens.Contains("all");
@@ -43,27 +48,29 @@ public class Program
             Directory.CreateDirectory(output);
 
             var refs = LoadDefaultRefs();
-            refs.Add(typeof(GenerateGrpcRemoteAttribute).Assembly.Location);
 
             var result = await ViewModelAnalyzer.AnalyzeAsync(
                 vms,
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-                "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute",
-                refs);
+                string.Empty,
+                refs,
+                null,
+                null,
+                "CommunityToolkit.Mvvm.ComponentModel.ObservableObject",
+                requireGenerateAttribute: false);
 
             if (result.ViewModelSymbol == null)
             {
-                Console.Error.WriteLine("No ViewModel with [GenerateGrpcRemote] found.");
+                Console.Error.WriteLine("No ViewModel subclass of ObservableObject found.");
                 return;
             }
 
-            var attr = result.ViewModelSymbol.GetAttributes()
-                .First(a => a.AttributeClass?.Name.Contains("GenerateGrpcRemote") == true);
-            var protoNamespace = attr.ConstructorArguments[0].Value?.ToString() ?? "Generated.Protos";
-            var serviceName = attr.ConstructorArguments[1].Value?.ToString() ?? result.ViewModelName + "Service";
-            var clientNamespace = attr.NamedArguments.FirstOrDefault(kv => kv.Key == "ClientProxyNamespace").Value.Value?.ToString()
-                ?? result.ViewModelSymbol.ContainingNamespace.ToDisplayString() + ".RemoteClients";
+            var protoNamespace = protoNs;
+            var serviceName = string.IsNullOrWhiteSpace(serviceNameOpt) ? result.ViewModelName + "Service" : serviceNameOpt;
+            var clientNamespace = string.IsNullOrWhiteSpace(clientNsOpt)
+                ? result.ViewModelSymbol.ContainingNamespace.ToDisplayString() + ".RemoteClients"
+                : clientNsOpt;
 
             if (genProto)
             {
@@ -85,7 +92,7 @@ public class Program
                 var client = Generators.GenerateClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.cs"), client);
             }
-        }, generateOption, outputOption, vmArgument);
+        }, generateOption, outputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
 
         return await root.InvokeAsync(args);
     }
