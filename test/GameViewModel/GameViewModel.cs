@@ -1,15 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PeakSWC.Mvvm.Remote; // Your custom attribute's namespace
-using System;
-using System.Threading.Tasks;
-// using System.Windows; // No longer directly using WPF dispatcher here
 
 namespace MonsterClicker.ViewModels
 {
-    [GenerateGrpcRemote("MonsterClicker.ViewModels.Protos","GameViewModelService",
-            ServerImplNamespace = "MonsterClicker.GrpcServices",
-            ClientProxyNamespace = "MonsterClicker.RemoteClients")]
+
     public partial class GameViewModel : ObservableObject
     {
         [ObservableProperty]
