@@ -7,6 +7,18 @@
     <ToolCommandName>remotemvvm</ToolCommandName>
     <PackageId>RemoteMvvm</PackageId>
     <Version>0.0.1</Version>
+	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+	    <Authors>Bud Cribar</Authors>
+    <Description>A command line tool for generating gRPC remote MVVM proxies and server implementations.</Description>
+    <PackageTags>sourcegenerator;mvvm;grpc;roslyn;automation;PeakSWC</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!--<EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>-->
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <IsPackable>true</IsPackable>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <PackageOutputPath>$(MSBuildThisFileDirectory)publish\</PackageOutputPath>
+
   </PropertyGroup>
   <ItemGroup>
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
@@ -21,7 +33,8 @@
     <ProjectReference Include="../GrpcRemoteMvvmModelUtil/GrpcRemoteMvvmModelUtil.csproj" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
-  <Target Name="InstallTool" AfterTargets="Build">
-    <Exec Command="dotnet tool install --global --add-source $(OutputPath) $(PackageId) --version $(Version) || dotnet tool update --global --add-source $(OutputPath) $(PackageId) --version $(Version)" />
-  </Target>
+	<Target Name="InstallTool" AfterTargets="Pack">
+		<Exec Command="dotnet tool uninstall --global $(PackageId)" ContinueOnError="true" />
+		<Exec Command="dotnet tool install --global --add-source $(PackageOutputPath) $(PackageId) --version $(Version)" />
+	</Target>
 </Project>
