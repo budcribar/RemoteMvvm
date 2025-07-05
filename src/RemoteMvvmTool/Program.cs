@@ -95,6 +95,11 @@ public class Program
                 var client = Generators.GenerateClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.cs"), client);
             }
+            if (genServer || genClient)
+            {
+                var opts = Generators.GenerateOptions();
+                await File.WriteAllTextAsync(Path.Combine(output, "GrpcRemoteOptions.cs"), opts);
+            }
         }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
 
         return await root.InvokeAsync(args);

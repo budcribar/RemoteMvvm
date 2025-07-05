@@ -38,7 +38,7 @@ public class GenerationTests
     {
         Directory.CreateDirectory(outputDir);
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
-        var vmFile = Path.Combine(root, "src","tests","MvvmClass","SampleViewModel.cs");
+        var vmFile = Path.Combine(root, "test","SampleViewModel","SampleViewModel.cs");
         var attrSource = await File.ReadAllTextAsync(Path.Combine(root, "src","GrpcRemoteMvvmGenerator","attributes","GenerateGrpcRemoteAttribute.cs"));
         var refs = LoadDefaultRefs();
         var (sym,name,props,cmds,comp) = await ViewModelAnalyzer.AnalyzeAsync(new[]{vmFile},

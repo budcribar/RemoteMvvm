@@ -44,14 +44,20 @@ namespace GameViewModel
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
             string vmFile = Path.Combine(root, "src", "demo", "MonsterClicker", "ViewModels", "GameViewModel.cs");
             string attrSource = await File.ReadAllTextAsync(Path.Combine(root, "src", "GrpcRemoteMvvmGenerator", "attributes", "GenerateGrpcRemoteAttribute.cs"));
-            var references = new[] { typeof(object).GetTypeInfo().Assembly.Location, typeof(Console).GetTypeInfo().Assembly.Location };
+            var references = new[]
+            {
+                typeof(object).GetTypeInfo().Assembly.Location,
+                typeof(Console).GetTypeInfo().Assembly.Location,
+                typeof(CommunityToolkit.Mvvm.ComponentModel.ObservableObject).Assembly.Location
+            };
             var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
                 "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute",
                 references,
                 attrSource,
-                "GenerateGrpcRemoteAttribute.cs");
+                "GenerateGrpcRemoteAttribute.cs",
+                requireGenerateAttribute: false);
             Assert.NotNull(sym);
             const string protoNs = "MonsterClicker.ViewModels.Protos";
             const string serviceName = "GameViewModelService";

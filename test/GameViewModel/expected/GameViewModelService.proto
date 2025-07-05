@@ -9,14 +9,14 @@ import "google/protobuf/empty.proto";
 
 // Message representing the full state of the GameViewModel
 message GameViewModelState {
-  string monster_name = 1;
-  string monster_max_health = 2;
-  string monster_current_health = 3;
-  string player_damage = 4;
-  string game_message = 5;
-  string is_monster_defeated = 6;
-  string can_use_special_attack = 7;
-  string is_special_attack_on_cooldown = 8;
+  string monster_name = 1; // Original C#: string MonsterName
+  int32 monster_max_health = 2; // Original C#: int MonsterMaxHealth
+  int32 monster_current_health = 3; // Original C#: int MonsterCurrentHealth
+  int32 player_damage = 4; // Original C#: int PlayerDamage
+  string game_message = 5; // Original C#: string GameMessage
+  bool is_monster_defeated = 6; // Original C#: bool IsMonsterDefeated
+  bool can_use_special_attack = 7; // Original C#: bool CanUseSpecialAttack
+  bool is_special_attack_on_cooldown = 8; // Original C#: bool IsSpecialAttackOnCooldown
 }
 
 message UpdatePropertyValueRequest {

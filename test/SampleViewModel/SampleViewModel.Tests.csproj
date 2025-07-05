@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <Compile Remove="expected/*.cs" />
+    <Compile Remove="actual/**" />
     <None Include="expected/*.cs" />
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <ProjectReference Include="../../src/RemoteMvvmTool/RemoteMvvmTool.csproj" />
