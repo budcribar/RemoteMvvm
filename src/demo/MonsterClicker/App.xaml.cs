@@ -1,6 +1,5 @@
 ﻿using System.Windows;
 using MonsterClicker.ViewModels;
-using PeakSWC.Mvvm.Remote;
 
 namespace MonsterClicker
 {
