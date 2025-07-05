@@ -28,6 +28,10 @@
     <Folder Include="RemoteGenerated\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\BlazorMonsterClicker\BlazorMonsterClicker\BlazorMonsterClicker.csproj" />
+  </ItemGroup>
+
   <!-- Run RemoteMvvmTool when the ViewModel or generated files change -->
   <ItemGroup>
     <RemoteMvvmViewModel Include="ViewModels\GameViewModel.cs" />
