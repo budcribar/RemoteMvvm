@@ -1,4 +1,6 @@
-﻿using System.Windows;
+using System;
+using System.Linq;
+using System.Windows;
 using MonsterClicker.ViewModels;
 using PeakSWC.Mvvm.Remote;
 
@@ -31,7 +33,7 @@ namespace MonsterClicker
                         mainWindow = new MainWindow(AppModeUtil.AppMode.Client)
                         {
                             DataContext = await clientVm.GetRemoteModel(),
-                            Title = $"Client Mode - Connected to {NetworkConfig.ServerAddress})"
+                            Title = $"Client Mode - Connected to {NetworkConfig.ServerAddress}"
                         };
                         break;
 
