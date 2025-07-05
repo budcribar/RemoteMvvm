@@ -9,9 +9,10 @@
 		
 	</PropertyGroup>
 
-	<ItemGroup>
-	  <Compile Include="..\..\MonsterClicker\NetworkConfig.cs" Link="NetworkConfig.cs" />
-	</ItemGroup>
+        <ItemGroup>
+          <Compile Include="..\..\MonsterClicker\NetworkConfig.cs" Link="NetworkConfig.cs" />
+          <Compile Include="..\..\..\RemoteMvvmTool\GenerateGrpcRemoteAttribute.cs" Link="GenerateGrpcRemoteAttribute.cs" />
+        </ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
@@ -20,16 +21,17 @@
 		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
 		
 
-		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+                <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+                <PackageReference Include="Google.Protobuf" Version="3.25.2" />
 
-		<!--<PackageReference Include="Grpc.Tools" Version="2.72.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>-->
+                <PackageReference Include="Grpc.Tools" Version="2.72.0">
+                        <PrivateAssets>all</PrivateAssets>
+                        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+                </PackageReference>
 
 
 		
-		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="Protos\" Access="Public" />
+                <Protobuf Include="protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="protos\" Access="Public" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -37,12 +39,12 @@
 		<RemoteGenerated Include="RemoteGenerated\GameViewModelGrpcServiceImpl.cs" />
 	</ItemGroup>
 
-	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
+    <Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
 
-		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
-		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
+            <Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
+            <Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="true" />
 
-	</Target>
+    </Target>
 
 	<Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
 
