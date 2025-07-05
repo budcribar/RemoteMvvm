@@ -3,12 +3,14 @@ using Microsoft.CodeAnalysis;
 using System.Text;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 public static class Generators
 {
     public static string GenerateProto(string protoNs, string serviceName, string vmName, List<PropertyInfo> props, List<CommandInfo> cmds, Compilation compilation)
     {
         var body = new StringBuilder();
+        body.AppendLine($"// Message representing the full state of the {vmName}");
         body.AppendLine($"message {vmName}State {{");
         int field = 1;
         foreach (var p in props)
@@ -63,9 +65,20 @@ public static class Generators
 
         var final = new StringBuilder();
         final.AppendLine("syntax = \"proto3\";");
+        final.AppendLine();
+
+        string protoPackageName = Regex.Replace(protoNs.ToLowerInvariant(), @"[^a-z0-9_]+", "_").Trim('_');
+        if (string.IsNullOrWhiteSpace(protoPackageName) || !char.IsLetter(protoPackageName[0]))
+        {
+            protoPackageName = "generated_" + protoPackageName;
+        }
+        final.AppendLine($"package {protoPackageName};");
+        final.AppendLine();
+
         final.AppendLine($"option csharp_namespace = \"{protoNs}\";");
-        final.AppendLine("import \"google/protobuf/empty.proto\";");
+        final.AppendLine();
         final.AppendLine("import \"google/protobuf/any.proto\";");
+        final.AppendLine("import \"google/protobuf/empty.proto\";");
         final.AppendLine();
         final.Append(body.ToString());
         return final.ToString();
