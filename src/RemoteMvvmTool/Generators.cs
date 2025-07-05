@@ -302,11 +302,12 @@ public static class Generators
         return sb.ToString();
     }
 
-    public static string GenerateServer(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds)
+    public static string GenerateServer(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds, string viewModelNamespace)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using Grpc.Core;");
         sb.AppendLine($"using {protoNs};");
+        sb.AppendLine($"using {viewModelNamespace};");
         sb.AppendLine("using Google.Protobuf.WellKnownTypes;");
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Linq;");

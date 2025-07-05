@@ -1,5 +1,6 @@
 using Grpc.Core;
 using SampleApp.ViewModels.Protos;
+using SampleApp.ViewModels;
 using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Linq;
