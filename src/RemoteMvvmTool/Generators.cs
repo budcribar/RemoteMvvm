@@ -346,10 +346,10 @@ public static class Generators
         sb.AppendLine("                    if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
         sb.AppendLine("                    else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
         sb.AppendLine("                    else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
-        sb.AppendLine("                    else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \"" + request.PropertyName + "\" and type \"" + request.NewValue.TypeUrl + "\".\"); }");
-        sb.AppendLine("                } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \"" + request.PropertyName + "\": " + ex.Message); }");
+        sb.AppendLine("                    else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
+        sb.AppendLine("                } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
         sb.AppendLine("            }");
-        sb.AppendLine("            else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \"" + request.PropertyName + "\" not found or not writable.\"); }");
+        sb.AppendLine("            else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
         sb.AppendLine("        });");
         sb.AppendLine("        return Task.FromResult(new Empty());");
         sb.AppendLine("    }");
@@ -414,7 +414,7 @@ public static class Generators
         sb.AppendLine("        if (string.IsNullOrEmpty(e.PropertyName)) return;");
         sb.AppendLine("        object? newValue = null;");
         sb.AppendLine("        try { newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }");
-        sb.AppendLine("        catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error getting property value for \\\"" + e.PropertyName + "\\\": " + ex.Message); return; }");
+        sb.AppendLine("        catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error getting property value for \" + e.PropertyName + \": \" + ex.Message); return; }");
         sb.AppendLine();
         sb.AppendLine($"        var notification = new {protoNs}.PropertyChangeNotification {{ PropertyName = e.PropertyName }};");
         sb.AppendLine("        if (newValue == null) notification.NewValue = Any.Pack(new Empty());");
@@ -430,8 +430,8 @@ public static class Generators
         sb.AppendLine("        foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))");
         sb.AppendLine("        {");
         sb.AppendLine("            try { await channelWriter.WriteAsync(notification); }");
-        sb.AppendLine("            catch (ChannelClosedException) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Channel closed for a subscriber, cannot write notification for '\" + e.PropertyName + "'. Subscriber likely disconnected.\"); }");
-        sb.AppendLine("            catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error writing to subscriber channel for '\" + e.PropertyName + "': \" + ex.Message); }");
+        sb.AppendLine("            catch (ChannelClosedException) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Channel closed for a subscriber, cannot write notification for '\" + e.PropertyName + \"'. Subscriber likely disconnected.\"); }");
+        sb.AppendLine("            catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error writing to subscriber channel for '\" + e.PropertyName + \"': \" + ex.Message); }");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine("}");
