@@ -64,7 +64,8 @@ namespace GameViewModel
             const string protoNs = "MonsterClicker.ViewModels.Protos";
             const string serviceName = "GameViewModelService";
             var proto = Generators.GenerateProto(protoNs, serviceName, name, props, cmds, comp);
-            var server = Generators.GenerateServer(name, protoNs, serviceName, props, cmds);
+            var vmNamespace = sym!.ContainingNamespace.ToDisplayString();
+            var server = Generators.GenerateServer(name, protoNs, serviceName, props, cmds, vmNamespace);
             var client = Generators.GenerateClient(name, protoNs, serviceName, props, cmds);
             var ts = Generators.GenerateTypeScriptClient(name, protoNs, serviceName, props, cmds);
             return (proto, server, client, ts);

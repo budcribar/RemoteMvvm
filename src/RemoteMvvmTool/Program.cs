@@ -83,7 +83,8 @@ public class Program
             }
             if (genServer)
             {
-                var server = Generators.GenerateServer(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
+                var vmNamespace = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
+                var server = Generators.GenerateServer(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespace);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "GrpcServiceImpl.cs"), server);
             }
             if (genClient)
