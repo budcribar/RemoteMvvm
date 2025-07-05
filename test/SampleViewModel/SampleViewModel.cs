@@ -1,17 +1,9 @@
 ﻿// Required using statements for CommunityToolkit.Mvvm and your custom attribute
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
-using PeakSWC.Mvvm.Remote; // Assuming your GenerateGrpcRemoteAttribute is in this namespace
-
 
 namespace SampleApp.ViewModels
 {
-    // Attribute to mark this ViewModel for gRPC remote generation
-    // Parameters: proto C# namespace, gRPC service name
-    // Optional named parameters: ServerImplNamespace, ClientProxyNamespace
-    [GenerateGrpcRemote("SampleApp.ViewModels.Protos", "CounterService",
-        ServerImplNamespace = "SampleApp.GrpcServices",
-        ClientProxyNamespace = "SampleApp.RemoteClients")]
     public partial class SampleViewModel : ObservableObject
     {
         // An observable property for a string value (e.g., a name)

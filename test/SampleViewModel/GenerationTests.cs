@@ -39,15 +39,13 @@ public class GenerationTests
         Directory.CreateDirectory(outputDir);
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
         var vmFile = Path.Combine(root, "test","SampleViewModel","SampleViewModel.cs");
-        var attrSource = await File.ReadAllTextAsync(Path.Combine(root, "src","GrpcRemoteMvvmGenerator","attributes","GenerateGrpcRemoteAttribute.cs"));
+       
         var refs = LoadDefaultRefs();
-        var (sym,name,props,cmds,comp) = await ViewModelAnalyzer.AnalyzeAsync(new[]{vmFile},
+        var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
             "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
             "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-            "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute",
-            refs,
-            attrSource,
-            "embedded://PeakSWC/Mvvm/Remote/GenerateGrpcRemoteAttribute.cs");
+          
+            refs);
         if(sym==null) throw new Exception("ViewModel not found");
         File.WriteAllText(Path.Combine(outputDir,"SampleViewModelService.proto"), Generators.GenerateProto("SampleApp.ViewModels.Protos","CounterService",name,props,cmds,comp));
         File.WriteAllText(Path.Combine(outputDir,"SampleViewModelRemoteClient.ts"), Generators.GenerateTypeScriptClient(name,"SampleApp.ViewModels.Protos","CounterService",props,cmds));

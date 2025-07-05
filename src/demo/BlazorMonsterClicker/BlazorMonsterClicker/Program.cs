@@ -1,10 +1,8 @@
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
-using Grpc.Net.Client;
+
 using Grpc.Net.Client.Web;
-using MonsterClicker.ViewModels.Protos;
-using MonsterClicker.RemoteClients;
-using MonsterClicker; // For NetworkConfig
+
 
 namespace BlazorMonsterClicker
 {

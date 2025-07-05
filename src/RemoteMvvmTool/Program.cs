@@ -56,12 +56,8 @@ public class Program
                 vms,
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-                string.Empty,
                 refs,
-                null,
-                null,
-                "CommunityToolkit.Mvvm.ComponentModel.ObservableObject",
-                requireGenerateAttribute: false);
+                "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
 
             if (result.ViewModelSymbol == null)
             {

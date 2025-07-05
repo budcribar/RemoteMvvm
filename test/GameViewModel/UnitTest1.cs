@@ -53,11 +53,8 @@ namespace GameViewModel
             var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-                "PeakSWC.Mvvm.Remote.GenerateGrpcRemoteAttribute",
                 references,
-                attrSource,
-                "GenerateGrpcRemoteAttribute.cs",
-                requireGenerateAttribute: false);
+                attrSource);
             Assert.NotNull(sym);
             const string protoNs = "MonsterClicker.ViewModels.Protos";
             const string serviceName = "GameViewModelService";

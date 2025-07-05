@@ -27,23 +27,26 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>-->
 
-		<PackageReference Include="PeakSWC.MvvmSourceGenerator" Version="1.0.0-preview50">
-			<!--<GrpcServices>Server</GrpcServices>-->
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
+
 		
 		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
-	
+
 	<ItemGroup>
-		<MvvmViewModelProtoSource Include="ViewModels\GameViewModel.cs">
-			<ProtoNamespace>MonsterClicker.ViewModels.Protos</ProtoNamespace>
-			<ServiceName>GameViewModelService</ServiceName>
-			<OutputPath>Protos\GameViewModelService.proto</OutputPath>
-		</MvvmViewModelProtoSource>
+		<RemoteMvvmViewModel Include="ViewModels\GameViewModel.cs" />
+		<RemoteGenerated Include="RemoteGenerated\GameViewModelGrpcServiceImpl.cs" />
 	</ItemGroup>
-	
+
+	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
+
+		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
+		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
+
+	</Target>
+
+	<Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
+
+
 	<ItemGroup>
 		<Folder Include="protos\" />
 	</ItemGroup>
