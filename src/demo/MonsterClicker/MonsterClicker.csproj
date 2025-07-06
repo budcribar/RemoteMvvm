@@ -9,7 +9,6 @@
 		<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>
 	</PropertyGroup>
 
-	
 	<ItemGroup>
 	  <FrameworkReference Include="Microsoft.AspNetCore.App" />
 	  <EmbeddedResource Include="Resources\sword.png" />
@@ -29,22 +28,17 @@
     <Folder Include="RemoteGenerated\" />
   </ItemGroup>
 
-  <!-- Run RemoteMvvmTool when the ViewModel or generated files change -->
   <ItemGroup>
     <RemoteMvvmViewModel Include="ViewModels\GameViewModel.cs" />
-	<RemoteGenerated Include="RemoteGenerated\GameViewModelGrpcServiceImpl.cs" />
   </ItemGroup>
 
-	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
 
-		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
-		<Exec Command="remotemvvm --generate proto,server,client,ts --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
-		
-	</Target>
+  <Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" >
+    <Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
+    <Exec Command="remotemvvm --generate proto,server,client,ts --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
+  </Target>
 
-	<Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
-
-  
+  <Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
 
 </Project>
 

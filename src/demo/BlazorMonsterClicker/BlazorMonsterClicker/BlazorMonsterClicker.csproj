@@ -25,12 +25,12 @@
 
 	<ItemGroup>
 		<RemoteMvvmViewModel Include="ViewModels\GameViewModel.cs" />
-		<RemoteGenerated Include="RemoteGenerated\GameViewModelRemoteClient.cs" />
+		<Compile Remove="RemoteGenerated\GameViewModel.Remote.g.cs" />
 	</ItemGroup>
 
-	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
+	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile">
 		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
-		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="true" />
+		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos --clientNamespace MonsterClicker.ViewModels.RemoteClients @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="true" />
 	</Target>
 
 	<Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
