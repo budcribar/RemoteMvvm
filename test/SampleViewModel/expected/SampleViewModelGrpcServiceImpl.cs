@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Threading.Channels;
 using System.Windows.Threading;
 using Channel = System.Threading.Channels.Channel;
+using Microsoft.Extensions.Logging;
 
 public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServiceBase
 {
@@ -38,11 +39,13 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
     private readonly SampleViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>>();
     private readonly Dispatcher _dispatcher;
+    private readonly ILogger? _logger;
 
-    public SampleViewModelGrpcServiceImpl(SampleViewModel viewModel, Dispatcher dispatcher)
+    public SampleViewModelGrpcServiceImpl(SampleViewModel viewModel, Dispatcher dispatcher, ILogger<SampleViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
 
