@@ -59,7 +59,8 @@ public class Program
             bool genProto = gens.Contains("proto") || gens.Contains("all");
             bool genServer = gens.Contains("server") || gens.Contains("all");
             bool genClient = gens.Contains("client") || gens.Contains("all");
-            bool genTs = gens.Contains("ts") || gens.Contains("all") || gens.Contains("tsclient");
+            bool genTsProject = gens.Contains("tsproject");
+            bool genTs = gens.Contains("ts") || gens.Contains("all") || gens.Contains("tsclient") || genTsProject;
 
             Directory.CreateDirectory(output);
             Directory.CreateDirectory(protoOutput);
@@ -102,6 +103,34 @@ public class Program
                     var ts = TypeScriptClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
                     await File.WriteAllTextAsync(tsPath, ts);
                 }
+            }
+            if (genTsProject)
+            {
+                string projDir = Path.Combine(output, "tsProject");
+                Directory.CreateDirectory(projDir);
+                Directory.CreateDirectory(Path.Combine(projDir, "src"));
+                Directory.CreateDirectory(Path.Combine(projDir, "src", "generated"));
+                Directory.CreateDirectory(Path.Combine(projDir, "wwwroot"));
+
+                string tsClientPath = Path.Combine(projDir, "src", result.ViewModelName + "RemoteClient.ts");
+                var tsClient = TypeScriptClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
+                await File.WriteAllTextAsync(tsClientPath, tsClient);
+
+                string appTs = TsProjectGenerator.GenerateAppTs(result.ViewModelName, serviceName, result.Properties, result.Commands);
+                await File.WriteAllTextAsync(Path.Combine(projDir, "src", "app.ts"), appTs);
+
+                string indexHtml = TsProjectGenerator.GenerateIndexHtml(result.ViewModelName, result.Properties, result.Commands);
+                await File.WriteAllTextAsync(Path.Combine(projDir, "wwwroot", "index.html"), indexHtml);
+
+                await File.WriteAllTextAsync(Path.Combine(projDir, "package.json"), TsProjectGenerator.GeneratePackageJson(result.ViewModelName));
+                await File.WriteAllTextAsync(Path.Combine(projDir, "tsconfig.json"), TsProjectGenerator.GenerateTsConfig());
+                await File.WriteAllTextAsync(Path.Combine(projDir, "webpack.config.js"), TsProjectGenerator.GenerateWebpackConfig());
+
+                string protoDir = Path.Combine(projDir, "protos");
+                Directory.CreateDirectory(protoDir);
+                string protoPathProj = Path.Combine(protoDir, serviceName + ".proto");
+                var protoText = ProtoGenerator.Generate(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
+                await File.WriteAllTextAsync(protoPathProj, protoText);
             }
             string vmNamespaceStr = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
             if (genServer)
