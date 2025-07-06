@@ -36,9 +36,9 @@ namespace MonsterClicker
             this.DataContextChanged += MainWindow_DataContextChanged;
             if (IsServerMode)
             {
-                MonsterClicker.GrpcServices.GameViewModelGrpcServiceImpl.ClientCountChanged += OnClientCountChanged;
+               GameViewModelGrpcServiceImpl.ClientCountChanged += OnClientCountChanged;
                 // Set initial value on startup
-                ConnectedClients = MonsterClicker.GrpcServices.GameViewModelGrpcServiceImpl.ClientCount;
+                ConnectedClients = GameViewModelGrpcServiceImpl.ClientCount;
             }
         }
 
@@ -46,7 +46,7 @@ namespace MonsterClicker
         {
             base.OnClosed(e);
             if (IsServerMode)
-                MonsterClicker.GrpcServices.GameViewModelGrpcServiceImpl.ClientCountChanged -= OnClientCountChanged;
+                GameViewModelGrpcServiceImpl.ClientCountChanged -= OnClientCountChanged;
         }
 
         public int ConnectedClients

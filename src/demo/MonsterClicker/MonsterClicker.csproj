@@ -19,6 +19,7 @@
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
 		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
+		<PackageReference Include="Grpc.Core" Version="2.46.6" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
 		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
