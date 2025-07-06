@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Xunit;
 using GrpcRemoteMvvmModelUtil;
 using System.Diagnostics;
+using RemoteMvvmTool.Generators;
 
 namespace SampleViewModel
 {
@@ -49,11 +50,11 @@ namespace SampleViewModel
 
                 refs);
             if (sym == null) throw new Exception("ViewModel not found");
-            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelService.proto"), Generators.GenerateProto("SampleApp.ViewModels.Protos", "CounterService", name, props, cmds, comp));
-            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelRemoteClient.ts"), Generators.GenerateTypeScriptClient(name, "SampleApp.ViewModels.Protos", "CounterService", props, cmds));
+            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelService.proto"), ProtoGenerator.Generate("SampleApp.ViewModels.Protos", "CounterService", name, props, cmds, comp));
+            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelRemoteClient.ts"), TypeScriptClientGenerator.Generate(name, "SampleApp.ViewModels.Protos", "CounterService", props, cmds));
             var vmNamespace = sym.ContainingNamespace.ToDisplayString();
-            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelGrpcServiceImpl.cs"), Generators.GenerateServer(name, "SampleApp.ViewModels.Protos", "CounterService", props, cmds, vmNamespace));
-            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelRemoteClient.cs"), Generators.GenerateClient(name, "SampleApp.ViewModels.Protos", "CounterService", props, cmds));
+            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelGrpcServiceImpl.cs"), ServerGenerator.Generate(name, "SampleApp.ViewModels.Protos", "CounterService", props, cmds, vmNamespace));
+            File.WriteAllText(Path.Combine(outputDir, "SampleViewModelRemoteClient.cs"), ClientGenerator.Generate(name, "SampleApp.ViewModels.Protos", "CounterService", props, cmds));
             return (name, Directory.GetFiles(outputDir));
         }
 
