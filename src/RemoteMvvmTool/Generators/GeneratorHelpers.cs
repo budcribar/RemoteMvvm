@@ -70,4 +70,3 @@ public static class GeneratorHelpers
         return "Any";
     }
 }
-}

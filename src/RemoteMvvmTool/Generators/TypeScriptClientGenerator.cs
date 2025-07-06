@@ -10,7 +10,6 @@ public static class TypeScriptClientGenerator
 {
     public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds)
     {
-    {
         var sb = new StringBuilder();
         sb.AppendLine($"// Auto-generated TypeScript client for {vmName}");
         sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb';");

@@ -40,6 +40,19 @@ public class Program
         root.AddOption(serviceNameOption);
         root.AddOption(clientNsOption);
 
+        bool NeedsGeneration(string outputFile, IEnumerable<string> inputs)
+        {
+            if (!File.Exists(outputFile))
+                return true;
+            var outTime = File.GetLastWriteTimeUtc(outputFile);
+            foreach (var inp in inputs)
+            {
+                if (File.Exists(inp) && File.GetLastWriteTimeUtc(inp) > outTime)
+                    return true;
+            }
+            return false;
+        }
+
         root.SetHandler(async (generate, output, protoOutput, vms, protoNs, serviceNameOpt, clientNsOpt) =>
         {
             var gens = generate.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
@@ -74,31 +87,55 @@ public class Program
 
             if (genProto)
             {
-                var proto = ProtoGenerator.Generate(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
-                await File.WriteAllTextAsync(Path.Combine(protoOutput, serviceName + ".proto"), proto);
+                string protoPath = Path.Combine(protoOutput, serviceName + ".proto");
+                if (NeedsGeneration(protoPath, vms))
+                {
+                    var proto = ProtoGenerator.Generate(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
+                    await File.WriteAllTextAsync(protoPath, proto);
+                }
             }
             if (genTs)
             {
-                var ts = TypeScriptClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
-                await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.ts"), ts);
+                string tsPath = Path.Combine(output, result.ViewModelName + "RemoteClient.ts");
+                if (NeedsGeneration(tsPath, vms))
+                {
+                    var ts = TypeScriptClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
+                    await File.WriteAllTextAsync(tsPath, ts);
+                }
             }
             string vmNamespaceStr = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
             if (genServer)
             {
-                var server = ServerGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespaceStr);
-                await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "GrpcServiceImpl.cs"), server);
+                string serverPath = Path.Combine(output, result.ViewModelName + "GrpcServiceImpl.cs");
+                if (NeedsGeneration(serverPath, vms))
+                {
+                    var server = ServerGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespaceStr);
+                    await File.WriteAllTextAsync(serverPath, server);
+                }
             }
             if (genClient)
             {
-                var client = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
-                await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.cs"), client);
+                string clientPath = Path.Combine(output, result.ViewModelName + "RemoteClient.cs");
+                if (NeedsGeneration(clientPath, vms))
+                {
+                    var client = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
+                    await File.WriteAllTextAsync(clientPath, client);
+                }
             }
             if (genServer || genClient)
             {
-                var opts = OptionsGenerator.Generate();
-                await File.WriteAllTextAsync(Path.Combine(output, "GrpcRemoteOptions.cs"), opts);
-                var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace);
-                await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + ".Remote.g.cs"), partial);
+                string optsPath = Path.Combine(output, "GrpcRemoteOptions.cs");
+                if (NeedsGeneration(optsPath, vms))
+                {
+                    var opts = OptionsGenerator.Generate();
+                    await File.WriteAllTextAsync(optsPath, opts);
+                }
+                string partialPath = Path.Combine(output, result.ViewModelName + ".Remote.g.cs");
+                if (NeedsGeneration(partialPath, vms))
+                {
+                    var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace);
+                    await File.WriteAllTextAsync(partialPath, partial);
+                }
             }
         }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
 
