@@ -119,3 +119,4 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("}");
         return sb.ToString();
 }
+}

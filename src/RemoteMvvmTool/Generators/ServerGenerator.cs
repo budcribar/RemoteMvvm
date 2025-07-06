@@ -9,7 +9,6 @@ public static class ServerGenerator
 {
     public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds, string viewModelNamespace)
     {
-    {
         var sb = new StringBuilder();
         sb.AppendLine("using Grpc.Core;");
         sb.AppendLine($"using {protoNs};");

@@ -10,7 +10,6 @@ public static class ClientGenerator
 {
     public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds, string? clientNamespace = null)
     {
-    {
         var sb = new StringBuilder();
         sb.AppendLine($"// Client Proxy ViewModel for {vmName}");
         sb.AppendLine();
