@@ -281,6 +281,7 @@ public static class Generators
     public static string GenerateViewModelPartial(string vmName, string protoNs, string serviceName, string vmNamespace, string clientNamespace)
     {
         var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
         sb.AppendLine("using Grpc.Core;");
         sb.AppendLine("using Grpc.Net.Client;");
         sb.AppendLine($"using {protoNs};");
@@ -330,7 +331,7 @@ public static class Generators
         sb.AppendLine("                       .AllowAnyMethod()");
         sb.AppendLine("                       .AllowAnyHeader()");
         sb.AppendLine("                       .WithExposedHeaders(\"Grpc-Status\", \"Grpc-Message\", \"Grpc-Encoding\", \"Grpc-Accept-Encoding\");");
-        sb.AppendLine("            }));
+        sb.AppendLine("            }));");
         sb.AppendLine();
         sb.AppendLine("            // Register the gRPC service implementation with ASP.NET Core DI");
         sb.AppendLine("            builder.Services.AddSingleton(_grpcService);");
@@ -338,11 +339,11 @@ public static class Generators
         sb.AppendLine("            // Configure Kestrel to listen on the specified port with HTTP/2 support");
         sb.AppendLine("            builder.WebHost.ConfigureKestrel(kestrelOptions =>");
         sb.AppendLine("            {");
-        sb.AppendLine("                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>");
+        sb.AppendLine("                kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>");
         sb.AppendLine("                {");
         sb.AppendLine("                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;");
         sb.AppendLine("                });");
-        sb.AppendLine("            });
+        sb.AppendLine("            });");
         sb.AppendLine();
         sb.AppendLine("            // Build the application");
         sb.AppendLine("            var app = builder.Build();");
@@ -369,6 +370,7 @@ public static class Generators
         sb.AppendLine($"        public {vmName}(ClientOptions options) : this()");
         sb.AppendLine("        {");
         sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
+        sb.AppendLine("            _dispatcher = Dispatcher.CurrentDispatcher;");
         sb.AppendLine("            _channel = GrpcChannel.ForAddress(options.Address);");
         sb.AppendLine($"            var client = new {serviceName}.{serviceName}Client(_channel);");
         sb.AppendLine($"            _remoteClient = new {vmName}RemoteClient(client);");
@@ -376,7 +378,7 @@ public static class Generators
         sb.AppendLine();
         sb.AppendLine($"        public async Task<{vmName}RemoteClient> GetRemoteModel()");
         sb.AppendLine("        {");
-        sb.AppendLine("            if (_remoteClient == null) throw new InvalidOperationException(\"Client options not provided\");");
+        sb.AppendLine("            if (_remoteClient == null) throw new InvalidOperationException(\"Client options not provided\");");  
         sb.AppendLine("            await _remoteClient.InitializeRemoteAsync();");
         sb.AppendLine("            return _remoteClient;");
         sb.AppendLine("        }");

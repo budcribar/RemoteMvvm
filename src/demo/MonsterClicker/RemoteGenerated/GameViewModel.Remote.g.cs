@@ -1,5 +1,4 @@
 #nullable enable
-// MANUALLY MODIFIED TO SUPPORT GRPC-WEB - DO NOT REGENERATE WITHOUT PRESERVING CHANGES
 using Grpc.Core;
 using Grpc.Net.Client;
 using MonsterClicker.ViewModels.Protos;
@@ -7,12 +6,12 @@ using MonsterClicker.ViewModels.RemoteClients;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Threading;
-using PeakSWC.Mvvm.Remote;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using PeakSWC.Mvvm.Remote;
 
 namespace MonsterClicker.ViewModels
 {
@@ -37,10 +36,10 @@ namespace MonsterClicker.ViewModels
         private void StartAspNetCoreServer(ServerOptions options)
         {
             var builder = WebApplication.CreateBuilder();
-            
+
             // Add services to the container
             builder.Services.AddGrpc();
-            
+
             // Add CORS support for gRPC-Web
             builder.Services.AddCors(o => o.AddPolicy("AllowAll", builder =>
             {
@@ -54,9 +53,9 @@ namespace MonsterClicker.ViewModels
             builder.Services.AddSingleton(_grpcService);
 
             // Configure Kestrel to listen on the specified port with HTTP/2 support
-            builder.WebHost.ConfigureKestrel(options =>
+            builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
-                options.ListenLocalhost(NetworkConfig.Port, listenOptions =>
+                kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });
@@ -67,7 +66,7 @@ namespace MonsterClicker.ViewModels
 
             // Configure the HTTP request pipeline
             app.UseRouting();
-            
+
             // Use CORS middleware
             app.UseCors("AllowAll");
 
