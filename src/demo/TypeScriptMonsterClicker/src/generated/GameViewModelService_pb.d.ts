@@ -5,8 +5,17 @@ import * as google_protobuf_empty_pb from 'google-protobuf/google/protobuf/empty
 
 
 export class GameViewModelState extends jspb.Message {
-  getCanUseSpecialAttack(): boolean;
-  setCanUseSpecialAttack(value: boolean): GameViewModelState;
+  getMonsterName(): string;
+  setMonsterName(value: string): GameViewModelState;
+
+  getMonsterMaxHealth(): number;
+  setMonsterMaxHealth(value: number): GameViewModelState;
+
+  getMonsterCurrentHealth(): number;
+  setMonsterCurrentHealth(value: number): GameViewModelState;
+
+  getPlayerDamage(): number;
+  setPlayerDamage(value: number): GameViewModelState;
 
   getGameMessage(): string;
   setGameMessage(value: string): GameViewModelState;
@@ -14,20 +23,11 @@ export class GameViewModelState extends jspb.Message {
   getIsMonsterDefeated(): boolean;
   setIsMonsterDefeated(value: boolean): GameViewModelState;
 
+  getCanUseSpecialAttack(): boolean;
+  setCanUseSpecialAttack(value: boolean): GameViewModelState;
+
   getIsSpecialAttackOnCooldown(): boolean;
   setIsSpecialAttackOnCooldown(value: boolean): GameViewModelState;
-
-  getMonsterCurrentHealth(): number;
-  setMonsterCurrentHealth(value: number): GameViewModelState;
-
-  getMonsterMaxHealth(): number;
-  setMonsterMaxHealth(value: number): GameViewModelState;
-
-  getMonsterName(): string;
-  setMonsterName(value: string): GameViewModelState;
-
-  getPlayerDamage(): number;
-  setPlayerDamage(value: number): GameViewModelState;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): GameViewModelState.AsObject;
@@ -39,38 +39,14 @@ export class GameViewModelState extends jspb.Message {
 
 export namespace GameViewModelState {
   export type AsObject = {
-    canUseSpecialAttack: boolean,
+    monsterName: string,
+    monsterMaxHealth: number,
+    monsterCurrentHealth: number,
+    playerDamage: number,
     gameMessage: string,
     isMonsterDefeated: boolean,
+    canUseSpecialAttack: boolean,
     isSpecialAttackOnCooldown: boolean,
-    monsterCurrentHealth: number,
-    monsterMaxHealth: number,
-    monsterName: string,
-    playerDamage: number,
-  }
-}
-
-export class PropertyChangeNotification extends jspb.Message {
-  getPropertyName(): string;
-  setPropertyName(value: string): PropertyChangeNotification;
-
-  getNewValue(): google_protobuf_any_pb.Any | undefined;
-  setNewValue(value?: google_protobuf_any_pb.Any): PropertyChangeNotification;
-  hasNewValue(): boolean;
-  clearNewValue(): PropertyChangeNotification;
-
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): PropertyChangeNotification.AsObject;
-  static toObject(includeInstance: boolean, msg: PropertyChangeNotification): PropertyChangeNotification.AsObject;
-  static serializeBinaryToWriter(message: PropertyChangeNotification, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): PropertyChangeNotification;
-  static deserializeBinaryFromReader(message: PropertyChangeNotification, reader: jspb.BinaryReader): PropertyChangeNotification;
-}
-
-export namespace PropertyChangeNotification {
-  export type AsObject = {
-    propertyName: string,
-    newValue?: google_protobuf_any_pb.Any.AsObject,
   }
 }
 
@@ -92,6 +68,30 @@ export class UpdatePropertyValueRequest extends jspb.Message {
 }
 
 export namespace UpdatePropertyValueRequest {
+  export type AsObject = {
+    propertyName: string,
+    newValue?: google_protobuf_any_pb.Any.AsObject,
+  }
+}
+
+export class PropertyChangeNotification extends jspb.Message {
+  getPropertyName(): string;
+  setPropertyName(value: string): PropertyChangeNotification;
+
+  getNewValue(): google_protobuf_any_pb.Any | undefined;
+  setNewValue(value?: google_protobuf_any_pb.Any): PropertyChangeNotification;
+  hasNewValue(): boolean;
+  clearNewValue(): PropertyChangeNotification;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): PropertyChangeNotification.AsObject;
+  static toObject(includeInstance: boolean, msg: PropertyChangeNotification): PropertyChangeNotification.AsObject;
+  static serializeBinaryToWriter(message: PropertyChangeNotification, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): PropertyChangeNotification;
+  static deserializeBinaryFromReader(message: PropertyChangeNotification, reader: jspb.BinaryReader): PropertyChangeNotification;
+}
+
+export namespace PropertyChangeNotification {
   export type AsObject = {
     propertyName: string,
     newValue?: google_protobuf_any_pb.Any.AsObject,
@@ -126,34 +126,6 @@ export namespace AttackMonsterResponse {
   }
 }
 
-export class ResetGameRequest extends jspb.Message {
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): ResetGameRequest.AsObject;
-  static toObject(includeInstance: boolean, msg: ResetGameRequest): ResetGameRequest.AsObject;
-  static serializeBinaryToWriter(message: ResetGameRequest, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): ResetGameRequest;
-  static deserializeBinaryFromReader(message: ResetGameRequest, reader: jspb.BinaryReader): ResetGameRequest;
-}
-
-export namespace ResetGameRequest {
-  export type AsObject = {
-  }
-}
-
-export class ResetGameResponse extends jspb.Message {
-  serializeBinary(): Uint8Array;
-  toObject(includeInstance?: boolean): ResetGameResponse.AsObject;
-  static toObject(includeInstance: boolean, msg: ResetGameResponse): ResetGameResponse.AsObject;
-  static serializeBinaryToWriter(message: ResetGameResponse, writer: jspb.BinaryWriter): void;
-  static deserializeBinary(bytes: Uint8Array): ResetGameResponse;
-  static deserializeBinaryFromReader(message: ResetGameResponse, reader: jspb.BinaryReader): ResetGameResponse;
-}
-
-export namespace ResetGameResponse {
-  export type AsObject = {
-  }
-}
-
 export class SpecialAttackAsyncRequest extends jspb.Message {
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SpecialAttackAsyncRequest.AsObject;
@@ -178,6 +150,34 @@ export class SpecialAttackAsyncResponse extends jspb.Message {
 }
 
 export namespace SpecialAttackAsyncResponse {
+  export type AsObject = {
+  }
+}
+
+export class ResetGameRequest extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ResetGameRequest.AsObject;
+  static toObject(includeInstance: boolean, msg: ResetGameRequest): ResetGameRequest.AsObject;
+  static serializeBinaryToWriter(message: ResetGameRequest, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ResetGameRequest;
+  static deserializeBinaryFromReader(message: ResetGameRequest, reader: jspb.BinaryReader): ResetGameRequest;
+}
+
+export namespace ResetGameRequest {
+  export type AsObject = {
+  }
+}
+
+export class ResetGameResponse extends jspb.Message {
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): ResetGameResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: ResetGameResponse): ResetGameResponse.AsObject;
+  static serializeBinaryToWriter(message: ResetGameResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): ResetGameResponse;
+  static deserializeBinaryFromReader(message: ResetGameResponse, reader: jspb.BinaryReader): ResetGameResponse;
+}
+
+export namespace ResetGameResponse {
   export type AsObject = {
   }
 }

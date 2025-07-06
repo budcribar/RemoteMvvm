@@ -83,28 +83,6 @@ export class GameViewModelServiceClient {
     this.methodDescriptorGetState);
   }
 
-  methodDescriptorSubscribeToPropertyChanges = new grpcWeb.MethodDescriptor(
-    '/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges',
-    grpcWeb.MethodType.SERVER_STREAMING,
-    GameViewModelService_pb.SubscribeRequest,
-    GameViewModelService_pb.PropertyChangeNotification,
-    (request: GameViewModelService_pb.SubscribeRequest) => {
-      return request.serializeBinary();
-    },
-    GameViewModelService_pb.PropertyChangeNotification.deserializeBinary
-  );
-
-  subscribeToPropertyChanges(
-    request: GameViewModelService_pb.SubscribeRequest,
-    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<GameViewModelService_pb.PropertyChangeNotification> {
-    return this.client_.serverStreaming(
-      this.hostname_ +
-        '/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges',
-      request,
-      metadata || {},
-      this.methodDescriptorSubscribeToPropertyChanges);
-  }
-
   methodDescriptorUpdatePropertyValue = new grpcWeb.MethodDescriptor(
     '/monsterclicker_viewmodels_protos.GameViewModelService/UpdatePropertyValue',
     grpcWeb.MethodType.UNARY,
@@ -146,6 +124,28 @@ export class GameViewModelServiceClient {
     request,
     metadata || {},
     this.methodDescriptorUpdatePropertyValue);
+  }
+
+  methodDescriptorSubscribeToPropertyChanges = new grpcWeb.MethodDescriptor(
+    '/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges',
+    grpcWeb.MethodType.SERVER_STREAMING,
+    GameViewModelService_pb.SubscribeRequest,
+    GameViewModelService_pb.PropertyChangeNotification,
+    (request: GameViewModelService_pb.SubscribeRequest) => {
+      return request.serializeBinary();
+    },
+    GameViewModelService_pb.PropertyChangeNotification.deserializeBinary
+  );
+
+  subscribeToPropertyChanges(
+    request: GameViewModelService_pb.SubscribeRequest,
+    metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<GameViewModelService_pb.PropertyChangeNotification> {
+    return this.client_.serverStreaming(
+      this.hostname_ +
+        '/monsterclicker_viewmodels_protos.GameViewModelService/SubscribeToPropertyChanges',
+      request,
+      metadata || {},
+      this.methodDescriptorSubscribeToPropertyChanges);
   }
 
   methodDescriptorAttackMonster = new grpcWeb.MethodDescriptor(
@@ -191,49 +191,6 @@ export class GameViewModelServiceClient {
     this.methodDescriptorAttackMonster);
   }
 
-  methodDescriptorResetGame = new grpcWeb.MethodDescriptor(
-    '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame',
-    grpcWeb.MethodType.UNARY,
-    GameViewModelService_pb.ResetGameRequest,
-    GameViewModelService_pb.ResetGameResponse,
-    (request: GameViewModelService_pb.ResetGameRequest) => {
-      return request.serializeBinary();
-    },
-    GameViewModelService_pb.ResetGameResponse.deserializeBinary
-  );
-
-  resetGame(
-    request: GameViewModelService_pb.ResetGameRequest,
-    metadata?: grpcWeb.Metadata | null): Promise<GameViewModelService_pb.ResetGameResponse>;
-
-  resetGame(
-    request: GameViewModelService_pb.ResetGameRequest,
-    metadata: grpcWeb.Metadata | null,
-    callback: (err: grpcWeb.RpcError,
-               response: GameViewModelService_pb.ResetGameResponse) => void): grpcWeb.ClientReadableStream<GameViewModelService_pb.ResetGameResponse>;
-
-  resetGame(
-    request: GameViewModelService_pb.ResetGameRequest,
-    metadata?: grpcWeb.Metadata | null,
-    callback?: (err: grpcWeb.RpcError,
-               response: GameViewModelService_pb.ResetGameResponse) => void) {
-    if (callback !== undefined) {
-      return this.client_.rpcCall(
-        this.hostname_ +
-          '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame',
-        request,
-        metadata || {},
-        this.methodDescriptorResetGame,
-        callback);
-    }
-    return this.client_.unaryCall(
-    this.hostname_ +
-      '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame',
-    request,
-    metadata || {},
-    this.methodDescriptorResetGame);
-  }
-
   methodDescriptorSpecialAttackAsync = new grpcWeb.MethodDescriptor(
     '/monsterclicker_viewmodels_protos.GameViewModelService/SpecialAttackAsync',
     grpcWeb.MethodType.UNARY,
@@ -275,6 +232,49 @@ export class GameViewModelServiceClient {
     request,
     metadata || {},
     this.methodDescriptorSpecialAttackAsync);
+  }
+
+  methodDescriptorResetGame = new grpcWeb.MethodDescriptor(
+    '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame',
+    grpcWeb.MethodType.UNARY,
+    GameViewModelService_pb.ResetGameRequest,
+    GameViewModelService_pb.ResetGameResponse,
+    (request: GameViewModelService_pb.ResetGameRequest) => {
+      return request.serializeBinary();
+    },
+    GameViewModelService_pb.ResetGameResponse.deserializeBinary
+  );
+
+  resetGame(
+    request: GameViewModelService_pb.ResetGameRequest,
+    metadata?: grpcWeb.Metadata | null): Promise<GameViewModelService_pb.ResetGameResponse>;
+
+  resetGame(
+    request: GameViewModelService_pb.ResetGameRequest,
+    metadata: grpcWeb.Metadata | null,
+    callback: (err: grpcWeb.RpcError,
+               response: GameViewModelService_pb.ResetGameResponse) => void): grpcWeb.ClientReadableStream<GameViewModelService_pb.ResetGameResponse>;
+
+  resetGame(
+    request: GameViewModelService_pb.ResetGameRequest,
+    metadata?: grpcWeb.Metadata | null,
+    callback?: (err: grpcWeb.RpcError,
+               response: GameViewModelService_pb.ResetGameResponse) => void) {
+    if (callback !== undefined) {
+      return this.client_.rpcCall(
+        this.hostname_ +
+          '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame',
+        request,
+        metadata || {},
+        this.methodDescriptorResetGame,
+        callback);
+    }
+    return this.client_.unaryCall(
+    this.hostname_ +
+      '/monsterclicker_viewmodels_protos.GameViewModelService/ResetGame',
+    request,
+    metadata || {},
+    this.methodDescriptorResetGame);
   }
 
   methodDescriptorPing = new grpcWeb.MethodDescriptor(
