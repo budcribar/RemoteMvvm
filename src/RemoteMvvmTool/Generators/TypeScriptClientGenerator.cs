@@ -12,7 +12,7 @@ public static class TypeScriptClientGenerator
     {
         var sb = new StringBuilder();
         sb.AppendLine($"// Auto-generated TypeScript client for {vmName}");
-        sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb.js';");
+        sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb';");
         var requestTypes = string.Join(", ", cmds.Select(c => c.MethodName + "Request").Distinct());
         if (!string.IsNullOrWhiteSpace(requestTypes))
         {
