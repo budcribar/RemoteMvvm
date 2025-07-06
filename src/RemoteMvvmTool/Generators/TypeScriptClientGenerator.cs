@@ -12,15 +12,15 @@ public static class TypeScriptClientGenerator
     {
         var sb = new StringBuilder();
         sb.AppendLine($"// Auto-generated TypeScript client for {vmName}");
-        sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb';");
+        sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb.js';");
         var requestTypes = string.Join(", ", cmds.Select(c => c.MethodName + "Request").Distinct());
         if (!string.IsNullOrWhiteSpace(requestTypes))
         {
-            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, {requestTypes} }} from './generated/{serviceName}_pb';");
+            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, {requestTypes} }} from './generated/{serviceName}_pb.js';");
         }
         else
         {
-            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus }} from './generated/{serviceName}_pb';");
+            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus }} from './generated/{serviceName}_pb.js';");
         }
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
