@@ -372,7 +372,7 @@ public static class Generators
         sb.AppendLine("using System.Threading.Channels;");
         sb.AppendLine("using System.Windows.Threading;");
         sb.AppendLine("using Channel = System.Threading.Channels.Channel;");
-        ;
+        sb.AppendLine("using Microsoft.Extensions.Logging;");
         sb.AppendLine();
         sb.AppendLine($"public partial class {vmName}GrpcServiceImpl : {serviceName}.{serviceName}Base");
         sb.AppendLine("{");
@@ -399,11 +399,13 @@ public static class Generators
         sb.AppendLine($"    private readonly {vmName} _viewModel;");
         sb.AppendLine($"    private static readonly ConcurrentDictionary<IServerStreamWriter<{protoNs}.PropertyChangeNotification>, Channel<{protoNs}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoNs}.PropertyChangeNotification>, Channel<{protoNs}.PropertyChangeNotification>>();");
         sb.AppendLine("    private readonly Dispatcher _dispatcher;");
+        sb.AppendLine("    private readonly ILogger? _logger;");
         sb.AppendLine();
-        sb.AppendLine($"    public {vmName}GrpcServiceImpl({vmName} viewModel, Dispatcher dispatcher)");
+        sb.AppendLine($"    public {vmName}GrpcServiceImpl({vmName} viewModel, Dispatcher dispatcher, ILogger<{vmName}GrpcServiceImpl>? logger = null)");
         sb.AppendLine("    {");
         sb.AppendLine("        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));");
         sb.AppendLine("        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));");
+        sb.AppendLine("        _logger = logger;");
         sb.AppendLine("        if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }");
         sb.AppendLine("    }");
         sb.AppendLine();
