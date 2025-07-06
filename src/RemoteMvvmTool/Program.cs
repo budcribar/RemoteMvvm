@@ -134,6 +134,9 @@ public class Program
                 string protoPathProj = Path.Combine(protoDir, serviceName + ".proto");
                 var protoText = ProtoGenerator.Generate(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
                 await File.WriteAllTextAsync(protoPathProj, protoText);
+
+                string readmePath = Path.Combine(projDir, "README.md");
+                await File.WriteAllTextAsync(readmePath, TsProjectGenerator.GenerateReadme(result.ViewModelName));
             }
             string vmNamespaceStr = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
             if (genServer)
