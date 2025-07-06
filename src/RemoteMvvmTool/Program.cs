@@ -81,10 +81,10 @@ public class Program
                 var ts = Generators.GenerateTypeScriptClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.ts"), ts);
             }
+            string vmNamespaceStr = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
             if (genServer)
             {
-                var vmNamespace = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
-                var server = Generators.GenerateServer(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespace);
+                var server = Generators.GenerateServer(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespaceStr);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "GrpcServiceImpl.cs"), server);
             }
             if (genClient)
@@ -96,6 +96,8 @@ public class Program
             {
                 var opts = Generators.GenerateOptions();
                 await File.WriteAllTextAsync(Path.Combine(output, "GrpcRemoteOptions.cs"), opts);
+                var partial = Generators.GenerateViewModelPartial(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace);
+                await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + ".Remote.g.cs"), partial);
             }
         }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
 
