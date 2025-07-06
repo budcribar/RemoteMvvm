@@ -1,0 +1,9 @@
+﻿{
+  "version": "1.0.0",
+  "commands": [
+    {
+      "name": "grpc-remote-mvvm-ts-client",
+      "entryPoint": "GrpcRemoteMvvmTsClientGen.dll"
+    }
+  ]
+}

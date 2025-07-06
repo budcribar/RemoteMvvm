@@ -1,0 +1,63 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+	<!--
+    Make the GrpcServices MSBuild property visible to the C# compiler
+    (and so to the AnalyzerConfigOptionsProvider).
+  -->
+	<ItemGroup>
+		<CompilerVisibleProperty Include="GrpcServices" />
+	</ItemGroup>
+
+	<!--
+    Grab all PackageReference items into our own list.
+  -->
+	<ItemGroup>
+		<_PeakSWCSourceGenPkg Include="@(PackageReference)" />
+	</ItemGroup>
+
+	<!--
+    Expose AvailableItemName so that MvvmViewModelProtoSource works.
+  -->
+	<ItemGroup>
+		<AvailableItemName Include="MvvmViewModelProtoSource" />
+	</ItemGroup>
+
+	<!--
+    Now set / clean up GrpcServices before CoreCompile,
+    pulling the metadata off *our* package.
+  -->
+	<Target Name="PeakSWC_SetGrpcServices" BeforeTargets="CoreCompile">
+		<!-- filter down to just our package -->
+		<ItemGroup>
+			<_FilteredPkg
+			  Include="@(_PeakSWCSourceGenPkg)"
+			  Condition=" '%(Identity)' == 'PeakSWC.MvvmSourceGenerator' " />
+		</ItemGroup>
+
+		<PropertyGroup>
+			<!-- if the user hasn't already set it, grab our metadata -->
+			<GrpcServices
+			  Condition="
+          '$(GrpcServices)' == ''
+          and '@(_FilteredPkg)' != ''
+        ">
+				%(_FilteredPkg.GrpcServices)
+			</GrpcServices>
+			<!-- strip *all* whitespace / newlines -->
+			<GrpcServices
+			  Condition="
+          '$(GrpcServices)' == ''
+          and '$(_RawGrpcServices)' != ''
+        ">
+				$([System.Text.RegularExpressions.Regex]::Replace('$(GrpcServices)', '\s+', ''))
+			</GrpcServices>
+		</PropertyGroup>
+
+		<!-- debug message to prove it's firing -->
+		<Message
+		  Importance="high"
+		  Condition="'$(GrpcServices)' != ''"
+		  Text="GrpcServices is now: '$(GrpcServices)'" />
+	</Target>
+</Project>
