@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
+using RemoteMvvmTool.Generators;
 
 public class Program
 {
@@ -73,30 +74,30 @@ public class Program
 
             if (genProto)
             {
-                var proto = Generators.GenerateProto(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
+                var proto = ProtoGenerator.Generate(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
                 await File.WriteAllTextAsync(Path.Combine(protoOutput, serviceName + ".proto"), proto);
             }
             if (genTs)
             {
-                var ts = Generators.GenerateTypeScriptClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
+                var ts = TypeScriptClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.ts"), ts);
             }
             string vmNamespaceStr = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
             if (genServer)
             {
-                var server = Generators.GenerateServer(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespaceStr);
+                var server = ServerGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespaceStr);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "GrpcServiceImpl.cs"), server);
             }
             if (genClient)
             {
-                var client = Generators.GenerateClient(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
+                var client = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + "RemoteClient.cs"), client);
             }
             if (genServer || genClient)
             {
-                var opts = Generators.GenerateOptions();
+                var opts = OptionsGenerator.Generate();
                 await File.WriteAllTextAsync(Path.Combine(output, "GrpcRemoteOptions.cs"), opts);
-                var partial = Generators.GenerateViewModelPartial(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace);
+                var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace);
                 await File.WriteAllTextAsync(Path.Combine(output, result.ViewModelName + ".Remote.g.cs"), partial);
             }
         }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
