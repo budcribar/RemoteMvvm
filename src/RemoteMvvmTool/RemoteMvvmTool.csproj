@@ -22,10 +22,10 @@
   </PropertyGroup>
   <ItemGroup>
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
     <!--<Compile Remove="GameViewModel.cs" />-->
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="../GrpcRemoteMvvmModelUtil/GrpcRemoteMvvmModelUtil.csproj" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
 	<Target Name="InstallTool" AfterTargets="Pack">

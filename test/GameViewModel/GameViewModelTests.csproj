@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/GrpcRemoteMvvmModelUtil/GrpcRemoteMvvmModelUtil.csproj" />
     <ProjectReference Include="../../src/RemoteMvvmTool/RemoteMvvmTool.csproj" />
   </ItemGroup>
 

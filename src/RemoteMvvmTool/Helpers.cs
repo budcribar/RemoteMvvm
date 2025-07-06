@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace GrpcRemoteMvvmModelUtil
 {
