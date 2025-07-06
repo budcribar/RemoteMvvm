@@ -111,6 +111,7 @@ public class Program
                 Directory.CreateDirectory(Path.Combine(projDir, "src"));
                 Directory.CreateDirectory(Path.Combine(projDir, "src", "generated"));
                 Directory.CreateDirectory(Path.Combine(projDir, "wwwroot"));
+                Directory.CreateDirectory(Path.Combine(projDir, ".vscode"));
 
                 string tsClientPath = Path.Combine(projDir, "src", result.ViewModelName + "RemoteClient.ts");
                 var tsClient = TypeScriptClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands);
@@ -125,6 +126,8 @@ public class Program
                 await File.WriteAllTextAsync(Path.Combine(projDir, "package.json"), TsProjectGenerator.GeneratePackageJson(result.ViewModelName));
                 await File.WriteAllTextAsync(Path.Combine(projDir, "tsconfig.json"), TsProjectGenerator.GenerateTsConfig());
                 await File.WriteAllTextAsync(Path.Combine(projDir, "webpack.config.js"), TsProjectGenerator.GenerateWebpackConfig());
+
+                await File.WriteAllTextAsync(Path.Combine(projDir, ".vscode", "launch.json"), TsProjectGenerator.GenerateLaunchJson());
 
                 string protoDir = Path.Combine(projDir, "protos");
                 Directory.CreateDirectory(protoDir);
