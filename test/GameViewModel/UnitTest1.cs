@@ -103,5 +103,13 @@ namespace GameViewModel
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
             AssertEqualWithDiff(Path.Combine(root, "test", "GameViewModel", "expected", "GameViewModelRemoteClient.ts"), ts);
         }
+
+        [Fact]
+        public void LaunchJsonMatchesExpected()
+        {
+            string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
+            var launch = TsProjectGenerator.GenerateLaunchJson();
+            AssertEqualWithDiff(Path.Combine(root, "test", "GameViewModel", "expected", "launch.json"), launch);
+        }
     }
 }

@@ -106,4 +106,24 @@ public static class TsProjectGenerator
         sb.AppendLine("};");
         return sb.ToString();
     }
+
+    public static string GenerateLaunchJson()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("{");
+        sb.AppendLine("  \"version\": \"0.2.0\",");
+        sb.AppendLine("  \"configurations\": [");
+        sb.AppendLine("    {");
+        sb.AppendLine("      \"type\": \"node\",");
+        sb.AppendLine("      \"request\": \"launch\",");
+        sb.AppendLine("      \"name\": \"Launch Program\",");
+        sb.AppendLine("      \"skipFiles\": [ \"<node_internals>/**\" ],");
+        sb.AppendLine("      \"program\": \"${workspaceFolder}/src/app.js\",");
+        sb.AppendLine("      \"cwd\": \"${workspaceFolder}\",");
+        sb.AppendLine("      \"console\": \"externalTerminal\"");
+        sb.AppendLine("    }");
+        sb.AppendLine("  ]");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
 }
