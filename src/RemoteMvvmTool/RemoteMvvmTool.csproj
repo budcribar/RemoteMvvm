@@ -21,8 +21,8 @@
 
   </PropertyGroup>
   <ItemGroup>
-	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-	  <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
+          <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+          <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
     <!--<Compile Remove="GameViewModel.cs" />-->
   </ItemGroup>
   <ItemGroup>
