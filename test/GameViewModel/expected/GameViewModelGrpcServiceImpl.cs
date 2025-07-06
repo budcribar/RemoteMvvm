@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Channels;
 using System.Windows.Threading;
+using Channel = System.Threading.Channels.Channel;
 
 public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameViewModelServiceBase
 {
