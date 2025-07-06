@@ -1,12 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
-		
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
-		<!--<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>-->
-
+		<BlazorWebAssemblyLoadAllGlobalizationData>false</BlazorWebAssemblyLoadAllGlobalizationData>
+		<NoWarn>$(NoWarn);NETSDK1082</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -15,13 +14,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
-		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
-		<PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.16" />
-		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.16" PrivateAssets="all" />
-		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
-		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
+		<PackageReference Include="Grpc.AspNetCore" Version="2.57.0" />
+		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.57.0" />
+		<PackageReference Include="Grpc.Net.ClientFactory" Version="2.57.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.17" />
+		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.17" PrivateAssets="all" />
+		<PackageReference Include="Grpc.Net.Client.Web" Version="2.57.0" />
+		<PackageReference Include="Google.Protobuf" Version="3.25.1" />
 		<Protobuf Include="protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="protos\" Access="Public" />
 	</ItemGroup>
 
@@ -31,18 +30,11 @@
 	</ItemGroup>
 
 	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
-
 		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
 		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="true" />
-
 	</Target>
 
 	<Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
-
-
-	<!--<ItemGroup>
-		<Folder Include="protos\" />
-	</ItemGroup>-->
 
 	<ItemGroup>
 		<Content Update="wwwroot\index.html">

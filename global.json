@@ -1,0 +1,9 @@
+{
+  "sdk": {
+    "version": "8.0.411",
+    "rollForward": "latestMinor"
+  },
+  "msbuild-sdks": {
+    "Microsoft.NET.Sdk.BlazorWebAssembly": "8.0.0"
+  }
+}
