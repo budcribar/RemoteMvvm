@@ -10,7 +10,7 @@ public static class TsProjectGenerator
     public static string GenerateAppTs(string vmName, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds)
     {
         var sb = new StringBuilder();
-        sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb.js';");
+        sb.AppendLine($"import {{ {serviceName}Client }} from './generated/{serviceName}ServiceClientPb';");
         sb.AppendLine($"import {{ {vmName}RemoteClient }} from './{vmName}RemoteClient';");
         sb.AppendLine();
         sb.AppendLine("const grpcHost = 'http://localhost:50052';");
