@@ -38,7 +38,7 @@
 	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
 
 		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
-		<Exec Command="remotemvvm --generate proto,server,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
+		<Exec Command="remotemvvm --generate proto,server,client,ts --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
 		
 	</Target>
 

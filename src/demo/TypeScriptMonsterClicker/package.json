@@ -8,7 +8,11 @@
     "build:debug": "webpack --mode development",
     "build:production": "npm run protoc && webpack --mode production --stats-error-details",
     "clean": "tsc --build --clean",
-    "prebuild": "npm run protoc"
+    "prebuild": "npm run protoc",
+    "start": "webpack serve --mode development",
+    "dev": "webpack serve --mode development --open",
+    "watch": "webpack --watch --mode development",
+    "debug": "echo \"Make sure to start the MonsterClicker server in 'server' mode before running this command\" && webpack serve --mode development --open"
   },
   "keywords": [],
   "author": "",
