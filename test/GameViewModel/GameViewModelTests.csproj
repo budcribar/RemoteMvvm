@@ -34,12 +34,4 @@
     <Compile Remove="expected/**" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Remove="expected\GameViewModelRemoteClient.ts" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="expected\GameViewModelRemoteClient.ts" />
-  </ItemGroup>
-
 </Project>
