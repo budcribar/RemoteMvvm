@@ -138,10 +138,11 @@ public static class TsProjectGenerator
         sb.AppendLine();
         sb.AppendLine("```bash");
         sb.AppendLine("npm install");
+        sb.AppendLine("npm run protoc");
         sb.AppendLine("npm run build");
         sb.AppendLine("```");
         sb.AppendLine();
-        sb.AppendLine("To regenerate the gRPC-Web stubs:");
+        sb.AppendLine("To regenerate the gRPC-Web stubs separately:");
         sb.AppendLine("```bash");
         sb.AppendLine("npm run protoc");
         sb.AppendLine("```");
