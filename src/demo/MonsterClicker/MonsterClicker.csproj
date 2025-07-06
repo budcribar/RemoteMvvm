@@ -10,6 +10,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
+	  <Compile Remove="RemoteGenerated\tsProject\**" />
+	  <EmbeddedResource Remove="RemoteGenerated\tsProject\**" />
+	  <None Remove="RemoteGenerated\tsProject\**" />
+	  <Page Remove="RemoteGenerated\tsProject\**" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <FrameworkReference Include="Microsoft.AspNetCore.App" />
 	  <EmbeddedResource Include="Resources\sword.png" />
 	</ItemGroup>
@@ -25,7 +32,7 @@
 
   <ItemGroup>
     <Folder Include="protos\" />
-    <Folder Include="RemoteGenerated\" />
+	  <Folder Include="RemoteGenerated" /> <!--Exclude="RemoteGenerated\tsProject\" />-->
   </ItemGroup>
 
   <ItemGroup>
@@ -33,9 +40,9 @@
   </ItemGroup>
 
 
-  <Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" >
+  <Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile">
     <Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
-    <Exec Command="remotemvvm --generate proto,server,client,ts --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
+    <Exec Command="remotemvvm --generate proto,server,client,ts,tsproject --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
   </Target>
 
   <Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
