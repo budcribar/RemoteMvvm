@@ -1,10 +1,11 @@
 using GrpcRemoteMvvmModelUtil;
 using Microsoft.CodeAnalysis;
-using System.Text;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System;
+using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 
 public static class Generators
 {
@@ -287,6 +288,7 @@ public static class Generators
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Threading.Tasks;");
         sb.AppendLine("using System.Windows.Threading;");
+        sb.AppendLine($"using PeakSWC.Mvvm.Remote;");
         sb.AppendLine();
         sb.AppendLine($"namespace {vmNamespace}");
         sb.AppendLine("{");
@@ -369,6 +371,8 @@ public static class Generators
         sb.AppendLine("using System.Diagnostics;");
         sb.AppendLine("using System.Threading.Channels;");
         sb.AppendLine("using System.Windows.Threading;");
+        sb.AppendLine("using Channel = System.Threading.Channels.Channel;");
+        ;
         sb.AppendLine();
         sb.AppendLine($"public partial class {vmName}GrpcServiceImpl : {serviceName}.{serviceName}Base");
         sb.AppendLine("{");

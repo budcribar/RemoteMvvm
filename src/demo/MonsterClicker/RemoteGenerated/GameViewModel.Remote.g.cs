@@ -2,10 +2,10 @@ using Grpc.Core;
 using Grpc.Net.Client;
 using MonsterClicker.ViewModels.Protos;
 using MonsterClicker.ViewModels.RemoteClients;
-using PeakSWC.Mvvm.Remote;
 using System;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using PeakSWC.Mvvm.Remote;
 
 namespace MonsterClicker.ViewModels
 {

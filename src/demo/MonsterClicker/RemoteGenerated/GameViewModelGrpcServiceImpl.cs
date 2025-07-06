@@ -13,8 +13,6 @@ using System.Threading.Channels;
 using System.Windows.Threading;
 using Channel = System.Threading.Channels.Channel;
 
-//using System.Windows.Threading;
-
 public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameViewModelServiceBase
 {
     public static event System.EventHandler<int>? ClientCountChanged;
