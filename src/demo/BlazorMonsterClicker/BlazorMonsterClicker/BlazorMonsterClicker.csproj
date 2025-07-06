@@ -21,7 +21,7 @@
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.16" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.16" PrivateAssets="all" />
 		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
-		<PackageReference Include="Google.Protobuf" Version="3.25.2" />
+		<PackageReference Include="Google.Protobuf" Version="3.31.1" />
 		<Protobuf Include="protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="protos\" Access="Public" />
 	</ItemGroup>
 
