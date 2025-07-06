@@ -277,6 +277,57 @@ public static class Generators
         return sb.ToString();
     }
 
+    public static string GenerateViewModelPartial(string vmName, string protoNs, string serviceName, string vmNamespace, string clientNamespace)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("using Grpc.Core;");
+        sb.AppendLine("using Grpc.Net.Client;");
+        sb.AppendLine($"using {protoNs};");
+        sb.AppendLine($"using {clientNamespace};");
+        sb.AppendLine("using System;");
+        sb.AppendLine("using System.Threading.Tasks;");
+        sb.AppendLine("using System.Windows.Threading;");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {vmNamespace}");
+        sb.AppendLine("{");
+        sb.AppendLine($"    public partial class {vmName}");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        private {vmName}GrpcServiceImpl? _grpcService;");
+        sb.AppendLine("        private Grpc.Core.Server? _server;");
+        sb.AppendLine("        private GrpcChannel? _channel;");
+        sb.AppendLine($"        private {clientNamespace}.{vmName}RemoteClient? _remoteClient;");
+        sb.AppendLine();
+        sb.AppendLine($"        public {vmName}(ServerOptions options) : this()");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
+        sb.AppendLine($"            _grpcService = new {vmName}GrpcServiceImpl(this, Dispatcher.CurrentDispatcher);");
+        sb.AppendLine("            _server = new Grpc.Core.Server");
+        sb.AppendLine("            {");
+        sb.AppendLine($"                Services = {{ {serviceName}.BindService(_grpcService) }},");
+        sb.AppendLine("                Ports = { new ServerPort(\"localhost\", options.Port, ServerCredentials.Insecure) }" + (!false ? string.Empty : string.Empty));
+        sb.AppendLine("            };");
+        sb.AppendLine("            _server.Start();");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine($"        public {vmName}(ClientOptions options) : this()");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
+        sb.AppendLine("            _channel = GrpcChannel.ForAddress(options.Address);");
+        sb.AppendLine($"            var client = new {serviceName}.{serviceName}Client(_channel);");
+        sb.AppendLine($"            _remoteClient = new {vmName}RemoteClient(client);");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine($"        public async Task<{vmName}RemoteClient> GetRemoteModel()");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (_remoteClient == null) throw new InvalidOperationException(\"Client options not provided\");");
+        sb.AppendLine("            await _remoteClient.InitializeRemoteAsync();");
+        sb.AppendLine("            return _remoteClient;");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+
     public static string GenerateOptions()
     {
         var sb = new StringBuilder();
