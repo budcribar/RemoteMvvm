@@ -25,11 +25,6 @@
     <!--<Compile Remove="GameViewModel.cs" />-->
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GameViewModel.cs">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="../GrpcRemoteMvvmModelUtil/GrpcRemoteMvvmModelUtil.csproj" />
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>

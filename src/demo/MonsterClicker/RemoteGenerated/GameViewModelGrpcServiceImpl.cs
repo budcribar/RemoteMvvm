@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Threading.Channels;
 using System.Windows.Threading;
 using Channel = System.Threading.Channels.Channel;
+using Microsoft.Extensions.Logging;
 
 public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameViewModelServiceBase
 {
@@ -38,11 +39,13 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
     private readonly GameViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
     private readonly Dispatcher _dispatcher;
+    private readonly ILogger? _logger;
 
-    public GameViewModelGrpcServiceImpl(GameViewModel viewModel, Dispatcher dispatcher)
+    public GameViewModelGrpcServiceImpl(GameViewModel viewModel, Dispatcher dispatcher, ILogger<GameViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
 
