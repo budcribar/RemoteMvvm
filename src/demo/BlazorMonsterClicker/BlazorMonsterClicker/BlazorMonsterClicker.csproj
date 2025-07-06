@@ -1,66 +1,53 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
 
 	<PropertyGroup>
-		<GrpcServices>Client</GrpcServices>
+		
 		<TargetFramework>net8.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<!--<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>-->
-		
+
 	</PropertyGroup>
 
-        <ItemGroup>
-          <Compile Include="..\..\MonsterClicker\NetworkConfig.cs" Link="NetworkConfig.cs" />
-          <Compile Include="..\..\..\RemoteMvvmTool\GenerateGrpcRemoteAttribute.cs" Link="GenerateGrpcRemoteAttribute.cs" />
-        </ItemGroup>
+	<ItemGroup>
+		<Compile Include="..\..\MonsterClicker\NetworkConfig.cs" Link="NetworkConfig.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
 		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
 		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
-		
 		<PackageReference Include="Grpc.Net.ClientFactory" Version="2.71.0" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.16" />
 		<PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.16" PrivateAssets="all" />
 		<PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
-		
-
-                <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
-                <PackageReference Include="Google.Protobuf" Version="3.25.2" />
-
-                <PackageReference Include="Grpc.Tools" Version="2.72.0">
-                        <PrivateAssets>all</PrivateAssets>
-                        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-                </PackageReference>
-
-
-		
-                <Protobuf Include="protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="protos\" Access="Public" />
+		<PackageReference Include="Google.Protobuf" Version="3.25.2" />
+		<Protobuf Include="protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="protos\" Access="Public" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<RemoteMvvmViewModel Include="ViewModels\GameViewModel.cs" />
-		<RemoteGenerated Include="RemoteGenerated\GameViewModelGrpcServiceImpl.cs" />
+		<RemoteGenerated Include="RemoteGenerated\GameViewModelRemoteClient.cs" />
 	</ItemGroup>
 
-    <Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
+	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile" Inputs="@(RemoteMvvmViewModel)" Outputs="@(RemoteGenerated)">
 
-            <Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
-            <Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="true" />
+		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
+		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="true" />
 
-    </Target>
+	</Target>
 
 	<Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
 
 
-	<ItemGroup>
+	<!--<ItemGroup>
 		<Folder Include="protos\" />
-	</ItemGroup>
-	
+	</ItemGroup>-->
+
 	<ItemGroup>
-	  <Content Update="wwwroot\index.html">
-	    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-	  </Content>
+		<Content Update="wwwroot\index.html">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 </Project>

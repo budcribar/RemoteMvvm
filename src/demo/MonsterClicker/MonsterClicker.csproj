@@ -20,7 +20,7 @@
 		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
 		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
-		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Server" ProtoRoot="Protos\" Access="Public" />
+		<Protobuf Include="Protos\GameViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
 	</ItemGroup>
 
   <ItemGroup>
