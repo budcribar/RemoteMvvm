@@ -1,0 +1,81 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+	<PropertyGroup>
+		<TargetFramework>net8.0-windows</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>preview</LangVersion>
+		<IsPackable>false</IsPackable>
+		<IsTestProject>true</IsTestProject>
+		<UseWPF>true</UseWPF>
+		<DefineConstants>$(DefineConstants);WPF_DISPATCHER</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
+		<PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
+		<PackageReference Include="Grpc.Core" Version="2.46.6" />
+
+		<PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="8.0.17" />
+		<PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+		<PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+		<PackageReference Include="xunit" Version="2.9.3" />
+		<PackageReference Include="xunit.runner.visualstudio" Version="3.1.1">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+		<PackageReference Include="coverlet.collector" Version="6.0.4">
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+			<PrivateAssets>all</PrivateAssets>
+		</PackageReference>
+
+		<Protobuf Include="Protos\PointerViewModelService.proto" GrpcServices="Both" ProtoRoot="Protos\" Access="Public" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="../../src/RemoteMvvmTool/RemoteMvvmTool.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		
+		<None Include="expected/*" />
+		<None Include="actual/*" />
+		<Compile Remove="actual\**" />
+		<Compile Remove="expected/**" />
+		<Compile Remove="expected\**" />
+		<Compile Remove="RemoteGenerated\tsProject\**" />
+		<Content Remove="actual\**" />
+		<Content Remove="expected\**" />
+		<Content Remove="RemoteGenerated\tsProject\**" />
+		<EmbeddedResource Remove="actual\**" />
+		<EmbeddedResource Remove="expected\**" />
+		<EmbeddedResource Remove="RemoteGenerated\tsProject\**" />
+		<None Remove="actual\**" />
+		<None Remove="expected\**" />
+		<None Remove="RemoteGenerated\tsProject\**" />
+		<Page Remove="RemoteGenerated\tsProject\**" />
+
+		<Folder Include="RemoteGenerated\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Remove="RemoteGenerated\PointerViewModelRemoteClient.ts" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<RemoteMvvmViewModel Include="PointerViewModel.cs" />
+	</ItemGroup>
+
+
+	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile">
+		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
+		<Exec Command="remotemvvm --generate proto,server,client,ts,tsproject --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace Pointer.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
+	</Target>
+
+	<ItemGroup>
+		<Reference Include="HPI.Wrappers.BlazorPointerTest">
+			<HintPath>HPI.Wrappers.BlazorPointerTest.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+
+</Project>

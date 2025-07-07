@@ -1,0 +1,23 @@
+{
+  "name": "pointerviewmodel",
+  "version": "1.0.0",
+  "scripts": {
+    "protoc": "protoc --plugin=protoc-gen-ts=\".\\node_modules\\.bin\\protoc-gen-ts.cmd\" --plugin=protoc-gen-grpc-web=\".\\node_modules\\protoc-gen-grpc-web\\bin\\protoc-gen-grpc-web.exe\" --js_out=\"import_style=commonjs,binary:./src/generated\" --grpc-web_out=\"import_style=typescript,mode=grpcwebtext:./src/generated\" -Iprotos -Inode_modules/protoc/protoc/include PointerViewModelService.proto",
+    "build": "webpack --mode development",
+    "dev": "webpack serve --mode development --open"
+  },
+  "devDependencies": {
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.0.0",
+    "webpack": "^5.0.0",
+    "webpack-cli": "^4.0.0",
+    "webpack-dev-server": "^4.0.0",
+    "ts-protoc-gen": "0.15.0"
+  },
+  "dependencies": {
+    "grpc-web": "^1.5.0",
+    "google-protobuf": "3.21.4",
+    "protoc": "^1.1.3",
+    "protoc-gen-grpc-web": "^1.5.0"
+  }
+}
