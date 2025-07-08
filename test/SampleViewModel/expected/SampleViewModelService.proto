@@ -26,10 +26,14 @@ message PropertyChangeNotification {
 message IncrementCountRequest {}
 message IncrementCountResponse {}
 
-message DelayedIncrementAsyncRequest {}
+message DelayedIncrementAsyncRequest {
+  int32 delay_milliseconds = 1; // Original C#: int delayMilliseconds
+}
 message DelayedIncrementAsyncResponse {}
 
-message SetNameToValueRequest {}
+message SetNameToValueRequest {
+  string value = 1; // Original C#: string? value
+}
 message SetNameToValueResponse {}
 
 message SubscribeRequest {

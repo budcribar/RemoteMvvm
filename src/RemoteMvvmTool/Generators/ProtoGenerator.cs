@@ -49,7 +49,36 @@ public static class ProtoGenerator
         foreach (var c in cmds)
         {
             body.AppendLine();
-            body.AppendLine($"message {c.MethodName}Request {{}}");
+            if (c.Parameters.Count == 0)
+            {
+                body.AppendLine($"message {c.MethodName}Request {{}}");
+            }
+            else
+            {
+                body.AppendLine($"message {c.MethodName}Request {{");
+                int paramField = 1;
+                foreach (var p in c.Parameters)
+                {
+                    string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
+                    string protoType = wkt switch
+                    {
+                        "StringValue" => "string",
+                        "BoolValue" => "bool",
+                        "Int32Value" => "int32",
+                        "Int64Value" => "int64",
+                        "UInt32Value" => "uint32",
+                        "UInt64Value" => "uint64",
+                        "FloatValue" => "float",
+                        "DoubleValue" => "double",
+                        "BytesValue" => "bytes",
+                        "Timestamp" => "google.protobuf.Timestamp",
+                        "Duration" => "google.protobuf.Duration",
+                        _ => "string"
+                    };
+                    body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(p.Name)} = {paramField++}; // Original C#: {p.TypeString} {p.Name}");
+                }
+                body.AppendLine("}");
+            }
             body.AppendLine($"message {c.MethodName}Response {{}}");
         }
 
