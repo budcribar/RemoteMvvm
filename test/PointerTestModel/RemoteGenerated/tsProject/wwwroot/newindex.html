@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>PointerViewModel Demo</title>
+</head>
+<body>
+    <div id="mouse-pointer-test">
+        <div id="initializing-spinner" role="status" style="display:none">
+            <span>Loading...</span>
+            <span class="sr-only">Loading test, please wait...</span>
+        </div>
+        <div class="top">
+            <div id="pointer-test-instructions" aria-live="polite"></div>
+        </div>
+        <div class="content">
+            <div id="test-area"></div>
+        </div>
+        <div class="bottom" style="display:none">
+            <button id="btn-cancel" class="hp-btn" aria-label="Cancel test">Cancel</button>
+            <button id="btn-finish" class="hp-btn" aria-label="Finish test">Finish</button>
+        </div>
+    </div>
+    <div id="connection-status"></div>
+    <script src="newbundle.js"></script>
+</body>
+</html>
