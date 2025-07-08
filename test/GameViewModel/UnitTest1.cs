@@ -55,7 +55,7 @@ namespace GameViewModel
         private static async Task<(string Proto, string Server, string Client, string Ts)> GenerateAsync()
         {
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            string vmFile = Path.Combine(root, "src", "demo", "MonsterClicker", "ViewModels", "GameViewModel.cs");
+            string vmFile = Path.Combine(root, "test", "GameViewModel", "GameViewModel.cs");
             var references = LoadDefaultRefs();
             var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
