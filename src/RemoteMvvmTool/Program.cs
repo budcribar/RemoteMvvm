@@ -168,7 +168,8 @@ public class Program
                 string partialPath = Path.Combine(output, result.ViewModelName + ".Remote.g.cs");
                 if (NeedsGeneration(partialPath, vms))
                 {
-                    var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace);
+                    var baseClass = result.ViewModelSymbol?.BaseType?.ToDisplayString() ?? string.Empty;
+                    var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace, baseClass);
                     await File.WriteAllTextAsync(partialPath, partial);
                 }
             }
