@@ -17,7 +17,7 @@ using System.Diagnostics;
 using System.Windows;
 #endif
 
-namespace HPSystemsTools.RemoteClients
+namespace Pointer.ViewModels.RemoteClients
 {
     public partial class PointerViewModelRemoteClient : ObservableObject, IDisposable
     {

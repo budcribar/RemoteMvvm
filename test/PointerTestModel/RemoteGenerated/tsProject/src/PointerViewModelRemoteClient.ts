@@ -116,9 +116,9 @@ export class PointerViewModelRemoteClient {
         const req = new OnCursorTestRequest();
         await this.grpcClient.onCursorTest(req);
     }
-    async onClickTest(e: any): Promise<void> {
+    async onClickTest(button: any): Promise<void> {
         const req = new OnClickTestRequest();
-        req.setE(e);
+        req.setButton(button);
         await this.grpcClient.onClickTest(req);
     }
     async onSelectDevice(device: any): Promise<void> {

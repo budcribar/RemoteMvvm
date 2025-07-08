@@ -14,7 +14,6 @@ namespace HPSystemsTools
     public partial class PointerViewModel : ObservableObject
     {
         private BlazorPointerTest? Test;
-        private bool _disposed = false;
         private bool _suppressNotifications = false;
 
         public PointerViewModel() { }
@@ -38,7 +37,7 @@ namespace HPSystemsTools
         public void Initialize()
         {
             if (Test == null) return;
-
+            
             Instructions = Test.Localized.CursorInstruction;
             ShowCursorTest = true;
             ShowBottom = false;
@@ -60,19 +59,19 @@ namespace HPSystemsTools
             ShowCursorTest = false;
             ShowConfigSelection = true;
             Instructions = Test.Localized.CenterBtnSelection;
-
+            
             // Start the timer in the Test class
             Test.StartTimer(2000);
         }
 
         [RelayCommand]
-        public void OnClickTest(MouseEventArgs e)
+        public void OnClickTest(int button)
         {
             if (Test == null) return;
 
             // More robust button mapping
             string clicked;
-            switch (e.Button)
+            switch (button)
             {
                 case 0: clicked = "left"; break;
                 case 1: clicked = "center"; break;
@@ -105,14 +104,14 @@ namespace HPSystemsTools
             ShowBottom = true;
             ShowTimer = true;
             Instructions = string.Empty;
-
+            
             // Start the timer in the Test class
             Test.StartTimer(180);
         }
 
         [RelayCommand]
         public void OnSelectNumButtons(int btnCount)
-        {
+        {       
             Set3BtnMode(btnCount);
         }
 
@@ -124,9 +123,9 @@ namespace HPSystemsTools
 
         [ObservableProperty]
         private int _clicksToPass = 2;
-
-        private Dictionary<string, int> _clicks = new() { { "cursor", 0 }, { "left", 0 }, { "right", 0 }, { "center", 0 } };
-        private Dictionary<string, int> _expectedClicks = new() { { "cursor", 1 }, { "left", 2 }, { "right", 2 }, { "center", 0 } };
+       
+        private Dictionary<string, int> _clicks = new() { {"cursor",0},{"left",0},{"right",0},{"center",0} };
+        private Dictionary<string, int> _expectedClicks = new() { {"cursor",1},{"left",2},{"right",2},{"center",0} };
 
         [ObservableProperty]
         private bool _is3Btn = false;
@@ -169,7 +168,7 @@ namespace HPSystemsTools
             {
                 // Suppress PropertyChanged notifications
                 _suppressNotifications = true;
-
+                
                 // Update the property without triggering notifications
                 LastClickCount = _clicks.TryGetValue(button, out var count) ? count : 0;
             }
@@ -198,7 +197,7 @@ namespace HPSystemsTools
             ShowSpinner = false;
             Test.CancelTest();
         }
-
+       
         private bool IsPassed()
         {
             foreach (var btn in _clicks.Keys)
@@ -222,25 +221,16 @@ namespace HPSystemsTools
             ShowSpinner = false;
             var expectedStr = string.Join(", ", _expectedClicks.Select(kvp => $"{kvp.Key}={kvp.Value}"));
             var clicksStr = string.Join(", ", _clicks.Select(kvp => $"{kvp.Key}={kvp.Value}"));
-
+            
             Test.Log($"Test finished. Expected: {expectedStr} | Actual: {clicksStr}");
             Test.FinishTest(IsPassed());
-
+          
         }
 
         private void Set3BtnMode(int btnCount)
         {
             Is3Btn = btnCount == 3;
             _expectedClicks["center"] = Is3Btn ? ClicksToPass : 0;
-        }
-
-        // Custom dispose method that will be called from the generated Dispose method
-        internal void CustomDispose()
-        {
-            if (!_disposed)
-            {
-                _disposed = true;
-            }
         }
     }
 }

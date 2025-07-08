@@ -41,16 +41,24 @@ message InitializeResponse {}
 message OnCursorTestRequest {}
 message OnCursorTestResponse {}
 
-message OnClickTestRequest {}
+message OnClickTestRequest {
+  int32 button = 1; // Original C#: int button
+}
 message OnClickTestResponse {}
 
-message OnSelectDeviceRequest {}
+message OnSelectDeviceRequest {
+  string device = 1; // Original C#: string device
+}
 message OnSelectDeviceResponse {}
 
-message OnSelectNumButtonsRequest {}
+message OnSelectNumButtonsRequest {
+  int32 btn_count = 1; // Original C#: int btnCount
+}
 message OnSelectNumButtonsResponse {}
 
-message GetClicksWithoutNotificationRequest {}
+message GetClicksWithoutNotificationRequest {
+  string button = 1; // Original C#: string button
+}
 message GetClicksWithoutNotificationResponse {}
 
 message ResetClicksRequest {}

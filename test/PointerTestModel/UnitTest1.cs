@@ -8,9 +8,9 @@ using Xunit;
 using System.Diagnostics;
 using RemoteMvvmTool.Generators;
 
-namespace GameViewModel
+namespace PointerViewModel
 {
-    public class GameViewModelGenerationTests
+    public class PointerViewModelGenerationTests
     {
         static void AssertEqualWithDiff(string expectedPath, string actualText)
         {
@@ -55,18 +55,19 @@ namespace GameViewModel
         private static async Task<(string Proto, string Server, string Client, string Ts)> GenerateAsync()
         {
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            string vmFile = Path.Combine(root, "src", "demo", "MonsterClicker", "ViewModels", "GameViewModel.cs");
+            string vmFile = Path.Combine(root, "test", "PointerTestModel", "PointerViewModel.cs");
             var references = LoadDefaultRefs();
             var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
                 references);
             Assert.NotNull(sym);
-            const string protoNs = "MonsterClicker.ViewModels.Protos";
-            const string serviceName = "GameViewModelService";
+            string protoNs = "Pointer.ViewModels.Protos";
+            const string serviceName = "PointerViewModelService";
             var proto = ProtoGenerator.Generate(protoNs, serviceName, name, props, cmds, comp);
             var vmNamespace = sym!.ContainingNamespace.ToDisplayString();
             var server = ServerGenerator.Generate(name, protoNs, serviceName, props, cmds, vmNamespace);
+            //protoNs = "HPSystemsTools.ViewModels.Protos";
             var client = ClientGenerator.Generate(name, protoNs, serviceName, props, cmds);
             var ts = TypeScriptClientGenerator.Generate(name, protoNs, serviceName, props, cmds);
             return (proto, server, client, ts);
@@ -77,7 +78,7 @@ namespace GameViewModel
         {
             var (proto, _, _, _) = await GenerateAsync();
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            AssertEqualWithDiff(Path.Combine(root, "test", "GameViewModel", "expected", "GameViewModelService.proto"), proto);
+            AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelService.proto"), proto);
         }
 
         [Fact]
@@ -85,7 +86,7 @@ namespace GameViewModel
         {
             var (_, server, _, _) = await GenerateAsync();
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            AssertEqualWithDiff(Path.Combine(root, "test", "GameViewModel", "expected", "GameViewModelGrpcServiceImpl.cs"), server);
+            AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelGrpcServiceImpl.cs"), server);
         }
 
         [Fact]
@@ -93,7 +94,7 @@ namespace GameViewModel
         {
             var (_, _, client, _) = await GenerateAsync();
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            AssertEqualWithDiff(Path.Combine(root, "test", "GameViewModel", "expected", "GameViewModelRemoteClient.cs"), client);
+            AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelRemoteClient.cs"), client);
         }
 
         [Fact]
@@ -101,7 +102,7 @@ namespace GameViewModel
         {
             var (_, _, _, ts) = await GenerateAsync();
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
-            AssertEqualWithDiff(Path.Combine(root, "test", "GameViewModel", "expected", "GameViewModelRemoteClient.ts"), ts);
+            AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelRemoteClient.ts"), ts);
         }
 
         [Fact]
@@ -109,7 +110,7 @@ namespace GameViewModel
         {
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));
             var launch = TsProjectGenerator.GenerateLaunchJson();
-            AssertEqualWithDiff(Path.Combine(root, "test", "GameViewModel", "expected", "launch.json"), launch);
+            AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "launch.json"), launch);
         }
     }
 }
