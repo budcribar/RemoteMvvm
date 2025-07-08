@@ -5,7 +5,7 @@ namespace RemoteMvvmTool.Generators;
 
 public static class ViewModelPartialGenerator
 {
-    public static string Generate(string vmName, string protoNs, string serviceName, string vmNamespace, string clientNamespace)
+    public static string Generate(string vmName, string protoNs, string serviceName, string vmNamespace, string clientNamespace, string baseClass)
     {
         var sb = new StringBuilder();
         sb.AppendLine("using Grpc.Core;");
@@ -24,7 +24,12 @@ public static class ViewModelPartialGenerator
         sb.AppendLine();
         sb.AppendLine($"namespace {vmNamespace}");
         sb.AppendLine("{");
-        sb.AppendLine($"    public partial class {vmName} : IDisposable");
+        string baseClause = string.IsNullOrWhiteSpace(baseClass) ? "" : baseClass;
+        if (!string.IsNullOrWhiteSpace(baseClause))
+            baseClause += ", IDisposable";
+        else
+            baseClause = "IDisposable";
+        sb.AppendLine($"    public partial class {vmName} : {baseClause}");
         sb.AppendLine("    {");
         sb.AppendLine($"        private {vmName}GrpcServiceImpl? _grpcService;");
         sb.AppendLine("        private IHost? _aspNetCoreHost;");
