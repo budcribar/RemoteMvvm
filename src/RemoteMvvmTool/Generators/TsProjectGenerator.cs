@@ -45,11 +45,21 @@ public static class TsProjectGenerator
         {
             string camel = GeneratorHelpers.ToCamelCase(cmd.MethodName);
             sb.AppendLine($"    (document.getElementById('{camel}-btn') as HTMLButtonElement).addEventListener('click', async () => {{");
-            sb.AppendLine($"        await vm.{camel}();");
+            var sampleArgs = string.Join(", ", cmd.Parameters.Select(p => GetSampleValue(p.TypeString)));
+            sb.AppendLine($"        await vm.{camel}({sampleArgs});");
             sb.AppendLine("    });");
         }
         sb.AppendLine("});");
         return sb.ToString();
+    }
+
+    private static string GetSampleValue(string typeString)
+    {
+        typeString = typeString.ToLowerInvariant();
+        if (typeString.Contains("int")) return "0";
+        if (typeString.Contains("bool")) return "false";
+        if (typeString.Contains("string")) return "'sample'";
+        return "undefined";
     }
 
     public static string GenerateIndexHtml(string vmName, List<PropertyInfo> props, List<CommandInfo> cmds)
