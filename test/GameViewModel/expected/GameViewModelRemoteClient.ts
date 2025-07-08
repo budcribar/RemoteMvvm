@@ -1,5 +1,5 @@
 // Auto-generated TypeScript client for GameViewModel
-import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb.js';
+import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
 import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest } from './generated/GameViewModelService_pb.js';
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
