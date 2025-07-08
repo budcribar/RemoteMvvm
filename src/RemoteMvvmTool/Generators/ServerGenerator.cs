@@ -1,6 +1,7 @@
 using GrpcRemoteMvvmModelUtil;
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace RemoteMvvmTool.Generators;
@@ -128,43 +129,20 @@ public static class ServerGenerator
             sb.AppendLine($"    public override async Task<{protoNs}.{cmd.MethodName}Response> {cmd.MethodName}({protoNs}.{cmd.MethodName}Request request, ServerCallContext context)");
             sb.AppendLine("    {");
             sb.AppendLine("        try { await await _dispatcher.InvokeAsync(async () => {");
-            string commandPropAccess = $"_viewModel.{cmd.CommandPropertyName}";
-            if (cmd.IsAsync)
+            string methodCall;
+            if (cmd.Parameters.Count == 0)
             {
-                sb.AppendLine($"            var command = {commandPropAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;");
-                sb.AppendLine("            if (command != null)");
-                sb.AppendLine("            {");
-                if (cmd.Parameters.Count == 1)
-                {
-                    var param = cmd.Parameters[0];
-                    sb.AppendLine($"                var typedCommand = {commandPropAccess} as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{param.TypeString}>;");
-                    sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{GeneratorHelpers.ToPascalCase(param.Name)}); else await command.ExecuteAsync(request);");
-                }
-                else if (cmd.Parameters.Count == 0)
-                    sb.AppendLine("                await command.ExecuteAsync(null);");
-                else
-                    sb.AppendLine("                await command.ExecuteAsync(request);");
-                sb.AppendLine("            }");
-                sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:{vmName}] Command {cmd.CommandPropertyName} not found or not IAsyncRelayCommand.\"); }}");
+                methodCall = $"_viewModel.{cmd.MethodName}()";
             }
             else
             {
-                sb.AppendLine($"            var command = {commandPropAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand;");
-                sb.AppendLine("            if (command != null)");
-                sb.AppendLine("            {");
-                if (cmd.Parameters.Count == 1)
-                {
-                    var param = cmd.Parameters[0];
-                    sb.AppendLine($"                var typedCommand = {commandPropAccess} as CommunityToolkit.Mvvm.Input.IRelayCommand<{param.TypeString}>;");
-                    sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute(request.{GeneratorHelpers.ToPascalCase(param.Name)}); else command.Execute(request);");
-                }
-                else if (cmd.Parameters.Count == 0)
-                    sb.AppendLine("                command.Execute(null);");
-                else
-                    sb.AppendLine("                command.Execute(request);");
-                sb.AppendLine("            }");
-                sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:{vmName}] Command {cmd.CommandPropertyName} not found or not IRelayCommand.\"); }}");
+                var paramList = string.Join(", ", cmd.Parameters.Select(p => $"request.{GeneratorHelpers.ToPascalCase(p.Name)}"));
+                methodCall = $"_viewModel.{cmd.MethodName}({paramList})";
             }
+            if (cmd.IsAsync)
+                sb.AppendLine($"            await {methodCall};");
+            else
+                sb.AppendLine($"            {methodCall};");
             sb.AppendLine("        }); } catch (Exception ex) {");
             sb.AppendLine($"        Debug.WriteLine(\"[GrpcService:{vmName}] Exception during command execution for {cmd.MethodName}: \" + ex.ToString());");
             sb.AppendLine("        throw new RpcException(new Status(StatusCode.Internal, \"Error executing command on server: \" + ex.Message));");
