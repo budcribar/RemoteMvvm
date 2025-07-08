@@ -1,52 +1,92 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components;
 
 namespace HPSystemsTools
 {
-  
+    // Note: Not implementing IDisposable here as it's already generated in the Remote.g.cs file
     public partial class PointerViewModel : ObservableObject
     {
         private BlazorPointerTest? Test;
-        private System.Timers.Timer? _timer;
+        private bool _disposed = false;
+        private bool _suppressNotifications = false;
 
         public PointerViewModel() { }
 
         public void Initialize(BlazorPointerTest test)
         {
-            Test = test;
+            Test = test ?? throw new ArgumentNullException(nameof(test));
+            Initialize();
+        }
+
+        // Override the OnPropertyChanged method to support suppressing notifications
+        protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+        {
+            if (!_suppressNotifications)
+            {
+                base.OnPropertyChanged(e);
+            }
+        }
+
+        [RelayCommand]
+        public void Initialize()
+        {
+            if (Test == null) return;
+
             Instructions = Test.Localized.CursorInstruction;
             ShowCursorTest = true;
             ShowBottom = false;
             ShowConfigSelection = false;
             ShowClickInstructions = false;
             ShowTimer = false;
+            ResetClicks();
         }
 
+        [RelayCommand]
         public void OnCursorTest()
         {
-            if (Clicks.ContainsKey("cursor"))
-                Clicks["cursor"]++;
+            if (Test == null) return;
+
+            if (_clicks.ContainsKey("cursor"))
+                _clicks["cursor"]++;
             else
-                Clicks["cursor"] = 1;
+                _clicks["cursor"] = 1;
             ShowCursorTest = false;
             ShowConfigSelection = true;
-            Instructions = Test?.Localized.CenterBtnSelection ?? string.Empty;
-            StartTimer(20);
+            Instructions = Test.Localized.CenterBtnSelection;
+
+            // Start the timer in the Test class
+            Test.StartTimer(2000);
         }
 
+        [RelayCommand]
         public void OnClickTest(MouseEventArgs e)
         {
-            var buttons = new[] { "left", "center", "right" };
-            var clicked = buttons[e.Button];
-            if ((!Is3Btn && clicked == "center"))
-                return;
-            if (Clicks[clicked] < ExpectedClicks[clicked])
+            if (Test == null) return;
+
+            // More robust button mapping
+            string clicked;
+            switch (e.Button)
             {
-                Clicks[clicked]++;
+                case 0: clicked = "left"; break;
+                case 1: clicked = "center"; break;
+                case 2: clicked = "right"; break;
+                default: return; // Unknown button
+            }
+
+            // Skip center button clicks if not in 3-button mode
+            if (!Is3Btn && clicked == "center")
+                return;
+
+            if (_clicks[clicked] < _expectedClicks[clicked])
+            {
+                _clicks[clicked]++;
             }
             if (IsPassed())
             {
@@ -54,104 +94,116 @@ namespace HPSystemsTools
             }
         }
 
-        public void OnSelectDevice(string device, int btnCount)
+        [RelayCommand]
+        public void OnSelectDevice(string device)
         {
+            if (Test == null) return;
+
             SelectedDevice = device;
             ShowConfigSelection = false;
             ShowClickInstructions = true;
             ShowBottom = true;
             ShowTimer = true;
-            Set3BtnMode(btnCount);
             Instructions = string.Empty;
-            StartTimer(180);
+
+            // Start the timer in the Test class
+            Test.StartTimer(180);
         }
 
-        public void StartTimer(int seconds)
+        [RelayCommand]
+        public void OnSelectNumButtons(int btnCount)
         {
-            TestTimeoutSec = seconds;
-            TimerText = Test?.Localized.TimerDesc.Replace("%s", TestTimeoutSec.ToString()) ?? $"{TestTimeoutSec}";
-            ShowTimer = true;
-            _timer?.Stop();
-            _timer = new System.Timers.Timer(1000);
-            _timer.Elapsed += (s, e) =>
-            {
-                if (TestTimeoutSec > 0)
-                {
-                    TestTimeoutSec--;
-                    TimerText = Test?.Localized.TimerDesc.Replace("%s", TestTimeoutSec.ToString()) ?? $"{TestTimeoutSec}";
-                }
-                if (TestTimeoutSec == 0)
-                {
-                    _timer.Stop();
-                    CancelTest();
-                }
-            };
-            _timer.Start();
+            Set3BtnMode(btnCount);
         }
 
         [ObservableProperty]
-        public partial bool Show { get; set; }
+        private bool _show = true;
 
         [ObservableProperty]
-        public partial bool ShowSpinner { get; set; }
-
-        // New properties for pointer test logic
-        public int ClicksToPass { get; set; } = 2;
-        public Dictionary<string, int> Clicks { get; set; } = new() { { "cursor", 0 }, { "left", 0 }, { "right", 0 }, { "center", 0 } };
-        public Dictionary<string, int> ExpectedClicks { get; set; } = new() { { "cursor", 1 }, { "left", 2 }, { "right", 2 }, { "center", 0 } };
+        private bool _showSpinner = false;
 
         [ObservableProperty]
-        public partial bool Is3Btn { get; set; } = false;
+        private int _clicksToPass = 2;
+
+        private Dictionary<string, int> _clicks = new() { { "cursor", 0 }, { "left", 0 }, { "right", 0 }, { "center", 0 } };
+        private Dictionary<string, int> _expectedClicks = new() { { "cursor", 1 }, { "left", 2 }, { "right", 2 }, { "center", 0 } };
 
         [ObservableProperty]
-        public partial int TestTimeoutSec { get; set; } = 180;
+        private bool _is3Btn = false;
 
         [ObservableProperty]
-        public partial string Instructions { get; set; } = string.Empty;
+        private int _testTimeoutSec = 180;
 
         [ObservableProperty]
-        public partial bool ShowCursorTest { get; set; } = true;
+        private string _instructions = string.Empty;
 
         [ObservableProperty]
-        public partial bool ShowConfigSelection { get; set; }
+        private bool _showCursorTest = true;
 
         [ObservableProperty]
-        public partial bool ShowClickInstructions { get; set; }
+        private bool _showConfigSelection = false;
 
         [ObservableProperty]
-        public partial bool ShowTimer { get; set; }
+        private bool _showClickInstructions = false;
 
         [ObservableProperty]
-        public partial bool ShowBottom { get; set; }
+        private bool _showTimer = false;
 
         [ObservableProperty]
-        public partial string TimerText { get; set; } = string.Empty;
+        private bool _showBottom = false;
 
         [ObservableProperty]
-        public partial string SelectedDevice { get; set; } = "mouse"; // or "touchpad"
+        private string _timerText = string.Empty;
 
-        // --- Additions for Blazor UI logic ---
+        [ObservableProperty]
+        private string _selectedDevice = "mouse"; // or "touchpad"
+
+        [ObservableProperty]
+        private int _lastClickCount;
+
+        // RelayCommand that suppresses PropertyChanged notifications while updating LastClickCount
+        [RelayCommand]
+        public void GetClicksWithoutNotification(string button)
+        {
+            try
+            {
+                // Suppress PropertyChanged notifications
+                _suppressNotifications = true;
+
+                // Update the property without triggering notifications
+                LastClickCount = _clicks.TryGetValue(button, out var count) ? count : 0;
+            }
+            finally
+            {
+                // Always restore notifications
+                _suppressNotifications = false;
+            }
+        }
+
+        [RelayCommand]
         public void ResetClicks()
         {
-            Clicks["cursor"] = 0;
-            Clicks["left"] = 0;
-            Clicks["right"] = 0;
-            Clicks["center"] = 0;
+            _clicks["cursor"] = 0;
+            _clicks["left"] = 0;
+            _clicks["right"] = 0;
+            _clicks["center"] = 0;
         }
 
+        [RelayCommand]
         public void CancelTest()
         {
+            if (Test == null) return;
+
             Show = false;
             ShowSpinner = false;
-            ResetClicks();
-            Test?.CancelTest();
+            Test.CancelTest();
         }
 
-        public bool IsPassed()
+        private bool IsPassed()
         {
-            foreach (var btn in Clicks.Keys)
+            foreach (var btn in _clicks.Keys)
             {
-                if (Clicks[btn] < ExpectedClicks[btn])
+                if (_clicks[btn] < _expectedClicks[btn])
                 {
                     if (!Is3Btn && btn == "center")
                         continue;
@@ -161,22 +213,34 @@ namespace HPSystemsTools
             return true;
         }
 
+        [RelayCommand]
         public void FinishTest()
         {
+            if (Test == null) return;
+
             Show = false;
             ShowSpinner = false;
-            var expectedStr = string.Join(", ", ExpectedClicks.Select(kvp => $"{kvp.Key}={kvp.Value}"));
-            var clicksStr = string.Join(", ", Clicks.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+            var expectedStr = string.Join(", ", _expectedClicks.Select(kvp => $"{kvp.Key}={kvp.Value}"));
+            var clicksStr = string.Join(", ", _clicks.Select(kvp => $"{kvp.Key}={kvp.Value}"));
 
-            Test?.Log($"Test finished. Expected: {expectedStr} | Actual: {clicksStr}");
-            Test?.FinishTest(IsPassed());
-            ResetClicks();
+            Test.Log($"Test finished. Expected: {expectedStr} | Actual: {clicksStr}");
+            Test.FinishTest(IsPassed());
+
         }
 
-        public void Set3BtnMode(int btnCount)
+        private void Set3BtnMode(int btnCount)
         {
             Is3Btn = btnCount == 3;
-            ExpectedClicks["center"] = Is3Btn ? ClicksToPass : 0;
+            _expectedClicks["center"] = Is3Btn ? ClicksToPass : 0;
+        }
+
+        // Custom dispose method that will be called from the generated Dispose method
+        internal void CustomDispose()
+        {
+            if (!_disposed)
+            {
+                _disposed = true;
+            }
         }
     }
 }

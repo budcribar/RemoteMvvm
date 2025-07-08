@@ -9,6 +9,20 @@ import "google/protobuf/empty.proto";
 
 // Message representing the full state of the PointerViewModel
 message PointerViewModelState {
+  bool show = 1; // Original C#: bool Show
+  bool show_spinner = 2; // Original C#: bool ShowSpinner
+  int32 clicks_to_pass = 3; // Original C#: int ClicksToPass
+  bool is3_btn = 4; // Original C#: bool Is3Btn
+  int32 test_timeout_sec = 5; // Original C#: int TestTimeoutSec
+  string instructions = 6; // Original C#: string Instructions
+  bool show_cursor_test = 7; // Original C#: bool ShowCursorTest
+  bool show_config_selection = 8; // Original C#: bool ShowConfigSelection
+  bool show_click_instructions = 9; // Original C#: bool ShowClickInstructions
+  bool show_timer = 10; // Original C#: bool ShowTimer
+  bool show_bottom = 11; // Original C#: bool ShowBottom
+  string timer_text = 12; // Original C#: string TimerText
+  string selected_device = 13; // Original C#: string SelectedDevice
+  int32 last_click_count = 14; // Original C#: int LastClickCount
 }
 
 message UpdatePropertyValueRequest {
@@ -20,6 +34,33 @@ message PropertyChangeNotification {
   string property_name = 1;
   google.protobuf.Any new_value = 2;
 }
+
+message InitializeRequest {}
+message InitializeResponse {}
+
+message OnCursorTestRequest {}
+message OnCursorTestResponse {}
+
+message OnClickTestRequest {}
+message OnClickTestResponse {}
+
+message OnSelectDeviceRequest {}
+message OnSelectDeviceResponse {}
+
+message OnSelectNumButtonsRequest {}
+message OnSelectNumButtonsResponse {}
+
+message GetClicksWithoutNotificationRequest {}
+message GetClicksWithoutNotificationResponse {}
+
+message ResetClicksRequest {}
+message ResetClicksResponse {}
+
+message CancelTestRequest {}
+message CancelTestResponse {}
+
+message FinishTestRequest {}
+message FinishTestResponse {}
 
 message SubscribeRequest {
   string client_id = 1;
@@ -39,5 +80,14 @@ service PointerViewModelService {
   rpc GetState (google.protobuf.Empty) returns (PointerViewModelState);
   rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
   rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);
+  rpc Initialize (InitializeRequest) returns (InitializeResponse);
+  rpc OnCursorTest (OnCursorTestRequest) returns (OnCursorTestResponse);
+  rpc OnClickTest (OnClickTestRequest) returns (OnClickTestResponse);
+  rpc OnSelectDevice (OnSelectDeviceRequest) returns (OnSelectDeviceResponse);
+  rpc OnSelectNumButtons (OnSelectNumButtonsRequest) returns (OnSelectNumButtonsResponse);
+  rpc GetClicksWithoutNotification (GetClicksWithoutNotificationRequest) returns (GetClicksWithoutNotificationResponse);
+  rpc ResetClicks (ResetClicksRequest) returns (ResetClicksResponse);
+  rpc CancelTest (CancelTestRequest) returns (CancelTestResponse);
+  rpc FinishTest (FinishTestRequest) returns (FinishTestResponse);
   rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
 }

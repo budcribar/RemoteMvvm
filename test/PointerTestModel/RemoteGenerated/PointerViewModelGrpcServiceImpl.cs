@@ -52,6 +52,104 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
     public override Task<PointerViewModelState> GetState(Empty request, ServerCallContext context)
     {
         var state = new PointerViewModelState();
+        // Mapping property: Show to state.Show
+        try
+        {
+            var propValue = _viewModel.Show;
+            state.Show = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Show to state.Show: " + ex.Message); }
+        // Mapping property: ShowSpinner to state.ShowSpinner
+        try
+        {
+            var propValue = _viewModel.ShowSpinner;
+            state.ShowSpinner = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowSpinner to state.ShowSpinner: " + ex.Message); }
+        // Mapping property: ClicksToPass to state.ClicksToPass
+        try
+        {
+            var propValue = _viewModel.ClicksToPass;
+            state.ClicksToPass = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ClicksToPass to state.ClicksToPass: " + ex.Message); }
+        // Mapping property: Is3Btn to state.Is3Btn
+        try
+        {
+            var propValue = _viewModel.Is3Btn;
+            state.Is3Btn = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Is3Btn to state.Is3Btn: " + ex.Message); }
+        // Mapping property: TestTimeoutSec to state.TestTimeoutSec
+        try
+        {
+            var propValue = _viewModel.TestTimeoutSec;
+            state.TestTimeoutSec = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property TestTimeoutSec to state.TestTimeoutSec: " + ex.Message); }
+        // Mapping property: Instructions to state.Instructions
+        try
+        {
+            var propValue = _viewModel.Instructions;
+            state.Instructions = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Instructions to state.Instructions: " + ex.Message); }
+        // Mapping property: ShowCursorTest to state.ShowCursorTest
+        try
+        {
+            var propValue = _viewModel.ShowCursorTest;
+            state.ShowCursorTest = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowCursorTest to state.ShowCursorTest: " + ex.Message); }
+        // Mapping property: ShowConfigSelection to state.ShowConfigSelection
+        try
+        {
+            var propValue = _viewModel.ShowConfigSelection;
+            state.ShowConfigSelection = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowConfigSelection to state.ShowConfigSelection: " + ex.Message); }
+        // Mapping property: ShowClickInstructions to state.ShowClickInstructions
+        try
+        {
+            var propValue = _viewModel.ShowClickInstructions;
+            state.ShowClickInstructions = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowClickInstructions to state.ShowClickInstructions: " + ex.Message); }
+        // Mapping property: ShowTimer to state.ShowTimer
+        try
+        {
+            var propValue = _viewModel.ShowTimer;
+            state.ShowTimer = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowTimer to state.ShowTimer: " + ex.Message); }
+        // Mapping property: ShowBottom to state.ShowBottom
+        try
+        {
+            var propValue = _viewModel.ShowBottom;
+            state.ShowBottom = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowBottom to state.ShowBottom: " + ex.Message); }
+        // Mapping property: TimerText to state.TimerText
+        try
+        {
+            var propValue = _viewModel.TimerText;
+            state.TimerText = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property TimerText to state.TimerText: " + ex.Message); }
+        // Mapping property: SelectedDevice to state.SelectedDevice
+        try
+        {
+            var propValue = _viewModel.SelectedDevice;
+            state.SelectedDevice = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property SelectedDevice to state.SelectedDevice: " + ex.Message); }
+        // Mapping property: LastClickCount to state.LastClickCount
+        try
+        {
+            var propValue = _viewModel.LastClickCount;
+            state.LastClickCount = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property LastClickCount to state.LastClickCount: " + ex.Message); }
         return Task.FromResult(state);
     }
 
@@ -96,6 +194,154 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
     {
         return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.InitializeResponse> Initialize(Pointer.ViewModels.Protos.InitializeRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.InitializeCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                command.Execute(null);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command InitializeCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for Initialize: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.InitializeResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.OnCursorTestResponse> OnCursorTest(Pointer.ViewModels.Protos.OnCursorTestRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.OnCursorTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                command.Execute(null);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnCursorTestCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnCursorTest: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.OnCursorTestResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.OnClickTestResponse> OnClickTest(Pointer.ViewModels.Protos.OnClickTestRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<MouseEventArgs>;
+                if (typedCommand != null) typedCommand.Execute(request.E); else command.Execute(request);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnClickTestCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnClickTest: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.OnClickTestResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.OnSelectDeviceResponse> OnSelectDevice(Pointer.ViewModels.Protos.OnSelectDeviceRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
+                if (typedCommand != null) typedCommand.Execute(request.Device); else command.Execute(request);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectDeviceCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnSelectDevice: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.OnSelectDeviceResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.OnSelectNumButtonsResponse> OnSelectNumButtons(Pointer.ViewModels.Protos.OnSelectNumButtonsRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<int>;
+                if (typedCommand != null) typedCommand.Execute(request.BtnCount); else command.Execute(request);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectNumButtonsCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnSelectNumButtons: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.OnSelectNumButtonsResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.GetClicksWithoutNotificationResponse> GetClicksWithoutNotification(Pointer.ViewModels.Protos.GetClicksWithoutNotificationRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
+                if (typedCommand != null) typedCommand.Execute(request.Button); else command.Execute(request);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command GetClicksWithoutNotificationCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for GetClicksWithoutNotification: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.GetClicksWithoutNotificationResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.ResetClicksResponse> ResetClicks(Pointer.ViewModels.Protos.ResetClicksRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.ResetClicksCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                command.Execute(null);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command ResetClicksCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for ResetClicks: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.ResetClicksResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.CancelTestResponse> CancelTest(Pointer.ViewModels.Protos.CancelTestRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.CancelTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                command.Execute(null);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command CancelTestCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for CancelTest: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.CancelTestResponse();
+    }
+
+    public override async Task<Pointer.ViewModels.Protos.FinishTestResponse> FinishTest(Pointer.ViewModels.Protos.FinishTestRequest request, ServerCallContext context)
+    {
+        try { await await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.FinishTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                command.Execute(null);
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command FinishTestCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for FinishTest: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new Pointer.ViewModels.Protos.FinishTestResponse();
     }
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
