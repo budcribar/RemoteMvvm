@@ -14,7 +14,7 @@ using PeakSWC.Mvvm.Remote;
 
 namespace HPSystemsTools
 {
-    public partial class PointerViewModel : IDisposable
+    public partial class PointerViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private PointerViewModelGrpcServiceImpl? _grpcService;
         private IHost? _aspNetCoreHost;

@@ -115,12 +115,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
     public override async Task<SampleApp.ViewModels.Protos.IncrementCountResponse> IncrementCount(SampleApp.ViewModels.Protos.IncrementCountRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.IncrementCountCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                command.Execute(null);
-            }
-            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command IncrementCountCommand not found or not IRelayCommand."); }
+            _viewModel.IncrementCount();
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for IncrementCount: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
@@ -131,13 +126,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
     public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse> DelayedIncrementAsync(SampleApp.ViewModels.Protos.DelayedIncrementAsyncRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
-            if (command != null)
-            {
-                var typedCommand = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<int>;
-                if (typedCommand != null) await typedCommand.ExecuteAsync(request.DelayMilliseconds); else await command.ExecuteAsync(request);
-            }
-            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command DelayedIncrementCommand not found or not IAsyncRelayCommand."); }
+            await _viewModel.DelayedIncrementAsync(request.DelayMilliseconds);
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for DelayedIncrementAsync: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
@@ -148,13 +137,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
     public override async Task<SampleApp.ViewModels.Protos.SetNameToValueResponse> SetNameToValue(SampleApp.ViewModels.Protos.SetNameToValueRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                var typedCommand = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string?>;
-                if (typedCommand != null) typedCommand.Execute(request.Value); else command.Execute(request);
-            }
-            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command SetNameToValueCommand not found or not IRelayCommand."); }
+            _viewModel.SetNameToValue(request.Value);
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for SetNameToValue: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));

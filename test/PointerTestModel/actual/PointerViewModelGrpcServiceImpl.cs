@@ -1,5 +1,5 @@
 using Grpc.Core;
-using MonsterClicker.ViewModels.Protos;
+using Pointer.ViewModels.Protos;
 using HPSystemsTools;
 using Google.Protobuf.WellKnownTypes;
 using System;
@@ -37,7 +37,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
     }
 
     private readonly PointerViewModel _viewModel;
-    private static readonly ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
+    private static readonly ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>>();
     private readonly Dispatcher _dispatcher;
     private readonly ILogger? _logger;
 
@@ -153,9 +153,9 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         return Task.FromResult(state);
     }
 
-    public override async Task SubscribeToPropertyChanges(MonsterClicker.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
+    public override async Task SubscribeToPropertyChanges(Pointer.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
-        var channel = Channel.CreateUnbounded<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
+        var channel = Channel.CreateUnbounded<Pointer.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         _subscriberChannels.TryAdd(responseStream, channel);
         ClientCount = _subscriberChannels.Count;
         try
@@ -173,7 +173,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         }
     }
 
-    public override Task<Empty> UpdatePropertyValue(MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override Task<Empty> UpdatePropertyValue(Pointer.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
         _dispatcher.Invoke(() => {
             var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
@@ -196,152 +196,103 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.InitializeResponse> Initialize(MonsterClicker.ViewModels.Protos.InitializeRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.InitializeResponse> Initialize(Pointer.ViewModels.Protos.InitializeRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.InitializeCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                command.Execute(null);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command InitializeCommand not found or not IRelayCommand."); }
+            _viewModel.Initialize();
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for Initialize: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.InitializeResponse();
+        return new Pointer.ViewModels.Protos.InitializeResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.OnCursorTestResponse> OnCursorTest(MonsterClicker.ViewModels.Protos.OnCursorTestRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.OnCursorTestResponse> OnCursorTest(Pointer.ViewModels.Protos.OnCursorTestRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.OnCursorTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                command.Execute(null);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnCursorTestCommand not found or not IRelayCommand."); }
+            _viewModel.OnCursorTest();
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnCursorTest: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.OnCursorTestResponse();
+        return new Pointer.ViewModels.Protos.OnCursorTestResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.OnClickTestResponse> OnClickTest(MonsterClicker.ViewModels.Protos.OnClickTestRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.OnClickTestResponse> OnClickTest(Pointer.ViewModels.Protos.OnClickTestRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                var typedCommand = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<int>;
-                if (typedCommand != null) typedCommand.Execute(request.Button); else command.Execute(request);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnClickTestCommand not found or not IRelayCommand."); }
+            _viewModel.OnClickTest(request.Button);
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnClickTest: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.OnClickTestResponse();
+        return new Pointer.ViewModels.Protos.OnClickTestResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.OnSelectDeviceResponse> OnSelectDevice(MonsterClicker.ViewModels.Protos.OnSelectDeviceRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.OnSelectDeviceResponse> OnSelectDevice(Pointer.ViewModels.Protos.OnSelectDeviceRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                var typedCommand = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
-                if (typedCommand != null) typedCommand.Execute(request.Device); else command.Execute(request);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectDeviceCommand not found or not IRelayCommand."); }
+            _viewModel.OnSelectDevice(request.Device);
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnSelectDevice: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.OnSelectDeviceResponse();
+        return new Pointer.ViewModels.Protos.OnSelectDeviceResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.OnSelectNumButtonsResponse> OnSelectNumButtons(MonsterClicker.ViewModels.Protos.OnSelectNumButtonsRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.OnSelectNumButtonsResponse> OnSelectNumButtons(Pointer.ViewModels.Protos.OnSelectNumButtonsRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                var typedCommand = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<int>;
-                if (typedCommand != null) typedCommand.Execute(request.BtnCount); else command.Execute(request);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectNumButtonsCommand not found or not IRelayCommand."); }
+            _viewModel.OnSelectNumButtons(request.BtnCount);
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for OnSelectNumButtons: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.OnSelectNumButtonsResponse();
+        return new Pointer.ViewModels.Protos.OnSelectNumButtonsResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.GetClicksWithoutNotificationResponse> GetClicksWithoutNotification(MonsterClicker.ViewModels.Protos.GetClicksWithoutNotificationRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.GetClicksWithoutNotificationResponse> GetClicksWithoutNotification(Pointer.ViewModels.Protos.GetClicksWithoutNotificationRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                var typedCommand = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
-                if (typedCommand != null) typedCommand.Execute(request.Button); else command.Execute(request);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command GetClicksWithoutNotificationCommand not found or not IRelayCommand."); }
+            _viewModel.GetClicksWithoutNotification(request.Button);
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for GetClicksWithoutNotification: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.GetClicksWithoutNotificationResponse();
+        return new Pointer.ViewModels.Protos.GetClicksWithoutNotificationResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.ResetClicksResponse> ResetClicks(MonsterClicker.ViewModels.Protos.ResetClicksRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.ResetClicksResponse> ResetClicks(Pointer.ViewModels.Protos.ResetClicksRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.ResetClicksCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                command.Execute(null);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command ResetClicksCommand not found or not IRelayCommand."); }
+            _viewModel.ResetClicks();
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for ResetClicks: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.ResetClicksResponse();
+        return new Pointer.ViewModels.Protos.ResetClicksResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.CancelTestResponse> CancelTest(MonsterClicker.ViewModels.Protos.CancelTestRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.CancelTestResponse> CancelTest(Pointer.ViewModels.Protos.CancelTestRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.CancelTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                command.Execute(null);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command CancelTestCommand not found or not IRelayCommand."); }
+            _viewModel.CancelTest();
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for CancelTest: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.CancelTestResponse();
+        return new Pointer.ViewModels.Protos.CancelTestResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.FinishTestResponse> FinishTest(MonsterClicker.ViewModels.Protos.FinishTestRequest request, ServerCallContext context)
+    public override async Task<Pointer.ViewModels.Protos.FinishTestResponse> FinishTest(Pointer.ViewModels.Protos.FinishTestRequest request, ServerCallContext context)
     {
         try { await await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.FinishTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                command.Execute(null);
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] Command FinishTestCommand not found or not IRelayCommand."); }
+            _viewModel.FinishTest();
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:PointerViewModel] Exception during command execution for FinishTest: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.FinishTestResponse();
+        return new Pointer.ViewModels.Protos.FinishTestResponse();
     }
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -351,7 +302,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try { newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
 
-        var notification = new MonsterClicker.ViewModels.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
+        var notification = new Pointer.ViewModels.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
         if (newValue == null) notification.NewValue = Any.Pack(new Empty());
         else if (newValue is string s) notification.NewValue = Any.Pack(new StringValue { Value = s });
         else if (newValue is int i) notification.NewValue = Any.Pack(new Int32Value { Value = i });
