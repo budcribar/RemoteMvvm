@@ -1,5 +1,5 @@
 // Auto-generated TypeScript client for SampleViewModel
-import { CounterServiceClient } from './generated/CounterServiceServiceClientPb.js';
+import { CounterServiceClient } from './generated/CounterServiceServiceClientPb';
 import { SampleViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, IncrementCountRequest, DelayedIncrementAsyncRequest, SetNameToValueRequest } from './generated/CounterService_pb.js';
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
