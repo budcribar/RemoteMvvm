@@ -31,6 +31,28 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PointerViewModel", "Pointer
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PointerViewModelTests", "test\PointerTestModel\PointerViewModelTests.csproj", "{EEDF0A1A-52E4-E107-2BCC-EC5894207308}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ThermalTest", "ThermalTest", "{6300CAB3-2808-4D0D-8267-33EE6BD7E115}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ViewModels", "ViewModels", "{19C18C6B-0FED-47F4-A326-232E27E3F000}"
+	ProjectSection(SolutionItems) = preProject
+		test\ThermalTest\ViewModels\HP3LSThermalTestViewModel.cs = test\ThermalTest\ViewModels\HP3LSThermalTestViewModel.cs
+		test\ThermalTest\ViewModels\ThermalZoneComponentViewModel.cs = test\ThermalTest\ViewModels\ThermalZoneComponentViewModel.cs
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "generated", "generated", "{CCF4922B-5DB1-429D-B8E7-9FBAECFF9DB2}"
+	ProjectSection(SolutionItems) = preProject
+		test\ThermalTest\ViewModels\generated\GrpcRemoteOptions.cs = test\ThermalTest\ViewModels\generated\GrpcRemoteOptions.cs
+		test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModel.Remote.g.cs = test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModel.Remote.g.cs
+		test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModelGrpcServiceImpl.cs = test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModelGrpcServiceImpl.cs
+		test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModelRemoteClient.cs = test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModelRemoteClient.cs
+		test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModelRemoteClient.ts = test\ThermalTest\ViewModels\generated\ThermalZoneComponentViewModelRemoteClient.ts
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{8EEFC213-ADDB-4A8E-BC37-1B258CA06D9B}"
+	ProjectSection(SolutionItems) = preProject
+		test\ThermalTest\ViewModels\protos\ThermalZoneComponentViewModelService.proto = test\ThermalTest\ViewModels\protos\ThermalZoneComponentViewModelService.proto
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -83,6 +105,10 @@ Global
 		{0AEF7F60-B7E3-48C4-ABA6-524F0D98D29F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{21473ECB-66FC-45EA-959C-A2DFE392D5BA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{EEDF0A1A-52E4-E107-2BCC-EC5894207308} = {21473ECB-66FC-45EA-959C-A2DFE392D5BA}
+		{6300CAB3-2808-4D0D-8267-33EE6BD7E115} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{19C18C6B-0FED-47F4-A326-232E27E3F000} = {6300CAB3-2808-4D0D-8267-33EE6BD7E115}
+		{CCF4922B-5DB1-429D-B8E7-9FBAECFF9DB2} = {19C18C6B-0FED-47F4-A326-232E27E3F000}
+		{8EEFC213-ADDB-4A8E-BC37-1B258CA06D9B} = {19C18C6B-0FED-47F4-A326-232E27E3F000}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {012EEB0A-22C5-4971-A229-3CC35E554B71}
