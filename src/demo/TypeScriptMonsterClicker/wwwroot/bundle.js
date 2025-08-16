@@ -2123,8 +2123,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   GameViewModelRemoteClient: () => (/* binding */ GameViewModelRemoteClient)
 /* harmony export */ });
-/* harmony import */ var _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelService_pb */ "./src/generated/GameViewModelService_pb.js");
-/* harmony import */ var _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/GameViewModelService_pb.js */ "./src/generated/GameViewModelService_pb.js");
+/* harmony import */ var _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! google-protobuf/google/protobuf/empty_pb */ "./node_modules/google-protobuf/google/protobuf/empty_pb.js");
 /* harmony import */ var google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! google-protobuf/google/protobuf/any_pb */ "./node_modules/google-protobuf/google/protobuf/any_pb.js");
@@ -2175,7 +2175,7 @@ class GameViewModelRemoteClient {
         this.notifyChange();
     }
     async updatePropertyValue(propertyName, value) {
-        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
+        const req = new _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
         await this.grpcClient.updatePropertyValue(req);
@@ -2203,15 +2203,15 @@ class GameViewModelRemoteClient {
         return anyVal;
     }
     async attackMonster() {
-        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.AttackMonsterRequest();
+        const req = new _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.AttackMonsterRequest();
         await this.grpcClient.attackMonster(req);
     }
     async specialAttackAsync() {
-        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.SpecialAttackAsyncRequest();
+        const req = new _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.SpecialAttackAsyncRequest();
         await this.grpcClient.specialAttackAsync(req);
     }
     async resetGame() {
-        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.ResetGameRequest();
+        const req = new _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.ResetGameRequest();
         await this.grpcClient.resetGame(req);
     }
     startPingLoop() {
@@ -2220,7 +2220,7 @@ class GameViewModelRemoteClient {
         this.pingIntervalId = setInterval(async () => {
             try {
                 const resp = await this.grpcClient.ping(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
-                if (resp.getStatus() === _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.ConnectionStatus.CONNECTED) {
+                if (resp.getStatus() === _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.ConnectionStatus.CONNECTED) {
                     if (this.connectionStatus !== 'Connected') {
                         await this.refreshState();
                     }
@@ -2237,7 +2237,7 @@ class GameViewModelRemoteClient {
         }, 5000);
     }
     startListeningToPropertyChanges() {
-        const req = new _generated_GameViewModelService_pb__WEBPACK_IMPORTED_MODULE_0__.SubscribeRequest();
+        const req = new _generated_GameViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.SubscribeRequest();
         req.setClientId(Math.random().toString());
         this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);
         this.propertyStream.on('data', (update) => {
