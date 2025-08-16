@@ -80,13 +80,13 @@ document.addEventListener('DOMContentLoaded', () => {
         await vm.onCursorTest();
     });
     (document.getElementById('onClickTest-btn') as HTMLButtonElement).addEventListener('click', async () => {
-        await vm.onClickTest(1);
+        await vm.onClickTest(0);
     });
     (document.getElementById('onSelectDevice-btn') as HTMLButtonElement).addEventListener('click', async () => {
         await vm.onSelectDevice('sample');
     });
     (document.getElementById('onSelectNumButtons-btn') as HTMLButtonElement).addEventListener('click', async () => {
-        await vm.onSelectNumButtons(3);
+        await vm.onSelectNumButtons(0);
     });
     (document.getElementById('getClicksWithoutNotification-btn') as HTMLButtonElement).addEventListener('click', async () => {
         await vm.getClicksWithoutNotification('sample');

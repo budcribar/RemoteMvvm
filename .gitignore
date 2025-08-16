@@ -364,3 +364,4 @@ FodyWeavers.xsd
 /test/GameViewModel/actual
 src/demo/MonsterClicker/RemoteGenerated/
 obj/
+/src/demo/TypeScriptMonsterClicker/tsconfig.tsbuildinfo
