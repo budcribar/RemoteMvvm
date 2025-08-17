@@ -61,7 +61,7 @@ public static class ProtoGenerator
             }
 
             if (allowMessage && type is INamedTypeSymbol namedType &&
-                (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct))
+                (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct || type.TypeKind == TypeKind.Error))
             {
                 if (!processedMessages.Contains(namedType))
                 {
@@ -104,11 +104,16 @@ public static class ProtoGenerator
         while (pendingMessages.Count > 0)
         {
             var msgType = pendingMessages.Dequeue();
-            var propsForMsg = Helpers.GetAllMembers(msgType)
-                                     .OfType<IPropertySymbol>()
-                                     .Where(p => p.GetMethod != null && p.Parameters.Length == 0)
-                                     .ToList();
-            if (propsForMsg.Count == 0) continue;
+
+            List<IPropertySymbol> propsForMsg = new();
+            if (msgType.TypeKind != TypeKind.Error)
+            {
+                propsForMsg = Helpers.GetAllMembers(msgType)
+                    .OfType<IPropertySymbol>()
+                    .Where(p => p.GetMethod != null && p.Parameters.Length == 0)
+                    .ToList();
+            }
+
             body.AppendLine($"message {msgType.Name}State {{");
             int msgField = 1;
             foreach (var prop in propsForMsg)
@@ -215,5 +220,6 @@ public static class ProtoGenerator
         final.AppendLine();
         final.Append(body.ToString());
         return final.ToString();
-}
+    }
+
 }
