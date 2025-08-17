@@ -78,8 +78,8 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
-                var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
-                    Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
+                    var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
+                        Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
                     if (obsPropAttribute != null)
                     {
                         string propertyName = fieldSymbol.Name.TrimStart('_');
@@ -89,6 +89,15 @@ namespace GrpcRemoteMvvmModelUtil
                         }
                         else continue;
                         props.Add(new PropertyInfo(propertyName, fieldSymbol.Type.ToDisplayString(), fieldSymbol.Type));
+                    }
+                }
+                else if (member is IPropertySymbol propertySymbol)
+                {
+                    var obsPropAttribute = propertySymbol.GetAttributes().FirstOrDefault(a =>
+                        Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
+                    if (obsPropAttribute != null)
+                    {
+                        props.Add(new PropertyInfo(propertySymbol.Name, propertySymbol.Type.ToDisplayString(), propertySymbol.Type));
                     }
                 }
             }

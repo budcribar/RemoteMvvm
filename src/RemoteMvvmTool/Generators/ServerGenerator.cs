@@ -71,7 +71,33 @@ public static class ServerGenerator
             sb.AppendLine("        try");
             sb.AppendLine("        {");
             sb.AppendLine($"            var propValue = _viewModel.{p.Name};");
-            if (true)
+            if (p.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
+            {
+                string def = named.ConstructedFrom.ToDisplayString();
+                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                {
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue);");
+                }
+                else if (def == "System.Collections.Generic.List<T>" ||
+                         def == "System.Collections.Generic.IList<T>" ||
+                         def == "System.Collections.Generic.IEnumerable<T>" ||
+                         def == "System.Collections.Generic.IReadOnlyList<T>" ||
+                         def == "System.Collections.Generic.ICollection<T>")
+                {
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange(propValue);");
+                }
+                else
+                {
+                    sb.AppendLine($"            state.{p.Name} = propValue;");
+                }
+            }
+            else if (p.FullTypeSymbol is IArrayTypeSymbol)
+            {
+                sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange(propValue);");
+            }
+            else
             {
                 sb.AppendLine($"            state.{p.Name} = propValue;");
             }
@@ -129,20 +155,38 @@ public static class ServerGenerator
             sb.AppendLine($"    public override async Task<{protoNs}.{cmd.MethodName}Response> {cmd.MethodName}({protoNs}.{cmd.MethodName}Request request, ServerCallContext context)");
             sb.AppendLine("    {");
             sb.AppendLine("        try { await await _dispatcher.InvokeAsync(async () => {");
-            string methodCall;
+            var relayType = cmd.IsAsync ? "CommunityToolkit.Mvvm.Input.IAsyncRelayCommand" : "CommunityToolkit.Mvvm.Input.IRelayCommand";
+            var relayTypeShort = cmd.IsAsync ? "IAsyncRelayCommand" : "IRelayCommand";
+            sb.AppendLine($"            var command = _viewModel.{cmd.CommandPropertyName} as {relayType};");
+            sb.AppendLine("            if (command != null)");
+            sb.AppendLine("            {");
             if (cmd.Parameters.Count == 0)
             {
-                methodCall = $"_viewModel.{cmd.MethodName}()";
+                if (cmd.IsAsync)
+                    sb.AppendLine("                await command.ExecuteAsync(null);");
+                else
+                    sb.AppendLine("                command.Execute(null);");
+            }
+            else if (cmd.Parameters.Count == 1)
+            {
+                var param = cmd.Parameters[0];
+                var paramProp = GeneratorHelpers.ToPascalCase(param.Name);
+                var typedRelay = cmd.IsAsync ? $"CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{param.TypeString}>" : $"CommunityToolkit.Mvvm.Input.IRelayCommand<{param.TypeString}>";
+                sb.AppendLine($"                var typedCommand = _viewModel.{cmd.CommandPropertyName} as {typedRelay};");
+                if (cmd.IsAsync)
+                    sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{paramProp}); else await command.ExecuteAsync(request);");
+                else
+                    sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute(request.{paramProp}); else command.Execute(request);");
             }
             else
             {
-                var paramList = string.Join(", ", cmd.Parameters.Select(p => $"request.{GeneratorHelpers.ToPascalCase(p.Name)}"));
-                methodCall = $"_viewModel.{cmd.MethodName}({paramList})";
+                if (cmd.IsAsync)
+                    sb.AppendLine("                await command.ExecuteAsync(request);");
+                else
+                    sb.AppendLine("                command.Execute(request);");
             }
-            if (cmd.IsAsync)
-                sb.AppendLine($"            await {methodCall};");
-            else
-                sb.AppendLine($"            {methodCall};");
+            sb.AppendLine("            }");
+            sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:{vmName}] Command {cmd.CommandPropertyName} not found or not {relayTypeShort}.\"); }}");
             sb.AppendLine("        }); } catch (Exception ex) {");
             sb.AppendLine($"        Debug.WriteLine(\"[GrpcService:{vmName}] Exception during command execution for {cmd.MethodName}: \" + ex.ToString());");
             sb.AppendLine("        throw new RpcException(new Status(StatusCode.Internal, \"Error executing command on server: \" + ex.Message));");
