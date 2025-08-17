@@ -61,13 +61,13 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             private set => SetProperty(ref _showReadme, value);
         }
 
-        public IRelayCommand<ThermalStateEnum> StateChangedCommand { get; }
+        public IRelayCommand<HPSystemsTools.ViewModels.ThermalStateEnum> StateChangedCommand { get; }
         public IRelayCommand CancelTestCommand { get; }
 
         public HP3LSThermalTestViewModelRemoteClient(Generated.Protos.HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
-            StateChangedCommand = new RelayCommand<ThermalStateEnum>(RemoteExecute_StateChanged);
+            StateChangedCommand = new RelayCommand<HPSystemsTools.ViewModels.ThermalStateEnum>(RemoteExecute_StateChanged);
             CancelTestCommand = new RelayCommand(RemoteExecute_CancelTest);
         }
 
@@ -139,7 +139,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             catch (Exception ex) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Unexpected error during initialization: " + ex.Message); }
         }
 
-        private void RemoteExecute_StateChanged(ThermalStateEnum state)
+        private void RemoteExecute_StateChanged(HPSystemsTools.ViewModels.ThermalStateEnum state)
         {
             if (!_isInitialized || _isDisposed) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Not initialized or disposed, command StateChanged skipped."); return; }
             Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Executing command StateChanged remotely...");

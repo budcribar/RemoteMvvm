@@ -132,7 +132,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             var command = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
-                var typedCommand = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<ThermalStateEnum>;
+                var typedCommand = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<HPSystemsTools.ViewModels.ThermalStateEnum>;
                 if (typedCommand != null) typedCommand.Execute(request.State); else command.Execute(request);
             }
             else { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Command StateChangedCommand not found or not IRelayCommand."); }
