@@ -1,5 +1,6 @@
 using GrpcRemoteMvvmModelUtil;
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,32 +12,113 @@ public static class ProtoGenerator
 {
     public static string Generate(string protoNs, string serviceName, string vmName, List<PropertyInfo> props, List<CommandInfo> cmds, Compilation compilation)
     {
+        if (props == null || props.Count == 0)
+        {
+            throw new InvalidOperationException("No observable properties were found to generate the state message.");
+        }
+
         var body = new StringBuilder();
+        var pendingMessages = new Queue<INamedTypeSymbol>();
+        var processedMessages = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+
+        string MapProtoType(ITypeSymbol type, bool allowMessage)
+        {
+            if (type is IArrayTypeSymbol arrayType)
+            {
+                string elementType = MapProtoType(arrayType.ElementType, allowMessage: true);
+                return $"repeated {elementType}";
+            }
+
+            if (type is INamedTypeSymbol named && named.IsGenericType)
+            {
+                string def = named.ConstructedFrom.ToDisplayString();
+                if (def == "System.Collections.Generic.List<T>" ||
+                    def == "System.Collections.Generic.IList<T>" ||
+                    def == "System.Collections.Generic.IEnumerable<T>" ||
+                    def == "System.Collections.Generic.IReadOnlyList<T>" ||
+                    def == "System.Collections.Generic.ICollection<T>")
+                {
+                    var elemType = named.TypeArguments[0];
+                    string elemProto = MapProtoType(elemType, allowMessage: true);
+                    return $"repeated {elemProto}";
+                }
+            }
+
+            string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
+            switch (wkt)
+            {
+                case "StringValue": return "string";
+                case "BoolValue": return "bool";
+                case "Int32Value": return "int32";
+                case "Int64Value": return "int64";
+                case "UInt32Value": return "uint32";
+                case "UInt64Value": return "uint64";
+                case "FloatValue": return "float";
+                case "DoubleValue": return "double";
+                case "BytesValue": return "bytes";
+                case "Timestamp": return "google.protobuf.Timestamp";
+                case "Duration": return "google.protobuf.Duration";
+            }
+
+            if (allowMessage && type is INamedTypeSymbol namedType &&
+                (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct))
+            {
+                if (!processedMessages.Contains(namedType))
+                {
+                    processedMessages.Add(namedType);
+                    pendingMessages.Enqueue(namedType);
+                }
+                return namedType.Name + "State";
+            }
+
+            return "string";
+        }
+
         body.AppendLine($"// Message representing the full state of the {vmName}");
         body.AppendLine($"message {vmName}State {{");
         int field = 1;
         foreach (var p in props)
         {
-            string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
-            string protoType = wkt switch
+            if (p.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
             {
-                "StringValue" => "string",
-                "BoolValue" => "bool",
-                "Int32Value" => "int32",
-                "Int64Value" => "int64",
-                "UInt32Value" => "uint32",
-                "UInt64Value" => "uint64",
-                "FloatValue" => "float",
-                "DoubleValue" => "double",
-                "BytesValue" => "bytes",
-                "Timestamp" => "google.protobuf.Timestamp",
-                "Duration" => "google.protobuf.Duration",
-                _ => "string"
-            };
+                string def = named.ConstructedFrom.ToDisplayString();
+                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                {
+                    var keyType = named.TypeArguments[0];
+                    var valueType = named.TypeArguments[1];
+                    string keyProto = MapProtoType(keyType, allowMessage: false);
+                    string valueProto = MapProtoType(valueType, allowMessage: true);
+                    body.AppendLine($"  map<{keyProto}, {valueProto}> {GeneratorHelpers.ToSnake(p.Name)} = {field++}; // Original C#: {p.TypeString} {p.Name}");
+                    continue;
+                }
+            }
+
+            string protoType = MapProtoType(p.FullTypeSymbol!, allowMessage: true);
             body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(p.Name)} = {field++}; // Original C#: {p.TypeString} {p.Name}");
         }
         body.AppendLine("}");
         body.AppendLine();
+
+        while (pendingMessages.Count > 0)
+        {
+            var msgType = pendingMessages.Dequeue();
+            var propsForMsg = Helpers.GetAllMembers(msgType)
+                                     .OfType<IPropertySymbol>()
+                                     .Where(p => p.GetMethod != null && p.Parameters.Length == 0)
+                                     .ToList();
+            if (propsForMsg.Count == 0) continue;
+            body.AppendLine($"message {msgType.Name}State {{");
+            int msgField = 1;
+            foreach (var prop in propsForMsg)
+            {
+                string protoType = MapProtoType(prop.Type, allowMessage: true);
+                body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(prop.Name)} = {msgField++}; // Original C#: {prop.Type.ToDisplayString()} {prop.Name}");
+            }
+            body.AppendLine("}");
+            body.AppendLine();
+        }
         body.AppendLine("message UpdatePropertyValueRequest {");
         body.AppendLine("  string property_name = 1;");
         body.AppendLine("  google.protobuf.Any new_value = 2;");
@@ -111,6 +193,10 @@ public static class ProtoGenerator
         body.AppendLine("}");
 
         var final = new StringBuilder();
+        final.AppendLine("// <auto-generated>");
+        final.AppendLine("// Generated by RemoteMvvmTool.");
+        final.AppendLine("// </auto-generated>");
+        final.AppendLine();
         final.AppendLine("syntax = \"proto3\";");
         final.AppendLine();
 
@@ -129,5 +215,6 @@ public static class ProtoGenerator
         final.AppendLine();
         final.Append(body.ToString());
         return final.ToString();
-}
+    }
+
 }
