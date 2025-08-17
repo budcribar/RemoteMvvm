@@ -67,6 +67,10 @@ public class Program
 
             var refs = LoadDefaultRefs();
 
+            Console.WriteLine("Analyzing view model files:");
+            foreach (var vm in vms)
+                Console.WriteLine("  " + vm);
+
             var result = await ViewModelAnalyzer.AnalyzeAsync(
                 vms,
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
