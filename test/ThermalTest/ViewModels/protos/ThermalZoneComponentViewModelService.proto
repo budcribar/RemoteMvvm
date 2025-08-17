@@ -4,16 +4,16 @@
 
 syntax = "proto3";
 
-package generated_protos;
+package thermaltest_protos;
 
-option csharp_namespace = "Generated.Protos";
+option csharp_namespace = "ThermalTest.Protos";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
 
 // Message representing the full state of the ThermalZoneComponentViewModel
 message ThermalZoneComponentViewModelState {
-  ZoneState zone = 1; // Original C#: Zone Zone
+  int32 zone = 1; // Original C#: HP.Telemetry.Zone Zone
   bool is_active = 2; // Original C#: bool IsActive
   string device_name = 3; // Original C#: string DeviceName
   int32 temperature = 4; // Original C#: int Temperature
@@ -25,9 +25,6 @@ message ThermalZoneComponentViewModelState {
   string background = 10; // Original C#: string Background
   int32 status = 11; // Original C#: HPSystemsTools.ViewModels.ThermalStateEnum Status
   int32 state = 12; // Original C#: HPSystemsTools.ViewModels.ThermalStateEnum State
-}
-
-message ZoneState {
 }
 
 message UpdatePropertyValueRequest {
