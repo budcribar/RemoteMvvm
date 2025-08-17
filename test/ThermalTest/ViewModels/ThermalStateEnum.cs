@@ -1,5 +1,4 @@
-﻿namespace HPSystemsTools.Models
-{
+﻿{
     public enum ThermalStateEnum
     {
         Unknown,
