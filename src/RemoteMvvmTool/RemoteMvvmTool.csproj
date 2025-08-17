@@ -28,6 +28,9 @@
   <ItemGroup>
     <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="publish\" />
+  </ItemGroup>
 	<Target Name="InstallTool" AfterTargets="Pack">
 		<Exec Command="dotnet tool uninstall --global $(PackageId)" ContinueOnError="true" />
 		<Exec Command="dotnet tool install --global --add-source $(PackageOutputPath) $(PackageId) --version $(Version)" />
