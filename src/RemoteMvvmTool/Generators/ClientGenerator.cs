@@ -113,7 +113,36 @@ public static class ClientGenerator
         foreach (var prop in props)
         {
             string protoStateFieldName = GeneratorHelpers.ToPascalCase(prop.Name);
-            sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+            if (prop.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
+            {
+                string def = named.ConstructedFrom.ToDisplayString();
+                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                {
+                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value);");
+                }
+                else if (def == "System.Collections.Generic.List<T>" ||
+                         def == "System.Collections.Generic.IList<T>" ||
+                         def == "System.Collections.Generic.IEnumerable<T>" ||
+                         def == "System.Collections.Generic.IReadOnlyList<T>" ||
+                         def == "System.Collections.Generic.ICollection<T>")
+                {
+                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                }
+                else
+                {
+                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+                }
+            }
+            else if (prop.FullTypeSymbol is IArrayTypeSymbol)
+            {
+                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+            }
+            else
+            {
+                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+            }
         }
         sb.AppendLine("                                Debug.WriteLine(\"[ClientProxy] State re-synced after reconnect.\");");
         sb.AppendLine("                            }");
@@ -154,7 +183,36 @@ public static class ClientGenerator
         foreach (var prop in props)
         {
             string protoStateFieldName = GeneratorHelpers.ToPascalCase(prop.Name);
-            sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+            if (prop.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
+            {
+                string def = named.ConstructedFrom.ToDisplayString();
+                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                {
+                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value);");
+                }
+                else if (def == "System.Collections.Generic.List<T>" ||
+                         def == "System.Collections.Generic.IList<T>" ||
+                         def == "System.Collections.Generic.IEnumerable<T>" ||
+                         def == "System.Collections.Generic.IReadOnlyList<T>" ||
+                         def == "System.Collections.Generic.ICollection<T>")
+                {
+                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                }
+                else
+                {
+                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+                }
+            }
+            else if (prop.FullTypeSymbol is IArrayTypeSymbol)
+            {
+                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+            }
+            else
+            {
+                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+            }
         }
         sb.AppendLine("                _isInitialized = true;");
         sb.AppendLine($"                Debug.WriteLine(\"[{vmName}RemoteClient] Initialized successfully.\");");
