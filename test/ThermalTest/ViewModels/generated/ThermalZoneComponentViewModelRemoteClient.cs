@@ -33,6 +33,90 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
+        private Zone _zone = default!;
+        public Zone Zone
+        {
+            get => _zone;
+            private set => SetProperty(ref _zone, value);
+        }
+
+        private bool _isActive = default!;
+        public bool IsActive
+        {
+            get => _isActive;
+            private set => SetProperty(ref _isActive, value);
+        }
+
+        private string _deviceName = default!;
+        public string DeviceName
+        {
+            get => _deviceName;
+            private set => SetProperty(ref _deviceName, value);
+        }
+
+        private int _temperature = default!;
+        public int Temperature
+        {
+            get => _temperature;
+            private set => SetProperty(ref _temperature, value);
+        }
+
+        private int _processorLoad = default!;
+        public int ProcessorLoad
+        {
+            get => _processorLoad;
+            private set => SetProperty(ref _processorLoad, value);
+        }
+
+        private int _fanSpeed = default!;
+        public int FanSpeed
+        {
+            get => _fanSpeed;
+            private set => SetProperty(ref _fanSpeed, value);
+        }
+
+        private int _secondsInState = default!;
+        public int SecondsInState
+        {
+            get => _secondsInState;
+            private set => SetProperty(ref _secondsInState, value);
+        }
+
+        private System.DateTime _firstSeenInState = default!;
+        public System.DateTime FirstSeenInState
+        {
+            get => _firstSeenInState;
+            private set => SetProperty(ref _firstSeenInState, value);
+        }
+
+        private int _progress = default!;
+        public int Progress
+        {
+            get => _progress;
+            private set => SetProperty(ref _progress, value);
+        }
+
+        private string _background = default!;
+        public string Background
+        {
+            get => _background;
+            private set => SetProperty(ref _background, value);
+        }
+
+        private ThermalStateEnum _status = default!;
+        public ThermalStateEnum Status
+        {
+            get => _status;
+            private set => SetProperty(ref _status, value);
+        }
+
+        private ThermalStateEnum _state = default!;
+        public ThermalStateEnum State
+        {
+            get => _state;
+            private set => SetProperty(ref _state, value);
+        }
+
 
         public ThermalZoneComponentViewModelRemoteClient(Generated.Protos.ThermalZoneComponentViewModelService.ThermalZoneComponentViewModelServiceClient grpcClient)
         {
@@ -54,6 +138,18 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                             try
                             {
                                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);
+                                this.Zone = state.Zone;
+                                this.IsActive = state.IsActive;
+                                this.DeviceName = state.DeviceName;
+                                this.Temperature = state.Temperature;
+                                this.ProcessorLoad = state.ProcessorLoad;
+                                this.FanSpeed = state.FanSpeed;
+                                this.SecondsInState = state.SecondsInState;
+                                this.FirstSeenInState = state.FirstSeenInState;
+                                this.Progress = state.Progress;
+                                this.Background = state.Background;
+                                this.Status = state.Status;
+                                this.State = state.State;
                                 Debug.WriteLine("[ClientProxy] State re-synced after reconnect.");
                             }
                             catch (Exception ex)
@@ -89,6 +185,18 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[ThermalZoneComponentViewModelRemoteClient] Initial state received.");
+                this.Zone = state.Zone;
+                this.IsActive = state.IsActive;
+                this.DeviceName = state.DeviceName;
+                this.Temperature = state.Temperature;
+                this.ProcessorLoad = state.ProcessorLoad;
+                this.FanSpeed = state.FanSpeed;
+                this.SecondsInState = state.SecondsInState;
+                this.FirstSeenInState = state.FirstSeenInState;
+                this.Progress = state.Progress;
+                this.Background = state.Background;
+                this.Status = state.Status;
+                this.State = state.State;
                 _isInitialized = true;
                 Debug.WriteLine("[ThermalZoneComponentViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
@@ -121,6 +229,30 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                Debug.WriteLine("[ThermalZoneComponentViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
                                switch (update.PropertyName)
                                {
+                                   case nameof(Zone):
+                                       Debug.WriteLine($"[ClientProxy:ThermalZoneComponentViewModel] Unpacking for Zone with WKT Any not fully implemented or is Any."); break;
+                                   case nameof(IsActive):
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating IsActive from {this.IsActive} to {val}."); this.IsActive = val; Debug.WriteLine($"After update, IsActive is {this.IsActive}."); } else { Debug.WriteLine($"Mismatched descriptor for IsActive, expected BoolValue."); } break;
+                                   case nameof(DeviceName):
+                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating DeviceName from \"{this.DeviceName}\" to '\"{val}\"."); this.DeviceName = val; Debug.WriteLine($"After update, DeviceName is '\"{this.DeviceName}\"."); } else { Debug.WriteLine($"Mismatched descriptor for DeviceName, expected StringValue."); } break;
+                                   case nameof(Temperature):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating Temperature from {this.Temperature} to {val}."); this.Temperature = val; Debug.WriteLine($"After update, Temperature is {this.Temperature}."); } else { Debug.WriteLine($"Mismatched descriptor for Temperature, expected Int32Value."); } break;
+                                   case nameof(ProcessorLoad):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating ProcessorLoad from {this.ProcessorLoad} to {val}."); this.ProcessorLoad = val; Debug.WriteLine($"After update, ProcessorLoad is {this.ProcessorLoad}."); } else { Debug.WriteLine($"Mismatched descriptor for ProcessorLoad, expected Int32Value."); } break;
+                                   case nameof(FanSpeed):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating FanSpeed from {this.FanSpeed} to {val}."); this.FanSpeed = val; Debug.WriteLine($"After update, FanSpeed is {this.FanSpeed}."); } else { Debug.WriteLine($"Mismatched descriptor for FanSpeed, expected Int32Value."); } break;
+                                   case nameof(SecondsInState):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating SecondsInState from {this.SecondsInState} to {val}."); this.SecondsInState = val; Debug.WriteLine($"After update, SecondsInState is {this.SecondsInState}."); } else { Debug.WriteLine($"Mismatched descriptor for SecondsInState, expected Int32Value."); } break;
+                                   case nameof(FirstSeenInState):
+                                       Debug.WriteLine($"[ClientProxy:ThermalZoneComponentViewModel] Unpacking for FirstSeenInState with WKT Timestamp not fully implemented or is Any."); break;
+                                   case nameof(Progress):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating Progress from {this.Progress} to {val}."); this.Progress = val; Debug.WriteLine($"After update, Progress is {this.Progress}."); } else { Debug.WriteLine($"Mismatched descriptor for Progress, expected Int32Value."); } break;
+                                   case nameof(Background):
+                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating Background from \"{this.Background}\" to '\"{val}\"."); this.Background = val; Debug.WriteLine($"After update, Background is '\"{this.Background}\"."); } else { Debug.WriteLine($"Mismatched descriptor for Background, expected StringValue."); } break;
+                                   case nameof(Status):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating Status from {this.Status} to {val}."); this.Status = val; Debug.WriteLine($"After update, Status is {this.Status}."); } else { Debug.WriteLine($"Mismatched descriptor for Status, expected Int32Value."); } break;
+                                   case nameof(State):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating State from {this.State} to {val}."); this.State = val; Debug.WriteLine($"After update, State is {this.State}."); } else { Debug.WriteLine($"Mismatched descriptor for State, expected Int32Value."); } break;
                                    default: Debug.WriteLine($"[ClientProxy:ThermalZoneComponentViewModel] Unknown property in notification: \"{update.PropertyName}\""); break;
                                }
                            } catch (Exception exInAction) { Debug.WriteLine($"[ClientProxy:ThermalZoneComponentViewModel] EXCEPTION INSIDE updateAction for \"{update.PropertyName}\": " + exInAction.ToString()); }

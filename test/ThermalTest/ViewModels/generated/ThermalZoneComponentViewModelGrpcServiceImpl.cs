@@ -52,6 +52,90 @@ public partial class ThermalZoneComponentViewModelGrpcServiceImpl : ThermalZoneC
     public override Task<ThermalZoneComponentViewModelState> GetState(Empty request, ServerCallContext context)
     {
         var state = new ThermalZoneComponentViewModelState();
+        // Mapping property: Zone to state.Zone
+        try
+        {
+            var propValue = _viewModel.Zone;
+            state.Zone = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Zone to state.Zone: " + ex.Message); }
+        // Mapping property: IsActive to state.IsActive
+        try
+        {
+            var propValue = _viewModel.IsActive;
+            state.IsActive = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property IsActive to state.IsActive: " + ex.Message); }
+        // Mapping property: DeviceName to state.DeviceName
+        try
+        {
+            var propValue = _viewModel.DeviceName;
+            state.DeviceName = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property DeviceName to state.DeviceName: " + ex.Message); }
+        // Mapping property: Temperature to state.Temperature
+        try
+        {
+            var propValue = _viewModel.Temperature;
+            state.Temperature = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Temperature to state.Temperature: " + ex.Message); }
+        // Mapping property: ProcessorLoad to state.ProcessorLoad
+        try
+        {
+            var propValue = _viewModel.ProcessorLoad;
+            state.ProcessorLoad = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property ProcessorLoad to state.ProcessorLoad: " + ex.Message); }
+        // Mapping property: FanSpeed to state.FanSpeed
+        try
+        {
+            var propValue = _viewModel.FanSpeed;
+            state.FanSpeed = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property FanSpeed to state.FanSpeed: " + ex.Message); }
+        // Mapping property: SecondsInState to state.SecondsInState
+        try
+        {
+            var propValue = _viewModel.SecondsInState;
+            state.SecondsInState = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property SecondsInState to state.SecondsInState: " + ex.Message); }
+        // Mapping property: FirstSeenInState to state.FirstSeenInState
+        try
+        {
+            var propValue = _viewModel.FirstSeenInState;
+            state.FirstSeenInState = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property FirstSeenInState to state.FirstSeenInState: " + ex.Message); }
+        // Mapping property: Progress to state.Progress
+        try
+        {
+            var propValue = _viewModel.Progress;
+            state.Progress = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Progress to state.Progress: " + ex.Message); }
+        // Mapping property: Background to state.Background
+        try
+        {
+            var propValue = _viewModel.Background;
+            state.Background = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Background to state.Background: " + ex.Message); }
+        // Mapping property: Status to state.Status
+        try
+        {
+            var propValue = _viewModel.Status;
+            state.Status = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Status to state.Status: " + ex.Message); }
+        // Mapping property: State to state.State
+        try
+        {
+            var propValue = _viewModel.State;
+            state.State = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property State to state.State: " + ex.Message); }
         return Task.FromResult(state);
     }
 
