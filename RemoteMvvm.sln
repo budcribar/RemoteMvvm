@@ -36,6 +36,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ViewModels", "ViewModels", "{19C18C6B-0FED-47F4-A326-232E27E3F000}"
 	ProjectSection(SolutionItems) = preProject
 		test\ThermalTest\ViewModels\HP3LSThermalTestViewModel.cs = test\ThermalTest\ViewModels\HP3LSThermalTestViewModel.cs
+		test\ThermalTest\ViewModels\IHpMonitor.cs = test\ThermalTest\ViewModels\IHpMonitor.cs
 		test\ThermalTest\ViewModels\TestSettingsModel.cs = test\ThermalTest\ViewModels\TestSettingsModel.cs
 		test\ThermalTest\ViewModels\ThermalStateEnum.cs = test\ThermalTest\ViewModels\ThermalStateEnum.cs
 		test\ThermalTest\ViewModels\ThermalZoneComponentViewModel.cs = test\ThermalTest\ViewModels\ThermalZoneComponentViewModel.cs
