@@ -51,6 +51,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "generated", "generated", "{
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{8EEFC213-ADDB-4A8E-BC37-1B258CA06D9B}"
+	ProjectSection(SolutionItems) = preProject
+		test\ThermalTest\ViewModels\protos\HP3LSThermalTestViewModelService.proto = test\ThermalTest\ViewModels\protos\HP3LSThermalTestViewModelService.proto
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
