@@ -71,7 +71,33 @@ public static class ServerGenerator
             sb.AppendLine("        try");
             sb.AppendLine("        {");
             sb.AppendLine($"            var propValue = _viewModel.{p.Name};");
-            if (true)
+            if (p.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
+            {
+                string def = named.ConstructedFrom.ToDisplayString();
+                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                {
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue);");
+                }
+                else if (def == "System.Collections.Generic.List<T>" ||
+                         def == "System.Collections.Generic.IList<T>" ||
+                         def == "System.Collections.Generic.IEnumerable<T>" ||
+                         def == "System.Collections.Generic.IReadOnlyList<T>" ||
+                         def == "System.Collections.Generic.ICollection<T>")
+                {
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange(propValue);");
+                }
+                else
+                {
+                    sb.AppendLine($"            state.{p.Name} = propValue;");
+                }
+            }
+            else if (p.FullTypeSymbol is IArrayTypeSymbol)
+            {
+                sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange(propValue);");
+            }
+            else
             {
                 sb.AppendLine($"            state.{p.Name} = propValue;");
             }
