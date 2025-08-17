@@ -3,6 +3,11 @@
     "RemoteMvvmTool": {
       "commandName": "Project",
       "commandLineArgs": "GameViewModel.cs\r\n"
+    },
+    "Thermal": {
+      "commandName": "Project",
+      "commandLineArgs": " HP3LSThermalTestViewModel.cs ThermalZoneComponentViewModel.cs ThermalStateEnum.cs\r\n",
+      "workingDirectory": "C:\\Users\\budcr\\source\\repos\\RemoteMvvm\\test\\ThermalTest\\ViewModels"
     }
   }
 }
