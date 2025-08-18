@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
 using RemoteMvvmTool.Generators;
+using Microsoft.CodeAnalysis;
 
 public class Program
 {
@@ -71,12 +72,22 @@ public class Program
             foreach (var vm in vms)
                 Console.WriteLine("  " + vm);
 
-            var result = await ViewModelAnalyzer.AnalyzeAsync(
-                vms,
-                "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
-                "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-                refs,
-                "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
+            (INamedTypeSymbol? ViewModelSymbol, string ViewModelName, List<PropertyInfo> Properties, List<CommandInfo> Commands, Compilation Compilation) result;
+            try
+            {
+                result = await ViewModelAnalyzer.AnalyzeAsync(
+                    vms,
+                    "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+                    "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+                    refs,
+                    "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+                Environment.ExitCode = 1;
+                return;
+            }
 
             if (result.ViewModelSymbol == null)
             {

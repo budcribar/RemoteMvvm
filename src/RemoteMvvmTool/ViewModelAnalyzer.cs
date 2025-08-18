@@ -1,6 +1,7 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -145,6 +146,7 @@ namespace GrpcRemoteMvvmModelUtil
         {
             var queue = new Queue<ITypeSymbol>(rootTypes.Where(t => t != null)!);
             var processed = new HashSet<string>();
+            var missing = new HashSet<string>();
 
             while (queue.Count > 0)
             {
@@ -185,6 +187,11 @@ namespace GrpcRemoteMvvmModelUtil
                             named = resolvedSym;
                         }
                     }
+                    if (named.TypeKind == TypeKind.Error)
+                    {
+                        missing.Add(fullName);
+                        continue;
+                    }
                 }
 
                 if (named.IsGenericType)
@@ -195,6 +202,11 @@ namespace GrpcRemoteMvvmModelUtil
 
                 foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
                     queue.Enqueue(prop.Type);
+            }
+
+            if (missing.Count > 0)
+            {
+                throw new InvalidOperationException("Unable to locate the following type definitions: " + string.Join(", ", missing));
             }
 
             return compilation;
