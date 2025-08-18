@@ -12,6 +12,18 @@ export class ThermalZoneComponentViewModelRemoteClient {
     private pingIntervalId?: any;
     private changeCallbacks: Array<() => void> = [];
 
+    zone: any;
+    isActive: any;
+    deviceName: any;
+    temperature: any;
+    processorLoad: any;
+    fanSpeed: any;
+    secondsInState: any;
+    firstSeenInState: any;
+    progress: any;
+    background: any;
+    status: any;
+    state: any;
     connectionStatus: string = 'Unknown';
 
     addChangeListener(cb: () => void): void {
@@ -28,6 +40,18 @@ export class ThermalZoneComponentViewModelRemoteClient {
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
+        this.zone = (state as any).getZone();
+        this.isActive = (state as any).getIsActive();
+        this.deviceName = (state as any).getDeviceName();
+        this.temperature = (state as any).getTemperature();
+        this.processorLoad = (state as any).getProcessorLoad();
+        this.fanSpeed = (state as any).getFanSpeed();
+        this.secondsInState = (state as any).getSecondsInState();
+        this.firstSeenInState = (state as any).getFirstSeenInState();
+        this.progress = (state as any).getProgress();
+        this.background = (state as any).getBackground();
+        this.status = (state as any).getStatus();
+        this.state = (state as any).getState();
         this.connectionStatus = 'Connected';
         this.notifyChange();
         this.startListeningToPropertyChanges();
@@ -36,6 +60,18 @@ export class ThermalZoneComponentViewModelRemoteClient {
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
+        this.zone = (state as any).getZone();
+        this.isActive = (state as any).getIsActive();
+        this.deviceName = (state as any).getDeviceName();
+        this.temperature = (state as any).getTemperature();
+        this.processorLoad = (state as any).getProcessorLoad();
+        this.fanSpeed = (state as any).getFanSpeed();
+        this.secondsInState = (state as any).getSecondsInState();
+        this.firstSeenInState = (state as any).getFirstSeenInState();
+        this.progress = (state as any).getProgress();
+        this.background = (state as any).getBackground();
+        this.status = (state as any).getStatus();
+        this.state = (state as any).getState();
         this.notifyChange();
     }
 
@@ -94,6 +130,30 @@ export class ThermalZoneComponentViewModelRemoteClient {
         this.propertyStream.on('data', (update: PropertyChangeNotification) => {
             const anyVal = update.getNewValue();
             switch (update.getPropertyName()) {
+                case 'IsActive':
+                    this.isActive = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+                case 'DeviceName':
+                    this.deviceName = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
+                case 'Temperature':
+                    this.temperature = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'ProcessorLoad':
+                    this.processorLoad = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'FanSpeed':
+                    this.fanSpeed = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'SecondsInState':
+                    this.secondsInState = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'Progress':
+                    this.progress = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'Background':
+                    this.background = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
             }
             this.notifyChange();
         });

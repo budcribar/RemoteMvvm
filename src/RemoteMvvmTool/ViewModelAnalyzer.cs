@@ -68,6 +68,18 @@ namespace GrpcRemoteMvvmModelUtil
                 return (null, "", new List<PropertyInfo>(), new List<CommandInfo>(), compilation);
             var properties = GetObservableProperties(mainViewModelSymbol, observablePropertyAttributeFullName, compilation);
             var commands = GetRelayCommands(mainViewModelSymbol, relayCommandAttributeFullName, compilation);
+
+            var searchDirs = viewModelFiles.Select(f => Path.GetDirectoryName(f)!)
+                                          .Where(p => !string.IsNullOrEmpty(p))
+                                          .Distinct();
+
+            compilation = await LoadDependentTypesAsync((CSharpCompilation)compilation, searchDirs,
+                properties.Select(p => p.FullTypeSymbol!).Concat(commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!))));
+
+            mainViewModelSymbol = compilation.GetTypeByMetadataName(mainViewModelSymbol.ToDisplayString()) ?? mainViewModelSymbol;
+            properties = GetObservableProperties(mainViewModelSymbol, observablePropertyAttributeFullName, compilation);
+            commands = GetRelayCommands(mainViewModelSymbol, relayCommandAttributeFullName, compilation);
+
             return (mainViewModelSymbol, originalVmName, properties, commands, compilation);
         }
 
@@ -78,8 +90,8 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
-                var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
-                    Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
+                    var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
+                        Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
                     if (obsPropAttribute != null)
                     {
                         string propertyName = fieldSymbol.Name.TrimStart('_');
@@ -89,6 +101,15 @@ namespace GrpcRemoteMvvmModelUtil
                         }
                         else continue;
                         props.Add(new PropertyInfo(propertyName, fieldSymbol.Type.ToDisplayString(), fieldSymbol.Type));
+                    }
+                }
+                else if (member is IPropertySymbol propertySymbol)
+                {
+                    var obsPropAttribute = propertySymbol.GetAttributes().FirstOrDefault(a =>
+                        Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
+                    if (obsPropAttribute != null)
+                    {
+                        props.Add(new PropertyInfo(propertySymbol.Name, propertySymbol.Type.ToDisplayString(), propertySymbol.Type));
                     }
                 }
             }
@@ -118,6 +139,65 @@ namespace GrpcRemoteMvvmModelUtil
                 }
             }
             return cmds;
+        }
+
+        private static async Task<CSharpCompilation> LoadDependentTypesAsync(CSharpCompilation compilation, IEnumerable<string> searchDirs, IEnumerable<ITypeSymbol?> rootTypes)
+        {
+            var queue = new Queue<ITypeSymbol>(rootTypes.Where(t => t != null)!);
+            var processed = new HashSet<string>();
+
+            while (queue.Count > 0)
+            {
+                var current = queue.Dequeue();
+
+                if (current is IArrayTypeSymbol arr)
+                {
+                    queue.Enqueue(arr.ElementType);
+                    continue;
+                }
+
+                if (current is not INamedTypeSymbol named)
+                    continue;
+
+                string fullName = named.ToDisplayString();
+                if (!processed.Add(fullName))
+                    continue;
+
+                if (named.TypeKind == TypeKind.Error)
+                {
+                    string? filePath = null;
+                    foreach (var dir in searchDirs)
+                    {
+                        var candidate = Path.Combine(dir, named.Name + ".cs");
+                        if (File.Exists(candidate)) { filePath = candidate; break; }
+                    }
+                    if (filePath != null && !compilation.SyntaxTrees.Any(t => t.FilePath == filePath))
+                    {
+                        var content = await File.ReadAllTextAsync(filePath);
+                        var tree = CSharpSyntaxTree.ParseText(content, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest), path: filePath);
+                        compilation = compilation.AddSyntaxTrees(tree);
+
+                        var semanticModel = compilation.GetSemanticModel(tree);
+                        var typeDecl = tree.GetRoot().DescendantNodes().OfType<TypeDeclarationSyntax>()
+                            .FirstOrDefault(t => t.Identifier.Text == named.Name);
+                        if (typeDecl != null && semanticModel.GetDeclaredSymbol(typeDecl) is INamedTypeSymbol resolvedSym)
+                        {
+                            named = resolvedSym;
+                        }
+                    }
+                }
+
+                if (named.IsGenericType)
+                {
+                    foreach (var arg in named.TypeArguments)
+                        queue.Enqueue(arg);
+                }
+
+                foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
+                    queue.Enqueue(prop.Type);
+            }
+
+            return compilation;
         }
     }
 }

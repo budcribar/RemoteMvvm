@@ -36,3 +36,15 @@ npm start
 ```
 
 The application will be available at `http://localhost:3000`.
+
+## Unsupported Types
+
+The `RemoteMvvmTool` currently supports basic scalar types, enums, arrays, lists, and dictionaries whose keys are simple scalars (`int32`, `int64`, `uint32`, `uint64`, `bool`, or `string`).
+
+The following constructs are **not supported** and will cause code generation to fail with a clear error message:
+
+- `HashSet<T>` collections
+- `Tuple` types (for example `Tuple<int,string>`)
+- Dictionaries with non-scalar keys such as `DateTime` or `object`
+
+Other complex or framework types may also be rejected if they cannot be mapped to a protobuf type.
