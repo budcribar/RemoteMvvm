@@ -56,7 +56,7 @@ namespace ComplexTypes.ViewModels
             {
                 kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>
                 {
-                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
                 });
             });
 
@@ -79,13 +79,14 @@ namespace ComplexTypes.ViewModels
 
             // Start the server
             _aspNetCoreHost = app;
-            Task.Run(() => app.RunAsync()); // Run the server in a background thread
+            app.StartAsync().GetAwaiter().GetResult();
         }
 
         public SupportedComplexViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
             _channel = GrpcChannel.ForAddress(options.Address);
             var client = new SupportedComplexViewModelService.SupportedComplexViewModelServiceClient(_channel);
             _remoteClient = new SupportedComplexViewModelRemoteClient(client);

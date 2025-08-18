@@ -2,7 +2,7 @@ namespace PeakSWC.Mvvm.Remote
 {
     public class ServerOptions
     {
-        public int Port { get; set; } = MonsterClicker.NetworkConfig.Port;
+        public int Port { get; set; } = ComplexTypes.ViewModels.NetworkConfig.Port;
         public bool UseHttps { get; set; } = true;
         public string? CorsPolicyName { get; set; } = "AllowAll";
         public string[]? AllowedOrigins { get; set; } = null;
@@ -14,6 +14,6 @@ namespace PeakSWC.Mvvm.Remote
 
     public class ClientOptions
     {
-        public string Address { get; set; } = MonsterClicker.NetworkConfig.ServerAddress;
+        public string Address { get; set; } = ComplexTypes.ViewModels.NetworkConfig.ServerAddress;
     }
 }

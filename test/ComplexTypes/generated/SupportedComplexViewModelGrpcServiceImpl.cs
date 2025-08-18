@@ -56,11 +56,70 @@ public partial class SupportedComplexViewModelGrpcServiceImpl : SupportedComplex
         try
         {
             var propValue = _viewModel.Layers;
-            if (propValue != null) state.Layers.Add(propValue);
+            if (propValue != null)
+            {
+                foreach (var layer in propValue)
+                {
+                    state.Layers[layer.Key] = MapSecondLevel(layer.Value);
+                }
+            }
         }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:SupportedComplexViewModel] Error mapping property Layers to state.Layers: " + ex.Message); }
         return Task.FromResult(state);
     }
+
+    private static SecondLevelState MapSecondLevel(SecondLevel model)
+    {
+        var state = new SecondLevelState();
+        if (model.ModeMap != null)
+        {
+            foreach (var kv in model.ModeMap)
+            {
+                var list = new ThirdLevelListState();
+                foreach (var third in kv.Value)
+                {
+                    list.Items.Add(MapThirdLevel(third));
+                }
+                state.ModeMap[(int)kv.Key] = list;
+            }
+        }
+        if (model.NamedGroups != null)
+        {
+            foreach (var kv in model.NamedGroups)
+            {
+                var list = new ThirdLevelListState();
+                foreach (var third in kv.Value)
+                {
+                    list.Items.Add(MapThirdLevel(third));
+                }
+                state.NamedGroups[kv.Key] = list;
+            }
+        }
+        return state;
+    }
+
+    private static ThirdLevelState MapThirdLevel(ThirdLevel model)
+    {
+        var state = new ThirdLevelState();
+        if (model.Series != null)
+        {
+            foreach (var fourth in model.Series)
+            {
+                state.Series.Add(MapFourthLevel(fourth));
+            }
+        }
+        if (model.Items != null)
+        {
+            foreach (var fourth in model.Items)
+            {
+                state.Items.Add(MapFourthLevel(fourth));
+            }
+        }
+        return state;
+    }
+
+    private static FourthLevelState MapFourthLevel(FourthLevel model)
+        => new FourthLevelState { Measurement = model.Measurement };
 
     public override async Task SubscribeToPropertyChanges(ComplexTypes.Protos.SubscribeRequest request, IServerStreamWriter<ComplexTypes.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {

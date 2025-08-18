@@ -17,6 +17,21 @@ message SupportedComplexViewModelState {
 }
 
 message SecondLevelState {
+  map<int32, ThirdLevelListState> mode_map = 1; // key: Mode enum as int
+  map<string, ThirdLevelListState> named_groups = 2;
+}
+
+message ThirdLevelListState {
+  repeated ThirdLevelState items = 1;
+}
+
+message ThirdLevelState {
+  repeated FourthLevelState series = 1;
+  repeated FourthLevelState items = 2;
+}
+
+message FourthLevelState {
+  double measurement = 1;
 }
 
 message UpdatePropertyValueRequest {

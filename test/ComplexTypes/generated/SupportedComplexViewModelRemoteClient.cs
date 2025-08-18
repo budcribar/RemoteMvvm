@@ -61,7 +61,7 @@ namespace ComplexTypes.ViewModels.RemoteClients
                             try
                             {
                                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);
-                                this.Layers = state.Layers.ToDictionary(k => k.Key, v => v.Value);
+                                this.Layers = ConvertState(state);
                                 Debug.WriteLine("[ClientProxy] State re-synced after reconnect.");
                             }
                             catch (Exception ex)
@@ -88,16 +88,16 @@ namespace ComplexTypes.ViewModels.RemoteClients
             }
         }
 
-        public async Task InitializeRemoteAsync(CancellationToken cancellationToken = default)
-        {
-            if (_isInitialized || _isDisposed) return;
-            Debug.WriteLine("[SupportedComplexViewModelRemoteClient] Initializing...");
+    public async Task InitializeRemoteAsync(CancellationToken cancellationToken = default)
+    {
+        if (_isInitialized || _isDisposed) return;
+        Debug.WriteLine("[SupportedComplexViewModelRemoteClient] Initializing...");
             try
             {
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[SupportedComplexViewModelRemoteClient] Initial state received.");
-                this.Layers = state.Layers.ToDictionary(k => k.Key, v => v.Value);
+                this.Layers = ConvertState(state);
                 _isInitialized = true;
                 Debug.WriteLine("[SupportedComplexViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
@@ -160,5 +160,35 @@ namespace ComplexTypes.ViewModels.RemoteClients
             _cts.Cancel();
             _cts.Dispose();
         }
+
+        private static System.Collections.Generic.Dictionary<int, ComplexTypes.ViewModels.SecondLevel> ConvertState(SupportedComplexViewModelState state)
+        {
+            return state.Layers.ToDictionary(k => k.Key, v => ConvertSecondLevel(v.Value));
+        }
+
+        private static ComplexTypes.ViewModels.SecondLevel ConvertSecondLevel(SecondLevelState state)
+        {
+            var model = new ComplexTypes.ViewModels.SecondLevel();
+            model.ModeMap = state.ModeMap.ToDictionary(k => (Mode)k.Key, v => ConvertThirdLevelArray(v.Value));
+            model.NamedGroups = state.NamedGroups.ToDictionary(k => k.Key, v => ConvertThirdLevelList(v.Value));
+            return model;
+        }
+
+        private static ComplexTypes.ViewModels.ThirdLevel[] ConvertThirdLevelArray(ThirdLevelListState list)
+            => list.Items.Select(ConvertThirdLevel).ToArray();
+
+        private static System.Collections.Generic.List<ComplexTypes.ViewModels.ThirdLevel> ConvertThirdLevelList(ThirdLevelListState list)
+            => list.Items.Select(ConvertThirdLevel).ToList();
+
+        private static ComplexTypes.ViewModels.ThirdLevel ConvertThirdLevel(ThirdLevelState state)
+        {
+            var model = new ComplexTypes.ViewModels.ThirdLevel();
+            model.Series = state.Series.Select(ConvertFourthLevel).ToArray();
+            model.Items = state.Items.Select(ConvertFourthLevel).ToList();
+            return model;
+        }
+
+        private static ComplexTypes.ViewModels.FourthLevel ConvertFourthLevel(FourthLevelState state)
+            => new ComplexTypes.ViewModels.FourthLevel { Measurement = state.Measurement };
     }
 }

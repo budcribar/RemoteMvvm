@@ -1,5 +1,5 @@
 // Centralize the port definition for server and client
-namespace MonsterClicker
+namespace ComplexTypes.ViewModels
 {
     public static class NetworkConfig
     {
