@@ -63,15 +63,20 @@ public static class ProtoGenerator
             if (allowMessage && type is INamedTypeSymbol namedType &&
                 (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct || type.TypeKind == TypeKind.Error))
             {
-                if (!processedMessages.Contains(namedType))
+                // Only allow user-defined types to be treated as messages; BCL types are unsupported
+                var ns = namedType.ContainingNamespace?.ToDisplayString() ?? string.Empty;
+                if (!ns.StartsWith("System", StringComparison.Ordinal))
                 {
-                    processedMessages.Add(namedType);
-                    pendingMessages.Enqueue(namedType);
+                    if (!processedMessages.Contains(namedType))
+                    {
+                        processedMessages.Add(namedType);
+                        pendingMessages.Enqueue(namedType);
+                    }
+                    return namedType.Name + "State";
                 }
-                return namedType.Name + "State";
             }
 
-            return "string";
+            throw new NotSupportedException($"Type '{type.ToDisplayString()}' is not supported.");
         }
 
         body.AppendLine($"// Message representing the full state of the {vmName}");
@@ -90,6 +95,9 @@ public static class ProtoGenerator
                     var valueType = named.TypeArguments[1];
                     string keyProto = MapProtoType(keyType, allowMessage: false);
                     string valueProto = MapProtoType(valueType, allowMessage: true);
+                    var allowedKeys = new HashSet<string> { "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64", "bool", "string" };
+                    if (!allowedKeys.Contains(keyProto))
+                        throw new NotSupportedException($"Dictionary key type '{keyType.ToDisplayString()}' is not supported.");
                     body.AppendLine($"  map<{keyProto}, {valueProto}> {GeneratorHelpers.ToSnake(p.Name)} = {field++}; // Original C#: {p.TypeString} {p.Name}");
                     continue;
                 }
