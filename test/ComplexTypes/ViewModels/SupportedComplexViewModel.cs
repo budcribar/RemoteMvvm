@@ -7,4 +7,8 @@ public partial class SupportedComplexViewModel : ObservableObject
 {
     [ObservableProperty]
     private Dictionary<int, SecondLevel> layers = new();
+
+    public SupportedComplexViewModel()
+    {
+    }
 }
