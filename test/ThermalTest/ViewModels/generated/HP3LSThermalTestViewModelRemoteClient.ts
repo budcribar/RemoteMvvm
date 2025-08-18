@@ -1,22 +1,43 @@
-// Auto-generated TypeScript client for HP3LSThermalTestViewModel
-import { HP3LSThermalTestViewModelServiceClient } from './generated/HP3LSThermalTestViewModelServiceServiceClientPb';
-import { HP3LSThermalTestViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, StateChangedRequest, CancelTestRequest } from './generated/HP3LSThermalTestViewModelService_pb.js';
-import * as grpcWeb from 'grpc-web';
+// TypeScript client for HP3LSThermalTestViewModel
+import { HP3LSThermalTestServiceClient } from './generated/HP3LSThermalTestServiceServiceClientPb';
+import { HP3LSThermalTestViewModelState, UpdatePropertyValueRequest } from './generated/HP3LSThermalTestService_pb';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
+export interface ThermalZoneState {
+    zone: number;
+    isActive: boolean;
+    deviceName: string;
+    temperature: number;
+    processorLoad: number;
+    fanSpeed: number;
+    secondsInState: number;
+    firstSeenInState?: any;
+    progress: number;
+    background: string;
+    status: number;
+    state: number;
+}
+
+export interface TestSettingsState {
+    cpuTemperatureThreshold: number;
+    cpuLoadThreshold: number;
+    cpuLoadTimeSpan: number;
+}
+
 export class HP3LSThermalTestViewModelRemoteClient {
-    private readonly grpcClient: HP3LSThermalTestViewModelServiceClient;
-    private propertyStream?: grpcWeb.ClientReadableStream<PropertyChangeNotification>;
-    private pingIntervalId?: any;
+    private readonly grpcClient: HP3LSThermalTestServiceClient;
     private changeCallbacks: Array<() => void> = [];
 
-    zones: any;
-    testSettings: any;
-    showDescription: any;
-    showReadme: any;
-    connectionStatus: string = 'Unknown';
+    zones: Map<number, ThermalZoneState> = new Map();
+    testSettings?: TestSettingsState;
+    showDescription = false;
+    showReadme = false;
+
+    constructor(grpcClient: HP3LSThermalTestServiceClient) {
+        this.grpcClient = grpcClient;
+    }
 
     addChangeListener(cb: () => void): void {
         this.changeCallbacks.push(cb);
@@ -26,29 +47,26 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.changeCallbacks.forEach(cb => cb());
     }
 
-    constructor(grpcClient: HP3LSThermalTestViewModelServiceClient) {
-        this.grpcClient = grpcClient;
+    private applyState(state: HP3LSThermalTestViewModelState): void {
+        const zonesMap = state.getZonesMap();
+        this.zones.clear();
+        zonesMap.forEach((value, key) => {
+            this.zones.set(key, value.toObject() as ThermalZoneState);
+        });
+        this.testSettings = state.getTestSettings()?.toObject() as TestSettingsState;
+        this.showDescription = state.getShowDescription();
+        this.showReadme = state.getShowReadme();
+        this.notifyChange();
     }
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZones();
-        this.testSettings = (state as any).getTestSettings();
-        this.showDescription = (state as any).getShowDescription();
-        this.showReadme = (state as any).getShowReadme();
-        this.connectionStatus = 'Connected';
-        this.notifyChange();
-        this.startListeningToPropertyChanges();
-        this.startPingLoop();
+        this.applyState(state);
     }
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZones();
-        this.testSettings = (state as any).getTestSettings();
-        this.showDescription = (state as any).getShowDescription();
-        this.showReadme = (state as any).getShowReadme();
-        this.notifyChange();
+        this.applyState(state);
     }
 
     async updatePropertyValue(propertyName: string, value: any): Promise<void> {
@@ -75,28 +93,10 @@ export class HP3LSThermalTestViewModelRemoteClient {
         } else {
             throw new Error('Unsupported value type');
         }
-        return anyVal;
+        req.setNewValue(anyVal);
+        await this.grpcClient.updatePropertyValue(req);
+        await this.refreshState();
     }
-
-    async stateChanged(state: any): Promise<void> {
-        const req = new StateChangedRequest();
-        req.setState(state);
-        await this.grpcClient.stateChanged(req);
-    }
-    async cancelTest(): Promise<void> {
-        const req = new CancelTestRequest();
-        await this.grpcClient.cancelTest(req);
-    }
-
-    private startPingLoop(): void {
-        if (this.pingIntervalId) return;
-        this.pingIntervalId = setInterval(async () => {
-            try {
-                const resp: ConnectionStatusResponse = await this.grpcClient.ping(new Empty());
-                if (resp.getStatus() === ConnectionStatus.CONNECTED) {
-                    if (this.connectionStatus !== 'Connected') {
-                        await this.refreshState();
-                    }
                     this.connectionStatus = 'Connected';
                 } else {
                     this.connectionStatus = 'Disconnected';
@@ -115,11 +115,37 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.propertyStream.on('data', (update: PropertyChangeNotification) => {
             const anyVal = update.getNewValue();
             switch (update.getPropertyName()) {
+<<<<<<<< HEAD:test/ThermalTest/ViewModels/generated/HP3LSThermalTestViewModelRemoteClient.ts
                 case 'ShowDescription':
                     this.showDescription = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
                     break;
                 case 'ShowReadme':
                     this.showReadme = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+========
+                case 'IsActive':
+                    this.isActive = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+                    break;
+                case 'DeviceName':
+                    this.deviceName = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
+                case 'Temperature':
+                    this.temperature = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'ProcessorLoad':
+                    this.processorLoad = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'FanSpeed':
+                    this.fanSpeed = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'SecondsInState':
+                    this.secondsInState = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'Progress':
+                    this.progress = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'Background':
+                    this.background = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+>>>>>>>> codex/fix-proto-generation-in-remotemvvmtool-04cd6g:test/ThermalTest/ViewModels/generated/ThermalZoneComponentViewModelRemoteClient.ts
                     break;
             }
             this.notifyChange();
@@ -132,7 +158,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
-    }
+}
 
     dispose(): void {
         if (this.propertyStream) {
