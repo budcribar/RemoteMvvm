@@ -1,6 +1,6 @@
 using Grpc.Core;
 using Grpc.Net.Client;
-using ThermalTest.Protos;
+using Generated.Protos;
 using HPSystemsTools.ViewModels.RemoteClients;
 using System;
 using System.Threading.Tasks;

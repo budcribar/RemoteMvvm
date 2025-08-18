@@ -1,0 +1,85 @@
+﻿@using HP.Telemetry;
+@using HPSystemsTools.Views.Components
+
+<div class="main-page-container">
+
+    <div class="test-title">CPU Thermal Test</div>
+    @if (ViewModel.ShowDescription)
+    {
+        <div class="test-description">
+            @Test.Localized.Instructions
+        </div>
+    }
+
+    <div class="test-parameters">
+        <div class="slider">
+            <div class="slider-title">@Test.Localized.TemperatureThresholdDTS</div>
+            <div class="slider-content">
+                <div class="slider-input">
+                    <input style="vertical-align:middle;" id="the-slider" type="range" min=50 max=100 step="5" @bind:event="oninput" @bind="@ViewModel.CpuTemperatureThreshold" />
+                </div>
+                <div class="slider-label">
+                    <label for="the-slider">@($"{@ViewModel.CpuTemperatureThreshold}%")</label>
+                </div>
+            </div>
+        </div>
+        <div class="slider">
+            <div class="slider-title">@Test.Localized.ProcessorMaximumLoad</div>
+            <div class="slider-content">
+                <div class="slider-input">
+                    <input style="vertical-align:middle;" id="the-slider" type="range" min=0 max=100 step="5" @bind:event="oninput" @bind="@ViewModel.CpuLoadThreshold" />
+                </div>
+                <div class="slider-label">
+                    <label for="the-slider">@($"{@ViewModel.CpuLoadThreshold}%")</label>
+                </div>
+            </div>
+        </div>
+        <div class="slider">
+            <div class="slider-title">@Test.Localized.MonitoringPeriod</div>
+            <div class="slider-content">
+                <div class="slider-input">
+                    <input style="vertical-align:middle;" id="the-slider" type="range" min=30 max=600 step="10" @bind:event="oninput" @bind="@ViewModel.CpuLoadTimeSpan" />
+                </div>
+                <div class="slider-label">
+                    <label for="the-slider">@($"{ViewModel.CpuLoadTimeSpan}s")</label>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="thermal-zones-container">
+        @if ((ViewModel.Zones.ContainsKey(Zone.CPUZ_0)))
+        {
+            <ThermalZoneCompoonent ViewModel=@(ViewModel.Zones[Zone.CPUZ_0])
+                                   Settings="ViewModel.TestSettings"
+                                   ProcessorLoadName="@Test.Localized.ProcessorLoad"
+                                   StateChangedEvent="ViewModel.StateChangedCommand.Execute">
+
+            </ThermalZoneCompoonent>
+        }
+        @if ((ViewModel.Zones.ContainsKey(Zone.CPUZ_1)))
+        {
+            <ThermalZoneCompoonent ViewModel=@(ViewModel.Zones[Zone.CPUZ_1])
+                                   Settings="ViewModel.TestSettings"
+                                   ProcessorLoadName="@Test.Localized.ProcessorLoad"
+                                   StateChangedEvent="ViewModel.StateChangedCommand.Execute"></ThermalZoneCompoonent>
+        }
+    </div>
+    <div class="show-hide-options">
+        <button @onclick=@(() => ViewModel.ShowReadme = !ViewModel.ShowReadme)>
+            @($"{(ViewModel.ShowReadme ? Test.Localized.HideReadme : Test.Localized.ShowReadme)}")
+        </button>
+        <button @onclick=@(() => { ViewModel.ShowDescription = !ViewModel.ShowDescription; })>
+            @($"{(ViewModel.ShowDescription ? Test.Localized.HideDescription : Test.Localized.ShowDescription)}")
+        </button>
+    </div>
+
+    @if (ViewModel.ShowReadme)
+    {
+        <ReadmeComponent />
+    }
+    <div class="bottom full-width hidden" id="wirelessBtnContainer">
+        <button id="wirelessCancelBtn" class="hp-btn secondary btn-margin" @onclick="ViewModel.CancelTestCommand.Execute">
+            @Test.Localized.Cancel
+        </button>
+    </div>
+</div>

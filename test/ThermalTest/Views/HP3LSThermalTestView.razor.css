@@ -1,0 +1,65 @@
+﻿.container {
+    display: flex;
+    justify-content: space-evenly;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-items: center;
+}
+
+.main-page-container {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: space-around;
+    align-content: space-around;
+    gap: 1em;
+}
+
+.test-title {
+    text-align: center;
+    width: 100%;
+    font-weight: bolder;
+    font-size: 1.1rem;
+}
+
+.test-description {
+}
+
+.test-parameters {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-evenly;
+}
+
+.show-hide-options {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-content: space-around;
+}
+
+.slider {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: space-evenly;
+    align-self: center;
+    font-size: .8rem;
+}
+
+.slider-title {
+    align-self: center;
+    font-weight: bolder;
+}
+
+.slider-content {
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.thermal-zones-container {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: space-around;
+    align-items: center;
+}

@@ -1,0 +1,32 @@
+﻿@using HPSystemsTools.Models
+
+@if ((ViewModel == null) || (Settings == null) || !ViewModel.IsActive)
+    return;
+
+<div class="thermal-zone-container" style="@($"background: {ViewModel.Background};")">
+    @if (ViewModel.Status == ThermalStateEnum.CheckInProgress)
+    {
+        <div class="progress-bar" data-label="@($"{ViewModel.Progress}%")">
+            <span class="value" style=@($"width: {ViewModel.Progress}%;")></span>
+        </div>
+    }
+
+    <div class="runtime-properties-container @($"state-{ViewModel.State}")">
+        <div class="runtime-property">
+            @((ViewModel.Status == ThermalStateEnum.CheckInProgress) ? ViewModel.State : ViewModel.Status)
+        </div>
+        <div class="runtime-property">@($"Max Temp: {GetTemperatureThreshold()}\xB0 C")</div>
+        <div class="runtime-property">@ViewModel.Zone</div>
+        <div class="runtime-property">@($"{ViewModel.FanSpeed} RPM")</div>
+    </div>
+    <div class="gauges-container">
+        <GaugeComponent Title="@ProcessorLoadName" CurrentValue=@ViewModel.ProcessorLoad MaxValue=@Settings.CpuLoadThreshold UnitOfMeasure="%"></GaugeComponent>
+        <GaugeComponent Title=@ViewModel.DeviceName CurrentValue=@ViewModel.Temperature MaxValue=@GetTemperatureThreshold() UnitOfMeasure=@($"\xB0 C")></GaugeComponent>
+    </div>
+    <div class="runtime-details">
+        @((ViewModel.Status == ThermalStateEnum.CheckInProgress) ? $"{StateDescriptions[ViewModel.Status]}{StateDescriptions[ViewModel.State]}" : StateDescriptions[ViewModel.Status])
+    </div>
+</div>
+
+
+

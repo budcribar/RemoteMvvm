@@ -1,0 +1,83 @@
+﻿.thermal-zone-container {
+    display: flex;
+    flex-flow: column wrap;
+    border: 1px solid #ccc;
+    width: 90%;
+}
+
+.runtime-properties-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-evenly;
+}
+
+.runtime-properties {
+    text-align: center;
+}
+
+.runtime-details {
+    text-align: center;
+}
+
+.gauges-container {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-evenly;
+}
+
+.state-RunningHot, .state-MaybeRunningHot, .state-Fail, .state-MaybeFail {
+    background: #faa;
+}
+
+.state-Ok, .state-MaybeOk, .state-Pass, .state-MaybePass {
+    background: #afa;
+}
+
+.state-Unknown, .state-StressLevelExceeded, .state-Reset {
+    background: #ccc;
+}
+
+.state-CheckInProgress {
+    background: #ffa;
+}
+
+.thermal-zone-table {
+    border: 1px solid #ccc;
+    width:100%;
+}
+
+.thermal-parameter {
+    text-align: center;
+    font-size: .8rem;
+}
+
+.thermal-gauge {
+    width:50%;
+}
+
+.test-progress {
+    width: 100%;
+}
+
+.progress-bar {
+    height: 1.5em;
+    width: 100%;
+    background-color: #eee;
+    position: relative;
+}
+
+.progress-bar:before {
+    content: attr(data-label);
+    font-size: 0.8em;
+    position: absolute;
+    text-align: center;
+    top: 5px;
+    left: 0;
+    right: 0;
+}
+
+.progress-bar .value {
+    background-color: #ccc;
+    display: inline-block;
+    height: 100%;
+}

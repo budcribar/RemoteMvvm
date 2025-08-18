@@ -1,0 +1,30 @@
+﻿.readme-container {
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: space-around;
+    align-content: space-around;
+    gap: .5em;
+}
+
+.readme-paragraph {
+    text-align: left;
+    width: 95%;
+}
+.reference-name {
+    font-weight: bolder;
+}
+
+.previous-content {
+    text-decoration:line-through;
+    display:none;
+}
+
+.emphasis {
+    animation: blinker 2s linear infinite;
+}
+
+@keyframes blinker {
+    50% {
+        opacity: 0.2;
+    }
+}

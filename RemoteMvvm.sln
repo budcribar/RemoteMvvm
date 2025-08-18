@@ -58,6 +58,26 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{8EEFC2
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ComplexTypes.Tests", "test\ComplexTypes\ComplexTypes.Tests.csproj", "{39A95025-3C20-45BA-83A2-8CBC38AC310F}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Views", "Views", "{D91D557E-CB93-4DCC-9AD6-EA278278CA81}"
+	ProjectSection(SolutionItems) = preProject
+		test\ThermalTest\Views\HP3LSThermalTestView.razor = test\ThermalTest\Views\HP3LSThermalTestView.razor
+		test\ThermalTest\Views\HP3LSThermalTestView.razor.cs = test\ThermalTest\Views\HP3LSThermalTestView.razor.cs
+		test\ThermalTest\Views\HP3LSThermalTestView.razor.css = test\ThermalTest\Views\HP3LSThermalTestView.razor.css
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{BDD5E06C-6A72-4DB8-9FF7-A73BDA36EFBC}"
+	ProjectSection(SolutionItems) = preProject
+		test\ThermalTest\Views\Components\GaugeComponent.razor = test\ThermalTest\Views\Components\GaugeComponent.razor
+		test\ThermalTest\Views\Components\GaugeComponent.razor.cs = test\ThermalTest\Views\Components\GaugeComponent.razor.cs
+		test\ThermalTest\Views\Components\GaugeComponent.razor.css = test\ThermalTest\Views\Components\GaugeComponent.razor.css
+		test\ThermalTest\Views\Components\ReadmeComponent.razor = test\ThermalTest\Views\Components\ReadmeComponent.razor
+		test\ThermalTest\Views\Components\ReadmeComponent.razor.cs = test\ThermalTest\Views\Components\ReadmeComponent.razor.cs
+		test\ThermalTest\Views\Components\ReadmeComponent.razor.css = test\ThermalTest\Views\Components\ReadmeComponent.razor.css
+		test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor = test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor
+		test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor.cs = test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor.cs
+		test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor.css = test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor.css
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -119,6 +139,8 @@ Global
 		{CCF4922B-5DB1-429D-B8E7-9FBAECFF9DB2} = {19C18C6B-0FED-47F4-A326-232E27E3F000}
 		{8EEFC213-ADDB-4A8E-BC37-1B258CA06D9B} = {19C18C6B-0FED-47F4-A326-232E27E3F000}
 		{39A95025-3C20-45BA-83A2-8CBC38AC310F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{D91D557E-CB93-4DCC-9AD6-EA278278CA81} = {6300CAB3-2808-4D0D-8267-33EE6BD7E115}
+		{BDD5E06C-6A72-4DB8-9FF7-A73BDA36EFBC} = {D91D557E-CB93-4DCC-9AD6-EA278278CA81}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {012EEB0A-22C5-4971-A229-3CC35E554B71}
