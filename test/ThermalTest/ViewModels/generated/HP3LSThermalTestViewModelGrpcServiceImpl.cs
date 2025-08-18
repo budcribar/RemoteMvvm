@@ -1,5 +1,5 @@
 using Grpc.Core;
-using ThermalTest.Protos;
+using Generated.Protos;
 using HPSystemsTools.ViewModels;
 using Google.Protobuf.WellKnownTypes;
 using System;
@@ -36,8 +36,8 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         ClientCount = 0;
     }
 
-    private readonly ThermalZoneComponentViewModel _viewModel;
-    private static readonly ConcurrentDictionary<IServerStreamWriter<ThermalTest.Protos.PropertyChangeNotification>, Channel<ThermalTest.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<ThermalTest.Protos.PropertyChangeNotification>, Channel<ThermalTest.Protos.PropertyChangeNotification>>();
+    private readonly HP3LSThermalTestViewModel _viewModel;
+    private static readonly ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>>();
     private readonly Dispatcher _dispatcher;
     private readonly ILogger? _logger;
 
@@ -51,97 +51,41 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     public override Task<HP3LSThermalTestViewModelState> GetState(Empty request, ServerCallContext context)
     {
-        var state = new ThermalZoneComponentViewModelState();
-        // Mapping property: Zone to state.Zone
+        var state = new HP3LSThermalTestViewModelState();
+        // Mapping property: Zones to state.Zones
         try
         {
-            var propValue = _viewModel.Zone;
-            state.Zone = propValue;
+            var propValue = _viewModel.Zones;
+            if (propValue != null) state.Zones.Add(propValue);
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Zone to state.Zone: " + ex.Message); }
-        // Mapping property: IsActive to state.IsActive
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property Zones to state.Zones: " + ex.Message); }
+        // Mapping property: TestSettings to state.TestSettings
         try
         {
-            var propValue = _viewModel.IsActive;
-            state.IsActive = propValue;
+            var propValue = _viewModel.TestSettings;
+            state.TestSettings = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property IsActive to state.IsActive: " + ex.Message); }
-        // Mapping property: DeviceName to state.DeviceName
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property TestSettings to state.TestSettings: " + ex.Message); }
+        // Mapping property: ShowDescription to state.ShowDescription
         try
         {
-            var propValue = _viewModel.DeviceName;
-            state.DeviceName = propValue;
+            var propValue = _viewModel.ShowDescription;
+            state.ShowDescription = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property DeviceName to state.DeviceName: " + ex.Message); }
-        // Mapping property: Temperature to state.Temperature
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ShowDescription to state.ShowDescription: " + ex.Message); }
+        // Mapping property: ShowReadme to state.ShowReadme
         try
         {
-            var propValue = _viewModel.Temperature;
-            state.Temperature = propValue;
+            var propValue = _viewModel.ShowReadme;
+            state.ShowReadme = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Temperature to state.Temperature: " + ex.Message); }
-        // Mapping property: ProcessorLoad to state.ProcessorLoad
-        try
-        {
-            var propValue = _viewModel.ProcessorLoad;
-            state.ProcessorLoad = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property ProcessorLoad to state.ProcessorLoad: " + ex.Message); }
-        // Mapping property: FanSpeed to state.FanSpeed
-        try
-        {
-            var propValue = _viewModel.FanSpeed;
-            state.FanSpeed = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property FanSpeed to state.FanSpeed: " + ex.Message); }
-        // Mapping property: SecondsInState to state.SecondsInState
-        try
-        {
-            var propValue = _viewModel.SecondsInState;
-            state.SecondsInState = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property SecondsInState to state.SecondsInState: " + ex.Message); }
-        // Mapping property: FirstSeenInState to state.FirstSeenInState
-        try
-        {
-            var propValue = _viewModel.FirstSeenInState;
-            state.FirstSeenInState = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property FirstSeenInState to state.FirstSeenInState: " + ex.Message); }
-        // Mapping property: Progress to state.Progress
-        try
-        {
-            var propValue = _viewModel.Progress;
-            state.Progress = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Progress to state.Progress: " + ex.Message); }
-        // Mapping property: Background to state.Background
-        try
-        {
-            var propValue = _viewModel.Background;
-            state.Background = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Background to state.Background: " + ex.Message); }
-        // Mapping property: Status to state.Status
-        try
-        {
-            var propValue = _viewModel.Status;
-            state.Status = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property Status to state.Status: " + ex.Message); }
-        // Mapping property: State to state.State
-        try
-        {
-            var propValue = _viewModel.State;
-            state.State = propValue;
-        }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:ThermalZoneComponentViewModel] Error mapping property State to state.State: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ShowReadme to state.ShowReadme: " + ex.Message); }
         return Task.FromResult(state);
     }
 
-    public override async Task SubscribeToPropertyChanges(ThermalTest.Protos.SubscribeRequest request, IServerStreamWriter<ThermalTest.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
+    public override async Task SubscribeToPropertyChanges(Generated.Protos.SubscribeRequest request, IServerStreamWriter<Generated.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
-        var channel = Channel.CreateUnbounded<ThermalTest.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
+        var channel = Channel.CreateUnbounded<Generated.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         _subscriberChannels.TryAdd(responseStream, channel);
         ClientCount = _subscriberChannels.Count;
         try
@@ -159,7 +103,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         }
     }
 
-    public override Task<Empty> UpdatePropertyValue(ThermalTest.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override Task<Empty> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
         _dispatcher.Invoke(() => {
             var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
@@ -222,7 +166,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         try { newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
 
-        var notification = new ThermalTest.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
+        var notification = new Generated.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
         if (newValue == null) notification.NewValue = Any.Pack(new Empty());
         else if (newValue is string s) notification.NewValue = Any.Pack(new StringValue { Value = s });
         else if (newValue is int i) notification.NewValue = Any.Pack(new Int32Value { Value = i });

@@ -13,14 +13,14 @@ import "google/protobuf/empty.proto";
 
 // Message representing the full state of the HP3LSThermalTestViewModel
 message HP3LSThermalTestViewModelState {
-  map<string, ThermalZoneComponentViewModelState> zones = 1; // Original C#: System.Collections.Generic.Dictionary<Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones
+  map<int32, ThermalZoneComponentViewModelState> zones = 1; // Original C#: System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones
   TestSettingsModelState test_settings = 2; // Original C#: TestSettingsModel TestSettings
   bool show_description = 3; // Original C#: bool ShowDescription
   bool show_readme = 4; // Original C#: bool ShowReadme
 }
 
 message ThermalZoneComponentViewModelState {
-  ZoneState zone = 1; // Original C#: Zone Zone
+  int32 zone = 1; // Original C#: HP.Telemetry.Zone Zone
   bool is_active = 2; // Original C#: bool IsActive
   string device_name = 3; // Original C#: string DeviceName
   int32 temperature = 4; // Original C#: int Temperature
@@ -35,9 +35,6 @@ message ThermalZoneComponentViewModelState {
 }
 
 message TestSettingsModelState {
-}
-
-message ZoneState {
 }
 
 message UpdatePropertyValueRequest {

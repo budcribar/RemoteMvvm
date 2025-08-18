@@ -33,8 +33,8 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        private System.Collections.Generic.Dictionary<Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> _zones = default!;
-        public System.Collections.Generic.Dictionary<Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones
+        private System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> _zones = default!;
+        public System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones
         {
             get => _zones;
             private set => SetProperty(ref _zones, value);
