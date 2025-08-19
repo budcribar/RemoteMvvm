@@ -106,6 +106,20 @@ public class ComplexTypeTests
     }
 
     [Fact]
+    public async Task SupportedCollectionTypes_GenerateProto()
+    {
+        string vmFile = Path.Combine(Root, "test", "ComplexTypes", "ViewModels", "SupportedCollectionsViewModel.cs");
+        var refs = LoadDefaultRefs();
+        var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs,
+            "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
+        var proto = ProtoGenerator.Generate("ComplexTypes.Protos", name + "Service", name, props, cmds, comp);
+        Assert.Contains("SupportedCollectionsViewModelState", proto);
+    }
+
+    [Fact]
     public async Task UnsupportedTypes_Throw()
     {
         string vmFile = Path.Combine(Root, "test", "ComplexTypes", "ViewModels", "UnsupportedViewModels.cs");

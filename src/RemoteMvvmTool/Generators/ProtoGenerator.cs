@@ -33,30 +33,28 @@ public static class ProtoGenerator
 
             if (type is INamedTypeSymbol named && named.IsGenericType)
             {
-                string def = named.ConstructedFrom.ToDisplayString();
-                if (def == "System.Collections.Generic.List<T>" ||
-                    def == "System.Collections.Generic.IList<T>" ||
-                    def == "System.Collections.Generic.IEnumerable<T>" ||
-                    def == "System.Collections.Generic.IReadOnlyList<T>" ||
-                    def == "System.Collections.Generic.ICollection<T>")
+                if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
                 {
-                    var elemType = named.TypeArguments[0];
-                    string elemProto = MapProtoType(elemType, allowMessage: true);
+                    string elemProto = MapProtoType(memElem!, allowMessage: true);
+                    if (memElem!.SpecialType == SpecialType.System_Byte)
+                        return "bytes";
                     return $"repeated {elemProto}";
                 }
 
-                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var keyType, out var valueType))
                 {
-                    var keyType = named.TypeArguments[0];
-                    var valueType = named.TypeArguments[1];
-                    string keyProto = MapProtoType(keyType, allowMessage: false);
+                    string keyProto = MapProtoType(keyType!, allowMessage: false);
                     var allowedKeys = new HashSet<string> { "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64", "bool", "string" };
                     if (!allowedKeys.Contains(keyProto))
-                        throw new NotSupportedException($"Dictionary key type '{keyType.ToDisplayString()}' is not supported.");
-                    string valueProto = MapProtoType(valueType, allowMessage: true);
+                        throw new NotSupportedException($"Dictionary key type '{keyType!.ToDisplayString()}' is not supported.");
+                    string valueProto = MapProtoType(valueType!, allowMessage: true);
                     return $"map<{keyProto}, {valueProto}>";
+                }
+
+                if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType))
+                {
+                    string elemProto = MapProtoType(elemType!, allowMessage: true);
+                    return $"repeated {elemProto}";
                 }
             }
 
