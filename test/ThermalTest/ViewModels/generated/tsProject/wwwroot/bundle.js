@@ -5019,10 +5019,10 @@ const grpcHost = 'http://localhost:50052';
 const grpcClient = new _generated_HP3LSThermalTestViewModelServiceServiceClientPb__WEBPACK_IMPORTED_MODULE_0__.HP3LSThermalTestViewModelServiceClient(grpcHost);
 const vm = new _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.HP3LSThermalTestViewModelRemoteClient(grpcClient);
 async function render() {
-    document.getElementById('zones').value = vm.zones;
-    document.getElementById('testSettings').value = vm.testSettings;
-    document.getElementById('showDescription').value = vm.showDescription;
-    document.getElementById('showReadme').value = vm.showReadme;
+    document.getElementById('zones').value = JSON.stringify(vm.zones);
+    document.getElementById('testSettings').value = JSON.stringify(vm.testSettings);
+    document.getElementById('showDescription').value = JSON.stringify(vm.showDescription);
+    document.getElementById('showReadme').value = JSON.stringify(vm.showReadme);
     document.getElementById('connection-status').textContent = vm.connectionStatus;
 }
 async function init() {

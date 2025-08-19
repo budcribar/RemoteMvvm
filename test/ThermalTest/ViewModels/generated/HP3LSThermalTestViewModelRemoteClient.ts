@@ -10,7 +10,7 @@ import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export interface ThermalZoneState {
-  zone: number;
+  zone: any;
   isActive: boolean;
   deviceName: string;
   temperature: number;
