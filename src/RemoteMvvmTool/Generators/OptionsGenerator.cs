@@ -12,7 +12,7 @@ public static class OptionsGenerator
         sb.AppendLine("{");
         sb.AppendLine("    public class ServerOptions");
         sb.AppendLine("    {");
-        sb.AppendLine("        public int Port { get; set; } = MonsterClicker.NetworkConfig.Port;");
+        sb.AppendLine("        public int Port { get; set; } = 50052;");
         sb.AppendLine("        public bool UseHttps { get; set; } = true;");
         sb.AppendLine("        public string? CorsPolicyName { get; set; } = \"AllowAll\";");
         sb.AppendLine("        public string[]? AllowedOrigins { get; set; } = null;");
@@ -24,7 +24,7 @@ public static class OptionsGenerator
         sb.AppendLine();
         sb.AppendLine("    public class ClientOptions");
         sb.AppendLine("    {");
-        sb.AppendLine("        public string Address { get; set; } = MonsterClicker.NetworkConfig.ServerAddress;");
+        sb.AppendLine("        public string Address { get; set; } = \"http://localhost:50052\";");
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
