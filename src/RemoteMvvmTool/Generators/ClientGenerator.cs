@@ -144,20 +144,24 @@ public static class ClientGenerator
             string protoStateFieldName = GeneratorHelpers.ToPascalCase(prop.Name);
             if (prop.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
             {
-                string def = named.ConstructedFrom.ToDisplayString();
-                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
                 {
-                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value);");
+                    var dictExpr = $"state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value)";
+                    if (named.TypeKind == TypeKind.Interface)
+                        sb.AppendLine($"                                this.{prop.Name} = {dictExpr};");
+                    else
+                        sb.AppendLine($"                                this.{prop.Name} = new {prop.TypeString}({dictExpr});");
                 }
-                else if (def == "System.Collections.Generic.List<T>" ||
-                         def == "System.Collections.Generic.IList<T>" ||
-                         def == "System.Collections.Generic.IEnumerable<T>" ||
-                         def == "System.Collections.Generic.IReadOnlyList<T>" ||
-                         def == "System.Collections.Generic.ICollection<T>")
+                else if (GeneratorHelpers.TryGetMemoryElementType(named, out _))
                 {
-                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+                }
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                {
+                    if (named.TypeKind == TypeKind.Interface)
+                        sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                    else
+                        sb.AppendLine($"                                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName});");
                 }
                 else
                 {
@@ -214,20 +218,24 @@ public static class ClientGenerator
             string protoStateFieldName = GeneratorHelpers.ToPascalCase(prop.Name);
             if (prop.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
             {
-                string def = named.ConstructedFrom.ToDisplayString();
-                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
                 {
-                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value);");
+                    var dictExpr = $"state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value)";
+                    if (named.TypeKind == TypeKind.Interface)
+                        sb.AppendLine($"                this.{prop.Name} = {dictExpr};");
+                    else
+                        sb.AppendLine($"                this.{prop.Name} = new {prop.TypeString}({dictExpr});");
                 }
-                else if (def == "System.Collections.Generic.List<T>" ||
-                         def == "System.Collections.Generic.IList<T>" ||
-                         def == "System.Collections.Generic.IEnumerable<T>" ||
-                         def == "System.Collections.Generic.IReadOnlyList<T>" ||
-                         def == "System.Collections.Generic.ICollection<T>")
+                else if (GeneratorHelpers.TryGetMemoryElementType(named, out _))
                 {
-                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+                }
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                {
+                    if (named.TypeKind == TypeKind.Interface)
+                        sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                    else
+                        sb.AppendLine($"                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName});");
                 }
                 else
                 {

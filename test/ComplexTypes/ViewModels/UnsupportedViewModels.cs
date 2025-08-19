@@ -13,8 +13,5 @@ public partial class UnsupportedTypesViewModel : ObservableObject
     private Dictionary<object, int> randomMap = new();
 
     [ObservableProperty]
-    private HashSet<string> tags = new();
-
-    [ObservableProperty]
     private Tuple<int, string> coordinates = new(0, string.Empty);
 }

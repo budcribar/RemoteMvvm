@@ -50,22 +50,19 @@ public static class TypeScriptClientGenerator
 
             if (type is INamedTypeSymbol named && named.IsGenericType)
             {
-                var def = named.ConstructedFrom.ToDisplayString();
-                if (def == "System.Collections.Generic.List<T>" ||
-                    def == "System.Collections.Generic.IList<T>" ||
-                    def == "System.Collections.Generic.IEnumerable<T>" ||
-                    def == "System.Collections.Generic.IReadOnlyList<T>" ||
-                    def == "System.Collections.Generic.ICollection<T>")
+                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var key, out var val))
                 {
-                    return MapTsType(named.TypeArguments[0]) + "[]";
-                }
-                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
-                {
-                    var keyTs = MapKeyType(named.TypeArguments[0]);
-                    var valTs = MapTsType(named.TypeArguments[1]);
+                    var keyTs = MapKeyType(key!);
+                    var valTs = MapTsType(val!);
                     return $"Record<{keyTs}, {valTs}>";
+                }
+                if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
+                {
+                    return MapTsType(memElem!) + "[]";
+                }
+                if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
+                {
+                    return MapTsType(elem!) + "[]";
                 }
             }
 
