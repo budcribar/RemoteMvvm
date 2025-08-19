@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Xunit;
 
+namespace Bugs;
 public class AnalyzerBugTests
 {
     [Fact]
