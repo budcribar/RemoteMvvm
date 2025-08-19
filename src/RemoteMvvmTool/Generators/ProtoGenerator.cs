@@ -42,6 +42,20 @@ public static class ProtoGenerator
                     string elemProto = MapProtoType(elemType, allowMessage: true);
                     return $"repeated {elemProto}";
                 }
+
+                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
+                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
+                {
+                    var keyType = named.TypeArguments[0];
+                    var valueType = named.TypeArguments[1];
+                    string keyProto = MapProtoType(keyType, allowMessage: false);
+                    var allowedKeys = new HashSet<string> { "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64", "bool", "string" };
+                    if (!allowedKeys.Contains(keyProto))
+                        throw new NotSupportedException($"Dictionary key type '{keyType.ToDisplayString()}' is not supported.");
+                    string valueProto = MapProtoType(valueType, allowMessage: true);
+                    return $"map<{keyProto}, {valueProto}>";
+                }
             }
 
             string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
@@ -84,25 +98,6 @@ public static class ProtoGenerator
         int field = 1;
         foreach (var p in props)
         {
-            if (p.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
-            {
-                string def = named.ConstructedFrom.ToDisplayString();
-                if (def == "System.Collections.Generic.Dictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IDictionary<TKey, TValue>" ||
-                    def == "System.Collections.Generic.IReadOnlyDictionary<TKey, TValue>")
-                {
-                    var keyType = named.TypeArguments[0];
-                    var valueType = named.TypeArguments[1];
-                    string keyProto = MapProtoType(keyType, allowMessage: false);
-                    string valueProto = MapProtoType(valueType, allowMessage: true);
-                    var allowedKeys = new HashSet<string> { "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64", "bool", "string" };
-                    if (!allowedKeys.Contains(keyProto))
-                        throw new NotSupportedException($"Dictionary key type '{keyType.ToDisplayString()}' is not supported.");
-                    body.AppendLine($"  map<{keyProto}, {valueProto}> {GeneratorHelpers.ToSnake(p.Name)} = {field++}; // Original C#: {p.TypeString} {p.Name}");
-                    continue;
-                }
-            }
-
             string protoType = MapProtoType(p.FullTypeSymbol!, allowMessage: true);
             body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(p.Name)} = {field++}; // Original C#: {p.TypeString} {p.Name}");
         }
