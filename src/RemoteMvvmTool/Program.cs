@@ -24,7 +24,7 @@ public class Program
 
     public static async Task<int> Main(string[] args)
     {
-        var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts");
+        var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts,tsproject");
         var outputOption = new Option<string>("--output", () => "generated", "Output directory for generated code files");
         var protoOutputOption = new Option<string>("--protoOutput", () => "protos", "Directory for generated .proto file");
         var vmArgument = new Argument<List<string>>("viewmodels", "ViewModel .cs files") { Arity = ArgumentArity.OneOrMore };
