@@ -20,6 +20,8 @@ public static class ProtoGenerator
         var body = new StringBuilder();
         var pendingMessages = new Queue<INamedTypeSymbol>();
         var processedMessages = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+        bool usesTimestamp = false;
+        bool usesDuration = false;
 
         string MapProtoType(ITypeSymbol type, bool allowMessage)
         {
@@ -70,8 +72,12 @@ public static class ProtoGenerator
                 case "FloatValue": return "float";
                 case "DoubleValue": return "double";
                 case "BytesValue": return "bytes";
-                case "Timestamp": return "google.protobuf.Timestamp";
-                case "Duration": return "google.protobuf.Duration";
+                case "Timestamp":
+                    usesTimestamp = true;
+                    return "google.protobuf.Timestamp";
+                case "Duration":
+                    usesDuration = true;
+                    return "google.protobuf.Duration";
             }
 
             if (allowMessage && type is INamedTypeSymbol namedType &&
@@ -150,21 +156,30 @@ public static class ProtoGenerator
                 foreach (var p in c.Parameters)
                 {
                     string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
-                    string protoType = wkt switch
+                    string protoType;
+                    switch (wkt)
                     {
-                        "StringValue" => "string",
-                        "BoolValue" => "bool",
-                        "Int32Value" => "int32",
-                        "Int64Value" => "int64",
-                        "UInt32Value" => "uint32",
-                        "UInt64Value" => "uint64",
-                        "FloatValue" => "float",
-                        "DoubleValue" => "double",
-                        "BytesValue" => "bytes",
-                        "Timestamp" => "google.protobuf.Timestamp",
-                        "Duration" => "google.protobuf.Duration",
-                        _ => "string"
-                    };
+                        case "StringValue": protoType = "string"; break;
+                        case "BoolValue": protoType = "bool"; break;
+                        case "Int32Value": protoType = "int32"; break;
+                        case "Int64Value": protoType = "int64"; break;
+                        case "UInt32Value": protoType = "uint32"; break;
+                        case "UInt64Value": protoType = "uint64"; break;
+                        case "FloatValue": protoType = "float"; break;
+                        case "DoubleValue": protoType = "double"; break;
+                        case "BytesValue": protoType = "bytes"; break;
+                        case "Timestamp":
+                            usesTimestamp = true;
+                            protoType = "google.protobuf.Timestamp";
+                            break;
+                        case "Duration":
+                            usesDuration = true;
+                            protoType = "google.protobuf.Duration";
+                            break;
+                        default:
+                            protoType = "string";
+                            break;
+                    }
                     body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(p.Name)} = {paramField++}; // Original C#: {p.TypeString} {p.Name}");
                 }
                 body.AppendLine("}");
@@ -220,6 +235,10 @@ public static class ProtoGenerator
         final.AppendLine();
         final.AppendLine("import \"google/protobuf/any.proto\";");
         final.AppendLine("import \"google/protobuf/empty.proto\";");
+        if (usesTimestamp)
+            final.AppendLine("import \"google/protobuf/timestamp.proto\";");
+        if (usesDuration)
+            final.AppendLine("import \"google/protobuf/duration.proto\";");
         final.AppendLine();
         final.Append(body.ToString());
         return final.ToString();
