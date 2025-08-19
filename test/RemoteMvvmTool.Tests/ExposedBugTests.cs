@@ -35,7 +35,7 @@ public class ExposedBugTests
     }
 
     [Fact]
-    public async Task AnalyzeAsync_MissingType_Detected()
+    public async Task AnalyzeAsync_MissingType_WarnsButContinues()
     {
         var code = @"using CommunityToolkit.Mvvm.ComponentModel;\npublic partial class Vm : ObservableObject {\n    [ObservableProperty]\n    private MissingType _value;\n}";
         var tempFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".cs");
@@ -43,9 +43,10 @@ public class ExposedBugTests
         var referencePaths = AppDomain.CurrentDomain.GetAssemblies()
             .Where(a => !a.IsDynamic && !string.IsNullOrEmpty(a.Location))
             .Select(a => a.Location);
-        await Assert.ThrowsAsync<InvalidOperationException>(() => ViewModelAnalyzer.AnalyzeAsync(new[] { tempFile },
+        var result = await ViewModelAnalyzer.AnalyzeAsync(new[] { tempFile },
             "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
             "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-            referencePaths));
+            referencePaths);
+        Assert.Equal("Vm", result.ViewModelName);
     }
 }

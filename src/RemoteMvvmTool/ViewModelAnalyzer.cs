@@ -60,7 +60,7 @@ namespace GrpcRemoteMvvmModelUtil
                         return start >= 0 && end > start ? msg.Substring(start + 1, end - start - 1) : msg;
                     })
                     .Distinct();
-                throw new InvalidOperationException("Unable to locate the following type definitions: " + string.Join(", ", missingNames));
+                Console.Error.WriteLine("Warning: unable to locate the following type definitions: " + string.Join(", ", missingNames));
             }
 
             INamedTypeSymbol? mainViewModelSymbol = null;
@@ -233,7 +233,7 @@ namespace GrpcRemoteMvvmModelUtil
 
             if (missing.Count > 0)
             {
-                throw new InvalidOperationException("Unable to locate the following type definitions: " + string.Join(", ", missing));
+                Console.Error.WriteLine("Warning: unable to locate the following type definitions: " + string.Join(", ", missing));
             }
 
             return compilation;

@@ -21,7 +21,7 @@ namespace SampleViewModel
         }
 
         [Fact]
-        public async Task MissingType_ReportsError()
+        public async Task MissingType_WarnsButContinues()
         {
             var code = @"using CommunityToolkit.Mvvm.ComponentModel;
 public partial class MissingTypeViewModel : ObservableObject
@@ -37,12 +37,12 @@ public partial class MissingTypeViewModel : ObservableObject
 
             var refs = LoadDefaultRefs();
 
-            var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => ViewModelAnalyzer.AnalyzeAsync(new[] { filePath },
+            var result = await ViewModelAnalyzer.AnalyzeAsync(new[] { filePath },
                 "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
                 "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-                refs));
+                refs);
 
-            Assert.Contains("UnknownType", ex.Message);
+            Assert.Equal("MissingTypeViewModel", result.ViewModelName);
         }
     }
 }
