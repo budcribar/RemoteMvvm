@@ -117,6 +117,31 @@ public class ComplexTypeTests
             "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
         var proto = ProtoGenerator.Generate("ComplexTypes.Protos", name + "Service", name, props, cmds, comp);
         Assert.Contains("SupportedCollectionsViewModelState", proto);
+
+        // Generic collections
+        Assert.Contains("repeated int32 int_list", proto);
+        Assert.Contains("map<string, int32> dictionary", proto);
+        Assert.Contains("map<string, int32> sorted_list", proto);
+        Assert.Contains("map<string, int32> sorted_dictionary", proto);
+        Assert.Contains("repeated int32 queue", proto);
+        Assert.Contains("repeated string stack", proto);
+        Assert.Contains("repeated string hash_set", proto);
+        Assert.Contains("repeated double linked_list", proto);
+        Assert.Contains("repeated float enumerable", proto);
+        Assert.Contains("repeated int32 collection", proto);
+        Assert.Contains("repeated string string_list", proto);
+        Assert.Contains("map<string, int32> dictionary_interface", proto);
+
+        // Thread-safe collections
+        Assert.Contains("map<string, int32> concurrent_dictionary", proto);
+        Assert.Contains("repeated string concurrent_queue", proto);
+        Assert.Contains("repeated int32 concurrent_stack", proto);
+        Assert.Contains("repeated double concurrent_bag", proto);
+        Assert.Contains("repeated int64 blocking_collection", proto);
+
+        // Memory-based types
+        Assert.Contains("bytes memory", proto);
+        Assert.Contains("repeated string read_only_memory", proto);
     }
 
     [Fact]
