@@ -6,7 +6,28 @@ namespace RemoteMvvmTool.Generators;
 
 public static class GeneratorHelpers
 {
-    public static string ToSnake(string s) => string.Concat(s.Select((c,i) => i>0 && char.IsUpper(c)?"_"+char.ToLower(c).ToString():char.ToLower(c).ToString()));
+    public static string ToSnake(string s)
+    {
+        if (string.IsNullOrEmpty(s))
+            return s;
+
+        var sb = new StringBuilder(s.Length * 2);
+        for (int i = 0; i < s.Length; i++)
+        {
+            char c = s[i];
+
+            bool addUnderscore = i > 0 && char.IsUpper(c) &&
+                                 (char.IsLower(s[i - 1]) ||
+                                  (i + 1 < s.Length && char.IsLower(s[i + 1])));
+
+            if (addUnderscore)
+                sb.Append('_');
+
+            sb.Append(char.ToLowerInvariant(c));
+        }
+
+        return sb.ToString();
+    }
     public static string ToCamel(string s) => string.IsNullOrEmpty(s)?s:char.ToLowerInvariant(s[0])+s.Substring(1);
     public static string ToCamelCase(string s) => string.IsNullOrEmpty(s) || char.IsLower(s[0]) ? s : char.ToLowerInvariant(s[0]) + s[1..];
     public static string ToPascalCase(string s) => string.IsNullOrEmpty(s) ? s : char.ToUpperInvariant(s[0]) + s[1..];
