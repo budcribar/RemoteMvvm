@@ -40,9 +40,15 @@ namespace GrpcRemoteMvvmModelUtil
 
             const string suffix = "Attribute";
 
-            static string Normalize(string name) => name.EndsWith(suffix, StringComparison.Ordinal)
-                ? name.Substring(0, name.Length - suffix.Length)
-                : name;
+            static string Normalize(string name)
+            {
+                if (name.StartsWith("global::", StringComparison.Ordinal))
+                    name = name.Substring("global::".Length);
+
+                return name.EndsWith(suffix, StringComparison.Ordinal)
+                    ? name.Substring(0, name.Length - suffix.Length)
+                    : name;
+            }
 
             var attrFull = Normalize(attrClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)));
             var targetFull = Normalize(fullyQualifiedAttributeName);
