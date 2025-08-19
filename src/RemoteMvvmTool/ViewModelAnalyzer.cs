@@ -46,6 +46,23 @@ namespace GrpcRemoteMvvmModelUtil
                 references: references,
                 options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary, nullableContextOptions: NullableContextOptions.Enable));
 
+            var missingTypeDiagnostics = compilation.GetDiagnostics()
+                .Where(d => d.Severity == DiagnosticSeverity.Error && d.Id == "CS0246")
+                .ToArray();
+            if (missingTypeDiagnostics.Length > 0)
+            {
+                var missingNames = missingTypeDiagnostics
+                    .Select(d =>
+                    {
+                        var msg = d.GetMessage();
+                        var start = msg.IndexOf('\'');
+                        var end = msg.IndexOf('\'', start + 1);
+                        return start >= 0 && end > start ? msg.Substring(start + 1, end - start - 1) : msg;
+                    })
+                    .Distinct();
+                Console.Error.WriteLine("Warning: unable to locate the following type definitions: " + string.Join(", ", missingNames));
+            }
+
             INamedTypeSymbol? mainViewModelSymbol = null;
             string originalVmName = "";
             foreach (var tree in syntaxTrees)
@@ -216,7 +233,7 @@ namespace GrpcRemoteMvvmModelUtil
 
             if (missing.Count > 0)
             {
-                throw new InvalidOperationException("Unable to locate the following type definitions: " + string.Join(", ", missing));
+                Console.Error.WriteLine("Warning: unable to locate the following type definitions: " + string.Join(", ", missing));
             }
 
             return compilation;
