@@ -45,7 +45,7 @@ namespace GrpcRemoteMvvmModelUtil
                 if (name.StartsWith("global::", StringComparison.Ordinal))
                     name = name.Substring("global::".Length);
 
-                return name.EndsWith(suffix, StringComparison.Ordinal)
+                return name.EndsWith(suffix, StringComparison.OrdinalIgnoreCase)
                     ? name.Substring(0, name.Length - suffix.Length)
                     : name;
             }
@@ -57,7 +57,7 @@ namespace GrpcRemoteMvvmModelUtil
             if (!targetFull.Contains('.'))
             {
                 var attrSimple = attrFull.Contains('.') ? attrFull[(attrFull.LastIndexOf('.') + 1)..] : attrFull;
-                return string.Equals(attrSimple, targetFull, StringComparison.Ordinal);
+                return string.Equals(attrSimple, targetFull, StringComparison.OrdinalIgnoreCase);
             }
 
             var attrLastDot = attrFull.LastIndexOf('.');
@@ -71,8 +71,8 @@ namespace GrpcRemoteMvvmModelUtil
             var targetQualifier = targetFull[..targetLastDot];
             var targetName = targetFull[(targetLastDot + 1)..];
 
-            return string.Equals(attrName, targetName, StringComparison.Ordinal) &&
-                   string.Equals(attrQualifier, targetQualifier, StringComparison.Ordinal);
+            return string.Equals(attrName, targetName, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(attrQualifier, targetQualifier, StringComparison.OrdinalIgnoreCase);
         }
 
         public static bool InheritsFrom(INamedTypeSymbol? typeSymbol, string baseTypeFullName)
