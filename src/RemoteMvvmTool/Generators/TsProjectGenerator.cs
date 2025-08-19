@@ -22,7 +22,10 @@ public static class TsProjectGenerator
         foreach (var p in props)
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
-            sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).value = vm.{camel};");
+            var assignExpr = p.TypeString.ToLowerInvariant().Contains("string")
+                ? $"vm.{camel}"
+                : $"JSON.stringify(vm.{camel})";
+            sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).value = {assignExpr};");
         }
         sb.AppendLine("    (document.getElementById('connection-status') as HTMLElement).textContent = vm.connectionStatus;");
         sb.AppendLine("}");
