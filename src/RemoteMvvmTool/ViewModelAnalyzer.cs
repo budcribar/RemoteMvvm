@@ -192,6 +192,20 @@ namespace GrpcRemoteMvvmModelUtil
                 if (!processed.Add(fullName))
                     continue;
 
+                // Skip expanding System.Threading.Tasks.Task and Task<T> to avoid traversing
+                // a large graph of framework types. For generic Task<T>, ensure T itself
+                // is processed so that its definition is still included.
+                if (fullName == "System.Threading.Tasks.Task" ||
+                    fullName.StartsWith("System.Threading.Tasks.Task<", StringComparison.Ordinal))
+                {
+                    if (named.IsGenericType)
+                    {
+                        foreach (var arg in named.TypeArguments)
+                            queue.Enqueue(arg);
+                    }
+                    continue;
+                }
+
                 if (named.TypeKind == TypeKind.Error)
                 {
                     string? filePath = null;

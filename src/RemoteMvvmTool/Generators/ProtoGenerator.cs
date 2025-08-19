@@ -80,6 +80,17 @@ public static class ProtoGenerator
                     return "google.protobuf.Duration";
             }
 
+            if (type is INamedTypeSymbol taskNamed)
+            {
+                var constructed = taskNamed.ConstructedFrom?.ToDisplayString();
+                if (constructed != null && constructed.StartsWith("System.Threading.Tasks.Task", StringComparison.Ordinal))
+                {
+                    if (taskNamed.TypeArguments.Length == 1)
+                        return MapProtoType(taskNamed.TypeArguments[0], allowMessage: true);
+                    return "google.protobuf.Any";
+                }
+            }
+
             if (allowMessage && type is INamedTypeSymbol namedType &&
                 (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct || type.TypeKind == TypeKind.Error))
             {
