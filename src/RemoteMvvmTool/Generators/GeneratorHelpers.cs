@@ -40,6 +40,10 @@ public static class GeneratorHelpers
         "System.Int64" => "Int64Value",
         "bool" => "BoolValue",
         "System.Boolean" => "BoolValue",
+        "float" => "FloatValue",
+        "System.Single" => "FloatValue",
+        "double" => "DoubleValue",
+        "System.Double" => "DoubleValue",
         _ => null
     };
     public static string LowercaseFirst(string str) => string.IsNullOrEmpty(str) ? str : char.ToLowerInvariant(str[0]) + str[1..];

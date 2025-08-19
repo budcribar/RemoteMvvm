@@ -36,6 +36,11 @@ namespace GrpcRemoteMvvmModelUtil
                 if (File.Exists(refPath))
                     references.Add(Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(refPath));
             }
+            var mvvmAssemblyPath = typeof(CommunityToolkit.Mvvm.ComponentModel.ObservableObject).Assembly.Location;
+            if (File.Exists(mvvmAssemblyPath) && !references.Any(r => string.Equals(r.Display, mvvmAssemblyPath, StringComparison.OrdinalIgnoreCase)))
+            {
+                references.Add(Microsoft.CodeAnalysis.MetadataReference.CreateFromFile(mvvmAssemblyPath));
+            }
             var compilation = CSharpCompilation.Create("ViewModelAssembly",
                 syntaxTrees: syntaxTrees,
                 references: references,
