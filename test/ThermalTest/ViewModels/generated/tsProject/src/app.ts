@@ -10,10 +10,10 @@ const grpcClient = new HP3LSThermalTestViewModelServiceClient(grpcHost);
 const vm = new HP3LSThermalTestViewModelRemoteClient(grpcClient);
 
 async function render() {
-    (document.getElementById('zones') as HTMLInputElement).value = vm.zones;
-    (document.getElementById('testSettings') as HTMLInputElement).value = vm.testSettings;
-    (document.getElementById('showDescription') as HTMLInputElement).value = vm.showDescription;
-    (document.getElementById('showReadme') as HTMLInputElement).value = vm.showReadme;
+    (document.getElementById('zones') as HTMLInputElement).value = JSON.stringify(vm.zones);
+    (document.getElementById('testSettings') as HTMLInputElement).value = JSON.stringify(vm.testSettings);
+    (document.getElementById('showDescription') as HTMLInputElement).value = JSON.stringify(vm.showDescription);
+    (document.getElementById('showReadme') as HTMLInputElement).value = JSON.stringify(vm.showReadme);
     (document.getElementById('connection-status') as HTMLElement).textContent = vm.connectionStatus;
 }
 

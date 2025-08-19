@@ -10,20 +10,20 @@ const grpcClient = new PointerViewModelServiceClient(grpcHost);
 const vm = new PointerViewModelRemoteClient(grpcClient);
 
 async function render() {
-    (document.getElementById('show') as HTMLInputElement).value = vm.show;
-    (document.getElementById('showSpinner') as HTMLInputElement).value = vm.showSpinner;
-    (document.getElementById('clicksToPass') as HTMLInputElement).value = vm.clicksToPass;
-    (document.getElementById('is3Btn') as HTMLInputElement).value = vm.is3Btn;
-    (document.getElementById('testTimeoutSec') as HTMLInputElement).value = vm.testTimeoutSec;
-    (document.getElementById('instructions') as HTMLInputElement).value = vm.instructions;
-    (document.getElementById('showCursorTest') as HTMLInputElement).value = vm.showCursorTest;
-    (document.getElementById('showConfigSelection') as HTMLInputElement).value = vm.showConfigSelection;
-    (document.getElementById('showClickInstructions') as HTMLInputElement).value = vm.showClickInstructions;
-    (document.getElementById('showTimer') as HTMLInputElement).value = vm.showTimer;
-    (document.getElementById('showBottom') as HTMLInputElement).value = vm.showBottom;
-    (document.getElementById('timerText') as HTMLInputElement).value = vm.timerText;
-    (document.getElementById('selectedDevice') as HTMLInputElement).value = vm.selectedDevice;
-    (document.getElementById('lastClickCount') as HTMLInputElement).value = vm.lastClickCount;
+    (document.getElementById('show') as HTMLInputElement).value = JSON.stringify(vm.show);
+    (document.getElementById('showSpinner') as HTMLInputElement).value = JSON.stringify(vm.showSpinner);
+    (document.getElementById('clicksToPass') as HTMLInputElement).value = JSON.stringify(vm.clicksToPass);
+    (document.getElementById('is3Btn') as HTMLInputElement).value = JSON.stringify(vm.is3Btn);
+    (document.getElementById('testTimeoutSec') as HTMLInputElement).value = JSON.stringify(vm.testTimeoutSec);
+    (document.getElementById('instructions') as HTMLInputElement).value = JSON.stringify(vm.instructions);
+    (document.getElementById('showCursorTest') as HTMLInputElement).value = JSON.stringify(vm.showCursorTest);
+    (document.getElementById('showConfigSelection') as HTMLInputElement).value = JSON.stringify(vm.showConfigSelection);
+    (document.getElementById('showClickInstructions') as HTMLInputElement).value = JSON.stringify(vm.showClickInstructions);
+    (document.getElementById('showTimer') as HTMLInputElement).value = JSON.stringify(vm.showTimer);
+    (document.getElementById('showBottom') as HTMLInputElement).value = JSON.stringify(vm.showBottom);
+    (document.getElementById('timerText') as HTMLInputElement).value = JSON.stringify(vm.timerText);
+    (document.getElementById('selectedDevice') as HTMLInputElement).value = JSON.stringify(vm.selectedDevice);
+    (document.getElementById('lastClickCount') as HTMLInputElement).value = JSON.stringify(vm.lastClickCount);
     (document.getElementById('connection-status') as HTMLElement).textContent = vm.connectionStatus;
 }
 
