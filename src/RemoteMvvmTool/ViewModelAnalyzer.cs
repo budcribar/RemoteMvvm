@@ -134,7 +134,12 @@ namespace GrpcRemoteMvvmModelUtil
                         }
                         string commandPropertyName = baseMethodName + "Command";
                         var parameters = methodSymbol.Parameters.Select(p => new ParameterInfo(p.Name, p.Type.ToDisplayString(), p.Type)).ToList();
-                        bool isAsync = methodSymbol.IsAsync || (methodSymbol.ReturnType is INamedTypeSymbol rtSym && (rtSym.Name == "Task" || (rtSym.IsGenericType && rtSym.ConstructedFrom?.ToDisplayString() == "System.Threading.Tasks.Task")));
+                        bool isAsync = methodSymbol.IsAsync ||
+                            (methodSymbol.ReturnType is INamedTypeSymbol rtSym &&
+                                (rtSym.Name == "Task" || rtSym.Name == "ValueTask" ||
+                                 (rtSym.IsGenericType &&
+                                    (rtSym.ConstructedFrom?.ToDisplayString() == "System.Threading.Tasks.Task" ||
+                                     rtSym.ConstructedFrom?.ToDisplayString() == "System.Threading.Tasks.ValueTask"))));
                         cmds.Add(new CommandInfo(methodSymbol.Name, commandPropertyName, parameters, isAsync));
                     }
                 }

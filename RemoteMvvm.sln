@@ -78,6 +78,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", 
 		test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor.css = test\ThermalTest\Views\Components\ThermalZoneCompoonent.razor.css
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RemoteMvvmTool.Tests", "test\RemoteMvvmTool.Tests\RemoteMvvmTool.Tests.csproj", "{CFE5665D-F575-454B-81D1-5F794BF2E45C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -118,6 +120,10 @@ Global
 		{39A95025-3C20-45BA-83A2-8CBC38AC310F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{39A95025-3C20-45BA-83A2-8CBC38AC310F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{39A95025-3C20-45BA-83A2-8CBC38AC310F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFE5665D-F575-454B-81D1-5F794BF2E45C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFE5665D-F575-454B-81D1-5F794BF2E45C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFE5665D-F575-454B-81D1-5F794BF2E45C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFE5665D-F575-454B-81D1-5F794BF2E45C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -141,6 +147,7 @@ Global
 		{39A95025-3C20-45BA-83A2-8CBC38AC310F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{D91D557E-CB93-4DCC-9AD6-EA278278CA81} = {6300CAB3-2808-4D0D-8267-33EE6BD7E115}
 		{BDD5E06C-6A72-4DB8-9FF7-A73BDA36EFBC} = {D91D557E-CB93-4DCC-9AD6-EA278278CA81}
+		{CFE5665D-F575-454B-81D1-5F794BF2E45C} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {012EEB0A-22C5-4971-A229-3CC35E554B71}
