@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -6,12 +7,63 @@ namespace ComplexTypes.ViewModels;
 
 public partial class SupportedCollectionsViewModel : ObservableObject
 {
+    // Generic collections
     [ObservableProperty]
-    private HashSet<string> tags = new();
+    private List<int> intList = new();
 
     [ObservableProperty]
-    private ConcurrentDictionary<string, int> counts = new();
+    private Dictionary<string, int> dictionary = new();
 
     [ObservableProperty]
-    private Queue<int> numbers = new();
+    private SortedList<string, int> sortedList = new();
+
+    [ObservableProperty]
+    private SortedDictionary<string, int> sortedDictionary = new();
+
+    [ObservableProperty]
+    private Queue<int> queue = new();
+
+    [ObservableProperty]
+    private Stack<string> stack = new();
+
+    [ObservableProperty]
+    private HashSet<string> hashSet = new();
+
+    [ObservableProperty]
+    private LinkedList<double> linkedList = new();
+
+    [ObservableProperty]
+    private IEnumerable<float> enumerable = new List<float>();
+
+    [ObservableProperty]
+    private ICollection<int> collection = new List<int>();
+
+    [ObservableProperty]
+    private IList<string> stringList = new List<string>();
+
+    [ObservableProperty]
+    private IDictionary<string, int> dictionaryInterface = new Dictionary<string, int>();
+
+    // Thread-safe collections
+    [ObservableProperty]
+    private ConcurrentDictionary<string, int> concurrentDictionary = new();
+
+    [ObservableProperty]
+    private ConcurrentQueue<string> concurrentQueue = new();
+
+    [ObservableProperty]
+    private ConcurrentStack<int> concurrentStack = new();
+
+    [ObservableProperty]
+    private ConcurrentBag<double> concurrentBag = new();
+
+    [ObservableProperty]
+    private BlockingCollection<long> blockingCollection = new();
+
+    // Memory-based types
+    [ObservableProperty]
+    private Memory<byte> memory = Memory<byte>.Empty;
+
+    [ObservableProperty]
+    private ReadOnlyMemory<char> readOnlyMemory = ReadOnlyMemory<char>.Empty;
 }
