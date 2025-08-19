@@ -1,41 +1,50 @@
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
-using Microsoft.CodeAnalysis;
 using RemoteMvvmTool.Generators;
 
 namespace Bugs;
 
 public class TypeScriptGenerationTests
 {
+    static List<string> LoadDefaultRefs()
+    {
+        var list = new List<string>();
+        string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+        if (tpa != null)
+        {
+            foreach (var p in tpa.Split(Path.PathSeparator))
+                if (!string.IsNullOrEmpty(p) && File.Exists(p)) list.Add(p);
+        }
+        return list;
+    }
+
     [Fact]
     public async Task GeneratesInterfacesForDependentTypes()
     {
         var code = @"\
-namespace CommunityToolkit.Mvvm.ComponentModel
-{
-    public class ObservableObject {}
-    public class ObservablePropertyAttribute : System.Attribute {}
-}
-namespace Test;
+public class ObservablePropertyAttribute : System.Attribute {}
 public class Child
 {
     public int Value { get; set; }
 }
-public partial class ParentViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject
+public partial class ParentViewModel : ObservableObject
 {
-    [CommunityToolkit.Mvvm.ComponentModel.ObservableProperty]
-    public partial Child ChildProp { get; set; }
+    [ObservableProperty]
+    public Child ChildProp { get; set; }
 }
+public class ObservableObject {}
 ";
         var tmp = Path.GetTempFileName();
         File.WriteAllText(tmp, code);
-        var refs = new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) };
+        var refs = LoadDefaultRefs();
         var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(new[] { tmp },
-            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
-            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            "ObservablePropertyAttribute",
+            "RelayCommandAttribute",
             refs,
-            "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
+            "ObservableObject");
         var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
         Assert.Contains("export interface ChildState", ts);
     }
