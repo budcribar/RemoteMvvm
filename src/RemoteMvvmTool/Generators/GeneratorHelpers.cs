@@ -15,6 +15,8 @@ public static class GeneratorHelpers
         "string" => "StringValue",
         "int" => "Int32Value",
         "System.Int32" => "Int32Value",
+        "long" => "Int64Value",
+        "System.Int64" => "Int64Value",
         "bool" => "BoolValue",
         "System.Boolean" => "BoolValue",
         _ => null

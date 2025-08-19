@@ -38,42 +38,68 @@ namespace GrpcRemoteMvvmModelUtil
             if (attrClass == null)
                 return false;
 
-            var fqn = attrClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-            if (string.Equals(fqn, fullyQualifiedAttributeName, StringComparison.Ordinal))
-                return true;
+            const string suffix = "Attribute";
 
-            string? attrNamespace = attrClass.ContainingNamespace?.ToDisplayString();
-            var attrName = attrClass.Name;
-            if (attrName.EndsWith("Attribute", StringComparison.Ordinal))
-                attrName = attrName.Substring(0, attrName.Length - "Attribute".Length);
+            static string Normalize(string name) => name.EndsWith(suffix, StringComparison.Ordinal)
+                ? name.Substring(0, name.Length - suffix.Length)
+                : name;
 
-            string? targetNamespace = null;
-            var targetName = fullyQualifiedAttributeName;
-            var lastDot = fullyQualifiedAttributeName.LastIndexOf('.');
-            if (lastDot >= 0)
+            var attrFull = Normalize(attrClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)));
+            var targetFull = Normalize(fullyQualifiedAttributeName);
+
+            // If the target does not specify a qualifier, compare using the simple name only.
+            if (!targetFull.Contains('.'))
             {
-                targetNamespace = fullyQualifiedAttributeName.Substring(0, lastDot);
-                targetName = fullyQualifiedAttributeName.Substring(lastDot + 1);
+                var attrSimple = attrFull.Contains('.') ? attrFull[(attrFull.LastIndexOf('.') + 1)..] : attrFull;
+                return string.Equals(attrSimple, targetFull, StringComparison.Ordinal);
             }
-            if (targetName.EndsWith("Attribute", StringComparison.Ordinal))
-                targetName = targetName.Substring(0, targetName.Length - "Attribute".Length);
 
-            if (!string.Equals(attrName, targetName, StringComparison.Ordinal))
+            var attrLastDot = attrFull.LastIndexOf('.');
+            if (attrLastDot < 0)
                 return false;
 
-            if (targetNamespace != null)
-                return string.Equals(attrNamespace, targetNamespace, StringComparison.Ordinal);
+            var attrQualifier = attrFull[..attrLastDot];
+            var attrName = attrFull[(attrLastDot + 1)..];
 
-            return true;
+            var targetLastDot = targetFull.LastIndexOf('.');
+            var targetQualifier = targetFull[..targetLastDot];
+            var targetName = targetFull[(targetLastDot + 1)..];
+
+            return string.Equals(attrName, targetName, StringComparison.Ordinal) &&
+                   string.Equals(attrQualifier, targetQualifier, StringComparison.Ordinal);
         }
 
         public static bool InheritsFrom(INamedTypeSymbol? typeSymbol, string baseTypeFullName)
         {
+            static bool SymbolMatches(INamedTypeSymbol symbol, string fullName)
+            {
+                var fqn = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+                return string.Equals(fqn, fullName, StringComparison.Ordinal);
+            }
+
+            static bool InterfaceMatches(INamedTypeSymbol symbol, string fullName)
+            {
+                if (SymbolMatches(symbol, fullName))
+                    return true;
+                foreach (var iface in symbol.Interfaces)
+                {
+                    if (InterfaceMatches(iface, fullName))
+                        return true;
+                }
+                return false;
+            }
+
             while (typeSymbol != null && typeSymbol.SpecialType != SpecialType.System_Object)
             {
-                var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                if (fqn == baseTypeFullName)
+                if (SymbolMatches(typeSymbol, baseTypeFullName))
                     return true;
+
+                foreach (var iface in typeSymbol.Interfaces)
+                {
+                    if (InterfaceMatches(iface, baseTypeFullName))
+                        return true;
+                }
+
                 typeSymbol = typeSymbol.BaseType;
             }
             return false;
