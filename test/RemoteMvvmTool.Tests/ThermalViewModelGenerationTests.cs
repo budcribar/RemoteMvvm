@@ -1,0 +1,79 @@
+using System;
+using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
+using Xunit;
+using GrpcRemoteMvvmModelUtil;
+
+namespace ThermalTests;
+
+public class ThermalViewModelGenerationTests
+{
+    static System.Collections.Generic.List<string> LoadDefaultRefs()
+    {
+        var list = new System.Collections.Generic.List<string>();
+        string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+        if (tpa != null)
+        {
+            foreach (var p in tpa.Split(Path.PathSeparator))
+                if (!string.IsNullOrEmpty(p) && File.Exists(p)) list.Add(p);
+        }
+        return list;
+    }
+
+    [Fact]
+    public async Task Analyzer_Finds_Types_From_Other_Files()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
+        var vmFile = Path.Combine(vmDir, "HP3LSThermalTestViewModel.cs");
+        var additionalFiles = new[]
+        {
+            Path.Combine(vmDir, "ThermalZoneComponentViewModel.cs"),
+            Path.Combine(vmDir, "ThermalStateEnum.cs"),
+            Path.Combine(vmDir, "IHpMonitor.cs"),
+            Path.Combine(vmDir, "TestSettingsModel.cs"),
+            Path.Combine(vmDir, "Zone.cs")
+        };
+        var refs = LoadDefaultRefs();
+        var allFiles = (new[] { vmFile }).Concat(additionalFiles).ToArray();
+        var result = await ViewModelAnalyzer.AnalyzeAsync(
+            allFiles,
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs);
+        Assert.NotNull(result.ViewModelSymbol);
+        Assert.Contains(result.Properties, p => p.TypeString.Contains("ThermalZoneComponentViewModel"));
+        Assert.Contains(result.Commands, c => c.MethodName == "StateChanged" && c.Parameters.Any(pr => pr.TypeString.Contains("ThermalStateEnum")));
+    }
+
+    [Fact]
+    public async Task RemoteMvvmTool_Generates_Code_Successfully()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
+        var oldDir = Environment.CurrentDirectory;
+        try
+        {
+            Environment.CurrentDirectory = vmDir;
+            var args = new[]
+            {
+                "HP3LSThermalTestViewModel.cs",
+                "ThermalZoneComponentViewModel.cs",
+                "ThermalStateEnum.cs",
+                "IHpMonitor.cs",
+                "TestSettingsModel.cs",
+                "Zone.cs"
+            };
+            if (Directory.Exists(Path.Combine(vmDir, "generated")))
+                Directory.Delete(Path.Combine(vmDir, "generated"), true);
+
+            var exitCode = await Program.Main(args);
+            Assert.Equal(0, exitCode);
+        }
+        finally
+        {
+            Environment.CurrentDirectory = oldDir;
+        }
+    }
+}
