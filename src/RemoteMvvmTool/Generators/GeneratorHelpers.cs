@@ -45,6 +45,12 @@ public static class GeneratorHelpers
         "System.UInt64" => "UInt64Value",
         "short" => "Int32Value",
         "System.Int16" => "Int32Value",
+        "byte" => "UInt32Value",
+        "System.Byte" => "UInt32Value",
+        "sbyte" => "Int32Value",
+        "System.SByte" => "Int32Value",
+        "char" => "StringValue",
+        "System.Char" => "StringValue",
         "decimal" => "StringValue",
         "System.Decimal" => "StringValue",
         "bool" => "BoolValue",
@@ -108,6 +114,12 @@ public static class GeneratorHelpers
         if (typeSymbol.TypeKind == TypeKind.Array && typeSymbol is IArrayTypeSymbol arraySymbol)
         {
             if (arraySymbol.ElementType.SpecialType == SpecialType.System_Byte && arraySymbol.Rank == 1)
+                return "BytesValue";
+        }
+
+        if (TryGetMemoryElementType(typeSymbol, out var elementType))
+        {
+            if (elementType?.SpecialType == SpecialType.System_Byte)
                 return "BytesValue";
         }
         return "Any";
