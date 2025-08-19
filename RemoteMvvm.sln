@@ -45,14 +45,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ViewModels", "ViewModels", 
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "generated", "generated", "{CCF4922B-5DB1-429D-B8E7-9FBAECFF9DB2}"
 	ProjectSection(SolutionItems) = preProject
-		test\ThermalTest\Views\Components\GaugeComponentView.ts = test\ThermalTest\Views\Components\GaugeComponentView.ts
 		test\ThermalTest\ViewModels\generated\GrpcRemoteOptions.cs = test\ThermalTest\ViewModels\generated\GrpcRemoteOptions.cs
 		test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModel.Remote.g.cs = test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModel.Remote.g.cs
 		test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModelGrpcServiceImpl.cs = test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModelGrpcServiceImpl.cs
 		test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModelRemoteClient.cs = test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModelRemoteClient.cs
 		test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModelRemoteClient.ts = test\ThermalTest\ViewModels\generated\HP3LSThermalTestViewModelRemoteClient.ts
-		test\ThermalTest\Views\Components\ReadmeComponentView.ts = test\ThermalTest\Views\Components\ReadmeComponentView.ts
-		test\ThermalTest\Views\Components\ThermalZoneComponentView.ts = test\ThermalTest\Views\Components\ThermalZoneComponentView.ts
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "protos", "protos", "{8EEFC213-ADDB-4A8E-BC37-1B258CA06D9B}"
