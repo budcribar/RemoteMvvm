@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using System;
 using System.Linq;
 using System.Text;
 
@@ -80,6 +81,9 @@ public static class GeneratorHelpers
         }
 
         string fullTypeName = typeSymbol.OriginalDefinition.ToDisplayString();
+        if (fullTypeName.StartsWith("System.Threading.Tasks.Task", StringComparison.Ordinal))
+            return "Any";
+
         switch (fullTypeName)
         {
             case "System.TimeSpan": return "Duration";
