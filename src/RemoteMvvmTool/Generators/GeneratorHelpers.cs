@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using System;
 using System.Linq;
 using System.Text;
 
@@ -85,6 +86,9 @@ public static class GeneratorHelpers
             case "System.TimeSpan": return "Duration";
             case "System.Guid": return "StringValue";
             case "System.DateTimeOffset": return "Timestamp";
+            case "System.DateOnly":
+            case "System.TimeOnly":
+                throw new NotSupportedException("DateOnly and TimeOnly are not supported.");
             case "System.Uri": return "StringValue";
             case "System.Version": return "StringValue";
             case "System.Numerics.BigInteger": return "StringValue";

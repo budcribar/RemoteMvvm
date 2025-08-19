@@ -1,5 +1,6 @@
 using GrpcRemoteMvvmModelUtil;
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -10,6 +11,22 @@ public static class TypeScriptClientGenerator
 {
     public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds)
     {
+        foreach (var p in props)
+        {
+            var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
+            if (wkt == "Timestamp" || wkt == "Duration")
+                throw new NotSupportedException($"Property '{p.Name}' with type '{p.TypeString}' is not supported by the TypeScript client generator.");
+        }
+        foreach (var cmd in cmds)
+        {
+            foreach (var p in cmd.Parameters)
+            {
+                var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
+                if (wkt == "Timestamp" || wkt == "Duration")
+                    throw new NotSupportedException($"Parameter '{p.Name}' of command '{cmd.MethodName}' uses unsupported type '{p.TypeString}'.");
+            }
+        }
+
         var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var queue = new Queue<INamedTypeSymbol>();
         var ifaceSb = new StringBuilder();
