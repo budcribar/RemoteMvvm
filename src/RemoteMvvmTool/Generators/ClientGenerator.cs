@@ -6,8 +6,21 @@ using System.Text;
 
 namespace RemoteMvvmTool.Generators;
 
+/// <summary>
+/// Generates C# client code for RemoteMvvm view models.
+/// </summary>
 public static class ClientGenerator
 {
+    /// <summary>
+    /// Produces the source code for a remote client that communicates with a generated gRPC service.
+    /// </summary>
+    /// <param name="vmName">The name of the source view model.</param>
+    /// <param name="protoNs">The namespace containing the generated protobuf types.</param>
+    /// <param name="serviceName">The gRPC service name.</param>
+    /// <param name="props">The observable properties exposed by the view model.</param>
+    /// <param name="cmds">The commands exposed by the view model.</param>
+    /// <param name="clientNamespace">Optional namespace for the generated client class.</param>
+    /// <returns>The generated C# source code.</returns>
     public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds, string? clientNamespace = null)
     {
         var sb = new StringBuilder();
