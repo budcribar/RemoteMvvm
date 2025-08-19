@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -9,36 +10,61 @@ namespace GrpcRemoteMvvmModelUtil
     {
         public static IEnumerable<ISymbol> GetAllMembers(INamedTypeSymbol typeSymbol)
         {
+            var seen = new HashSet<ISymbol>(SymbolEqualityComparer.Default);
             var currentType = typeSymbol;
             while (currentType != null && currentType.SpecialType != SpecialType.System_Object)
             {
                 foreach (var member in currentType.GetMembers())
                 {
-                    yield return member;
+                    if (seen.Add(member))
+                        yield return member;
                 }
                 currentType = currentType.BaseType;
+            }
+
+            foreach (var iface in typeSymbol.AllInterfaces)
+            {
+                foreach (var member in iface.GetMembers())
+                {
+                    if (seen.Add(member))
+                        yield return member;
+                }
             }
         }
 
         public static bool AttributeMatches(AttributeData attributeData, string fullyQualifiedAttributeName)
         {
-            var fqn = attributeData.AttributeClass?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-            if (fqn == fullyQualifiedAttributeName)
-                return true;
-
-            var shortName = attributeData.AttributeClass?.Name;
-            if (shortName == null)
+            var attrClass = attributeData.AttributeClass;
+            if (attrClass == null)
                 return false;
 
-            var targetShort = fullyQualifiedAttributeName.Split('.').Last();
-            if (targetShort.EndsWith("Attribute"))
-                targetShort = targetShort.Substring(0, targetShort.Length - "Attribute".Length);
+            var fqn = attrClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
+            if (string.Equals(fqn, fullyQualifiedAttributeName, StringComparison.Ordinal))
+                return true;
 
-            var simpleName = shortName;
-            if (simpleName.EndsWith("Attribute"))
-                simpleName = simpleName.Substring(0, simpleName.Length - "Attribute".Length);
+            string? attrNamespace = attrClass.ContainingNamespace?.ToDisplayString();
+            var attrName = attrClass.Name;
+            if (attrName.EndsWith("Attribute", StringComparison.Ordinal))
+                attrName = attrName.Substring(0, attrName.Length - "Attribute".Length);
 
-            return simpleName == targetShort || shortName == targetShort || shortName == fullyQualifiedAttributeName;
+            string? targetNamespace = null;
+            var targetName = fullyQualifiedAttributeName;
+            var lastDot = fullyQualifiedAttributeName.LastIndexOf('.');
+            if (lastDot >= 0)
+            {
+                targetNamespace = fullyQualifiedAttributeName.Substring(0, lastDot);
+                targetName = fullyQualifiedAttributeName.Substring(lastDot + 1);
+            }
+            if (targetName.EndsWith("Attribute", StringComparison.Ordinal))
+                targetName = targetName.Substring(0, targetName.Length - "Attribute".Length);
+
+            if (!string.Equals(attrName, targetName, StringComparison.Ordinal))
+                return false;
+
+            if (targetNamespace != null)
+                return string.Equals(attrNamespace, targetNamespace, StringComparison.Ordinal);
+
+            return true;
         }
 
         public static bool InheritsFrom(INamedTypeSymbol? typeSymbol, string baseTypeFullName)
