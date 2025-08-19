@@ -10,6 +10,7 @@ option csharp_namespace = "Generated.Protos";
 
 import "google/protobuf/any.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
 
 // Message representing the full state of the HP3LSThermalTestViewModel
 message HP3LSThermalTestViewModelState {
