@@ -15,20 +15,20 @@ export class PointerViewModelRemoteClient {
     private pingIntervalId?: any;
     private changeCallbacks: Array<() => void> = [];
 
-    show: any;
-    showSpinner: any;
-    clicksToPass: any;
-    is3Btn: any;
-    testTimeoutSec: any;
-    instructions: any;
-    showCursorTest: any;
-    showConfigSelection: any;
-    showClickInstructions: any;
-    showTimer: any;
-    showBottom: any;
-    timerText: any;
-    selectedDevice: any;
-    lastClickCount: any;
+    show: boolean;
+    showSpinner: boolean;
+    clicksToPass: number;
+    is3Btn: boolean;
+    testTimeoutSec: number;
+    instructions: string;
+    showCursorTest: boolean;
+    showConfigSelection: boolean;
+    showClickInstructions: boolean;
+    showTimer: boolean;
+    showBottom: boolean;
+    timerText: string;
+    selectedDevice: string;
+    lastClickCount: number;
     connectionStatus: string = 'Unknown';
 
     addChangeListener(cb: () => void): void {

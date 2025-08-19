@@ -58,6 +58,7 @@
 		<Compile Remove="RemoteGenerated\PointerViewModel.Remote.g.cs" />
 		<Compile Remove="RemoteGenerated\PointerViewModelGrpcServiceImpl.cs" />
 		<Compile Remove="RemoteGenerated\PointerViewModelRemoteClient.cs" />
+		<Folder Include="actual\" />
 
 		<Folder Include="RemoteGenerated\" />
 	</ItemGroup>
