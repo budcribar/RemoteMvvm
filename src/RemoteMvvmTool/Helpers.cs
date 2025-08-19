@@ -77,10 +77,13 @@ namespace GrpcRemoteMvvmModelUtil
 
         public static bool InheritsFrom(INamedTypeSymbol? typeSymbol, string baseTypeFullName)
         {
+            static string Normalize(string name) =>
+                name.StartsWith("global::", StringComparison.Ordinal) ? name.Substring("global::".Length) : name;
+
             static bool SymbolMatches(INamedTypeSymbol symbol, string fullName)
             {
                 var fqn = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                return string.Equals(fqn, fullName, StringComparison.Ordinal);
+                return string.Equals(Normalize(fqn), Normalize(fullName), StringComparison.Ordinal);
             }
 
             static bool InterfaceMatches(INamedTypeSymbol symbol, string fullName)
