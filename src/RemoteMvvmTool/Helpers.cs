@@ -42,6 +42,11 @@ namespace GrpcRemoteMvvmModelUtil
             if (string.Equals(fqn, fullyQualifiedAttributeName, StringComparison.Ordinal))
                 return true;
 
+            if (attrClass.ContainingType != null)
+            {
+                return false;
+            }
+
             string? attrNamespace = attrClass.ContainingNamespace?.ToDisplayString();
             var attrName = attrClass.Name;
             if (attrName.EndsWith("Attribute", StringComparison.Ordinal))
@@ -72,7 +77,7 @@ namespace GrpcRemoteMvvmModelUtil
             while (typeSymbol != null && typeSymbol.SpecialType != SpecialType.System_Object)
             {
                 var fqn = typeSymbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                if (fqn == baseTypeFullName)
+                if (fqn == baseTypeFullName || typeSymbol.AllInterfaces.Any(i => i.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)) == baseTypeFullName))
                     return true;
                 typeSymbol = typeSymbol.BaseType;
             }
