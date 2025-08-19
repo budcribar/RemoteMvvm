@@ -15,8 +15,8 @@ export class SampleViewModelRemoteClient {
     private pingIntervalId?: any;
     private changeCallbacks: Array<() => void> = [];
 
-    name: any;
-    count: any;
+    name: string;
+    count: number;
     connectionStatus: string = 'Unknown';
 
     addChangeListener(cb: () => void): void {
