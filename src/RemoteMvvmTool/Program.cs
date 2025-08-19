@@ -88,6 +88,12 @@ public class Program
                 Environment.ExitCode = 1;
                 return;
             }
+            catch (FileNotFoundException ex)
+            {
+                Console.Error.WriteLine(ex.Message);
+                Environment.ExitCode = 1;
+                return;
+            }
 
             if (result.ViewModelSymbol == null)
             {
