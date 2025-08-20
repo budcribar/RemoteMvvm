@@ -88,7 +88,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                             try
                             {
                                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);
-                                this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => k.Key, v => ProtoStateConverters.FromProto(v.Value)));
+                                this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => (HP.Telemetry.Zone)k.Key, v => ProtoStateConverters.FromProto(v.Value)));
                                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                                 this.ShowDescription = state.ShowDescription;
                                 this.ShowReadme = state.ShowReadme;
@@ -127,7 +127,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Initial state received.");
-                this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => k.Key, v => ProtoStateConverters.FromProto(v.Value)));
+                this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => (HP.Telemetry.Zone)k.Key, v => ProtoStateConverters.FromProto(v.Value)));
                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                 this.ShowDescription = state.ShowDescription;
                 this.ShowReadme = state.ShowReadme;

@@ -14,7 +14,7 @@ import "google/protobuf/timestamp.proto";
 
 // Message representing the full state of the HP3LSThermalTestViewModel
 message HP3LSThermalTestViewModelState {
-  repeated Zone_ThermalZoneComponentViewModel_Entry zones = 1; // Original C#: System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones
+  map<int32, ThermalZoneComponentViewModelState> zones = 1; // Original C#: System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones
   TestSettingsModelState test_settings = 2; // Original C#: HPSystemsTools.Models.TestSettingsModel TestSettings
   bool show_description = 3; // Original C#: bool ShowDescription
   bool show_readme = 4; // Original C#: bool ShowReadme
@@ -39,11 +39,6 @@ message TestSettingsModelState {
   int32 cpu_temperature_threshold = 1; // Original C#: int CpuTemperatureThreshold
   int32 cpu_load_threshold = 2; // Original C#: int CpuLoadThreshold
   int32 cpu_load_time_span = 3; // Original C#: int CpuLoadTimeSpan
-}
-
-message Zone_ThermalZoneComponentViewModel_Entry {
-  int32 key = 1;
-  ThermalZoneComponentViewModelState value = 2;
 }
 
 message UpdatePropertyValueRequest {

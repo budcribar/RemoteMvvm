@@ -61,7 +61,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         try
         {
             var propValue = _viewModel.Zones;
-            if (propValue != null) state.Zones.Add(propValue.Select(kv => new Zone_ThermalZoneComponentViewModel_Entry { Key = kv.Key, Value = ProtoStateConverters.ToProto(kv.Value) }));
+            if (propValue != null) state.Zones.Add(propValue.ToDictionary(kv => (int)kv.Key, kv => ProtoStateConverters.ToProto(kv.Value)));
         }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property Zones to state.Zones: " + ex.Message); }
         // Mapping property: TestSettings to state.TestSettings

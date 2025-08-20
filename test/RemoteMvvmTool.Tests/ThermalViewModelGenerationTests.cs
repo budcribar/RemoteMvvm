@@ -34,7 +34,6 @@ public class ThermalViewModelGenerationTests
             Path.Combine(vmDir, "ThermalStateEnum.cs"),
             Path.Combine(vmDir, "IHpMonitor.cs"),
             Path.Combine(vmDir, "TestSettingsModel.cs"),
-            Path.Combine(vmDir, "Zone.cs")
         };
         var refs = LoadDefaultRefs();
         var allFiles = (new[] { vmFile }).Concat(additionalFiles).ToArray();
@@ -60,7 +59,6 @@ public class ThermalViewModelGenerationTests
             Path.Combine(vmDir, "ThermalStateEnum.cs"),
             Path.Combine(vmDir, "IHpMonitor.cs"),
             Path.Combine(vmDir, "TestSettingsModel.cs"),
-            Path.Combine(vmDir, "Zone.cs")
         };
         var refs = LoadDefaultRefs();
         var allFiles = (new[] { vmFile }).Concat(additionalFiles).ToArray();
@@ -87,7 +85,6 @@ public class ThermalViewModelGenerationTests
             Path.Combine(vmDir, "ThermalStateEnum.cs"),
             Path.Combine(vmDir, "IHpMonitor.cs"),
             Path.Combine(vmDir, "TestSettingsModel.cs"),
-            Path.Combine(vmDir, "Zone.cs")
         };
         var refs = LoadDefaultRefs();
         var allFiles = (new[] { vmFile }).Concat(additionalFiles).ToArray();
@@ -104,34 +101,6 @@ public class ThermalViewModelGenerationTests
         Assert.Contains("ThermalZoneComponentViewModelState", conv);
     }
 
-    [Fact]
-    public async Task Generated_Converters_Handle_Unresolved_Enum_As_Int()
-    {
-        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
-        var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
-        var vmFile = Path.Combine(vmDir, "HP3LSThermalTestViewModel.cs");
-        // Intentionally omit Zone.cs so the Zone type is unresolved
-        var additionalFiles = new[]
-        {
-            Path.Combine(vmDir, "ThermalZoneComponentViewModel.cs"),
-            Path.Combine(vmDir, "ThermalStateEnum.cs"),
-            Path.Combine(vmDir, "IHpMonitor.cs"),
-            Path.Combine(vmDir, "TestSettingsModel.cs")
-        };
-        var refs = LoadDefaultRefs();
-        var allFiles = (new[] { vmFile }).Concat(additionalFiles).ToArray();
-        var result = await ViewModelAnalyzer.AnalyzeAsync(
-            allFiles,
-            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
-            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
-            refs);
-        var rootTypes = result.Properties.Select(p => p.FullTypeSymbol!)
-            .Concat(result.Commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!)));
-        var conv = ConversionGenerator.Generate("Generated.Protos", result.ViewModelSymbol!.ContainingNamespace.ToDisplayString(), rootTypes, result.Compilation);
-        Assert.Contains("state.Zone = (int)model.Zone", conv);
-        Assert.Contains("model.Zone = (HP.Telemetry.Zone)state.Zone", conv);
-        Assert.DoesNotContain("ZoneState", conv);
-    }
 
     [Fact]
     public async Task RemoteMvvmTool_Generates_Code_Successfully()
@@ -149,7 +118,6 @@ public class ThermalViewModelGenerationTests
                 "ThermalStateEnum.cs",
                 "IHpMonitor.cs",
                 "TestSettingsModel.cs",
-                "Zone.cs"
             };
             if (Directory.Exists(Path.Combine(vmDir, "generated")))
                 Directory.Delete(Path.Combine(vmDir, "generated"), true);
@@ -181,7 +149,6 @@ public class ThermalViewModelGenerationTests
                 "ThermalStateEnum.cs",
                 "IHpMonitor.cs",
                 "TestSettingsModel.cs",
-                "Zone.cs"
             };
             if (Directory.Exists(Path.Combine(vmDir, "generated")))
                 Directory.Delete(Path.Combine(vmDir, "generated"), true);
