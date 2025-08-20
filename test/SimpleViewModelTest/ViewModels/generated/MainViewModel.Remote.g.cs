@@ -27,7 +27,7 @@ namespace SimpleViewModelTest.ViewModels
         private GrpcChannel? _channel;
         private SimpleViewModelTest.ViewModels.RemoteClients.MainViewModelRemoteClient? _remoteClient;
 
-        public MainViewModel(ServerOptions options) : this()
+        public MainViewModel(ServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -87,7 +87,7 @@ namespace SimpleViewModelTest.ViewModels
             Task.Run(() => app.RunAsync()); // Run the server in a background thread
         }
 
-        public MainViewModel(ClientOptions options) : this()
+        public MainViewModel(ClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _channel = GrpcChannel.ForAddress(options.Address);

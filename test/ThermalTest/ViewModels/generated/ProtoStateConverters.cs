@@ -41,7 +41,6 @@ public static class ProtoStateConverters
         model.FanSpeed = state.FanSpeed;
         model.SecondsInState = state.SecondsInState;
         model.FirstSeenInState = state.FirstSeenInState?.ToDateTime() ?? DateTime.MinValue;
-
         model.Progress = state.Progress;
         model.Background = state.Background;
         model.Status = (HPSystemsTools.Models.ThermalStateEnum)state.Status;
