@@ -142,7 +142,7 @@ public static class ProtoGenerator
             {
                 propsForMsg = Helpers.GetAllMembers(msgType)
                     .OfType<IPropertySymbol>()
-                    .Where(p => p.GetMethod != null && p.Parameters.Length == 0)
+                    .Where(p => !p.IsStatic && p.GetMethod != null && p.Parameters.Length == 0)
                     .ToList();
             }
 

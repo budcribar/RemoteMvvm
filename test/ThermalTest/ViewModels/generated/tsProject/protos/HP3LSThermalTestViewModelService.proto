@@ -39,7 +39,6 @@ message TestSettingsModelState {
   int32 cpu_temperature_threshold = 1; // Original C#: int CpuTemperatureThreshold
   int32 cpu_load_threshold = 2; // Original C#: int CpuLoadThreshold
   int32 cpu_load_time_span = 3; // Original C#: int CpuLoadTimeSpan
-  map<string, int32> dts = 4; // Original C#: System.Collections.Generic.Dictionary<string, int> DTS
 }
 
 message UpdatePropertyValueRequest {

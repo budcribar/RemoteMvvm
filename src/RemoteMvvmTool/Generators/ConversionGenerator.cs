@@ -45,6 +45,7 @@ public static class ConversionGenerator
         sb.AppendLine($"        var state = new {protoNs}.{stateName}();");
         foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
         {
+            if (prop.IsStatic) continue;
             if (prop.DeclaredAccessibility != Accessibility.Public || prop.GetMethod == null) continue;
             var propType = prop.Type;
             string propName = prop.Name;
@@ -78,6 +79,7 @@ public static class ConversionGenerator
         sb.AppendLine($"        var model = new {fullName}();");
         foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
         {
+            if (prop.IsStatic) continue;
             if (prop.DeclaredAccessibility != Accessibility.Public || prop.SetMethod == null) continue;
             var propType = prop.Type;
             string propName = prop.Name;
