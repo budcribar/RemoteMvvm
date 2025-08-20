@@ -78,6 +78,15 @@ public static class ProtoGenerator
                     return "google.protobuf.Duration";
             }
 
+            if (type.TypeKind == TypeKind.Enum)
+                return "int32";
+
+            if (type.TypeKind == TypeKind.Error)
+            {
+                Console.Error.WriteLine($"Warning: Type '{type.ToDisplayString()}' is not supported. Using 'int32'.");
+                return "int32";
+            }
+
             if (type is INamedTypeSymbol taskNamed)
             {
                 var constructed = taskNamed.ConstructedFrom?.ToDisplayString();
