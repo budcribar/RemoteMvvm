@@ -206,7 +206,7 @@ public class Program
                 if (NeedsGeneration(partialPath, vms))
                 {
                     var baseClass = result.ViewModelSymbol?.BaseType?.ToDisplayString() ?? string.Empty;
-                    var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace, baseClass);
+                    var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace, baseClass, runType);
                     await File.WriteAllTextAsync(partialPath, partial);
                 }
             }
