@@ -217,14 +217,18 @@ namespace GrpcRemoteMvvmModelUtil
                         var candidate = Path.Combine(dir, named.Name + ".cs");
                         if (File.Exists(candidate)) { filePath = candidate; break; }
                     }
-                    if (filePath != null && !compilation.SyntaxTrees.Any(t => t.FilePath == filePath))
+                    if (filePath != null)
                     {
-                        var content = await File.ReadAllTextAsync(filePath);
-                        var tree = CSharpSyntaxTree.ParseText(content, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest), path: filePath);
-                        compilation = compilation.AddSyntaxTrees(tree);
+                        var tree = compilation.SyntaxTrees.FirstOrDefault(t => t.FilePath == filePath);
+                        if (tree == null)
+                        {
+                            var content = await File.ReadAllTextAsync(filePath);
+                            tree = CSharpSyntaxTree.ParseText(content, CSharpParseOptions.Default.WithLanguageVersion(LanguageVersion.Latest), path: filePath);
+                            compilation = compilation.AddSyntaxTrees(tree);
+                        }
 
                         var semanticModel = compilation.GetSemanticModel(tree);
-                        var typeDecl = tree.GetRoot().DescendantNodes().OfType<TypeDeclarationSyntax>()
+                        var typeDecl = tree.GetRoot().DescendantNodes().OfType<BaseTypeDeclarationSyntax>()
                             .FirstOrDefault(t => t.Identifier.Text == named.Name);
                         if (typeDecl != null && semanticModel.GetDeclaredSymbol(typeDecl) is INamedTypeSymbol resolvedSym)
                         {

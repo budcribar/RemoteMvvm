@@ -44,6 +44,7 @@ public class ThermalViewModelGenerationTests
             refs);
         Assert.NotNull(result.ViewModelSymbol);
         Assert.Contains(result.Properties, p => p.TypeString.Contains("ThermalZoneComponentViewModel"));
+        Assert.Contains(result.Properties, p => p.TypeString.Contains("HP.Telemetry.Zone"));
         Assert.Contains(result.Commands, c => c.MethodName == "StateChanged" && c.Parameters.Any(pr => pr.TypeString.Contains("ThermalStateEnum")));
     }
 
@@ -67,6 +68,8 @@ public class ThermalViewModelGenerationTests
             };
             if (Directory.Exists(Path.Combine(vmDir, "generated")))
                 Directory.Delete(Path.Combine(vmDir, "generated"), true);
+            if (Directory.Exists(Path.Combine(vmDir, "protos")))
+                Directory.Delete(Path.Combine(vmDir, "protos"), true);
 
             var exitCode = await Program.Main(args);
             Assert.Equal(0, exitCode);
