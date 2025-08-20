@@ -7,6 +7,7 @@ using System.Linq;
 using Generated.Protos;
 using System;
 using Google.Protobuf.WellKnownTypes;
+
 namespace HPSystemsTools.ViewModels;
 
 public static class ProtoStateConverters
