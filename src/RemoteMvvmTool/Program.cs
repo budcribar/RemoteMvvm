@@ -188,6 +188,14 @@ public class Program
             }
             if (genServer || genClient)
             {
+                string convPath = Path.Combine(output, "ProtoStateConverters.cs");
+                if (NeedsGeneration(convPath, vms))
+                {
+                    var rootTypes = result.Properties.Select(p => p.FullTypeSymbol!)
+                        .Concat(result.Commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!)));
+                    var conv = ConversionGenerator.Generate(protoNamespace, vmNamespaceStr, rootTypes);
+                    await File.WriteAllTextAsync(convPath, conv);
+                }
                 string optsPath = Path.Combine(output, "GrpcRemoteOptions.cs");
                 if (NeedsGeneration(optsPath, vms))
                 {

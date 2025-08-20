@@ -119,7 +119,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task<SampleApp.ViewModels.Protos.IncrementCountResponse> IncrementCount(SampleApp.ViewModels.Protos.IncrementCountRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.IncrementCountCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -135,7 +135,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse> DelayedIncrementAsync(SampleApp.ViewModels.Protos.DelayedIncrementAsyncRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
             if (command != null)
             {
@@ -152,7 +152,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task<SampleApp.ViewModels.Protos.SetNameToValueResponse> SetNameToValue(SampleApp.ViewModels.Protos.SetNameToValueRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {

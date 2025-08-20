@@ -156,25 +156,46 @@ public static class ClientGenerator
                 {
                     sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
                 }
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
+                    string sel = string.Empty;
+                    if (elem!.TypeKind == TypeKind.Enum)
+                        sel = $".Select(e => ({elem.ToDisplayString()})e)";
+                    else if (!GeneratorHelpers.IsWellKnownType(elem))
+                        sel = ".Select(ProtoStateConverters.FromProto)";
                     if (named.TypeKind == TypeKind.Interface)
-                        sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                        sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
                     else
-                        sb.AppendLine($"                                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName});");
+                        sb.AppendLine($"                                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}{sel});");
                 }
                 else
                 {
-                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+                    if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
+                        sb.AppendLine($"                                this.{prop.Name} = ({prop.TypeString})state.{protoStateFieldName};");
+                    else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
+                        sb.AppendLine($"                                this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
+                    else
+                        sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
                 }
             }
-            else if (prop.FullTypeSymbol is IArrayTypeSymbol)
+            else if (prop.FullTypeSymbol is IArrayTypeSymbol arr)
             {
-                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+                string sel = string.Empty;
+                var elem = arr.ElementType;
+                if (elem.TypeKind == TypeKind.Enum)
+                    sel = $".Select(e => ({elem.ToDisplayString()})e)";
+                else if (!GeneratorHelpers.IsWellKnownType(elem))
+                    sel = ".Select(ProtoStateConverters.FromProto)";
+                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}{sel}.ToArray();");
             }
             else
             {
-                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+                if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
+                    sb.AppendLine($"                                this.{prop.Name} = ({prop.TypeString})state.{protoStateFieldName};");
+                else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
+                    sb.AppendLine($"                                this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
+                else
+                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
             }
         }
         sb.AppendLine("                                Debug.WriteLine(\"[ClientProxy] State re-synced after reconnect.\");");
@@ -230,25 +251,46 @@ public static class ClientGenerator
                 {
                     sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
                 }
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
+                    string sel = string.Empty;
+                    if (elem!.TypeKind == TypeKind.Enum)
+                        sel = $".Select(e => ({elem.ToDisplayString()})e)";
+                    else if (!GeneratorHelpers.IsWellKnownType(elem))
+                        sel = ".Select(ProtoStateConverters.FromProto)";
                     if (named.TypeKind == TypeKind.Interface)
-                        sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                        sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
                     else
-                        sb.AppendLine($"                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName});");
+                        sb.AppendLine($"                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}{sel});");
                 }
                 else
                 {
-                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+                    if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
+                        sb.AppendLine($"                this.{prop.Name} = ({prop.TypeString})state.{protoStateFieldName};");
+                    else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
+                        sb.AppendLine($"                this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
+                    else
+                        sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
                 }
             }
-            else if (prop.FullTypeSymbol is IArrayTypeSymbol)
+            else if (prop.FullTypeSymbol is IArrayTypeSymbol arr)
             {
-                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+                string sel = string.Empty;
+                var elem = arr.ElementType;
+                if (elem.TypeKind == TypeKind.Enum)
+                    sel = $".Select(e => ({elem.ToDisplayString()})e)";
+                else if (!GeneratorHelpers.IsWellKnownType(elem))
+                    sel = ".Select(ProtoStateConverters.FromProto)";
+                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}{sel}.ToArray();");
             }
             else
             {
-                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+                if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
+                    sb.AppendLine($"                this.{prop.Name} = ({prop.TypeString})state.{protoStateFieldName};");
+                else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
+                    sb.AppendLine($"                this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
+                else
+                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
             }
         }
         sb.AppendLine("                _isInitialized = true;");
@@ -269,7 +311,16 @@ public static class ClientGenerator
             string requestCreation = $"new {protoNs}.{cmd.MethodName}Request()";
             if (cmd.Parameters.Any())
             {
-                var paramAssignments = cmd.Parameters.Select(p => $"{GeneratorHelpers.ToPascalCase(p.Name)} = {GeneratorHelpers.LowercaseFirst(p.Name)}");
+                var paramAssignments = cmd.Parameters.Select(p =>
+                {
+                    var varName = GeneratorHelpers.LowercaseFirst(p.Name);
+                    string expr = p.FullTypeSymbol.TypeKind == TypeKind.Enum
+                        ? $"(int){varName}"
+                        : (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol)
+                            ? $"ProtoStateConverters.ToProto({varName})"
+                            : varName);
+                    return $"{GeneratorHelpers.ToPascalCase(p.Name)} = {expr}";
+                });
                 requestCreation = $"new {protoNs}.{cmd.MethodName}Request {{ {string.Join(", ", paramAssignments)} }}";
             }
             string methodSignature = cmd.IsAsync ? $"private async Task RemoteExecute_{cmd.MethodName}Async({paramListWithType})" : $"private void RemoteExecute_{cmd.MethodName}({paramListWithType})";

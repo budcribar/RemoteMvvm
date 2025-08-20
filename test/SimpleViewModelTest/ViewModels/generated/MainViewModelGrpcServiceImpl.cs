@@ -61,7 +61,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         try
         {
             var propValue = _viewModel.Devices;
-            if (propValue != null) state.Devices.Add(propValue);
+            if (propValue != null) state.Devices.Add(propValue.Select(ProtoStateConverters.ToProto));
         }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error mapping property Devices to state.Devices: " + ex.Message); }
         return Task.FromResult(state);
@@ -112,12 +112,12 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
 
     public override async Task<Generated.Protos.UpdateStatusResponse> UpdateStatus(Generated.Protos.UpdateStatusRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.UpdateStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
                 var typedCommand = _viewModel.UpdateStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus>;
-                if (typedCommand != null) typedCommand.Execute(request.Status); else command.Execute(request);
+                if (typedCommand != null) typedCommand.Execute((SimpleViewModelTest.ViewModels.DeviceStatus)request.Status); else command.Execute(request);
             }
             else { Debug.WriteLine("[GrpcService:MainViewModel] Command UpdateStatusCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {

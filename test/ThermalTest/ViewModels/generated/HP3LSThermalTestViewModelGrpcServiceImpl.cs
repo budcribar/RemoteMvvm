@@ -68,7 +68,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         try
         {
             var propValue = _viewModel.TestSettings;
-            state.TestSettings = propValue;
+            state.TestSettings = ProtoStateConverters.ToProto(propValue);
         }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property TestSettings to state.TestSettings: " + ex.Message); }
         // Mapping property: ShowDescription to state.ShowDescription
@@ -133,12 +133,12 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     public override async Task<Generated.Protos.StateChangedResponse> StateChanged(Generated.Protos.StateChangedRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
                 var typedCommand = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<HPSystemsTools.ViewModels.ThermalStateEnum>;
-                if (typedCommand != null) typedCommand.Execute(request.State); else command.Execute(request);
+                if (typedCommand != null) typedCommand.Execute((HPSystemsTools.ViewModels.ThermalStateEnum)request.State); else command.Execute(request);
             }
             else { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Command StateChangedCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -150,7 +150,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     public override async Task<Generated.Protos.CancelTestResponse> CancelTest(Generated.Protos.CancelTestRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.CancelTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
