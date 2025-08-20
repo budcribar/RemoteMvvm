@@ -106,4 +106,44 @@ public class ThermalViewModelGenerationTests
             Environment.CurrentDirectory = oldDir;
         }
     }
+
+    [Fact]
+    public async Task Generated_Code_Omits_Static_Properties()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
+        var oldDir = Environment.CurrentDirectory;
+        try
+        {
+            Environment.CurrentDirectory = vmDir;
+            var args = new[]
+            {
+                "HP3LSThermalTestViewModel.cs",
+                "ThermalZoneComponentViewModel.cs",
+                "ThermalStateEnum.cs",
+                "IHpMonitor.cs",
+                "TestSettingsModel.cs",
+                "Zone.cs"
+            };
+            if (Directory.Exists(Path.Combine(vmDir, "generated")))
+                Directory.Delete(Path.Combine(vmDir, "generated"), true);
+            if (Directory.Exists(Path.Combine(vmDir, "protos")))
+                Directory.Delete(Path.Combine(vmDir, "protos"), true);
+
+            var exitCode = await Program.Main(args);
+            Assert.Equal(0, exitCode);
+
+            var protoFile = Path.Combine(vmDir, "protos", "HP3LSThermalTestViewModelService.proto");
+            var protoText = File.ReadAllText(protoFile);
+            Assert.DoesNotContain("dts", protoText, StringComparison.OrdinalIgnoreCase);
+
+            var converterFile = Path.Combine(vmDir, "generated", "ProtoStateConverters.cs");
+            var converterText = File.ReadAllText(converterFile);
+            Assert.DoesNotContain("DTS", converterText);
+        }
+        finally
+        {
+            Environment.CurrentDirectory = oldDir;
+        }
+    }
 }

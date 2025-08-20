@@ -16,7 +16,6 @@ public static class ProtoStateConverters
         state.CpuTemperatureThreshold = model.CpuTemperatureThreshold;
         state.CpuLoadThreshold = model.CpuLoadThreshold;
         state.CpuLoadTimeSpan = model.CpuLoadTimeSpan;
-        state.DTS = model.DTS;
         return state;
     }
 
@@ -26,7 +25,6 @@ public static class ProtoStateConverters
         model.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
         model.CpuLoadThreshold = state.CpuLoadThreshold;
         model.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
-        model.DTS = state.DTS;
         return model;
     }
 
