@@ -65,6 +65,10 @@ public static class GeneratorHelpers
         "System.Single" => "FloatValue",
         "double" => "DoubleValue",
         "System.Double" => "DoubleValue",
+        "half" => "FloatValue",
+        "Half" => "FloatValue",
+        "System.Half" => "FloatValue",
+        "System.DateTime" => "Timestamp",
         _ => null
     };
     public static string LowercaseFirst(string str) => string.IsNullOrEmpty(str) ? str : char.ToLowerInvariant(str[0]) + str[1..];
@@ -128,12 +132,24 @@ public static class GeneratorHelpers
 
         if (TryGetMemoryElementType(typeSymbol, out var elementType))
         {
+            if (elementType is INamedTypeSymbol namedNullable &&
+                namedNullable.IsGenericType &&
+                namedNullable.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                elementType = namedNullable.TypeArguments[0];
+            }
             if (elementType?.SpecialType == SpecialType.System_Byte)
                 return "BytesValue";
         }
 
         if (TryGetEnumerableElementType(typeSymbol, out var enumElem))
         {
+            if (enumElem is INamedTypeSymbol enumNullable &&
+                enumNullable.IsGenericType &&
+                enumNullable.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                enumElem = enumNullable.TypeArguments[0];
+            }
             if (enumElem?.SpecialType == SpecialType.System_Byte)
                 return "BytesValue";
         }
@@ -205,7 +221,8 @@ public static class GeneratorHelpers
         if (typeSymbol is INamedTypeSymbol named)
         {
             var def = named.OriginalDefinition.ToDisplayString();
-            if (def == "System.Memory<T>" || def == "System.ReadOnlyMemory<T>")
+            if (def == "System.Memory<T>" || def == "System.ReadOnlyMemory<T>" ||
+                def == "System.Span<T>" || def == "System.ReadOnlySpan<T>")
             {
                 elementType = named.TypeArguments[0];
                 return true;
