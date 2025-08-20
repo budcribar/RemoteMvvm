@@ -87,7 +87,7 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("            // Configure Kestrel to listen on the specified port with HTTP/2 support");
         sb.AppendLine("            builder.WebHost.ConfigureKestrel(kestrelOptions =>");
         sb.AppendLine("            {");
-        sb.AppendLine("                kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>");
+        sb.AppendLine("                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>");
         sb.AppendLine("                {");
         sb.AppendLine("                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;");
         sb.AppendLine("                });");
