@@ -40,7 +40,7 @@ public class GeneratedCodeCompilationTests
         Directory.CreateDirectory(tempDir);
         var vmDir = tempDir;
         var vmFile = Path.Combine(vmDir, "TestViewModel.cs");
-        var viewModelCode = @$"using System;\nusing System.Collections.Generic;\nusing CommunityToolkit.Mvvm.ComponentModel;\nusing CommunityToolkit.Mvvm.Input;\n\nnamespace GeneratedTests;\n\npublic partial class TestViewModel : ObservableObject\n{{\n    [ObservableProperty]\n    private Dictionary<{keyType}, {valueType}> map;\n\n    [RelayCommand]\n    void DoThing() {{ }}\n\n    public enum SampleEnum {{ A, B, C }}\n    public class NestedType {{ public int Value {{ get; set; }} }}\n}}";
+        var viewModelCode = @$"using System;\nusing System.Collections.Generic;\nusing CommunityToolkit.Mvvm.ComponentModel;\nusing CommunityToolkit.Mvvm.Input;\n\nnamespace GeneratedTests;\n\npublic partial class TestViewModel : ObservableObject\n{{\n    [ObservableProperty]\n    private Dictionary<{keyType}, {valueType}> map;\n\n    [RelayCommand]\n    void DoThing() {{ }}\n\n    public enum SampleEnum {{ A, B, C }}\n    public class NestedType {{ public int Value {{ get; set; }} }}\n}}".Replace("\\n", "\n");
         File.WriteAllText(vmFile, viewModelCode);
 
         var generatedDir = Path.Combine(vmDir, "generated");
@@ -63,7 +63,7 @@ public class GeneratedCodeCompilationTests
             .Concat(Directory.GetFiles(grpcOut, "*.cs"))
             .ToList();
 
-        var stubCode = @$"using System;\nusing System.Collections.Generic;\nusing CommunityToolkit.Mvvm.ComponentModel;\nusing CommunityToolkit.Mvvm.Input;\n\nnamespace GeneratedTests;\n\npublic partial class TestViewModel : ObservableObject\n{{\n    public Dictionary<{keyType}, {valueType}> Map {{ get; set; }} = new();\n    public IRelayCommand DoThingCommand {{ get; }} = new RelayCommand(() => {{ }});\n    public enum SampleEnum {{ A, B, C }}\n    public class NestedType {{ public int Value {{ get; set; }} }}\n}}";
+        var stubCode = @$"using System;\nusing System.Collections.Generic;\nusing CommunityToolkit.Mvvm.ComponentModel;\nusing CommunityToolkit.Mvvm.Input;\n\nnamespace GeneratedTests;\n\npublic partial class TestViewModel : ObservableObject\n{{\n    public Dictionary<{keyType}, {valueType}> Map {{ get; set; }} = new();\n    public IRelayCommand DoThingCommand {{ get; }} = new RelayCommand(() => {{ }});\n    public enum SampleEnum {{ A, B, C }}\n    public class NestedType {{ public int Value {{ get; set; }} }}\n}}".Replace("\\n", "\n");
         var stubFile = Path.Combine(vmDir, "TestViewModelStub.cs");
         File.WriteAllText(stubFile, stubCode);
         sourceFiles.Add(stubFile);
