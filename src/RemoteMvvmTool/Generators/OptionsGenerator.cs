@@ -20,6 +20,7 @@ public static class OptionsGenerator
         sb.AppendLine("        public string[]? AllowedMethods { get; set; } = null;");
         sb.AppendLine("        public string[]? ExposedHeaders { get; set; } = null;");
         sb.AppendLine("        public string? LogLevel { get; set; } = \"Debug\";");
+        sb.AppendLine("        public string RunString { get; set; } = \"WPF\";");
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine("    public class ClientOptions");

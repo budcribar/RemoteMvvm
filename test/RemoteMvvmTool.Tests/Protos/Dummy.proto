@@ -1,0 +1,10 @@
+syntax = "proto3";
+option csharp_namespace = "RemoteMvvmTool.Tests.Protos";
+package remotemvvmtool.tests;
+
+message PingRequest {}
+message PingReply {}
+
+service TestService {
+  rpc Ping (PingRequest) returns (PingReply);
+}

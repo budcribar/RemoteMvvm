@@ -31,6 +31,7 @@ public class Program
         var protoNsOption = new Option<string>("--protoNamespace", () => "Generated.Protos", "C# namespace for generated proto types");
         var serviceNameOption = new Option<string?>("--serviceName", description: "gRPC service name");
         var clientNsOption = new Option<string?>("--clientNamespace", description: "Namespace for generated client proxy");
+        var runOption = new Option<string>("--run", () => "wpf", "Application type: wpf, winforms, or console");
 
         var root = new RootCommand("RemoteMvvm generation tool");
         root.AddOption(generateOption);
@@ -40,6 +41,7 @@ public class Program
         root.AddOption(protoOutputOption);
         root.AddOption(serviceNameOption);
         root.AddOption(clientNsOption);
+        root.AddOption(runOption);
 
         bool NeedsGeneration(string outputFile, IEnumerable<string> inputs)
         {
@@ -54,7 +56,7 @@ public class Program
             return false;
         }
 
-        root.SetHandler(async (generate, output, protoOutput, vms, protoNs, serviceNameOpt, clientNsOpt) =>
+        root.SetHandler(async (generate, output, protoOutput, vms, protoNs, serviceNameOpt, clientNsOpt, runType) =>
         {
             var gens = generate.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             bool genProto = gens.Contains("proto") || gens.Contains("all");
@@ -165,7 +167,7 @@ public class Program
                 string serverPath = Path.Combine(output, result.ViewModelName + "GrpcServiceImpl.cs");
                 if (NeedsGeneration(serverPath, vms))
                 {
-                    var server = ServerGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespaceStr);
+                    var server = ServerGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, vmNamespaceStr, runType);
                     await File.WriteAllTextAsync(serverPath, server);
                 }
             }
@@ -194,7 +196,7 @@ public class Program
                     await File.WriteAllTextAsync(partialPath, partial);
                 }
             }
-        }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption);
+        }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption, runOption);
 
         return await root.InvokeAsync(args);
     }
