@@ -87,7 +87,17 @@ public static class ServerGenerator
             {
                 if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
                 {
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue);");
+                    var keyType = named.TypeArguments[0];
+                    var valueType = named.TypeArguments[1];
+                    string keySel = "(int)kv.Key";
+                    if (GeneratorHelpers.IsWellKnownType(keyType) && keyType.TypeKind != TypeKind.Enum)
+                        keySel = "kv.Key";
+                    string valSel = "kv.Value";
+                    if (valueType.TypeKind == TypeKind.Enum)
+                        valSel = "(int)kv.Value";
+                    else if (!GeneratorHelpers.IsWellKnownType(valueType))
+                        valSel = "ProtoStateConverters.ToProto(kv.Value)";
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue.ToDictionary(kv => {keySel}, kv => {valSel}));");
                 }
                 else if (GeneratorHelpers.TryGetMemoryElementType(named, out _))
                 {
