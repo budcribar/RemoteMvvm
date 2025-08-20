@@ -11,6 +11,9 @@ namespace GrpcRemoteMvvmModelUtil
 {
     public class ViewModelAnalyzer
     {
+        private static readonly SymbolDisplayFormat FullNameFormat = SymbolDisplayFormat.FullyQualifiedFormat
+            .WithMiscellaneousOptions(SymbolDisplayFormat.FullyQualifiedFormat.MiscellaneousOptions |
+                                      SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier);
         public static async Task<(INamedTypeSymbol? ViewModelSymbol, string ViewModelName, List<PropertyInfo> Properties, List<CommandInfo> Commands, Compilation Compilation)> AnalyzeAsync(
             IEnumerable<string> viewModelFiles,
             string observablePropertyAttributeFullName,
@@ -124,7 +127,8 @@ namespace GrpcRemoteMvvmModelUtil
                             propertyName = char.ToUpperInvariant(propertyName[0]) + propertyName.Substring(1);
                         }
                         else continue;
-                        props.Add(new PropertyInfo(propertyName, fieldSymbol.Type.ToDisplayString(), fieldSymbol.Type));
+                        var typeName = fieldSymbol.Type.ToDisplayString(FullNameFormat).Replace("global::", "");
+                        props.Add(new PropertyInfo(propertyName, typeName, fieldSymbol.Type));
                     }
                 }
                 else if (member is IPropertySymbol propertySymbol)
@@ -134,7 +138,8 @@ namespace GrpcRemoteMvvmModelUtil
                         Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
                     if (obsPropAttribute != null)
                     {
-                        props.Add(new PropertyInfo(propertySymbol.Name, propertySymbol.Type.ToDisplayString(), propertySymbol.Type));
+                        var typeName = propertySymbol.Type.ToDisplayString(FullNameFormat).Replace("global::", "");
+                        props.Add(new PropertyInfo(propertySymbol.Name, typeName, propertySymbol.Type));
                     }
                 }
             }
@@ -158,7 +163,9 @@ namespace GrpcRemoteMvvmModelUtil
                             baseMethodName = baseMethodName.Substring(0, baseMethodName.Length - "Async".Length);
                         }
                         string commandPropertyName = baseMethodName + "Command";
-                        var parameters = methodSymbol.Parameters.Select(p => new ParameterInfo(p.Name, p.Type.ToDisplayString(), p.Type)).ToList();
+                        var parameters = methodSymbol.Parameters
+                            .Select(p => new ParameterInfo(p.Name, p.Type.ToDisplayString(FullNameFormat).Replace("global::", ""), p.Type))
+                            .ToList();
                         bool isAsync = methodSymbol.IsAsync ||
                             (methodSymbol.ReturnType is INamedTypeSymbol rtSym &&
                                 (rtSym.Name == "Task" || rtSym.Name == "ValueTask" ||
@@ -224,8 +231,10 @@ namespace GrpcRemoteMvvmModelUtil
                         compilation = compilation.AddSyntaxTrees(tree);
 
                         var semanticModel = compilation.GetSemanticModel(tree);
-                        var typeDecl = tree.GetRoot().DescendantNodes().OfType<TypeDeclarationSyntax>()
-                            .FirstOrDefault(t => t.Identifier.Text == named.Name);
+                        var root = tree.GetRoot();
+                        var typeDecl = root.DescendantNodes().FirstOrDefault(n =>
+                            (n is TypeDeclarationSyntax t && t.Identifier.Text == named.Name) ||
+                            (n is EnumDeclarationSyntax e && e.Identifier.Text == named.Name));
                         if (typeDecl != null && semanticModel.GetDeclaredSymbol(typeDecl) is INamedTypeSymbol resolvedSym)
                         {
                             named = resolvedSym;
