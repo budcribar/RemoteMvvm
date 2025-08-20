@@ -45,10 +45,16 @@ public static class GeneratorHelpers
         "System.UInt64" => "UInt64Value",
         "short" => "Int32Value",
         "System.Int16" => "Int32Value",
+        "ushort" => "UInt32Value",
+        "System.UInt16" => "UInt32Value",
         "byte" => "UInt32Value",
         "System.Byte" => "UInt32Value",
         "sbyte" => "Int32Value",
         "System.SByte" => "Int32Value",
+        "nint" => "Int64Value",
+        "System.IntPtr" => "Int64Value",
+        "nuint" => "UInt64Value",
+        "System.UIntPtr" => "UInt64Value",
         "char" => "StringValue",
         "System.Char" => "StringValue",
         "decimal" => "StringValue",
@@ -88,6 +94,8 @@ public static class GeneratorHelpers
             case SpecialType.System_Byte: return "UInt32Value";
             case SpecialType.System_Int16: return "Int32Value";
             case SpecialType.System_UInt16: return "UInt32Value";
+            case SpecialType.System_IntPtr: return "Int64Value";
+            case SpecialType.System_UIntPtr: return "UInt64Value";
             case SpecialType.System_Char: return "StringValue";
             case SpecialType.System_DateTime: return "Timestamp";
             case SpecialType.System_Decimal: return "StringValue";
@@ -105,7 +113,8 @@ public static class GeneratorHelpers
             case "System.DateTimeOffset": return "Timestamp";
             case "System.DateOnly":
             case "System.TimeOnly":
-                throw new NotSupportedException("DateOnly and TimeOnly are not supported.");
+                return "StringValue";
+            case "System.Half": return "FloatValue";
             case "System.Uri": return "StringValue";
             case "System.Version": return "StringValue";
             case "System.Numerics.BigInteger": return "StringValue";
@@ -154,6 +163,12 @@ public static class GeneratorHelpers
     public static bool TryGetEnumerableElementType(ITypeSymbol typeSymbol, out ITypeSymbol? elementType)
     {
         elementType = null;
+        if (typeSymbol is IArrayTypeSymbol arraySymbol)
+        {
+            elementType = arraySymbol.ElementType.OriginalDefinition;
+            return true;
+        }
+
         if (typeSymbol is INamedTypeSymbol named)
         {
             if (named.OriginalDefinition.ToDisplayString() == "System.Collections.Generic.IEnumerable<T>")
