@@ -77,6 +77,52 @@ public static class ServerGenerator
         sb.AppendLine($"    public override Task<{vmName}State> GetState(Empty request, ServerCallContext context)");
         sb.AppendLine("    {");
         sb.AppendLine($"        var state = new {vmName}State();");
+
+        string KeyToProto(string expr, ITypeSymbol type)
+        {
+            if (type.TypeKind == TypeKind.Enum) return $"(int){expr}";
+            return GeneratorHelpers.GetProtoWellKnownTypeFor(type) switch
+            {
+                "Int32Value" => $"(int){expr}",
+                "UInt32Value" => $"(uint){expr}",
+                "Int64Value" => expr,
+                "UInt64Value" => expr,
+                "StringValue" => type.ToDisplayString() == "System.Guid" ? $"{expr}.ToString()" : expr,
+                _ => expr
+            };
+        }
+
+        string ValueToProto(string expr, ITypeSymbol type, string prefix)
+        {
+            if (GeneratorHelpers.TryGetDictionaryTypeArgs(type, out var k, out var v))
+                return DictToProto(expr, k!, v!, prefix + "_kv");
+            if (type.TypeKind == TypeKind.Enum) return $"(int){expr}";
+            var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
+            if (wkt == "Timestamp") return $"Timestamp.FromDateTime({expr}.ToUniversalTime())";
+            if (!GeneratorHelpers.IsWellKnownType(type)) return $"ProtoStateConverters.ToProto({expr})";
+            return expr;
+        }
+
+        string DictToProto(string dictExpr, ITypeSymbol kType, ITypeSymbol vType, string kvVar)
+        {
+            if (GeneratorHelpers.CanUseProtoMap(kType, vType))
+            {
+                string keySel = KeyToProto($"{kvVar}.Key", kType);
+                string valSel = ValueToProto($"{kvVar}.Value", vType, kvVar + "1");
+                return $"{dictExpr}.ToDictionary({kvVar} => {keySel}, {kvVar} => {valSel})";
+            }
+            else
+            {
+                string entryName = GeneratorHelpers.GetDictionaryEntryName(kType, vType);
+                string keySel = KeyToProto($"{kvVar}.Key", kType);
+                string valSel = ValueToProto($"{kvVar}.Value", vType, kvVar + "1");
+                if (GeneratorHelpers.TryGetDictionaryTypeArgs(vType, out _, out _))
+                    return $"{dictExpr}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {{ {valSel} }} }})";
+                else
+                    return $"{dictExpr}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {valSel} }})";
+            }
+        }
+
         foreach (var p in props)
         {
             sb.AppendLine($"        // Mapping property: {p.Name} to state.{p.Name}");
@@ -89,15 +135,8 @@ public static class ServerGenerator
                 {
                     var keyType = named.TypeArguments[0];
                     var valueType = named.TypeArguments[1];
-                    string keySel = "(int)kv.Key";
-                    if (GeneratorHelpers.IsWellKnownType(keyType) && keyType.TypeKind != TypeKind.Enum)
-                        keySel = "kv.Key";
-                    string valSel = "kv.Value";
-                    if (valueType.TypeKind == TypeKind.Enum)
-                        valSel = "(int)kv.Value";
-                    else if (!GeneratorHelpers.IsWellKnownType(valueType))
-                        valSel = "ProtoStateConverters.ToProto(kv.Value)";
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue.ToDictionary(kv => {keySel}, kv => {valSel}));");
+                    var dictExpr = DictToProto("propValue", keyType, valueType, "kv");
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add({dictExpr});");
                 }
                 else if (GeneratorHelpers.TryGetMemoryElementType(named, out _))
                 {

@@ -20,6 +20,7 @@ public static class ProtoGenerator
         var body = new StringBuilder();
         var pendingMessages = new Queue<INamedTypeSymbol>();
         var processedMessages = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+        var mapEntryMessages = new Dictionary<string, (ITypeSymbol Key, ITypeSymbol Value)>();
         bool usesTimestamp = false;
         bool usesDuration = false;
 
@@ -43,12 +44,21 @@ public static class ProtoGenerator
 
                 if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var keyType, out var valueType))
                 {
-                    string keyProto = MapProtoType(keyType!, allowMessage: false);
-                    var allowedKeys = new HashSet<string> { "int32", "int64", "uint32", "uint64", "sint32", "sint64", "fixed32", "fixed64", "sfixed32", "sfixed64", "bool", "string" };
-                    if (!allowedKeys.Contains(keyProto))
-                        throw new NotSupportedException($"Dictionary key type '{keyType!.ToDisplayString()}' is not supported.");
-                    string valueProto = MapProtoType(valueType!, allowMessage: true);
-                    return $"map<{keyProto}, {valueProto}>";
+                    if (GeneratorHelpers.CanUseProtoMap(keyType!, valueType!))
+                    {
+                        string keyProto = MapProtoType(keyType!, allowMessage: false);
+                        string valueProto = MapProtoType(valueType!, allowMessage: true);
+                        return $"map<{keyProto}, {valueProto}>";
+                    }
+                    else
+                    {
+                        string entryName = GeneratorHelpers.GetDictionaryEntryName(keyType!, valueType!);
+                        if (!mapEntryMessages.ContainsKey(entryName))
+                            mapEntryMessages[entryName] = (keyType!, valueType!);
+                        string valueProto = MapProtoType(valueType!, allowMessage: true);
+                        _ = MapProtoType(keyType!, allowMessage: true);
+                        return $"repeated {entryName}";
+                    }
                 }
 
                 if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType))
@@ -156,6 +166,25 @@ public static class ProtoGenerator
             body.AppendLine("}");
             body.AppendLine();
         }
+
+        var processedEntries = new HashSet<string>();
+        while (processedEntries.Count < mapEntryMessages.Count)
+        {
+            foreach (var kvp in mapEntryMessages.ToList())
+            {
+                if (processedEntries.Contains(kvp.Key))
+                    continue;
+                processedEntries.Add(kvp.Key);
+                string keyProto = MapProtoType(kvp.Value.Key, allowMessage: true);
+                string valueProto = MapProtoType(kvp.Value.Value, allowMessage: true);
+                body.AppendLine($"message {kvp.Key} {{");
+                body.AppendLine($"  {keyProto} key = 1;");
+                body.AppendLine($"  {valueProto} value = 2;");
+                body.AppendLine("}");
+                body.AppendLine();
+            }
+        }
+
         body.AppendLine("message UpdatePropertyValueRequest {");
         body.AppendLine("  string property_name = 1;");
         body.AppendLine("  google.protobuf.Any new_value = 2;");
