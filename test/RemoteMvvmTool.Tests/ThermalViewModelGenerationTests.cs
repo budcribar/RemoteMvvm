@@ -67,6 +67,8 @@ public class ThermalViewModelGenerationTests
             };
             if (Directory.Exists(Path.Combine(vmDir, "generated")))
                 Directory.Delete(Path.Combine(vmDir, "generated"), true);
+            if (Directory.Exists(Path.Combine(vmDir, "protos")))
+                Directory.Delete(Path.Combine(vmDir, "protos"), true);
 
             var exitCode = await Program.Main(args);
             Assert.Equal(0, exitCode);
