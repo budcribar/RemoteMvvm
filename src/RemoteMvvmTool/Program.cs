@@ -193,7 +193,7 @@ public class Program
                 {
                     var rootTypes = result.Properties.Select(p => p.FullTypeSymbol!)
                         .Concat(result.Commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!)));
-                    var conv = ConversionGenerator.Generate(protoNamespace, vmNamespaceStr, rootTypes);
+                    var conv = ConversionGenerator.Generate(protoNamespace, vmNamespaceStr, rootTypes, result.Compilation);
                     await File.WriteAllTextAsync(convPath, conv);
                 }
                 string optsPath = Path.Combine(output, "GrpcRemoteOptions.cs");
