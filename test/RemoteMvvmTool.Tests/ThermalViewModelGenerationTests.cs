@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using GrpcRemoteMvvmModelUtil;
+using RemoteMvvmTool.Generators;
 
 namespace ThermalTests;
 
@@ -44,8 +45,34 @@ public class ThermalViewModelGenerationTests
             refs);
         Assert.NotNull(result.ViewModelSymbol);
         Assert.Contains(result.Properties, p => p.TypeString.Contains("ThermalZoneComponentViewModel"));
-        Assert.Contains(result.Properties, p => p.TypeString.Contains("HP.Telemetry.Zone"));
-        Assert.Contains(result.Commands, c => c.MethodName == "StateChanged" && c.Parameters.Any(pr => pr.TypeString.Contains("ThermalStateEnum")));
+        Assert.Contains(result.Commands, c => c.MethodName == "StateChanged" && c.Parameters.Any(pr => pr.TypeString == "HPSystemsTools.Models.ThermalStateEnum"));
+    }
+
+    [Fact]
+    public async Task Generated_Server_Uses_Correct_Enum_Namespace()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
+        var vmFile = Path.Combine(vmDir, "HP3LSThermalTestViewModel.cs");
+        var additionalFiles = new[]
+        {
+            Path.Combine(vmDir, "ThermalZoneComponentViewModel.cs"),
+            Path.Combine(vmDir, "ThermalStateEnum.cs"),
+            Path.Combine(vmDir, "IHpMonitor.cs"),
+            Path.Combine(vmDir, "TestSettingsModel.cs"),
+            Path.Combine(vmDir, "Zone.cs")
+        };
+        var refs = LoadDefaultRefs();
+        var allFiles = (new[] { vmFile }).Concat(additionalFiles).ToArray();
+        var result = await ViewModelAnalyzer.AnalyzeAsync(
+            allFiles,
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs);
+        var vmNamespace = result.ViewModelSymbol!.ContainingNamespace.ToDisplayString();
+        var server = RemoteMvvmTool.Generators.ServerGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", result.Properties, result.Commands, vmNamespace);
+        Assert.Contains("IRelayCommand<HPSystemsTools.Models.ThermalStateEnum>", server);
+        Assert.Contains("(HPSystemsTools.Models.ThermalStateEnum)request.State", server);
     }
 
     [Fact]

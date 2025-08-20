@@ -1,4 +1,4 @@
-﻿namespace HPSystemsTools.ViewModels
+namespace HPSystemsTools.Models
 {
     public enum ThermalStateEnum
     {
