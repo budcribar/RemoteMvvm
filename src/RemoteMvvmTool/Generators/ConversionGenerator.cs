@@ -32,8 +32,8 @@ public static class ConversionGenerator
         if (type is null) return;
         if (type.TypeKind == TypeKind.Enum) { processed.Add(type.ToDisplayString()); return; }
         if (type is IArrayTypeSymbol arr) { GenerateForType(arr.ElementType, sb, processed, protoNs); return; }
-        if (GeneratorHelpers.TryGetEnumerableElementType(type, out var elemType)) { if (elemType != null) GenerateForType(elemType, sb, processed, protoNs); return; }
         if (GeneratorHelpers.TryGetDictionaryTypeArgs(type, out var keyType, out var valueType)) { if (keyType != null) GenerateForType(keyType, sb, processed, protoNs); if (valueType != null) GenerateForType(valueType, sb, processed, protoNs); return; }
+        if (GeneratorHelpers.TryGetEnumerableElementType(type, out var elemType)) { if (elemType != null) GenerateForType(elemType, sb, processed, protoNs); return; }
         if (type is not INamedTypeSymbol named) return;
         var fullName = named.ToDisplayString();
         if (processed.Contains(fullName)) return;

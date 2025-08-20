@@ -76,6 +76,35 @@ public class ThermalViewModelGenerationTests
     }
 
     [Fact]
+    public async Task Generated_Client_Handles_Dictionary_Property()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
+        var vmFile = Path.Combine(vmDir, "HP3LSThermalTestViewModel.cs");
+        var additionalFiles = new[]
+        {
+            Path.Combine(vmDir, "ThermalZoneComponentViewModel.cs"),
+            Path.Combine(vmDir, "ThermalStateEnum.cs"),
+            Path.Combine(vmDir, "IHpMonitor.cs"),
+            Path.Combine(vmDir, "TestSettingsModel.cs"),
+            Path.Combine(vmDir, "Zone.cs")
+        };
+        var refs = LoadDefaultRefs();
+        var allFiles = (new[] { vmFile }).Concat(additionalFiles).ToArray();
+        var result = await ViewModelAnalyzer.AnalyzeAsync(
+            allFiles,
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs);
+        var client = ClientGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", result.Properties, result.Commands, string.Empty);
+        Assert.Contains("ToDictionary(k => (HP.Telemetry.Zone)k.Key, v => ProtoStateConverters.FromProto(v.Value))", client);
+        var rootTypes = result.Properties.Select(p => p.FullTypeSymbol!)
+            .Concat(result.Commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!)));
+        var conv = ConversionGenerator.Generate("Generated.Protos", result.ViewModelSymbol!.ContainingNamespace.ToDisplayString(), rootTypes);
+        Assert.Contains("ThermalZoneComponentViewModelState", conv);
+    }
+
+    [Fact]
     public async Task RemoteMvvmTool_Generates_Code_Successfully()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));

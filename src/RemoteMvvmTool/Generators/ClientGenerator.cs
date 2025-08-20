@@ -146,7 +146,17 @@ public static class ClientGenerator
             {
                 if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
                 {
-                    var dictExpr = $"state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value)";
+                    var keyType = named.TypeArguments[0];
+                    var valueType = named.TypeArguments[1];
+                    string keySel = $"({keyType.ToDisplayString()})k.Key";
+                    if (GeneratorHelpers.IsWellKnownType(keyType) && keyType.TypeKind != TypeKind.Enum)
+                        keySel = "k.Key";
+                    string valSel = "v.Value";
+                    if (valueType.TypeKind == TypeKind.Enum)
+                        valSel = $"({valueType.ToDisplayString()})v.Value";
+                    else if (!GeneratorHelpers.IsWellKnownType(valueType))
+                        valSel = "ProtoStateConverters.FromProto(v.Value)";
+                    var dictExpr = $"state.{protoStateFieldName}.ToDictionary(k => {keySel}, v => {valSel})";
                     if (named.TypeKind == TypeKind.Interface)
                         sb.AppendLine($"                                this.{prop.Name} = {dictExpr};");
                     else
@@ -241,7 +251,17 @@ public static class ClientGenerator
             {
                 if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
                 {
-                    var dictExpr = $"state.{protoStateFieldName}.ToDictionary(k => k.Key, v => v.Value)";
+                    var keyType = named.TypeArguments[0];
+                    var valueType = named.TypeArguments[1];
+                    string keySel = $"({keyType.ToDisplayString()})k.Key";
+                    if (GeneratorHelpers.IsWellKnownType(keyType) && keyType.TypeKind != TypeKind.Enum)
+                        keySel = "k.Key";
+                    string valSel = "v.Value";
+                    if (valueType.TypeKind == TypeKind.Enum)
+                        valSel = $"({valueType.ToDisplayString()})v.Value";
+                    else if (!GeneratorHelpers.IsWellKnownType(valueType))
+                        valSel = "ProtoStateConverters.FromProto(v.Value)";
+                    var dictExpr = $"state.{protoStateFieldName}.ToDictionary(k => {keySel}, v => {valSel})";
                     if (named.TypeKind == TypeKind.Interface)
                         sb.AppendLine($"                this.{prop.Name} = {dictExpr};");
                     else
