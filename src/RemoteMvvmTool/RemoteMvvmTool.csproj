@@ -25,12 +25,18 @@
           <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
     <!--<Compile Remove="GameViewModel.cs" />-->
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="publish\" />
-  </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
+    </ItemGroup>
+    <ItemGroup>
+      <EmbeddedResource Include="Resources/ClientTemplate.cs.tmpl" LogicalName="RemoteMvvmTool.Resources.ClientTemplate.cs.tmpl" />
+      <EmbeddedResource Include="Resources/ConversionTemplate.cs.tmpl" LogicalName="RemoteMvvmTool.Resources.ConversionTemplate.cs.tmpl" />
+      <EmbeddedResource Include="Resources/OptionsTemplate.cs.tmpl" LogicalName="RemoteMvvmTool.Resources.OptionsTemplate.cs.tmpl" />
+      <EmbeddedResource Include="Resources/ProtoTemplate.proto.tmpl" LogicalName="RemoteMvvmTool.Resources.ProtoTemplate.proto.tmpl" />
+    </ItemGroup>
+    <ItemGroup>
+      <Folder Include="publish\" />
+    </ItemGroup>
 	<Target Name="InstallTool" AfterTargets="Pack">
 		<Exec Command="dotnet tool uninstall --global $(PackageId)" ContinueOnError="true" />
 		<Exec Command="dotnet tool install --global --add-source $(PackageOutputPath) $(PackageId) --version $(Version)" />
