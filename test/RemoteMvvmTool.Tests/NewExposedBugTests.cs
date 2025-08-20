@@ -53,7 +53,7 @@ public class NewExposedBugTests
         });
         var field = (IFieldSymbol)compilation.GetTypeByMetadataName("C")!.GetMembers("Numbers").Single();
         Assert.True(GeneratorHelpers.TryGetEnumerableElementType(field.Type, out var elem));
-        Assert.Equal("System.Int32", elem!.ToDisplayString());
+        Assert.Equal("int", elem!.ToDisplayString());
     }
 
     [Fact]
