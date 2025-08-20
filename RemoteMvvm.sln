@@ -41,6 +41,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ViewModels", "ViewModels", 
 		test\ThermalTest\ViewModels\TestSettingsModel.cs = test\ThermalTest\ViewModels\TestSettingsModel.cs
 		test\ThermalTest\ViewModels\ThermalStateEnum.cs = test\ThermalTest\ViewModels\ThermalStateEnum.cs
 		test\ThermalTest\ViewModels\ThermalZoneComponentViewModel.cs = test\ThermalTest\ViewModels\ThermalZoneComponentViewModel.cs
+		test\ThermalTest\ViewModels\Zone.cs = test\ThermalTest\ViewModels\Zone.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "generated", "generated", "{CCF4922B-5DB1-429D-B8E7-9FBAECFF9DB2}"
