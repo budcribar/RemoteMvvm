@@ -181,17 +181,17 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
     public override Task<Empty> UpdatePropertyValue(Pointer.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
         _dispatcher.Invoke(() => {
-            var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-            if (propertyInfo != null && propertyInfo.CanWrite)
-            {
-                try {
-                    if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
-                    else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
-                    else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
-                    else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-                } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
+        if (propertyInfo != null && propertyInfo.CanWrite)
+        {
+            try {
+                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
+                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
+                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
+                else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
+            } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+        }
+        else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
         });
         return Task.FromResult(new Empty());
     }
