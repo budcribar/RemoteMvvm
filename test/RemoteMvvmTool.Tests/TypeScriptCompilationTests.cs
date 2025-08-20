@@ -21,13 +21,35 @@ public class TypeScriptCompilationTests
         return list;
     }
 
+    static void RunPs(string scriptPath, string args, string workDir)
+    {
+        var psi = new ProcessStartInfo("powershell", $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {args}")
+        {
+            WorkingDirectory = workDir,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        using var p = Process.Start(psi)!;
+        var stdout = p.StandardOutput.ReadToEnd();
+        var stderr = p.StandardError.ReadToEnd();
+        p.WaitForExit();
+
+        if (p.ExitCode != 0)
+        {
+            throw new Exception($"PowerShell script failed with {p.ExitCode}:\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}");
+        }
+    }
+
     static void RunCmd(string file, string args, string workDir)
     {
         var psi = new ProcessStartInfo(file, args)
         {
             WorkingDirectory = workDir,
             RedirectStandardOutput = true,
-            RedirectStandardError = true
+            RedirectStandardError = true,
+            UseShellExecute = false,
         };
         using var p = Process.Start(psi)!;
         p.WaitForExit();
@@ -156,7 +178,7 @@ class FakeClient extends {name}ServiceClient {{
 }";
         File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
 
-        RunCmd("tsc", "--project tsconfig.json", tempDir);
+        RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
         RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
     }
 }
