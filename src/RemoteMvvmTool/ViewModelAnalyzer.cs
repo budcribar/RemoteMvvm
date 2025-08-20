@@ -66,6 +66,20 @@ namespace GrpcRemoteMvvmModelUtil
                 Console.Error.WriteLine("Warning: unable to locate the following type definitions: " + string.Join(", ", missingNames));
             }
 
+            var duplicateTypeDiagnostics = compilation.GetDiagnostics()
+                .Where(d => d.Severity == DiagnosticSeverity.Error && d.Id == "CS0101")
+                .ToArray();
+            if (duplicateTypeDiagnostics.Length > 0)
+            {
+                foreach (var grp in duplicateTypeDiagnostics.GroupBy(d => d.GetMessage()))
+                {
+                    var files = grp.Select(d => d.Location.SourceTree?.FilePath)
+                                   .Where(p => !string.IsNullOrEmpty(p))
+                                   .Distinct();
+                    Console.Error.WriteLine("Warning: duplicate type definition - " + grp.Key + " in: " + string.Join(", ", files));
+                }
+            }
+
             INamedTypeSymbol? mainViewModelSymbol = null;
             string originalVmName = "";
             foreach (var tree in syntaxTrees)
@@ -183,7 +197,7 @@ namespace GrpcRemoteMvvmModelUtil
         {
             var queue = new Queue<ITypeSymbol>(rootTypes.Where(t => t != null)!);
             var processed = new HashSet<string>();
-            var missing = new HashSet<string>();
+            var missing = new Dictionary<string, string>();
 
             while (queue.Count > 0)
             {
@@ -246,7 +260,8 @@ namespace GrpcRemoteMvvmModelUtil
                     }
                     if (named.TypeKind == TypeKind.Error)
                     {
-                        missing.Add(fullName);
+                        var searched = filePath ?? string.Join(", ", searchDirs.Select(d => Path.Combine(d, named.Name + ".cs")));
+                        missing[fullName] = searched;
                         continue;
                     }
                 }
@@ -263,7 +278,8 @@ namespace GrpcRemoteMvvmModelUtil
 
             if (missing.Count > 0)
             {
-                Console.Error.WriteLine("Warning: unable to locate the following type definitions: " + string.Join(", ", missing));
+                foreach (var kv in missing)
+                    Console.Error.WriteLine($"Warning: unable to locate type definition for {kv.Key} (searched: {kv.Value})");
             }
 
             return compilation;

@@ -126,7 +126,8 @@ public static class ClientGenerator
 
         string KeyFromProto(string expr, ITypeSymbol type)
         {
-            if (type.TypeKind == TypeKind.Enum) return $"({type.ToDisplayString()}){expr}";
+            if (type.TypeKind == TypeKind.Enum || type.TypeKind == TypeKind.Error)
+                return $"({type.ToDisplayString()}){expr}";
             return GeneratorHelpers.GetProtoWellKnownTypeFor(type) switch
             {
                 "Int32Value" => type.SpecialType == SpecialType.System_Int32 ? expr : $"({type.ToDisplayString()}){expr}",
