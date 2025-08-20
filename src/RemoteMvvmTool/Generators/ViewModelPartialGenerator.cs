@@ -41,7 +41,7 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("        private GrpcChannel? _channel;");
         sb.AppendLine($"        private {clientNamespace}.{vmName}RemoteClient? _remoteClient;");
         sb.AppendLine();
-        sb.AppendLine($"        public {vmName}(ServerOptions options) : this()");
+        sb.AppendLine($"        public {vmName}(ServerOptions options)");
         sb.AppendLine("        {");
         sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
         if (runType == "wpf")
@@ -115,7 +115,7 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("            Task.Run(() => app.RunAsync()); // Run the server in a background thread");
         sb.AppendLine("        }");
         sb.AppendLine();
-        sb.AppendLine($"        public {vmName}(ClientOptions options) : this()");
+        sb.AppendLine($"        public {vmName}(ClientOptions options)");
         sb.AppendLine("        {");
         sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
         sb.AppendLine("            _channel = GrpcChannel.ForAddress(options.Address);");
