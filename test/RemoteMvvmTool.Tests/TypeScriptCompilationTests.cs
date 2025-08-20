@@ -177,8 +177,15 @@ class FakeClient extends {name}ServiceClient {{
   ""include"": [""**/*.ts"", ""**/*.js""]
 }";
         File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
+        try
+        {
+            RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+        }
+        catch
+        {
+            RunCmd("tsc", "--project tsconfig.json", tempDir);
+        }
 
-        RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
         RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
     }
 }
