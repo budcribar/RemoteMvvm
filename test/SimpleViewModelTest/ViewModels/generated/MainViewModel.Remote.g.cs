@@ -6,10 +6,9 @@
 using Grpc.Core;
 using Grpc.Net.Client;
 using Generated.Protos;
-using HPSystemsTools.ViewModels.RemoteClients;
+using SimpleViewModelTest.ViewModels.RemoteClients;
 using System;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -17,21 +16,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
 using PeakSWC.Mvvm.Remote;
 
-namespace HPSystemsTools.ViewModels
+namespace SimpleViewModelTest.ViewModels
 {
-    public partial class HP3LSThermalTestViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
+    public partial class MainViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
-        private HP3LSThermalTestViewModelGrpcServiceImpl? _grpcService;
+        private MainViewModelGrpcServiceImpl? _grpcService;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
-        private HPSystemsTools.ViewModels.RemoteClients.HP3LSThermalTestViewModelRemoteClient? _remoteClient;
-        private readonly Dispatcher _dispatcher;
+        private SimpleViewModelTest.ViewModels.RemoteClients.MainViewModelRemoteClient? _remoteClient;
 
-        public HP3LSThermalTestViewModel(ServerOptions options) : this()
+        public MainViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
-            _grpcService = new HP3LSThermalTestViewModelGrpcServiceImpl(this, _dispatcher);
+            _grpcService = new MainViewModelGrpcServiceImpl(this);
 
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -78,7 +75,7 @@ namespace HPSystemsTools.ViewModels
             app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 
             // Map gRPC services
-            app.MapGrpcService<HP3LSThermalTestViewModelGrpcServiceImpl>()
+            app.MapGrpcService<MainViewModelGrpcServiceImpl>()
                .EnableGrpcWeb()
                .RequireCors("AllowAll");
 
@@ -87,16 +84,15 @@ namespace HPSystemsTools.ViewModels
             Task.Run(() => app.RunAsync()); // Run the server in a background thread
         }
 
-        public HP3LSThermalTestViewModel(ClientOptions options) : this()
+        public MainViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
             _channel = GrpcChannel.ForAddress(options.Address);
-            var client = new HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient(_channel);
-            _remoteClient = new HP3LSThermalTestViewModelRemoteClient(client);
+            var client = new MainViewModelService.MainViewModelServiceClient(_channel);
+            _remoteClient = new MainViewModelRemoteClient(client);
         }
 
-        public async Task<HP3LSThermalTestViewModelRemoteClient> GetRemoteModel()
+        public async Task<MainViewModelRemoteClient> GetRemoteModel()
         {
             if (_remoteClient == null) throw new InvalidOperationException("Client options not provided");
             await _remoteClient.InitializeRemoteAsync();

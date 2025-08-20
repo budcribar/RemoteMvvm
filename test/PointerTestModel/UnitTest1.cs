@@ -73,7 +73,7 @@ namespace PointerViewModel
             return (proto, server, client, ts);
         }
 
-        [Fact(Skip = "Dispatcher option updated")]
+        [Fact]
         public async Task ProtoMatchesExpected()
         {
             var (proto, _, _, _) = await GenerateAsync();
@@ -81,7 +81,7 @@ namespace PointerViewModel
             AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelService.proto"), proto);
         }
 
-        [Fact(Skip = "Dispatcher option updated")]
+        [Fact]
         public async Task ServerMatchesExpected()
         {
             var (_, server, _, _) = await GenerateAsync();
@@ -89,7 +89,7 @@ namespace PointerViewModel
             AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelGrpcServiceImpl.cs"), server);
         }
 
-        [Fact(Skip = "Dispatcher option updated")]
+        [Fact]
         public async Task ClientMatchesExpected()
         {
             var (_, _, client, _) = await GenerateAsync();
@@ -97,7 +97,7 @@ namespace PointerViewModel
             AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelRemoteClient.cs"), client);
         }
 
-        [Fact(Skip = "Dispatcher option updated")]
+        [Fact]
         public async Task TypeScriptMatchesExpected()
         {
             var (_, _, _, ts) = await GenerateAsync();
@@ -105,7 +105,7 @@ namespace PointerViewModel
             AssertEqualWithDiff(Path.Combine(root, "test", "PointerTestModel", "expected", "PointerViewModelRemoteClient.ts"), ts);
         }
 
-        [Fact(Skip = "Dispatcher option updated")]
+        [Fact]
         public void LaunchJsonMatchesExpected()
         {
             string root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../../"));

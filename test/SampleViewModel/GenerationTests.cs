@@ -70,7 +70,7 @@ namespace SampleViewModel
             return list;
         }
 
-        [Fact(Skip = "Dispatcher option updated")]
+        [Fact]
         public async Task GeneratedOutputs_MatchExpected()
         {
             var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());

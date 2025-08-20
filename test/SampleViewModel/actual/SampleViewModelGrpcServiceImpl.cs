@@ -15,9 +15,9 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Channels;
-using System.Windows.Threading;
 using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
+using System.Windows.Threading;
 
 public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServiceBase
 {
@@ -43,13 +43,13 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     private readonly SampleViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher _dispatcher;
+    private readonly Action<Action> _dispatch;
     private readonly ILogger? _logger;
 
     public SampleViewModelGrpcServiceImpl(SampleViewModel viewModel, Dispatcher dispatcher, ILogger<SampleViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _dispatch = action => dispatcher.Invoke(action);
         _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
@@ -96,18 +96,18 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override Task<Empty> UpdatePropertyValue(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatcher.Invoke(() => {
-            var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-            if (propertyInfo != null && propertyInfo.CanWrite)
-            {
-                try {
-                    if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
-                    else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
-                    else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
-                    else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-                } catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
-            }
-            else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+        _dispatch(() => {
+        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
+        if (propertyInfo != null && propertyInfo.CanWrite)
+        {
+            try {
+                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
+                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
+                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
+                else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
+            } catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+        }
+        else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
         });
         return Task.FromResult(new Empty());
     }
@@ -119,8 +119,13 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task<SampleApp.ViewModels.Protos.IncrementCountResponse> IncrementCount(SampleApp.ViewModels.Protos.IncrementCountRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
-            _viewModel.IncrementCount();
+        try { _dispatch(() => {
+            var command = _viewModel.IncrementCountCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                command.Execute(null);
+            }
+            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command IncrementCountCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for IncrementCount: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
@@ -130,8 +135,14 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse> DelayedIncrementAsync(SampleApp.ViewModels.Protos.DelayedIncrementAsyncRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
-            await _viewModel.DelayedIncrementAsync(request.DelayMilliseconds);
+        try { _dispatch(() => {
+            var command = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<int>;
+                if (typedCommand != null) await typedCommand.ExecuteAsync(request.DelayMilliseconds); else await command.ExecuteAsync(request);
+            }
+            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command DelayedIncrementCommand not found or not IAsyncRelayCommand."); }
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for DelayedIncrementAsync: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
@@ -141,8 +152,14 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task<SampleApp.ViewModels.Protos.SetNameToValueResponse> SetNameToValue(SampleApp.ViewModels.Protos.SetNameToValueRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
-            _viewModel.SetNameToValue(request.Value);
+        try { _dispatch(() => {
+            var command = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string?>;
+                if (typedCommand != null) typedCommand.Execute(request.Value); else command.Execute(request);
+            }
+            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command SetNameToValueCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for SetNameToValue: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));

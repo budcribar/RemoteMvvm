@@ -7,7 +7,7 @@ using Xunit;
 
 public class DefaultNamespaceGenerationTests
 {
-    [Fact(Skip = "Dispatcher option updated")]
+    [Fact]
     public async Task RemoteMvvmTool_Generates_And_Compiles_Simple_ViewModel()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
