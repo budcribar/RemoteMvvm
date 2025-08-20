@@ -5,34 +5,23 @@
 #nullable enable
 using System.Linq;
 using Generated.Protos;
-
+using System;
+using Google.Protobuf.WellKnownTypes;
 namespace HPSystemsTools.ViewModels;
 
 public static class ProtoStateConverters
 {
-    public static Generated.Protos.ZoneState ToProto(HP.Telemetry.Zone model)
-    {
-        var state = new Generated.Protos.ZoneState();
-        return state;
-    }
-
-    public static HP.Telemetry.Zone FromProto(Generated.Protos.ZoneState state)
-    {
-        var model = new HP.Telemetry.Zone();
-        return model;
-    }
-
     public static Generated.Protos.ThermalZoneComponentViewModelState ToProto(HPSystemsTools.ViewModels.ThermalZoneComponentViewModel model)
     {
         var state = new Generated.Protos.ThermalZoneComponentViewModelState();
-        state.Zone = ToProto(model.Zone);
+        state.Zone = (int)model.Zone;
         state.IsActive = model.IsActive;
         state.DeviceName = model.DeviceName;
         state.Temperature = model.Temperature;
         state.ProcessorLoad = model.ProcessorLoad;
         state.FanSpeed = model.FanSpeed;
         state.SecondsInState = model.SecondsInState;
-        state.FirstSeenInState = model.FirstSeenInState;
+        state.FirstSeenInState = Timestamp.FromDateTime(model.FirstSeenInState.ToUniversalTime());
         state.Progress = model.Progress;
         state.Background = model.Background;
         state.Status = (int)model.Status;
@@ -43,14 +32,15 @@ public static class ProtoStateConverters
     public static HPSystemsTools.ViewModels.ThermalZoneComponentViewModel FromProto(Generated.Protos.ThermalZoneComponentViewModelState state)
     {
         var model = new HPSystemsTools.ViewModels.ThermalZoneComponentViewModel();
-        model.Zone = FromProto(state.Zone);
+        model.Zone = (HP.Telemetry.Zone)state.Zone;
         model.IsActive = state.IsActive;
         model.DeviceName = state.DeviceName;
         model.Temperature = state.Temperature;
         model.ProcessorLoad = state.ProcessorLoad;
         model.FanSpeed = state.FanSpeed;
         model.SecondsInState = state.SecondsInState;
-        model.FirstSeenInState = state.FirstSeenInState;
+        model.FirstSeenInState = state.FirstSeenInState?.ToDateTime() ?? DateTime.MinValue;
+
         model.Progress = state.Progress;
         model.Background = state.Background;
         model.Status = (HPSystemsTools.Models.ThermalStateEnum)state.Status;
