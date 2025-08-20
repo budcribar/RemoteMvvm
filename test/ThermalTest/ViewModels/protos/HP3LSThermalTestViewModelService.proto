@@ -31,8 +31,8 @@ message ThermalZoneComponentViewModelState {
   google.protobuf.Timestamp first_seen_in_state = 8; // Original C#: System.DateTime FirstSeenInState
   int32 progress = 9; // Original C#: int Progress
   string background = 10; // Original C#: string Background
-  int32 status = 11; // Original C#: HPSystemsTools.ViewModels.ThermalStateEnum Status
-  int32 state = 12; // Original C#: HPSystemsTools.ViewModels.ThermalStateEnum State
+  int32 status = 11; // Original C#: HPSystemsTools.Models.ThermalStateEnum Status
+  int32 state = 12; // Original C#: HPSystemsTools.Models.ThermalStateEnum State
 }
 
 message TestSettingsModelState {
@@ -53,7 +53,7 @@ message PropertyChangeNotification {
 }
 
 message StateChangedRequest {
-  int32 state = 1; // Original C#: HPSystemsTools.ViewModels.ThermalStateEnum state
+  int32 state = 1; // Original C#: HPSystemsTools.Models.ThermalStateEnum state
 }
 message StateChangedResponse {}
 
