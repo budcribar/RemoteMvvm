@@ -24,6 +24,7 @@ public class Program
 
     public static async Task<int> Main(string[] args)
     {
+        Environment.ExitCode = 0;
         var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts,tsproject");
         var outputOption = new Option<string>("--output", () => "generated", "Output directory for generated code files");
         var protoOutputOption = new Option<string>("--protoOutput", () => "protos", "Directory for generated .proto file");
@@ -64,6 +65,11 @@ public class Program
             bool genClient = gens.Contains("client") || gens.Contains("all");
             bool genTsProject = gens.Contains("tsproject");
             bool genTs = gens.Contains("ts") || gens.Contains("all") || gens.Contains("tsclient") || genTsProject;
+
+            var baseDir = Environment.CurrentDirectory;
+            output = Path.GetFullPath(output, baseDir);
+            protoOutput = Path.GetFullPath(protoOutput, baseDir);
+            vms = vms.Select(v => Path.GetFullPath(v, baseDir)).ToList();
 
             Directory.CreateDirectory(output);
             Directory.CreateDirectory(protoOutput);

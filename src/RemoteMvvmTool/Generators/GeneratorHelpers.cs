@@ -17,7 +17,7 @@ public static class GeneratorHelpers
         {
             char c = s[i];
 
-            bool addUnderscore = i > 0 && char.IsUpper(c) &&
+            bool addUnderscore = i > 0 && s[i - 1] != '_' && char.IsUpper(c) &&
                                  (char.IsLower(s[i - 1]) ||
                                   (i + 1 < s.Length && char.IsLower(s[i + 1])));
 
@@ -131,6 +131,13 @@ public static class GeneratorHelpers
             if (elementType?.SpecialType == SpecialType.System_Byte)
                 return "BytesValue";
         }
+
+        if (TryGetEnumerableElementType(typeSymbol, out var enumElem))
+        {
+            if (enumElem?.SpecialType == SpecialType.System_Byte)
+                return "BytesValue";
+        }
+
         return "Any";
     }
 
@@ -163,9 +170,14 @@ public static class GeneratorHelpers
     public static bool TryGetEnumerableElementType(ITypeSymbol typeSymbol, out ITypeSymbol? elementType)
     {
         elementType = null;
+        if (typeSymbol.SpecialType == SpecialType.System_String)
+        {
+            return false;
+        }
+
         if (typeSymbol is IArrayTypeSymbol arraySymbol)
         {
-            elementType = arraySymbol.ElementType.OriginalDefinition;
+            elementType = arraySymbol.ElementType;
             return true;
         }
 

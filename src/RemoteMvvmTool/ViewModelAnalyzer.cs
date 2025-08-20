@@ -113,6 +113,7 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
+                    if (fieldSymbol.IsStatic) continue;
                     var obsPropAttribute = fieldSymbol.GetAttributes().FirstOrDefault(a =>
                         Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
                     if (obsPropAttribute != null)
@@ -128,6 +129,7 @@ namespace GrpcRemoteMvvmModelUtil
                 }
                 else if (member is IPropertySymbol propertySymbol)
                 {
+                    if (propertySymbol.IsStatic) continue;
                     var obsPropAttribute = propertySymbol.GetAttributes().FirstOrDefault(a =>
                         Helpers.AttributeMatches(a, observablePropertyAttributeFullName));
                     if (obsPropAttribute != null)
@@ -145,6 +147,7 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 if (member is IMethodSymbol methodSymbol)
                 {
+                if (methodSymbol.IsStatic) continue;
                 var relayCmdAttribute = methodSymbol.GetAttributes().FirstOrDefault(a =>
                     Helpers.AttributeMatches(a, relayCommandAttributeFullName));
                     if (relayCmdAttribute != null)
