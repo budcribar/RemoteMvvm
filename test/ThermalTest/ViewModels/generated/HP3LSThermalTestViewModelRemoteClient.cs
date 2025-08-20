@@ -89,7 +89,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                             {
                                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);
                                 this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => k.Key, v => v.Value));
-                                this.TestSettings = state.TestSettings;
+                                this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                                 this.ShowDescription = state.ShowDescription;
                                 this.ShowReadme = state.ShowReadme;
                                 Debug.WriteLine("[ClientProxy] State re-synced after reconnect.");
@@ -128,7 +128,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Initial state received.");
                 this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => k.Key, v => v.Value));
-                this.TestSettings = state.TestSettings;
+                this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                 this.ShowDescription = state.ShowDescription;
                 this.ShowReadme = state.ShowReadme;
                 _isInitialized = true;
@@ -147,7 +147,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Executing command StateChanged remotely...");
             try
             {
-                _ = _grpcClient.StateChangedAsync(new Generated.Protos.StateChangedRequest { State = state }, cancellationToken: _cts.Token);
+                _ = _grpcClient.StateChangedAsync(new Generated.Protos.StateChangedRequest { State = (int)state }, cancellationToken: _cts.Token);
             }
             catch (RpcException ex) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Error executing command StateChanged: " + ex.Status.StatusCode + " - " + ex.Status.Detail); }
             catch (OperationCanceledException) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Command StateChanged cancelled."); }

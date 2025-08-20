@@ -203,7 +203,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.InitializeResponse> Initialize(Pointer.ViewModels.Protos.InitializeRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.InitializeCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -219,7 +219,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnCursorTestResponse> OnCursorTest(Pointer.ViewModels.Protos.OnCursorTestRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnCursorTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -235,7 +235,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnClickTestResponse> OnClickTest(Pointer.ViewModels.Protos.OnClickTestRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -252,7 +252,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnSelectDeviceResponse> OnSelectDevice(Pointer.ViewModels.Protos.OnSelectDeviceRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -269,7 +269,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnSelectNumButtonsResponse> OnSelectNumButtons(Pointer.ViewModels.Protos.OnSelectNumButtonsRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -286,7 +286,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.GetClicksWithoutNotificationResponse> GetClicksWithoutNotification(Pointer.ViewModels.Protos.GetClicksWithoutNotificationRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -303,7 +303,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.ResetClicksResponse> ResetClicks(Pointer.ViewModels.Protos.ResetClicksRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.ResetClicksCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -319,7 +319,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.CancelTestResponse> CancelTest(Pointer.ViewModels.Protos.CancelTestRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.CancelTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -335,7 +335,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.FinishTestResponse> FinishTest(Pointer.ViewModels.Protos.FinishTestRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.FinishTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {

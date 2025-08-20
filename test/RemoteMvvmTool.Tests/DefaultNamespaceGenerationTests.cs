@@ -38,26 +38,22 @@ public class DefaultNamespaceGenerationTests
         RunProtoc(protoDir, protoFile, grpcOut);
 
         // collect source files
-        var sourceFiles = new[]
-        {
-            Path.Combine(vmDir, "DeviceStatus.cs"),
-            Path.Combine(vmDir, "NetworkConfig.cs"),
-            Path.Combine(generatedDir, "GrpcRemoteOptions.cs"),
-            Path.Combine(generatedDir, "MainViewModel.Remote.g.cs"),
-            Path.Combine(generatedDir, "MainViewModelGrpcServiceImpl.cs"),
-            Path.Combine(generatedDir, "MainViewModelRemoteClient.cs")
-        }
-        .Concat(Directory.GetFiles(grpcOut, "*.cs"))
-        .ToList();
+        var sourceFiles = Directory.GetFiles(generatedDir, "*.cs")
+            .Concat(new[]
+            {
+                Path.Combine(vmDir, "DeviceInfo.cs"),
+                Path.Combine(vmDir, "DeviceStatus.cs"),
+                Path.Combine(vmDir, "NetworkConfig.cs")
+            })
+            .Concat(Directory.GetFiles(grpcOut, "*.cs"))
+            .ToList();
 
         // add a dispatcher stub so we don't need the WPF assemblies on non-Windows platforms
-        var dispatcherStub = @"namespace System.Windows.Threading { public class Dispatcher { public void Invoke(System.Action a) => a(); public static Dispatcher CurrentDispatcher { get; } = new Dispatcher(); } }";
-        var deviceInfoStub = @"namespace SimpleViewModelTest.ViewModels { public class DeviceInfo : Generated.Protos.DeviceInfoState { } }";
+        var dispatcherStub = @"namespace System.Windows.Threading { public class Dispatcher { public void Invoke(System.Action a) => a(); public System.Threading.Tasks.Task InvokeAsync(System.Func<System.Threading.Tasks.Task> f) => f(); public static Dispatcher CurrentDispatcher { get; } = new Dispatcher(); } }";
         var vmStub = @"namespace SimpleViewModelTest.ViewModels { public partial class MainViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject { public MainViewModel() { } public System.Collections.Generic.List<DeviceInfo> Devices { get; set; } = new(); public CommunityToolkit.Mvvm.Input.IRelayCommand<DeviceStatus> UpdateStatusCommand { get; } = new CommunityToolkit.Mvvm.Input.RelayCommand<DeviceStatus>(_ => { }); } }";
-        var serviceCtorStub = @"public partial class MainViewModelGrpcServiceImpl { public MainViewModelGrpcServiceImpl(MainViewModel vm) : this(vm, System.Windows.Threading.Dispatcher.CurrentDispatcher, null) {} }";
+        var serviceCtorStub = @"public partial class MainViewModelGrpcServiceImpl { public MainViewModelGrpcServiceImpl(SimpleViewModelTest.ViewModels.MainViewModel vm) : this(vm, System.Windows.Threading.Dispatcher.CurrentDispatcher, null) {} }";
         var trees = sourceFiles.Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f)).ToList();
         trees.Add(CSharpSyntaxTree.ParseText(dispatcherStub));
-        trees.Add(CSharpSyntaxTree.ParseText(deviceInfoStub));
         trees.Add(CSharpSyntaxTree.ParseText(vmStub));
         trees.Add(CSharpSyntaxTree.ParseText(serviceCtorStub));
 

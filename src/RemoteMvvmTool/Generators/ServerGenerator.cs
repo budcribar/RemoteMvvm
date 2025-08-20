@@ -93,22 +93,43 @@ public static class ServerGenerator
                 {
                     sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name}.Add(propValue.ToArray());");
                 }
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue);");
+                    string sel = string.Empty;
+                    if (elem!.TypeKind == TypeKind.Enum)
+                        sel = ".Select(e => (int)e)";
+                    else if (!GeneratorHelpers.IsWellKnownType(elem))
+                        sel = ".Select(ProtoStateConverters.ToProto)";
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue{sel});");
                 }
                 else
                 {
-                    sb.AppendLine($"            state.{p.Name} = propValue;");
+                    if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
+                        sb.AppendLine($"            state.{p.Name} = (int)propValue;");
+                    else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
+                        sb.AppendLine($"            state.{p.Name} = ProtoStateConverters.ToProto(propValue);");
+                    else
+                        sb.AppendLine($"            state.{p.Name} = propValue;");
                 }
             }
-            else if (p.FullTypeSymbol is IArrayTypeSymbol)
+            else if (p.FullTypeSymbol is IArrayTypeSymbol arr)
             {
-                sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue);");
+                string sel = string.Empty;
+                var elem = arr.ElementType;
+                if (elem.TypeKind == TypeKind.Enum)
+                    sel = ".Select(e => (int)e)";
+                else if (!GeneratorHelpers.IsWellKnownType(elem))
+                    sel = ".Select(ProtoStateConverters.ToProto)";
+                sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue{sel});");
             }
             else
             {
-                sb.AppendLine($"            state.{p.Name} = propValue;");
+                if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
+                    sb.AppendLine($"            state.{p.Name} = (int)propValue;");
+                else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
+                    sb.AppendLine($"            state.{p.Name} = ProtoStateConverters.ToProto(propValue);");
+                else
+                    sb.AppendLine($"            state.{p.Name} = propValue;");
             }
             sb.AppendLine("        }");
             sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.Message); }}");
@@ -165,7 +186,7 @@ public static class ServerGenerator
             sb.AppendLine($"    public override async Task<{protoNs}.{cmd.MethodName}Response> {cmd.MethodName}({protoNs}.{cmd.MethodName}Request request, ServerCallContext context)");
             sb.AppendLine("    {");
         if (runType == "wpf")
-            sb.AppendLine("        try { await await _dispatcher.InvokeAsync(async () => {");
+            sb.AppendLine("        try { await _dispatcher.InvokeAsync(async () => {");
         else if (runType == "winforms")
             sb.AppendLine("        try { _dispatcher.Invoke(new Action(() => {");
         else
@@ -187,21 +208,26 @@ public static class ServerGenerator
                 else
                     sb.AppendLine("                command.Execute(null);");
             }
-            else if (cmd.Parameters.Count == 1)
+                else if (cmd.Parameters.Count == 1)
             {
                 var param = cmd.Parameters[0];
                 var paramProp = GeneratorHelpers.ToPascalCase(param.Name);
                 var typedRelay = cmd.IsAsync ? $"CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{param.TypeString}>" : $"CommunityToolkit.Mvvm.Input.IRelayCommand<{param.TypeString}>";
                 sb.AppendLine($"                var typedCommand = _viewModel.{cmd.CommandPropertyName} as {typedRelay};");
+                string paramConv = param.FullTypeSymbol.TypeKind == TypeKind.Enum
+                    ? $"({param.TypeString})request.{paramProp}"
+                    : (!GeneratorHelpers.IsWellKnownType(param.FullTypeSymbol)
+                        ? $"ProtoStateConverters.FromProto(request.{paramProp})"
+                        : $"request.{paramProp}");
                 if (cmd.IsAsync)
                 {
                     if (runType == "wpf" || runType == "console")
-                        sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{paramProp}); else await command.ExecuteAsync(request);");
+                        sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync({paramConv}); else await command.ExecuteAsync(request);");
                     else
-                        sb.AppendLine($"                if (typedCommand != null) typedCommand.ExecuteAsync(request.{paramProp}).GetAwaiter().GetResult(); else command.ExecuteAsync(request).GetAwaiter().GetResult();");
+                        sb.AppendLine($"                if (typedCommand != null) typedCommand.ExecuteAsync({paramConv}).GetAwaiter().GetResult(); else command.ExecuteAsync(request).GetAwaiter().GetResult();");
                 }
                 else
-                    sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute(request.{paramProp}); else command.Execute(request);");
+                    sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute({paramConv}); else command.Execute(request);");
             }
             else
             {
