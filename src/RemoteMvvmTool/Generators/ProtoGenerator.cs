@@ -83,6 +83,11 @@ public static class ProtoGenerator
 
             if (type.TypeKind == TypeKind.Error)
             {
+                var enumMatch = compilation.GetSymbolsWithName(type.Name, SymbolFilter.Type)
+                    .OfType<INamedTypeSymbol>()
+                    .FirstOrDefault(s => s.ToDisplayString() == type.ToDisplayString() && s.TypeKind == TypeKind.Enum);
+                if (enumMatch != null)
+                    return "int32";
                 Console.Error.WriteLine($"Warning: Type '{type.ToDisplayString()}' is not supported. Using 'int32'.");
                 return "int32";
             }

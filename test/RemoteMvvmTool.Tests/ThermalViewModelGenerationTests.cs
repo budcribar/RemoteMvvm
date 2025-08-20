@@ -44,6 +44,7 @@ public class ThermalViewModelGenerationTests
             refs);
         Assert.NotNull(result.ViewModelSymbol);
         Assert.Contains(result.Properties, p => p.TypeString.Contains("ThermalZoneComponentViewModel"));
+        Assert.Contains(result.Properties, p => p.TypeString.Contains("HP.Telemetry.Zone"));
         Assert.Contains(result.Commands, c => c.MethodName == "StateChanged" && c.Parameters.Any(pr => pr.TypeString.Contains("ThermalStateEnum")));
     }
 
