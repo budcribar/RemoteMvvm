@@ -16,7 +16,6 @@ public static class ViewModelPartialGenerator
         sb.AppendLine($"using {clientNamespace};");
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Threading.Tasks;");
-        sb.AppendLine("using System.Windows.Threading;");
         sb.AppendLine("using Microsoft.AspNetCore.Builder;");
         sb.AppendLine("using Microsoft.AspNetCore.Hosting;");
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
@@ -37,13 +36,11 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("        private IHost? _aspNetCoreHost;");
         sb.AppendLine("        private GrpcChannel? _channel;");
         sb.AppendLine($"        private {clientNamespace}.{vmName}RemoteClient? _remoteClient;");
-        sb.AppendLine("        private readonly Dispatcher _dispatcher;");
         sb.AppendLine();
         sb.AppendLine($"        public {vmName}(ServerOptions options) : this()");
         sb.AppendLine("        {");
         sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
-        sb.AppendLine("            _dispatcher = Dispatcher.CurrentDispatcher;");
-        sb.AppendLine($"            _grpcService = new {vmName}GrpcServiceImpl(this, _dispatcher);");
+        sb.AppendLine($"            _grpcService = new {vmName}GrpcServiceImpl(this);");
         sb.AppendLine();
         sb.AppendLine("            // Always use ASP.NET Core with Kestrel to support gRPC-Web");
         sb.AppendLine("            StartAspNetCoreServer(options);");
@@ -103,7 +100,6 @@ public static class ViewModelPartialGenerator
         sb.AppendLine($"        public {vmName}(ClientOptions options) : this()");
         sb.AppendLine("        {");
         sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
-        sb.AppendLine("            _dispatcher = Dispatcher.CurrentDispatcher;");
         sb.AppendLine("            _channel = GrpcChannel.ForAddress(options.Address);");
         sb.AppendLine($"            var client = new {serviceName}.{serviceName}Client(_channel);");
         sb.AppendLine($"            _remoteClient = new {vmName}RemoteClient(client);");
