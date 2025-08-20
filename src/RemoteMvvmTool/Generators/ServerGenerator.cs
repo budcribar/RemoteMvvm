@@ -88,22 +88,24 @@ public static class ServerGenerator
                 {
                     sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name}.Add(propValue.ToArray());");
                 }
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType))
                 {
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue);");
+                    var conv = GeneratorHelpers.ToProtoValue(elemType!, "x");
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue.Select(x => {conv}));");
                 }
                 else
                 {
-                    sb.AppendLine($"            state.{p.Name} = propValue;");
+                    sb.AppendLine($"            state.{p.Name} = {GeneratorHelpers.ToProtoValue(p.FullTypeSymbol!, "propValue")};");
                 }
             }
-            else if (p.FullTypeSymbol is IArrayTypeSymbol)
+            else if (p.FullTypeSymbol is IArrayTypeSymbol arrayType)
             {
-                sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue);");
+                var conv = GeneratorHelpers.ToProtoValue(arrayType.ElementType, "x");
+                sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue.Select(x => {conv}));");
             }
             else
             {
-                sb.AppendLine($"            state.{p.Name} = propValue;");
+                sb.AppendLine($"            state.{p.Name} = {GeneratorHelpers.ToProtoValue(p.FullTypeSymbol!, "propValue")};");
             }
             sb.AppendLine("        }");
             sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.Message); }}");
@@ -180,10 +182,11 @@ public static class ServerGenerator
                 var paramProp = GeneratorHelpers.ToPascalCase(param.Name);
                 var typedRelay = cmd.IsAsync ? $"CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{param.TypeString}>" : $"CommunityToolkit.Mvvm.Input.IRelayCommand<{param.TypeString}>";
                 sb.AppendLine($"                var typedCommand = _viewModel.{cmd.CommandPropertyName} as {typedRelay};");
+                var convertedParam = GeneratorHelpers.FromProtoValue(param.FullTypeSymbol!, $"request.{paramProp}");
                 if (cmd.IsAsync)
-                    sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{paramProp}); else await command.ExecuteAsync(request);");
+                    sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync({convertedParam}); else await command.ExecuteAsync(request);");
                 else
-                    sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute(request.{paramProp}); else command.Execute(request);");
+                    sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute({convertedParam}); else command.Execute(request);");
             }
             else
             {

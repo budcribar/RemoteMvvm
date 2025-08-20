@@ -156,25 +156,27 @@ public static class ClientGenerator
                 {
                     sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
                 }
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType))
                 {
+                    var conv = GeneratorHelpers.FromProtoValue(elemType!, "x");
                     if (named.TypeKind == TypeKind.Interface)
-                        sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                        sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.Select(x => {conv}).ToList();");
                     else
-                        sb.AppendLine($"                                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName});");
+                        sb.AppendLine($"                                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}.Select(x => {conv}));");
                 }
                 else
                 {
-                    sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+                    sb.AppendLine($"                                this.{prop.Name} = {GeneratorHelpers.FromProtoValue(prop.FullTypeSymbol!, $"state.{protoStateFieldName}")};");
                 }
             }
-            else if (prop.FullTypeSymbol is IArrayTypeSymbol)
+            else if (prop.FullTypeSymbol is IArrayTypeSymbol arrayType)
             {
-                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+                var conv = GeneratorHelpers.FromProtoValue(arrayType.ElementType, "x");
+                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName}.Select(x => {conv}).ToArray();");
             }
             else
             {
-                sb.AppendLine($"                                this.{prop.Name} = state.{protoStateFieldName};");
+                sb.AppendLine($"                                this.{prop.Name} = {GeneratorHelpers.FromProtoValue(prop.FullTypeSymbol!, $"state.{protoStateFieldName}")};");
             }
         }
         sb.AppendLine("                                Debug.WriteLine(\"[ClientProxy] State re-synced after reconnect.\");");
@@ -230,25 +232,27 @@ public static class ClientGenerator
                 {
                     sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
                 }
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out _))
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType))
                 {
+                    var conv = GeneratorHelpers.FromProtoValue(elemType!, "x");
                     if (named.TypeKind == TypeKind.Interface)
-                        sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToList();");
+                        sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.Select(x => {conv}).ToList();");
                     else
-                        sb.AppendLine($"                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName});");
+                        sb.AppendLine($"                this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}.Select(x => {conv}));");
                 }
                 else
                 {
-                    sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+                    sb.AppendLine($"                this.{prop.Name} = {GeneratorHelpers.FromProtoValue(prop.FullTypeSymbol!, $"state.{protoStateFieldName}")};");
                 }
             }
-            else if (prop.FullTypeSymbol is IArrayTypeSymbol)
+            else if (prop.FullTypeSymbol is IArrayTypeSymbol arrayType)
             {
-                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+                var conv = GeneratorHelpers.FromProtoValue(arrayType.ElementType, "x");
+                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName}.Select(x => {conv}).ToArray();");
             }
             else
             {
-                sb.AppendLine($"                this.{prop.Name} = state.{protoStateFieldName};");
+                sb.AppendLine($"                this.{prop.Name} = {GeneratorHelpers.FromProtoValue(prop.FullTypeSymbol!, $"state.{protoStateFieldName}")};");
             }
         }
         sb.AppendLine("                _isInitialized = true;");
