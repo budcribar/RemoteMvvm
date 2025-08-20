@@ -131,6 +131,8 @@ public class ComplexTypeTests
         Assert.Contains("repeated int32 collection", proto);
         Assert.Contains("repeated string string_list", proto);
         Assert.Contains("map<string, int32> dictionary_interface", proto);
+        Assert.Contains("map<string, int32> read_only_dictionary", proto);
+        Assert.Contains("map<string, int32> read_only_dictionary_interface", proto);
 
         // Thread-safe collections
         Assert.Contains("map<string, int32> concurrent_dictionary", proto);
