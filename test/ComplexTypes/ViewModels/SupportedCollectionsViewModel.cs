@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace ComplexTypes.ViewModels;
@@ -43,6 +44,12 @@ public partial class SupportedCollectionsViewModel : ObservableObject
 
     [ObservableProperty]
     private IDictionary<string, int> dictionaryInterface = new Dictionary<string, int>();
+
+    [ObservableProperty]
+    private ReadOnlyDictionary<string, int> readOnlyDictionary = new(new Dictionary<string, int>());
+
+    [ObservableProperty]
+    private IReadOnlyDictionary<string, int> readOnlyDictionaryInterface = new Dictionary<string, int>();
 
     // Thread-safe collections
     [ObservableProperty]
