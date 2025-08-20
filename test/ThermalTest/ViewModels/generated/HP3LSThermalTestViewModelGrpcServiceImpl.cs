@@ -43,13 +43,13 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     private readonly HP3LSThermalTestViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>>();
-    private readonly Action<Action> _dispatch;
+    private readonly Dispatcher _dispatcher;
     private readonly ILogger? _logger;
 
     public HP3LSThermalTestViewModelGrpcServiceImpl(HP3LSThermalTestViewModel viewModel, Dispatcher dispatcher, ILogger<HP3LSThermalTestViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatch = action => dispatcher.Invoke(action);
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
@@ -110,7 +110,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     public override Task<Empty> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatch(() => {
+        _dispatcher.Invoke(() => {
         var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
         if (propertyInfo != null && propertyInfo.CanWrite)
         {
@@ -133,7 +133,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     public override async Task<Generated.Protos.StateChangedResponse> StateChanged(Generated.Protos.StateChangedRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -150,7 +150,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     public override async Task<Generated.Protos.CancelTestResponse> CancelTest(Generated.Protos.CancelTestRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.CancelTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {

@@ -15,9 +15,9 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Channels;
-using System.Windows.Threading;
 using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
+using System.Windows.Threading;
 
 public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.PointerViewModelServiceBase
 {

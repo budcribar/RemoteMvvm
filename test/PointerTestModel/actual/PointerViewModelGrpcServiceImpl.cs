@@ -43,13 +43,13 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     private readonly PointerViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Action<Action> _dispatch;
+    private readonly Dispatcher _dispatcher;
     private readonly ILogger? _logger;
 
     public PointerViewModelGrpcServiceImpl(PointerViewModel viewModel, Dispatcher dispatcher, ILogger<PointerViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatch = action => dispatcher.Invoke(action);
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
@@ -180,18 +180,18 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override Task<Empty> UpdatePropertyValue(Pointer.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatch(() => {
-        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-        if (propertyInfo != null && propertyInfo.CanWrite)
-        {
-            try {
-                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
-                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
-                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
-                else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-            } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
-        }
-        else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+        _dispatcher.Invoke(() => {
+            var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
+            if (propertyInfo != null && propertyInfo.CanWrite)
+            {
+                try {
+                    if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
+                    else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
+                    else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
+                    else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
+                } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+            }
+            else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
         });
         return Task.FromResult(new Empty());
     }
@@ -203,7 +203,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.InitializeResponse> Initialize(Pointer.ViewModels.Protos.InitializeRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.InitializeCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -219,7 +219,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnCursorTestResponse> OnCursorTest(Pointer.ViewModels.Protos.OnCursorTestRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnCursorTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -235,7 +235,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnClickTestResponse> OnClickTest(Pointer.ViewModels.Protos.OnClickTestRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -252,7 +252,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnSelectDeviceResponse> OnSelectDevice(Pointer.ViewModels.Protos.OnSelectDeviceRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -269,7 +269,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.OnSelectNumButtonsResponse> OnSelectNumButtons(Pointer.ViewModels.Protos.OnSelectNumButtonsRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -286,7 +286,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.GetClicksWithoutNotificationResponse> GetClicksWithoutNotification(Pointer.ViewModels.Protos.GetClicksWithoutNotificationRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -303,7 +303,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.ResetClicksResponse> ResetClicks(Pointer.ViewModels.Protos.ResetClicksRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.ResetClicksCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -319,7 +319,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.CancelTestResponse> CancelTest(Pointer.ViewModels.Protos.CancelTestRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.CancelTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -335,7 +335,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     public override async Task<Pointer.ViewModels.Protos.FinishTestResponse> FinishTest(Pointer.ViewModels.Protos.FinishTestRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.FinishTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
