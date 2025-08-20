@@ -28,4 +28,26 @@ public class RunOptionTests
         var server = ServerGenerator.Generate(name, "Generated.Protos", name + "Service", props, cmds, vmNamespace, "console");
         Assert.DoesNotContain("Dispatcher", server);
     }
+
+    [Fact]
+    public async Task ServerGeneration_WinFormsMode_UsesDispatcher()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var vmDir = Path.Combine(root, "test", "SimpleViewModelTest", "ViewModels");
+        var vmFile = Path.Combine(vmDir, "MainViewModel.cs");
+        var refs = new System.Collections.Generic.List<string>();
+        string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+        if (tpa != null)
+        {
+            foreach (var p in tpa.Split(Path.PathSeparator))
+                if (!string.IsNullOrEmpty(p) && File.Exists(p)) refs.Add(p);
+        }
+        var (sym, name, props, cmds, comp) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile },
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs);
+        var vmNamespace = sym?.ContainingNamespace.ToDisplayString() ?? string.Empty;
+        var server = ServerGenerator.Generate(name, "Generated.Protos", name + "Service", props, cmds, vmNamespace, "winforms");
+        Assert.Contains("Control _dispatcher", server);
+    }
 }

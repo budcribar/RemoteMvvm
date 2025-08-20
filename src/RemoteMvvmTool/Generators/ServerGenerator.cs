@@ -54,16 +54,21 @@ public static class ServerGenerator
         sb.AppendLine();
         sb.AppendLine($"    private readonly {vmName} _viewModel;");
         sb.AppendLine($"    private static readonly ConcurrentDictionary<IServerStreamWriter<{protoNs}.PropertyChangeNotification>, Channel<{protoNs}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoNs}.PropertyChangeNotification>, Channel<{protoNs}.PropertyChangeNotification>>();");
-        if (runType != "console") sb.AppendLine("    private readonly Action<Action> _dispatch;");
+        if (runType == "wpf") sb.AppendLine("    private readonly Dispatcher _dispatcher;");
+        else if (runType == "winforms") sb.AppendLine("    private readonly Control _dispatcher;");
         sb.AppendLine("    private readonly ILogger? _logger;");
         sb.AppendLine();
         string dispatcherParam = runType == "wpf" ? "Dispatcher dispatcher, " : runType == "winforms" ? "Control dispatcher, " : string.Empty;
-        sb.AppendLine($"    public {vmName}GrpcServiceImpl({vmName} viewModel, {dispatcherParam}ILogger<{vmName}GrpcServiceImpl>? logger = null)");
+        sb.AppendLine("    public " + vmName + "GrpcServiceImpl(" + vmName + " viewModel, " + dispatcherParam + "ILogger<" + vmName + "GrpcServiceImpl>? logger = null)");
         sb.AppendLine("    {");
         sb.AppendLine("        _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));");
-        if (runType != "console")
+        if (runType == "wpf")
         {
-            sb.AppendLine("        _dispatch = action => dispatcher.Invoke(action);");
+            sb.AppendLine("        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));");
+        }
+        else if (runType == "winforms")
+        {
+            sb.AppendLine("        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));");
         }
         sb.AppendLine("        _logger = logger;");
         sb.AppendLine("        if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }");
@@ -133,7 +138,8 @@ public static class ServerGenerator
         sb.AppendLine();
         sb.AppendLine($"    public override Task<Empty> UpdatePropertyValue({protoNs}.UpdatePropertyValueRequest request, ServerCallContext context)");
         sb.AppendLine("    {");
-        if (runType != "console") sb.AppendLine("        _dispatch(() => {");
+        if (runType == "wpf") sb.AppendLine("        _dispatcher.Invoke(() => {");
+        else if (runType == "winforms") sb.AppendLine("        _dispatcher.Invoke(() => {");
         sb.AppendLine("        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
         sb.AppendLine("        if (propertyInfo != null && propertyInfo.CanWrite)");
         sb.AppendLine("        {");
@@ -145,7 +151,7 @@ public static class ServerGenerator
         sb.AppendLine("            } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
         sb.AppendLine("        }");
         sb.AppendLine("        else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
-        if (runType != "console") sb.AppendLine("        });");
+        if (runType == "wpf" || runType == "winforms") sb.AppendLine("        });");
         sb.AppendLine("        return Task.FromResult(new Empty());");
         sb.AppendLine("    }");
         sb.AppendLine();
@@ -158,8 +164,10 @@ public static class ServerGenerator
         {
             sb.AppendLine($"    public override async Task<{protoNs}.{cmd.MethodName}Response> {cmd.MethodName}({protoNs}.{cmd.MethodName}Request request, ServerCallContext context)");
             sb.AppendLine("    {");
-        if (runType != "console")
-            sb.AppendLine("        try { _dispatch(() => {");
+        if (runType == "wpf")
+            sb.AppendLine("        try { await await _dispatcher.InvokeAsync(async () => {");
+        else if (runType == "winforms")
+            sb.AppendLine("        try { _dispatcher.Invoke(new Action(() => {");
         else
             sb.AppendLine("        try {");
             var relayType = cmd.IsAsync ? "CommunityToolkit.Mvvm.Input.IAsyncRelayCommand" : "CommunityToolkit.Mvvm.Input.IRelayCommand";
@@ -170,7 +178,12 @@ public static class ServerGenerator
             if (cmd.Parameters.Count == 0)
             {
                 if (cmd.IsAsync)
-                    sb.AppendLine("                await command.ExecuteAsync(null);");
+                {
+                    if (runType == "wpf" || runType == "console")
+                        sb.AppendLine("                await command.ExecuteAsync(null);");
+                    else
+                        sb.AppendLine("                command.ExecuteAsync(null).GetAwaiter().GetResult();");
+                }
                 else
                     sb.AppendLine("                command.Execute(null);");
             }
@@ -181,21 +194,33 @@ public static class ServerGenerator
                 var typedRelay = cmd.IsAsync ? $"CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{param.TypeString}>" : $"CommunityToolkit.Mvvm.Input.IRelayCommand<{param.TypeString}>";
                 sb.AppendLine($"                var typedCommand = _viewModel.{cmd.CommandPropertyName} as {typedRelay};");
                 if (cmd.IsAsync)
-                    sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{paramProp}); else await command.ExecuteAsync(request);");
+                {
+                    if (runType == "wpf" || runType == "console")
+                        sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync(request.{paramProp}); else await command.ExecuteAsync(request);");
+                    else
+                        sb.AppendLine($"                if (typedCommand != null) typedCommand.ExecuteAsync(request.{paramProp}).GetAwaiter().GetResult(); else command.ExecuteAsync(request).GetAwaiter().GetResult();");
+                }
                 else
                     sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute(request.{paramProp}); else command.Execute(request);");
             }
             else
             {
                 if (cmd.IsAsync)
-                    sb.AppendLine(runType == "console" ? "                await command.ExecuteAsync(request);" : "                command.ExecuteAsync(request).GetAwaiter().GetResult();");
+                {
+                    if (runType == "wpf" || runType == "console")
+                        sb.AppendLine("                await command.ExecuteAsync(request);");
+                    else
+                        sb.AppendLine("                command.ExecuteAsync(request).GetAwaiter().GetResult();");
+                }
                 else
                     sb.AppendLine("                command.Execute(request);");
             }
             sb.AppendLine("            }");
             sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:{vmName}] Command {cmd.CommandPropertyName} not found or not {relayTypeShort}.\"); }}");
-        if (runType != "console")
+        if (runType == "wpf")
             sb.AppendLine("        }); } catch (Exception ex) {");
+        else if (runType == "winforms")
+            sb.AppendLine("        })); } catch (Exception ex) {");
         else
             sb.AppendLine("        } catch (Exception ex) {");
             sb.AppendLine($"        Debug.WriteLine(\"[GrpcService:{vmName}] Exception during command execution for {cmd.MethodName}: \" + ex.ToString());");

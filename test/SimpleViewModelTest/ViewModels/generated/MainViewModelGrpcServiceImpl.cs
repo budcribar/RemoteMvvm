@@ -43,13 +43,13 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
 
     private readonly MainViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>>();
-    private readonly Action<Action> _dispatch;
+    private readonly Dispatcher _dispatcher;
     private readonly ILogger? _logger;
 
     public MainViewModelGrpcServiceImpl(MainViewModel viewModel, Dispatcher dispatcher, ILogger<MainViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatch = action => dispatcher.Invoke(action);
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
@@ -89,7 +89,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
 
     public override Task<Empty> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatch(() => {
+        _dispatcher.Invoke(() => {
         var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
         if (propertyInfo != null && propertyInfo.CanWrite)
         {
@@ -112,7 +112,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
 
     public override async Task<Generated.Protos.UpdateStatusResponse> UpdateStatus(Generated.Protos.UpdateStatusRequest request, ServerCallContext context)
     {
-        try { _dispatch(() => {
+        try { await await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.UpdateStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
