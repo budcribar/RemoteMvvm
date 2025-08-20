@@ -170,4 +170,17 @@ public class ComplexTypeTests
 
         AssertSecondLevel(serverVm.Layers[1], remoteClient.Layers[1]);
     }
+
+    [Fact]
+    public async Task SupportedTypes_ClientDataTransferredToServer()
+    {
+        var clientServerOptions = new ServerOptions { Port = NetworkConfig.Port };
+        using var clientVm = new SupportedComplexViewModel(clientServerOptions) { Layers = CreateSampleData() };
+
+        var serverClientOptions = new ClientOptions { Address = NetworkConfig.ServerAddress };
+        using var serverVm = new SupportedComplexViewModel(serverClientOptions);
+        using var remoteClient = await serverVm.GetRemoteModel();
+
+        AssertSecondLevel(clientVm.Layers[1], remoteClient.Layers[1]);
+    }
 }
