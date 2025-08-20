@@ -34,16 +34,16 @@ public class ComplexTypeTests
         var thirdA = new ThirdLevel
         {
             Series = new[] { fourthA },
-            Items = new List<FourthLevel> { new FourthLevel { Measurement = 7.89 } }
+            Items = new List<FourthLevel> { new FourthLevel { Measurement = 7.89 },fourthA,fourthB }
         };
         var thirdB = new ThirdLevel
         {
-            Series = new[] { fourthB },
-            Items = new List<FourthLevel> { new FourthLevel { Measurement = 0.12 } }
+            Series = new[] { fourthB,fourthA },
+            Items = new List<FourthLevel> { new FourthLevel { Measurement = 0.12 },fourthB, fourthA }
         };
         var second = new SecondLevel
         {
-            ModeMap = new Dictionary<Mode, ThirdLevel[]> { { Mode.On, new[] { thirdA } }, { Mode.Off, new[] { thirdB } } },
+            ModeMap = new Dictionary<Mode, ThirdLevel[]> { { Mode.On, new[] { thirdA,thirdB } }, { Mode.Off, new[] { thirdB,thirdA } } },
             NamedGroups = new Dictionary<string, List<ThirdLevel>>
             {
                 { "groupA", new List<ThirdLevel> { thirdA } },
