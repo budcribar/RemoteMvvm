@@ -15,9 +15,9 @@ using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Threading.Channels;
-using System.Windows.Threading;
 using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
+using System.Windows.Threading;
 
 public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameViewModelServiceBase
 {
@@ -43,13 +43,13 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     private readonly GameViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher _dispatcher;
+    private readonly Action<Action> _dispatch;
     private readonly ILogger? _logger;
 
     public GameViewModelGrpcServiceImpl(GameViewModel viewModel, Dispatcher dispatcher, ILogger<GameViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _dispatch = action => dispatcher.Invoke(action);
         _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
@@ -138,18 +138,18 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override Task<Empty> UpdatePropertyValue(MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatcher.Invoke(() => {
-            var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-            if (propertyInfo != null && propertyInfo.CanWrite)
-            {
-                try {
-                    if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
-                    else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
-                    else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
-                    else { Debug.WriteLine("[GrpcService:GameViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-                } catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
-            }
-            else { Debug.WriteLine("[GrpcService:GameViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+        _dispatch(() => {
+        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
+        if (propertyInfo != null && propertyInfo.CanWrite)
+        {
+            try {
+                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
+                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
+                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
+                else { Debug.WriteLine("[GrpcService:GameViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
+            } catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+        }
+        else { Debug.WriteLine("[GrpcService:GameViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
         });
         return Task.FromResult(new Empty());
     }
@@ -161,7 +161,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override async Task<MonsterClicker.ViewModels.Protos.AttackMonsterResponse> AttackMonster(MonsterClicker.ViewModels.Protos.AttackMonsterRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { _dispatch(() => {
             var command = _viewModel.AttackMonsterCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
@@ -177,7 +177,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override async Task<MonsterClicker.ViewModels.Protos.SpecialAttackAsyncResponse> SpecialAttackAsync(MonsterClicker.ViewModels.Protos.SpecialAttackAsyncRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { _dispatch(() => {
             var command = _viewModel.SpecialAttackCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
             if (command != null)
             {
@@ -193,7 +193,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override async Task<MonsterClicker.ViewModels.Protos.ResetGameResponse> ResetGame(MonsterClicker.ViewModels.Protos.ResetGameRequest request, ServerCallContext context)
     {
-        try { await await _dispatcher.InvokeAsync(async () => {
+        try { _dispatch(() => {
             var command = _viewModel.ResetGameCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
