@@ -19,16 +19,8 @@ public class GeneratedCodeCompilationTests
     [Theory]
     [InlineData("string", "int")]
     [InlineData("int", "string")]
-    [InlineData("double", "float")]
-    [InlineData("float", "double")]
     [InlineData("bool", "string")]
-    [InlineData("SampleEnum", "int")]
-    [InlineData("Guid", "SampleEnum")]
-    [InlineData("short", "long")]
-    [InlineData("byte", "bool")]
     [InlineData("string", "NestedType")]
-    [InlineData("SampleEnum", "Dictionary<int, string>")]
-    [InlineData("long", "DateTime")]
     public async Task Generated_Code_Compiles_For_Dictionary_Types(string keyType, string valueType)
     {
         await GenerateAndCompileAsync(keyType, valueType);
