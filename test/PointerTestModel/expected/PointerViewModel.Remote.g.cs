@@ -59,7 +59,7 @@ namespace HPSystemsTools
             // Configure Kestrel to listen on the specified port with HTTP/2 support
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
-                kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>
+                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });

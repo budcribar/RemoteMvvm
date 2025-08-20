@@ -147,4 +147,12 @@ public class RunOptionTests
         Assert.DoesNotContain("Control _dispatcher", partial);
         Assert.Contains($"new {name}GrpcServiceImpl(this)", partial);
     }
+
+    [Fact]
+    public void ViewModelPartialGeneration_UsesOptionsPort()
+    {
+        var partial = ViewModelPartialGenerator.Generate("TestViewModel", "Generated.Protos", "TestViewModelService", "Generated.ViewModels", "Generated.Clients", string.Empty, "console");
+        Assert.Contains("kestrelOptions.ListenLocalhost(options.Port", partial);
+        Assert.DoesNotContain("NetworkConfig.Port", partial);
+    }
 }
