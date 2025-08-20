@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using System.Windows.Threading;
 using PeakSWC.Mvvm.Remote;
 
 namespace HPSystemsTools.ViewModels
@@ -21,6 +22,7 @@ namespace HPSystemsTools.ViewModels
     public partial class HP3LSThermalTestViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private HP3LSThermalTestViewModelGrpcServiceImpl? _grpcService;
+        private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private HPSystemsTools.ViewModels.RemoteClients.HP3LSThermalTestViewModelRemoteClient? _remoteClient;
@@ -28,7 +30,8 @@ namespace HPSystemsTools.ViewModels
         public HP3LSThermalTestViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _grpcService = new HP3LSThermalTestViewModelGrpcServiceImpl(this);
+            _dispatcher = Dispatcher.CurrentDispatcher;
+            _grpcService = new HP3LSThermalTestViewModelGrpcServiceImpl(this, _dispatcher);
 
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -56,7 +59,7 @@ namespace HPSystemsTools.ViewModels
             // Configure Kestrel to listen on the specified port with HTTP/2 support
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
-                kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>
+                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });
