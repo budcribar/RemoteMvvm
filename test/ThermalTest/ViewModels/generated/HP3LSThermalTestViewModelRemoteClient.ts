@@ -28,7 +28,6 @@ export interface TestSettingsState {
   cpuTemperatureThreshold: number;
   cpuLoadThreshold: number;
   cpuLoadTimeSpan: number;
-  dTS: Record<string, number>;
 }
 
 export class HP3LSThermalTestViewModelRemoteClient {
