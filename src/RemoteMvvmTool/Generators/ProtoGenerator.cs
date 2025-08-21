@@ -12,10 +12,7 @@ public static class ProtoGenerator
 {
     public static string Generate(string protoNs, string serviceName, string vmName, List<PropertyInfo> props, List<CommandInfo> cmds, Compilation compilation)
     {
-        if (props == null || props.Count == 0)
-        {
-            throw new InvalidOperationException("No observable properties were found to generate the state message.");
-        }
+        props ??= new List<PropertyInfo>();
 
         var body = new StringBuilder();
         var pendingMessages = new Queue<INamedTypeSymbol>();
@@ -28,6 +25,9 @@ public static class ProtoGenerator
         {
             if (type is IArrayTypeSymbol arrayType)
             {
+                if (arrayType.Rank != 1) throw new NotSupportedException("Multi-dimensional arrays are not supported.");
+                if (arrayType.ElementType.SpecialType == SpecialType.System_Byte)
+                    return "bytes";
                 string elementType = MapProtoType(arrayType.ElementType, allowMessage: true);
                 return $"repeated {elementType}";
             }
@@ -68,7 +68,30 @@ public static class ProtoGenerator
                 }
             }
 
-            string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
+            string wkt;
+            if (type is INamedTypeSymbol nullableType && nullableType.IsGenericType &&
+                nullableType.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                var inner = nullableType.TypeArguments[0];
+                string innerWkt = GeneratorHelpers.GetProtoWellKnownTypeFor(inner);
+                switch (innerWkt)
+                {
+                    case "StringValue": return "google.protobuf.StringValue";
+                    case "BoolValue": return "google.protobuf.BoolValue";
+                    case "Int32Value": return "google.protobuf.Int32Value";
+                    case "Int64Value": return "google.protobuf.Int64Value";
+                    case "UInt32Value": return "google.protobuf.UInt32Value";
+                    case "UInt64Value": return "google.protobuf.UInt64Value";
+                    case "FloatValue": return "google.protobuf.FloatValue";
+                    case "DoubleValue": return "google.protobuf.DoubleValue";
+                }
+                type = inner;
+                wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
+            }
+            else
+            {
+                wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
+            }
             switch (wkt)
             {
                 case "StringValue": return "string";
@@ -207,31 +230,7 @@ public static class ProtoGenerator
                 int paramField = 1;
                 foreach (var p in c.Parameters)
                 {
-                    string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
-                    string protoType;
-                    switch (wkt)
-                    {
-                        case "StringValue": protoType = "string"; break;
-                        case "BoolValue": protoType = "bool"; break;
-                        case "Int32Value": protoType = "int32"; break;
-                        case "Int64Value": protoType = "int64"; break;
-                        case "UInt32Value": protoType = "uint32"; break;
-                        case "UInt64Value": protoType = "uint64"; break;
-                        case "FloatValue": protoType = "float"; break;
-                        case "DoubleValue": protoType = "double"; break;
-                        case "BytesValue": protoType = "bytes"; break;
-                        case "Timestamp":
-                            usesTimestamp = true;
-                            protoType = "google.protobuf.Timestamp";
-                            break;
-                        case "Duration":
-                            usesDuration = true;
-                            protoType = "google.protobuf.Duration";
-                            break;
-                        default:
-                            protoType = "string";
-                            break;
-                    }
+                    string protoType = MapProtoType(p.FullTypeSymbol!, allowMessage: true);
                     body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(p.Name)} = {paramField++}; // Original C#: {p.TypeString} {p.Name}");
                 }
                 body.AppendLine("}");

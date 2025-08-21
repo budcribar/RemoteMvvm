@@ -217,6 +217,10 @@ public static class ServerGenerator
         sb.AppendLine("            try {");
         sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
         sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
+        sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
+        sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
+        sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
+        sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
         sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
         sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
         sb.AppendLine("            } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
@@ -340,6 +344,7 @@ public static class ServerGenerator
         sb.AppendLine("        {");
         sb.AppendLine("            case string s: return Any.Pack(new StringValue { Value = s });");
         sb.AppendLine("            case int i: return Any.Pack(new Int32Value { Value = i });");
+        sb.AppendLine("            case uint ui: return Any.Pack(new UInt32Value { Value = ui });");
         sb.AppendLine("            case bool b: return Any.Pack(new BoolValue { Value = b });");
         sb.AppendLine("            case double d: return Any.Pack(new DoubleValue { Value = d });");
         sb.AppendLine("            case float f: return Any.Pack(new FloatValue { Value = f });");
@@ -375,6 +380,7 @@ public static class ServerGenerator
         sb.AppendLine("            case string s: return Value.ForString(s);");
         sb.AppendLine("            case bool b: return Value.ForBool(b);");
         sb.AppendLine("            case int i: return Value.ForNumber(i);");
+        sb.AppendLine("            case uint ui: return Value.ForNumber(ui);");
         sb.AppendLine("            case long l: return Value.ForNumber(l);");
         sb.AppendLine("            case double d: return Value.ForNumber(d);");
         sb.AppendLine("            case float f: return Value.ForNumber(f);");
