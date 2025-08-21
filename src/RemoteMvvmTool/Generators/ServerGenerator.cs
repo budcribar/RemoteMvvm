@@ -383,8 +383,8 @@ public static class ServerGenerator
         sb.AppendLine("        {");
         sb.AppendLine("            var lv = new List<Value>();");
         sb.AppendLine("            foreach (var item in enumerable)");
-        sb.AppendLine("                lv.Add(ToValue(item));");
-        sb.AppendLine("            return Value.ForList(lv);");
+        sb.AppendLine("                lv.Values.Add(ToValue(item));");
+        sb.AppendLine("            return Value.ForList(lv.Values.ToArray());");
         sb.AppendLine("        }");
         sb.AppendLine("        var structValue = new Struct();");
         sb.AppendLine("        foreach (var prop in value.GetType().GetProperties())");

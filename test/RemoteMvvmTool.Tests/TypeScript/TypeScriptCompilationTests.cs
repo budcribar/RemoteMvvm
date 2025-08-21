@@ -146,7 +146,7 @@ class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
       getZonesMap: () => ({{ toObject: () => ({{ 0: {{ zone: 0, temperature: 42 }} }}) }}),
-      getTestSettings: () => ({{ toObject: () => ({{ cpuTemperatureThreshold:0, cpuLoadThreshold:0, cpuLoadTimeSpan:0, dTS:{{}} }}) }}),
+      getTestSettings: () => ({{ cpuTemperatureThreshold:0, cpuLoadThreshold:0, cpuLoadTimeSpan:0, dTS:{{}} }}),
       getShowDescription: () => true,
       getShowReadme: () => false
     }};
