@@ -167,6 +167,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:GameViewModel] Command AttackMonsterCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -199,6 +200,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:GameViewModel] Command ResetGameCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -285,8 +287,8 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         {
             var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Values.Add(ToValue(item));
-            return Value.ForList(lv.Values.ToArray());
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())
