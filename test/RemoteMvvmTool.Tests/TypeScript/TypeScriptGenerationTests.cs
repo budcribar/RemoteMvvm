@@ -4,8 +4,9 @@ using System.IO;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
 using RemoteMvvmTool.Generators;
+using Xunit;
 
-namespace Bugs;
+namespace RemoteMvvmTool.Tests.TypeScript;
 
 public class TypeScriptGenerationTests
 {
