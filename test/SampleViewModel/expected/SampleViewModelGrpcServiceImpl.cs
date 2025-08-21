@@ -44,7 +44,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     private readonly SampleViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher _dispatcher;
+    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
     public SampleViewModelGrpcServiceImpl(SampleViewModel viewModel, Dispatcher dispatcher, ILogger<SampleViewModelGrpcServiceImpl>? logger = null)

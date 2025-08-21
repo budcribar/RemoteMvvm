@@ -44,7 +44,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     private readonly GameViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher _dispatcher;
+    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
     public GameViewModelGrpcServiceImpl(GameViewModel viewModel, Dispatcher dispatcher, ILogger<GameViewModelGrpcServiceImpl>? logger = null)

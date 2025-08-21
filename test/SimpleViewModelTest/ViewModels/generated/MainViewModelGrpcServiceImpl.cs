@@ -44,7 +44,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
 
     private readonly MainViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher _dispatcher;
+    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
     public MainViewModelGrpcServiceImpl(MainViewModel viewModel, Dispatcher dispatcher, ILogger<MainViewModelGrpcServiceImpl>? logger = null)

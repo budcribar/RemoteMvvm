@@ -70,7 +70,7 @@ public class RunOptionTests
             refs);
         var vmNamespace = sym?.ContainingNamespace.ToDisplayString() ?? string.Empty;
         var server = ServerGenerator.Generate(name, "Generated.Protos", name + "Service", props, cmds, vmNamespace, "wpf");
-        Assert.Contains("Dispatcher _dispatcher", server);
+        Assert.Contains("Dispatcher? _dispatcher", server);
     }
 
     [Fact]
