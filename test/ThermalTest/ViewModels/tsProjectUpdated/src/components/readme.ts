@@ -11,12 +11,23 @@ export class ReadmeElement extends HTMLElement {
     this.root.innerHTML = `
       <style>
         :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.4; color: #1a1a1a; }
-        .readme-container { padding: 12px 0; }
-        .readme-paragraph { margin: 8px 0; }
-        .reference-name { font-weight: 600; }
-        .emphasis { font-weight: 600; }
-        .previous-content { display: none; opacity: 0.8; }
+        .readme-container {
+          display: flex;
+          flex-flow: column wrap;
+          justify-content: space-around;
+          align-content: space-around;
+          gap: .5em;
+          padding: 12px 0;
+        }
+        .readme-paragraph {
+          text-align: left;
+          width: 95%;
+        }
+        .reference-name { font-weight: bolder; }
+        .previous-content { text-decoration: line-through; display: none; }
         :host([show-previous="true"]) .previous-content { display: inline; }
+        .emphasis { animation: blinker 2s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.2; } }
         a { color: #0a6cff; text-decoration: none; }
         a:hover { text-decoration: underline; }
       </style>

@@ -27,17 +27,57 @@ export class GaugeElement extends HTMLElement {
         this.root.innerHTML = `
             <style>
                 :host { display: inline-block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; }
-                .gauge-container { min-width: 220px; }
-                .gauge-title { font-weight: 600; margin-bottom: 6px; color: #222; }
-                .gauge-title span { font-size: 0.95rem; }
-                .gauge-body { position: relative; height: 24px; background: #f2f2f2; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
-                .gauge-filler { position: absolute; inset: 0 auto 0 0; width: 100%; transform-origin: left center; background: #4caf50; }
-                .gauge-cover { position: absolute; inset: 0; display: grid; place-items: center; color: #111; font-weight: 600; font-size: 0.9rem; text-shadow: 0 1px 0 rgba(255,255,255,0.6); pointer-events: none; }
+                .gauge-title { font-weight: bold; height: 2.5em; text-align: center; color: #222; }
+                .gauge-container {
+                    /* display: flex;
+                    flex-flow: column nowrap; */
+                    align-items: center;
+                    width: 200px;
+                    gap: 1em;
+                }
+                .gauge-body {
+                    width: 100%;
+                    height: 0;
+                    padding-bottom: 50%;
+                    background: #b4c0be;
+                    position: relative;
+                    border-top-left-radius: 100% 200%;
+                    border-top-right-radius: 100% 200%;
+                    overflow: hidden;
+                }
+                .gauge-filler {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    width: inherit;
+                    height: 100%;
+                    transform-origin: center top;
+                    transition: transform 0.2s ease-out;
+                    background: #4caf50;
+                }
+                .gauge-cover {
+                    width: 75%;
+                    height: 150%;
+                    position: absolute;
+                    background: #ffffff;
+                    border-radius: 50%;
+                    top: 25%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding-bottom: 25%;
+                    box-sizing: border-box;
+                    color: #111;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+                    pointer-events: none;
+                }
             </style>
             <div class="gauge-container">
-                <div class="gauge-title">
-                    <span id="titleSpan"></span>
-                </div>
+                <div class="gauge-title"><span id="titleSpan"></span></div>
                 <div class="gauge-body">
                     <div id="filler" class="gauge-filler"></div>
                     <div class="gauge-cover">

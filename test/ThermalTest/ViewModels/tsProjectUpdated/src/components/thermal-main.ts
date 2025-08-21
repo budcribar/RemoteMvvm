@@ -44,17 +44,73 @@ export class ThermalMainElement extends HTMLElement {
     this.root.innerHTML = `
       <style>
         :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; }
-        .main-page-container { display: grid; gap: 16px; }
-        .test-title { font-size: 1.25rem; font-weight: 700; }
-        .test-description { background: #f7f7fa; padding: 10px 12px; border-radius: 8px; }
-        .test-parameters { display: grid; gap: 12px; }
-        .slider { background: #fff; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
-        .slider-title { font-weight: 600; margin-bottom: 8px; }
-        .slider-content { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
-        .slider-input input[type=range] { width: 100%; }
+        /* Provided layout styles */
+        .container {
+          display: flex;
+          justify-content: space-evenly;
+          flex-flow: row wrap;
+          align-items: center;
+          justify-items: center;
+        }
+        .main-page-container {
+          display: flex;
+          flex-flow: column wrap;
+          justify-content: space-around;
+          align-content: space-around;
+          gap: 1em;
+        }
+        .test-title {
+          text-align: center;
+          width: 100%;
+          font-weight: bolder;
+          font-size: 1.1rem;
+        }
+        .test-description { /* keep default block; styling optional */ }
+        .test-parameters {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-evenly;
+        }
+        .show-hide-options {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-around;
+          align-content: space-around;
+        }
+        .slider {
+          display: flex;
+          flex-flow: column nowrap;
+          justify-content: space-evenly;
+          align-self: center;
+          font-size: .8rem;
+          background: #fff;
+          border-radius: 8px;
+          padding: 10px 12px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .slider-title {
+          align-self: center;
+          font-weight: bolder;
+          margin-bottom: 8px;
+        }
+        .slider-content {
+          display: flex;
+          flex-flow: row nowrap;
+          justify-content: space-evenly;
+          align-items: center;
+          gap: 12px;
+        }
+        .slider-input input[type=range] { width: 260px; max-width: 60vw; }
         .slider-label label { font-weight: 600; min-width: 48px; display: inline-block; text-align: right; }
-        .thermal-zones-container { display: grid; gap: 12px; }
-        .show-hide-options { display: flex; gap: 8px; }
+        .thermal-zones-container {
+          display: flex;
+          flex-flow: column wrap;
+          justify-content: space-around;
+          align-items: center;
+          gap: 12px;
+        }
+
+        /* Buttons and misc */
         button { appearance: none; border: 1px solid rgba(0,0,0,0.1); background: #f4f6f8; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
         button:hover { background: #eef1f5; }
         .bottom { display: flex; justify-content: flex-end; }

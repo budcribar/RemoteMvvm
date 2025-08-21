@@ -2544,17 +2544,57 @@ class GaugeElement extends HTMLElement {
         this.root.innerHTML = `
             <style>
                 :host { display: inline-block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; }
-                .gauge-container { min-width: 220px; }
-                .gauge-title { font-weight: 600; margin-bottom: 6px; color: #222; }
-                .gauge-title span { font-size: 0.95rem; }
-                .gauge-body { position: relative; height: 24px; background: #f2f2f2; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
-                .gauge-filler { position: absolute; inset: 0 auto 0 0; width: 100%; transform-origin: left center; background: #4caf50; }
-                .gauge-cover { position: absolute; inset: 0; display: grid; place-items: center; color: #111; font-weight: 600; font-size: 0.9rem; text-shadow: 0 1px 0 rgba(255,255,255,0.6); pointer-events: none; }
+                .gauge-title { font-weight: bold; height: 2.5em; text-align: center; color: #222; }
+                .gauge-container {
+                    /* display: flex;
+                    flex-flow: column nowrap; */
+                    align-items: center;
+                    width: 200px;
+                    gap: 1em;
+                }
+                .gauge-body {
+                    width: 100%;
+                    height: 0;
+                    padding-bottom: 50%;
+                    background: #b4c0be;
+                    position: relative;
+                    border-top-left-radius: 100% 200%;
+                    border-top-right-radius: 100% 200%;
+                    overflow: hidden;
+                }
+                .gauge-filler {
+                    position: absolute;
+                    top: 100%;
+                    left: 0;
+                    width: inherit;
+                    height: 100%;
+                    transform-origin: center top;
+                    transition: transform 0.2s ease-out;
+                    background: #4caf50;
+                }
+                .gauge-cover {
+                    width: 75%;
+                    height: 150%;
+                    position: absolute;
+                    background: #ffffff;
+                    border-radius: 50%;
+                    top: 25%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding-bottom: 25%;
+                    box-sizing: border-box;
+                    color: #111;
+                    font-weight: 600;
+                    font-size: 0.9rem;
+                    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+                    pointer-events: none;
+                }
             </style>
             <div class="gauge-container">
-                <div class="gauge-title">
-                    <span id="titleSpan"></span>
-                </div>
+                <div class="gauge-title"><span id="titleSpan"></span></div>
                 <div class="gauge-body">
                     <div id="filler" class="gauge-filler"></div>
                     <div class="gauge-cover">
@@ -2616,6 +2656,70 @@ customElements.define('x-gauge', GaugeElement);
 
 /***/ }),
 
+/***/ "./src/components/notification.ts":
+/*!****************************************!*\
+  !*** ./src/components/notification.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   NotificationElement: () => (/* binding */ NotificationElement)
+/* harmony export */ });
+// Simple notification/modal component with backdrop and slot
+// Usage: <x-notification open><div>content</div></x-notification>
+// Methods: show(), hide()
+class NotificationElement extends HTMLElement {
+    static get observedAttributes() { return ['open', 'title']; }
+    constructor() {
+        super();
+        this.root = this.attachShadow({ mode: 'open' });
+        this.root.innerHTML = `
+      <style>
+        :host { display: contents; }
+        .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; z-index: 9999; }
+        .panel { position: fixed; left: 50%; top: 10%; transform: translateX(-50%);
+                 background: #fff; color: #111; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                 min-width: 320px; max-width: 90vw; max-height: 80vh; overflow: auto; display: none; z-index: 10000; }
+        header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #eee; font-weight: 700; }
+        .content { padding: 12px; }
+        button.close { appearance: none; background: transparent; border: 0; font-size: 1.2rem; line-height: 1; cursor: pointer; }
+        :host([open]) .backdrop, :host([open]) .panel { display: block; }
+      </style>
+      <div class="backdrop" id="backdrop"></div>
+      <div class="panel" role="dialog" aria-modal="true" aria-live="polite">
+        <header>
+          <div id="title"></div>
+          <button id="btnClose" class="close" aria-label="Close">×</button>
+        </header>
+        <div class="content"><slot></slot></div>
+      </div>
+    `;
+    }
+    connectedCallback() {
+        const $ = (id) => this.root.getElementById(id);
+        $('backdrop').addEventListener('click', () => this.hide());
+        $('btnClose').addEventListener('click', () => this.hide());
+        this.syncTitle();
+    }
+    attributeChangedCallback(name) {
+        if (name === 'title')
+            this.syncTitle();
+    }
+    syncTitle() {
+        const el = this.root.getElementById('title');
+        if (el)
+            el.textContent = this.getAttribute('title') ?? '';
+    }
+    show() { this.setAttribute('open', ''); }
+    hide() { this.removeAttribute('open'); this.dispatchEvent(new CustomEvent('close')); }
+}
+customElements.define('x-notification', NotificationElement);
+
+
+/***/ }),
+
 /***/ "./src/components/readme.ts":
 /*!**********************************!*\
   !*** ./src/components/readme.ts ***!
@@ -2637,12 +2741,23 @@ class ReadmeElement extends HTMLElement {
         this.root.innerHTML = `
       <style>
         :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.4; color: #1a1a1a; }
-        .readme-container { padding: 12px 0; }
-        .readme-paragraph { margin: 8px 0; }
-        .reference-name { font-weight: 600; }
-        .emphasis { font-weight: 600; }
-        .previous-content { display: none; opacity: 0.8; }
+        .readme-container {
+          display: flex;
+          flex-flow: column wrap;
+          justify-content: space-around;
+          align-content: space-around;
+          gap: .5em;
+          padding: 12px 0;
+        }
+        .readme-paragraph {
+          text-align: left;
+          width: 95%;
+        }
+        .reference-name { font-weight: bolder; }
+        .previous-content { text-decoration: line-through; display: none; }
         :host([show-previous="true"]) .previous-content { display: inline; }
+        .emphasis { animation: blinker 2s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0.2; } }
         a { color: #0a6cff; text-decoration: none; }
         a:hover { text-decoration: underline; }
       </style>
@@ -2757,17 +2872,73 @@ class ThermalMainElement extends HTMLElement {
         this.root.innerHTML = `
       <style>
         :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; }
-        .main-page-container { display: grid; gap: 16px; }
-        .test-title { font-size: 1.25rem; font-weight: 700; }
-        .test-description { background: #f7f7fa; padding: 10px 12px; border-radius: 8px; }
-        .test-parameters { display: grid; gap: 12px; }
-        .slider { background: #fff; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
-        .slider-title { font-weight: 600; margin-bottom: 8px; }
-        .slider-content { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
-        .slider-input input[type=range] { width: 100%; }
+        /* Provided layout styles */
+        .container {
+          display: flex;
+          justify-content: space-evenly;
+          flex-flow: row wrap;
+          align-items: center;
+          justify-items: center;
+        }
+        .main-page-container {
+          display: flex;
+          flex-flow: column wrap;
+          justify-content: space-around;
+          align-content: space-around;
+          gap: 1em;
+        }
+        .test-title {
+          text-align: center;
+          width: 100%;
+          font-weight: bolder;
+          font-size: 1.1rem;
+        }
+        .test-description { /* keep default block; styling optional */ }
+        .test-parameters {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-evenly;
+        }
+        .show-hide-options {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-around;
+          align-content: space-around;
+        }
+        .slider {
+          display: flex;
+          flex-flow: column nowrap;
+          justify-content: space-evenly;
+          align-self: center;
+          font-size: .8rem;
+          background: #fff;
+          border-radius: 8px;
+          padding: 10px 12px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+        }
+        .slider-title {
+          align-self: center;
+          font-weight: bolder;
+          margin-bottom: 8px;
+        }
+        .slider-content {
+          display: flex;
+          flex-flow: row nowrap;
+          justify-content: space-evenly;
+          align-items: center;
+          gap: 12px;
+        }
+        .slider-input input[type=range] { width: 260px; max-width: 60vw; }
         .slider-label label { font-weight: 600; min-width: 48px; display: inline-block; text-align: right; }
-        .thermal-zones-container { display: grid; gap: 12px; }
-        .show-hide-options { display: flex; gap: 8px; }
+        .thermal-zones-container {
+          display: flex;
+          flex-flow: column wrap;
+          justify-content: space-around;
+          align-items: center;
+          gap: 12px;
+        }
+
+        /* Buttons and misc */
         button { appearance: none; border: 1px solid rgba(0,0,0,0.1); background: #f4f6f8; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
         button:hover { background: #eef1f5; }
         .bottom { display: flex; justify-content: flex-end; }
@@ -3014,16 +3185,86 @@ class ThermalZoneElement extends HTMLElement {
         this.root.innerHTML = `
       <style>
         :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; }
-        .thermal-zone-container { border-radius: 8px; padding: 12px; background: #fafafa; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
-        .progress-bar { position: relative; height: 14px; border-radius: 7px; background: #e9e9e9; overflow: hidden; margin-bottom: 10px; }
-        .progress-bar .value { display: block; height: 100%; background: linear-gradient(90deg,#4caf50,#81c784); width: 0; transition: width 200ms ease; }
-        .progress-bar::after { content: attr(data-label); position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: #222; text-shadow: 0 1px 0 rgba(255,255,255,0.5); }
+        /* Container */
+        .thermal-zone-container {
+          display: flex;
+          flex-flow: column wrap;
+          border: 1px solid #ccc;
+          width: 90%;
+          border-radius: 8px;
+          padding: 12px;
+          background: #fafafa;
+        }
 
-        .runtime-properties-container { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
-        .runtime-property { background: #fff; border-radius: 6px; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); text-align: center; font-weight: 600; }
+        /* Progress */
+        .test-progress { width: 100%; }
+        .progress-bar {
+          height: 1.5em;
+          width: 100%;
+          background-color: #eee;
+          position: relative;
+          border-radius: 7px;
+          overflow: hidden;
+          margin-bottom: 10px;
+        }
+        .progress-bar:before {
+          content: attr(data-label);
+          font-size: 0.8em;
+          position: absolute;
+          text-align: center;
+          top: 5px;
+          left: 0; right: 0;
+        }
+        .progress-bar .value {
+          background-color: #ccc;
+          display: inline-block;
+          height: 100%;
+          width: 0;
+          transition: width 200ms ease;
+        }
 
-        .gauges-container { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 12px; align-items: center; margin: 8px 0; }
-        .runtime-details { margin-top: 8px; color: #333; }
+        /* Runtime properties */
+        .runtime-properties-container {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-evenly;
+          gap: 8px;
+          margin: 8px 0;
+        }
+        .runtime-properties { text-align: center; }
+        .runtime-property {
+          background: #fff;
+          border-radius: 6px;
+          padding: 8px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+          text-align: center;
+          font-weight: 600;
+          min-width: 120px;
+        }
+
+        /* Gauges */
+        .gauges-container {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-evenly;
+          align-items: center;
+          margin: 8px 0;
+          gap: 12px;
+        }
+        .thermal-gauge { width: 50%; }
+
+        /* Details */
+        .runtime-details { text-align: center; color: #333; margin-top: 8px; }
+
+        /* State backgrounds */
+        .state-RunningHot, .state-MaybeRunningHot, .state-Fail, .state-MaybeFail { background: #faa; }
+        .state-Ok, .state-MaybeOk, .state-Pass, .state-MaybePass { background: #afa; }
+        .state-Unknown, .state-StressLevelExceeded, .state-Reset { background: #ccc; }
+        .state-CheckInProgress { background: #ffa; }
+
+        /* Tables (not used by markup, included per spec) */
+        .thermal-zone-table { border: 1px solid #ccc; width: 100%; }
+        .thermal-parameter { text-align: center; font-size: .8rem; }
       </style>
       <div id="container" class="thermal-zone-container">
         <div id="progressWrap" class="progress-wrap" hidden>
@@ -3032,14 +3273,14 @@ class ThermalZoneElement extends HTMLElement {
           </div>
         </div>
 
-        <div id="runtimeProps" class="runtime-properties-container">
+  <div id="runtimeProps" class="runtime-properties-container">
           <div id="propPrimary" class="runtime-property"></div>
           <div id="propMaxTemp" class="runtime-property"></div>
           <div id="propZone" class="runtime-property"></div>
           <div id="propFan" class="runtime-property"></div>
         </div>
 
-        <div class="gauges-container">
+  <div class="gauges-container">
           <x-gauge id="gaugeCpu" title="" text="" background="#2196f3" transform="scaleX(0)"></x-gauge>
           <x-gauge id="gaugeTemp" title="" text="" background="#e53935" transform="scaleX(0)"></x-gauge>
         </div>
@@ -3101,6 +3342,7 @@ class ThermalZoneElement extends HTMLElement {
         const propMaxTemp = this.root.getElementById('propMaxTemp');
         const propZone = this.root.getElementById('propZone');
         const propFan = this.root.getElementById('propFan');
+        const runtimeProps = this.root.getElementById('runtimeProps');
         const maxTemp = this.num('max-temp');
         const zone = this.str('zone');
         const fan = this.num('fan-speed');
@@ -3109,6 +3351,17 @@ class ThermalZoneElement extends HTMLElement {
         propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
         propZone.textContent = zone;
         propFan.textContent = `${fan} RPM`;
+        // Apply state-based class styling (supports either textual status/state values)
+        const sanitize = (s) => (s || '').toString().replace(/\s+/g, '').replace(/[^\w-]/g, '');
+        const stateClassCandidates = [sanitize(state), sanitize(status)].filter(Boolean);
+        // Reset to base class, then add the first matching textual class
+        runtimeProps.className = 'runtime-properties-container';
+        for (const cls of stateClassCandidates) {
+            if (/\D/.test(cls)) { // has non-digit characters -> likely a name like CheckInProgress
+                runtimeProps.classList.add(`state-${cls}`);
+                break;
+            }
+        }
         // Parse descriptions JSON lazily
         try {
             const descAttr = this.getAttribute('state-descriptions');
@@ -5609,9 +5862,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_readme__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/readme */ "./src/components/readme.ts");
 /* harmony import */ var _components_thermal_zone__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components/thermal-zone */ "./src/components/thermal-zone.ts");
 /* harmony import */ var _components_thermal_main__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/thermal-main */ "./src/components/thermal-main.ts");
+/* harmony import */ var _components_notification__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./components/notification */ "./src/components/notification.ts");
 // <auto-generated>
 // Generated by RemoteMvvmTool.
 // </auto-generated>
+
 
 
 
@@ -5697,7 +5952,32 @@ document.addEventListener('DOMContentLoaded', () => {
             await vm.updatePropertyValue('CpuLoadTimeSpan', Number(e?.detail?.value ?? 0));
         });
         main.addEventListener('toggle-readme', async (e) => {
-            await vm.updatePropertyValue('ShowReadme', Boolean(e?.detail?.value));
+            const show = Boolean(e?.detail?.value);
+            await vm.updatePropertyValue('ShowReadme', show);
+            if (show) {
+                // Create or reuse a notification element to show the README
+                let note = document.querySelector('x-notification');
+                if (!note) {
+                    note = document.createElement('x-notification');
+                    note.setAttribute('title', 'README');
+                    const readme = document.createElement('x-readme');
+                    // Mirror show-previous from main, if present
+                    if (main.getAttribute('readme-show-previous') === 'true') {
+                        readme.setAttribute('show-previous', 'true');
+                    }
+                    note.appendChild(readme);
+                    document.body.appendChild(note);
+                    note.addEventListener('close', async () => {
+                        // When the notification closes, turn off ShowReadme in VM and reflect to main
+                        await vm.updatePropertyValue('ShowReadme', false);
+                        main.setAttribute('show-readme', 'false');
+                    });
+                }
+                if (typeof note.show === 'function')
+                    note.show();
+                else
+                    note.setAttribute('open', '');
+            }
         });
         main.addEventListener('toggle-description', async (e) => {
             await vm.updatePropertyValue('ShowDescription', Boolean(e?.detail?.value));

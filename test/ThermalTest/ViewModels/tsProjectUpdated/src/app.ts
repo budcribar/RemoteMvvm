@@ -8,6 +8,7 @@ import './components/gauge';
 import './components/readme';
 import './components/thermal-zone';
 import './components/thermal-main';
+import './components/notification';
 
 const grpcHost = 'http://localhost:50052';
 const grpcClient = new HP3LSThermalTestViewModelServiceClient(grpcHost);
@@ -90,7 +91,29 @@ document.addEventListener('DOMContentLoaded', () => {
             await vm.updatePropertyValue('CpuLoadTimeSpan', Number(e?.detail?.value ?? 0));
         });
         main.addEventListener('toggle-readme', async (e: any) => {
-            await vm.updatePropertyValue('ShowReadme', Boolean(e?.detail?.value));
+            const show = Boolean(e?.detail?.value);
+            await vm.updatePropertyValue('ShowReadme', show);
+            if (show) {
+                // Create or reuse a notification element to show the README
+                let note = document.querySelector('x-notification') as any;
+                if (!note) {
+                    note = document.createElement('x-notification') as any;
+                    note.setAttribute('title', 'README');
+                    const readme = document.createElement('x-readme');
+                    // Mirror show-previous from main, if present
+                    if ((main as HTMLElement).getAttribute('readme-show-previous') === 'true') {
+                        readme.setAttribute('show-previous', 'true');
+                    }
+                    note.appendChild(readme);
+                    document.body.appendChild(note);
+                    note.addEventListener('close', async () => {
+                        // When the notification closes, turn off ShowReadme in VM and reflect to main
+                        await vm.updatePropertyValue('ShowReadme', false);
+                        (main as HTMLElement).setAttribute('show-readme', 'false');
+                    });
+                }
+                if (typeof note.show === 'function') note.show(); else note.setAttribute('open', '');
+            }
         });
         main.addEventListener('toggle-description', async (e: any) => {
             await vm.updatePropertyValue('ShowDescription', Boolean(e?.detail?.value));

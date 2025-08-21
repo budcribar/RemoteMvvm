@@ -40,16 +40,86 @@ export class ThermalZoneElement extends HTMLElement {
     this.root.innerHTML = `
       <style>
         :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; }
-        .thermal-zone-container { border-radius: 8px; padding: 12px; background: #fafafa; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
-        .progress-bar { position: relative; height: 14px; border-radius: 7px; background: #e9e9e9; overflow: hidden; margin-bottom: 10px; }
-        .progress-bar .value { display: block; height: 100%; background: linear-gradient(90deg,#4caf50,#81c784); width: 0; transition: width 200ms ease; }
-        .progress-bar::after { content: attr(data-label); position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: #222; text-shadow: 0 1px 0 rgba(255,255,255,0.5); }
+        /* Container */
+        .thermal-zone-container {
+          display: flex;
+          flex-flow: column wrap;
+          border: 1px solid #ccc;
+          width: 90%;
+          border-radius: 8px;
+          padding: 12px;
+          background: #fafafa;
+        }
 
-        .runtime-properties-container { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
-        .runtime-property { background: #fff; border-radius: 6px; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); text-align: center; font-weight: 600; }
+        /* Progress */
+        .test-progress { width: 100%; }
+        .progress-bar {
+          height: 1.5em;
+          width: 100%;
+          background-color: #eee;
+          position: relative;
+          border-radius: 7px;
+          overflow: hidden;
+          margin-bottom: 10px;
+        }
+        .progress-bar:before {
+          content: attr(data-label);
+          font-size: 0.8em;
+          position: absolute;
+          text-align: center;
+          top: 5px;
+          left: 0; right: 0;
+        }
+        .progress-bar .value {
+          background-color: #ccc;
+          display: inline-block;
+          height: 100%;
+          width: 0;
+          transition: width 200ms ease;
+        }
 
-        .gauges-container { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 12px; align-items: center; margin: 8px 0; }
-        .runtime-details { margin-top: 8px; color: #333; }
+        /* Runtime properties */
+        .runtime-properties-container {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-evenly;
+          gap: 8px;
+          margin: 8px 0;
+        }
+        .runtime-properties { text-align: center; }
+        .runtime-property {
+          background: #fff;
+          border-radius: 6px;
+          padding: 8px;
+          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+          text-align: center;
+          font-weight: 600;
+          min-width: 120px;
+        }
+
+        /* Gauges */
+        .gauges-container {
+          display: flex;
+          flex-flow: row wrap;
+          justify-content: space-evenly;
+          align-items: center;
+          margin: 8px 0;
+          gap: 12px;
+        }
+        .thermal-gauge { width: 50%; }
+
+        /* Details */
+        .runtime-details { text-align: center; color: #333; margin-top: 8px; }
+
+        /* State backgrounds */
+        .state-RunningHot, .state-MaybeRunningHot, .state-Fail, .state-MaybeFail { background: #faa; }
+        .state-Ok, .state-MaybeOk, .state-Pass, .state-MaybePass { background: #afa; }
+        .state-Unknown, .state-StressLevelExceeded, .state-Reset { background: #ccc; }
+        .state-CheckInProgress { background: #ffa; }
+
+        /* Tables (not used by markup, included per spec) */
+        .thermal-zone-table { border: 1px solid #ccc; width: 100%; }
+        .thermal-parameter { text-align: center; font-size: .8rem; }
       </style>
       <div id="container" class="thermal-zone-container">
         <div id="progressWrap" class="progress-wrap" hidden>
@@ -58,14 +128,14 @@ export class ThermalZoneElement extends HTMLElement {
           </div>
         </div>
 
-        <div id="runtimeProps" class="runtime-properties-container">
+  <div id="runtimeProps" class="runtime-properties-container">
           <div id="propPrimary" class="runtime-property"></div>
           <div id="propMaxTemp" class="runtime-property"></div>
           <div id="propZone" class="runtime-property"></div>
           <div id="propFan" class="runtime-property"></div>
         </div>
 
-        <div class="gauges-container">
+  <div class="gauges-container">
           <x-gauge id="gaugeCpu" title="" text="" background="#2196f3" transform="scaleX(0)"></x-gauge>
           <x-gauge id="gaugeTemp" title="" text="" background="#e53935" transform="scaleX(0)"></x-gauge>
         </div>
@@ -128,10 +198,11 @@ export class ThermalZoneElement extends HTMLElement {
     }
 
     // Runtime props
-    const propPrimary = this.root.getElementById('propPrimary') as HTMLDivElement;
-    const propMaxTemp = this.root.getElementById('propMaxTemp') as HTMLDivElement;
-    const propZone = this.root.getElementById('propZone') as HTMLDivElement;
-    const propFan = this.root.getElementById('propFan') as HTMLDivElement;
+  const propPrimary = this.root.getElementById('propPrimary') as HTMLDivElement;
+  const propMaxTemp = this.root.getElementById('propMaxTemp') as HTMLDivElement;
+  const propZone = this.root.getElementById('propZone') as HTMLDivElement;
+  const propFan = this.root.getElementById('propFan') as HTMLDivElement;
+  const runtimeProps = this.root.getElementById('runtimeProps') as HTMLDivElement;
 
     const maxTemp = this.num('max-temp');
     const zone = this.str('zone');
@@ -141,6 +212,18 @@ export class ThermalZoneElement extends HTMLElement {
     propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
     propZone.textContent = zone;
     propFan.textContent = `${fan} RPM`;
+
+    // Apply state-based class styling (supports either textual status/state values)
+    const sanitize = (s: string) => (s || '').toString().replace(/\s+/g, '').replace(/[^\w-]/g, '');
+    const stateClassCandidates = [sanitize(state), sanitize(status)].filter(Boolean);
+    // Reset to base class, then add the first matching textual class
+    runtimeProps.className = 'runtime-properties-container';
+    for (const cls of stateClassCandidates) {
+      if (/\D/.test(cls)) { // has non-digit characters -> likely a name like CheckInProgress
+        runtimeProps.classList.add(`state-${cls}`);
+        break;
+      }
+    }
 
     // Parse descriptions JSON lazily
     try {
