@@ -122,6 +122,102 @@ export class {serviceName}Client {{
             "export class CancelTestRequest {}\n");
     }
 
+    static async Task RunSimpleCompilationTest(string propertyType, string propertyName, string tsReturnValue, string tsAssertion, string? extraCode = null)
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var vmCode = @"public class ObservablePropertyAttribute : System.Attribute {}\npublic class RelayCommandAttribute : System.Attribute {}\n" +
+                     (extraCode ?? string.Empty) +
+                     $"public partial class TestViewModel : ObservableObject {{ [ObservableProperty] public partial {propertyType} {propertyName} {{ get; set; }} }}\npublic class ObservableObject {}";
+        var vmFile = Path.Combine(tempDir, "TestViewModel.cs");
+        File.WriteAllText(vmFile, vmCode);
+        var refs = LoadDefaultRefs();
+        var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
+        var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
+        var tsClientFile = Path.Combine(tempDir, name + "RemoteClient.ts");
+        File.WriteAllText(tsClientFile, ts);
+
+        CreateTsStubs(tempDir, name, name + "Service");
+
+        var testTs = $@"declare var process: any;
+import {{ {name}RemoteClient }} from './{name}RemoteClient';
+import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
+class FakeClient extends {name}ServiceClient {{
+  async getState(_req:any) {{
+    return {{
+      get{propertyName}: () => {tsReturnValue}
+    }};
+  }}
+  updatePropertyValue(_req:any) {{ return Promise.resolve(); }}
+  subscribeToPropertyChanges(_req:any) {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
+  ping(_req:any) {{ return Promise.resolve({{ getStatus: () => 0 }}); }}
+  stateChanged(_req:any) {{ return Promise.resolve(); }}
+  cancelTest(_req:any) {{ return Promise.resolve(); }}
+}}
+(async () => {{
+  const client = new {name}RemoteClient(new FakeClient(''));
+  await client.initializeRemote();
+  {tsAssertion}
+  client.dispose();
+}})().catch(e => {{ console.error(e); process.exit(1); }});
+";
+        File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
+
+        var tsconfig = @"{
+  \"compilerOptions\": {
+    \"target\": \"es2018\",
+    \"module\": \"commonjs\",
+    \"strict\": false,
+    \"esModuleInterop\": true,
+    \"lib\": [\"es2018\", \"dom\"],
+    \"outDir\": \"dist\",
+    \"allowJs\": true
+  },
+  \"include\": [\"**/*.ts\", \"**/*.js\"]
+}";
+        File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
+        try
+        {
+            RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+        }
+        catch
+        {
+            RunCmd("tsc", "--project tsconfig.json", tempDir);
+        }
+
+        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+    }
+
+    [Fact]
+    public async Task Generated_TypeScript_Compiles_With_Int_Property()
+    {
+        await RunSimpleCompilationTest("int", "Value", "42", "if (client.value !== 42) throw new Error('Int property transfer failed');");
+    }
+
+    [Fact]
+    public async Task Generated_TypeScript_Compiles_With_String_Property()
+    {
+        await RunSimpleCompilationTest("string", "Text", "'hello'", "if (client.text !== 'hello') throw new Error('String property transfer failed');");
+    }
+
+    [Fact]
+    public async Task Generated_TypeScript_Compiles_With_Bool_Property()
+    {
+        await RunSimpleCompilationTest("bool", "Enabled", "true", "if (!client.enabled) throw new Error('Bool property transfer failed');");
+    }
+
+    [Fact]
+    public async Task Generated_TypeScript_Compiles_With_Double_Property()
+    {
+        await RunSimpleCompilationTest("double", "Ratio", "0.5", "if (client.ratio !== 0.5) throw new Error('Double property transfer failed');");
+    }
+
+    [Fact]
+    public async Task Generated_TypeScript_Compiles_With_Enum_Property()
+    {
+        await RunSimpleCompilationTest("Mode", "Mode", "1", "if (client.mode !== 1) throw new Error('Enum property transfer failed');", "public enum Mode { A, B }\\n");
+    }
+
     [Fact]
     public async Task Generated_TypeScript_Compiles_And_Transfers_Dictionary()
     {
