@@ -22,6 +22,24 @@ public class ThermalViewModelGenerationTests
         return list;
     }
 
+    static void CleanGeneratedDir(string vmDir)
+    {
+        var generatedDir = Path.Combine(vmDir, "generated");
+        if (!Directory.Exists(generatedDir))
+            return;
+
+        foreach (var entry in Directory.EnumerateFileSystemEntries(generatedDir))
+        {
+            if (Path.GetFileName(entry).Equals("tsProject", StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            if (Directory.Exists(entry))
+                Directory.Delete(entry, true);
+            else
+                File.Delete(entry);
+        }
+    }
+
     [Fact]
     public async Task Analyzer_Finds_Types_From_Other_Files()
     {
@@ -181,8 +199,7 @@ public class ThermalViewModelGenerationTests
                 "IHpMonitor.cs",
                 "TestSettingsModel.cs",
             };
-            if (Directory.Exists(Path.Combine(vmDir, "generated")))
-                Directory.Delete(Path.Combine(vmDir, "generated"), true);
+            CleanGeneratedDir(vmDir);
             if (Directory.Exists(Path.Combine(vmDir, "protos")))
                 Directory.Delete(Path.Combine(vmDir, "protos"), true);
 
@@ -212,8 +229,7 @@ public class ThermalViewModelGenerationTests
                 "IHpMonitor.cs",
                 "TestSettingsModel.cs",
             };
-            if (Directory.Exists(Path.Combine(vmDir, "generated")))
-                Directory.Delete(Path.Combine(vmDir, "generated"), true);
+            CleanGeneratedDir(vmDir);
             if (Directory.Exists(Path.Combine(vmDir, "protos")))
                 Directory.Delete(Path.Combine(vmDir, "protos"), true);
 
