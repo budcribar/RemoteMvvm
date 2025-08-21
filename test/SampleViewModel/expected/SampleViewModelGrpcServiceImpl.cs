@@ -125,6 +125,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:SampleViewModel] Command IncrementCountCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -159,6 +160,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             {
                 var typedCommand = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string?>;
                 if (typedCommand != null) typedCommand.Execute(request.Value); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:SampleViewModel] Command SetNameToValueCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -245,8 +247,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         {
             var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Values.Add(ToValue(item));
-            return Value.ForList(lv.Values.ToArray());
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())

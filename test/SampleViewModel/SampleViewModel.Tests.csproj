@@ -10,9 +10,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="actual2\**" />
     <Compile Remove="expected/*.cs" />
     <Compile Remove="actual/**" />
     <None Include="expected/*.cs" />
+    <EmbeddedResource Remove="actual2\**" />
+    <None Remove="actual2\**" />
 	  <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <ProjectReference Include="../../src/RemoteMvvmTool/RemoteMvvmTool.csproj" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />

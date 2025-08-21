@@ -119,6 +119,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             {
                 var typedCommand = _viewModel.UpdateStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus>;
                 if (typedCommand != null) typedCommand.Execute((SimpleViewModelTest.ViewModels.DeviceStatus)request.Status); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:MainViewModel] Command UpdateStatusCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -205,8 +206,8 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         {
             var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Values.Add(ToValue(item));
-            return Value.ForList(lv.Values.ToArray());
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())

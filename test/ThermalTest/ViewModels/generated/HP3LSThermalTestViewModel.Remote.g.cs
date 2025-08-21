@@ -54,7 +54,7 @@ namespace HPSystemsTools.ViewModels
             }));
 
             // Register the gRPC service implementation with ASP.NET Core DI
-            builder.Services.AddSingleton(_grpcService);
+            builder.Services.AddSingleton(_grpcService!);
 
             // Configure Kestrel to listen on the specified port with HTTP/2 support
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
@@ -90,6 +90,7 @@ namespace HPSystemsTools.ViewModels
         public HP3LSThermalTestViewModel(ClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
+            _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
             var client = new HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient(_channel);
             _remoteClient = new HP3LSThermalTestViewModelRemoteClient(client);

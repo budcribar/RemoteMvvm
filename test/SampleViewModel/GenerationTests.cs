@@ -74,7 +74,7 @@ namespace SampleViewModel
         public async Task GeneratedOutputs_MatchExpected()
         {
             var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
-            var actualDir = Path.Combine(root, "test", "SampleViewModel", "actual");
+            var actualDir = Path.Combine(root, "test", "SampleViewModel", "actual2");
            
             var (_, files) = await GenerateAsync(actualDir);
            

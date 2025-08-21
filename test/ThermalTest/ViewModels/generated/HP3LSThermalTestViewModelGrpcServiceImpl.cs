@@ -140,6 +140,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             {
                 var typedCommand = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<HPSystemsTools.Models.ThermalStateEnum>;
                 if (typedCommand != null) typedCommand.Execute((HPSystemsTools.Models.ThermalStateEnum)request.State); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Command StateChangedCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -156,6 +157,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Command CancelTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -242,8 +244,8 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         {
             var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Values.Add(ToValue(item));
-            return Value.ForList(lv.Values.ToArray());
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())

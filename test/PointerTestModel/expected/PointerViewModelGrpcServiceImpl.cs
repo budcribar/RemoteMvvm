@@ -209,6 +209,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command InitializeCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -225,6 +226,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnCursorTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -242,6 +244,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<int>;
                 if (typedCommand != null) typedCommand.Execute(request.Button); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnClickTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -259,6 +262,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
                 if (typedCommand != null) typedCommand.Execute(request.Device); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectDeviceCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -276,6 +280,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<int>;
                 if (typedCommand != null) typedCommand.Execute(request.BtnCount); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectNumButtonsCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -293,6 +298,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
                 if (typedCommand != null) typedCommand.Execute(request.Button); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command GetClicksWithoutNotificationCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -309,6 +315,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command ResetClicksCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -325,6 +332,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command CancelTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -341,6 +349,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command FinishTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -427,8 +436,8 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         {
             var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Values.Add(ToValue(item));
-            return Value.ForList(lv.Values.ToArray());
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())
