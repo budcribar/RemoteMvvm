@@ -10,7 +10,10 @@ const grpcClient = new HP3LSThermalTestViewModelServiceClient(grpcHost);
 const vm = new HP3LSThermalTestViewModelRemoteClient(grpcClient);
 
 async function render() {
-    (document.getElementById('zones') as HTMLInputElement).value = JSON.stringify(vm.zones);
+    (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).value = JSON.stringify(vm.cpuTemperatureThreshold);
+    (document.getElementById('cpuLoadThreshold') as HTMLInputElement).value = JSON.stringify(vm.cpuLoadThreshold);
+    (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).value = JSON.stringify(vm.cpuLoadTimeSpan);
+    (document.getElementById('zoneList') as HTMLInputElement).value = JSON.stringify(vm.zoneList);
     (document.getElementById('testSettings') as HTMLInputElement).value = JSON.stringify(vm.testSettings);
     (document.getElementById('showDescription') as HTMLInputElement).value = JSON.stringify(vm.showDescription);
     (document.getElementById('showReadme') as HTMLInputElement).value = JSON.stringify(vm.showReadme);
@@ -25,8 +28,17 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    (document.getElementById('zones') as HTMLInputElement).addEventListener('change', async () => {
-        await vm.updatePropertyValue('Zones', (document.getElementById('zones') as HTMLInputElement).value);
+    (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).addEventListener('change', async () => {
+        await vm.updatePropertyValue('CpuTemperatureThreshold', (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).value);
+    });
+    (document.getElementById('cpuLoadThreshold') as HTMLInputElement).addEventListener('change', async () => {
+        await vm.updatePropertyValue('CpuLoadThreshold', (document.getElementById('cpuLoadThreshold') as HTMLInputElement).value);
+    });
+    (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).addEventListener('change', async () => {
+        await vm.updatePropertyValue('CpuLoadTimeSpan', (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).value);
+    });
+    (document.getElementById('zoneList') as HTMLInputElement).addEventListener('change', async () => {
+        await vm.updatePropertyValue('ZoneList', (document.getElementById('zoneList') as HTMLInputElement).value);
     });
     (document.getElementById('testSettings') as HTMLInputElement).addEventListener('change', async () => {
         await vm.updatePropertyValue('TestSettings', (document.getElementById('testSettings') as HTMLInputElement).value);

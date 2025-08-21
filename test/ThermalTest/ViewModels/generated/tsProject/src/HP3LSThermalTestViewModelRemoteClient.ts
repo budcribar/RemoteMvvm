@@ -7,7 +7,7 @@ import { HP3LSThermalTestViewModelState, UpdatePropertyValueRequest, SubscribeRe
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export interface ThermalZoneState {
   zone: number;
@@ -28,7 +28,6 @@ export interface TestSettingsState {
   cpuTemperatureThreshold: number;
   cpuLoadThreshold: number;
   cpuLoadTimeSpan: number;
-  dTS: Record<string, number>;
 }
 
 export class HP3LSThermalTestViewModelRemoteClient {
@@ -37,7 +36,10 @@ export class HP3LSThermalTestViewModelRemoteClient {
     private pingIntervalId?: any;
     private changeCallbacks: Array<() => void> = [];
 
-    zones: Record<number, ThermalZoneState>;
+    cpuTemperatureThreshold: number;
+    cpuLoadThreshold: number;
+    cpuLoadTimeSpan: number;
+    zoneList: ThermalZoneState[];
     testSettings: TestSettingsState;
     showDescription: boolean;
     showReadme: boolean;
@@ -57,7 +59,10 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZonesMap().toObject();
+        this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
+        this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
+        this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
+        this.zoneList = (state as any).getZoneList();
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -69,7 +74,10 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZonesMap().toObject();
+        this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
+        this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
+        this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
+        this.zoneList = (state as any).getZoneList();
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -89,10 +97,16 @@ export class HP3LSThermalTestViewModelRemoteClient {
             const wrapper = new StringValue();
             wrapper.setValue(value);
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
-        } else if (typeof value === 'number' && Number.isInteger(value)) {
-            const wrapper = new Int32Value();
-            wrapper.setValue(value);
-            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+        } else if (typeof value === 'number') {
+            if (Number.isInteger(value)) {
+                const wrapper = new Int32Value();
+                wrapper.setValue(value);
+                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+            } else {
+                const wrapper = new DoubleValue();
+                wrapper.setValue(value);
+                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.DoubleValue');
+            }
         } else if (typeof value === 'boolean') {
             const wrapper = new BoolValue();
             wrapper.setValue(value);
@@ -140,6 +154,15 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.propertyStream.on('data', (update: PropertyChangeNotification) => {
             const anyVal = update.getNewValue();
             switch (update.getPropertyName()) {
+                case 'CpuTemperatureThreshold':
+                    this.cpuTemperatureThreshold = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'CpuLoadThreshold':
+                    this.cpuLoadThreshold = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
+                case 'CpuLoadTimeSpan':
+                    this.cpuLoadTimeSpan = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+                    break;
                 case 'ShowDescription':
                     this.showDescription = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
                     break;
