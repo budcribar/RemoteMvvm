@@ -63,3 +63,4 @@ service CounterService {
   rpc SetNameToValue (SetNameToValueRequest) returns (SetNameToValueResponse);
   rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
 }
+

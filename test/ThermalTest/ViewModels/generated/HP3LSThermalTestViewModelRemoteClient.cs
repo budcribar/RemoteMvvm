@@ -169,7 +169,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
 
         private void StartListeningToPropertyChanges(CancellationToken cancellationToken)
         {
-            _ = Task.Run(async () => 
+            _ = Task.Run(async () =>
             {
                 if (_isDisposed) return;
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Starting property change listener...");
@@ -184,8 +184,10 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                         updateCount++;
                         if (_isDisposed) { Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Disposed during update " + updateCount + ", exiting property update loop."); break; }
                         Debug.WriteLine($"[HP3LSThermalTestViewModelRemoteClient] RAW UPDATE #" + updateCount + " RECEIVED: PropertyName=\"" + update.PropertyName + "\", ValueTypeUrl=\"" + (update.NewValue?.TypeUrl ?? "null_type_url") + "\"");
-                        Action updateAction = () => {
-                           try {
+                        Action updateAction = () =>
+                        {
+                           try
+                           {
                                Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
                                switch (update.PropertyName)
                                {
@@ -197,9 +199,10 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                     if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowDescription from {this.ShowDescription} to {val}."); this.ShowDescription = val; Debug.WriteLine($"After update, ShowDescription is {this.ShowDescription}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowDescription, expected BoolValue."); } break;
                                    case nameof(ShowReadme):
                     if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowReadme from {this.ShowReadme} to {val}."); this.ShowReadme = val; Debug.WriteLine($"After update, ShowReadme is {this.ShowReadme}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowReadme, expected BoolValue."); } break;
-                                   default: Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unknown property in notification: \"{update.PropertyName}\""); break;
+                                   default: Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
-                           } catch (Exception exInAction) { Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] EXCEPTION INSIDE updateAction for \"{update.PropertyName}\": " + exInAction.ToString()); }
+                           }
+                           catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                         };
                         #if WPF_DISPATCHER
                         Application.Current?.Dispatcher.Invoke(updateAction);
@@ -212,7 +215,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 }
                 catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Property subscription RpcException Cancelled."); }
                 catch (OperationCanceledException) { Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Property subscription OperationCanceledException."); }
-                catch (Exception ex) { if (!_isDisposed) Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Error in property listener: " + ex.GetType().Name + " - " + ex.Message + "\nStackTrace: " + ex.StackTrace); }
+                catch (Exception ex) { if (!_isDisposed) Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Error in property listener: " + ex.GetType().Name + " - " + ex.Message + "\nStackTrace: " + ex.StackTrace); }
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Property change listener task finished.");
             }, cancellationToken);
         }

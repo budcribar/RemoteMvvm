@@ -81,3 +81,4 @@ service HP3LSThermalTestViewModelService {
   rpc CancelTest (CancelTestRequest) returns (CancelTestResponse);
   rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
 }
+

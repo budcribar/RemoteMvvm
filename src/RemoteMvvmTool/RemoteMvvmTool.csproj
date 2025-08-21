@@ -21,6 +21,10 @@
 
   </PropertyGroup>
   <ItemGroup>
+    <None Remove="Resources\ClientTemplate.tmpl" />
+  </ItemGroup>
+  
+  <ItemGroup>
           <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
           <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.13.0" />
     <!--<Compile Remove="GameViewModel.cs" />-->
@@ -28,11 +32,12 @@
     <ItemGroup>
       <PackageReference Include="System.CommandLine" Version="2.0.0-beta4.22272.1" />
     </ItemGroup>
+
     <ItemGroup>
-      <EmbeddedResource Include="Resources/ClientTemplate.cs.tmpl" LogicalName="RemoteMvvmTool.Resources.ClientTemplate.cs.tmpl" />
-      <EmbeddedResource Include="Resources/ConversionTemplate.cs.tmpl" LogicalName="RemoteMvvmTool.Resources.ConversionTemplate.cs.tmpl" />
-      <EmbeddedResource Include="Resources/OptionsTemplate.cs.tmpl" LogicalName="RemoteMvvmTool.Resources.OptionsTemplate.cs.tmpl" />
-      <EmbeddedResource Include="Resources/ProtoTemplate.proto.tmpl" LogicalName="RemoteMvvmTool.Resources.ProtoTemplate.proto.tmpl" />
+      <EmbeddedResource Include="Resources/ClientTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.ClientTemplate.tmpl" />
+      <EmbeddedResource Include="Resources/ConversionTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.ConversionTemplate.tmpl" />
+      <EmbeddedResource Include="Resources/OptionsTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.OptionsTemplate.tmpl" />
+      <EmbeddedResource Include="Resources/ProtoTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.ProtoTemplate.tmpl" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="publish\" />

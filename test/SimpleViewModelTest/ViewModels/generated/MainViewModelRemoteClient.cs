@@ -127,7 +127,7 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
 
         private void StartListeningToPropertyChanges(CancellationToken cancellationToken)
         {
-            _ = Task.Run(async () => 
+            _ = Task.Run(async () =>
             {
                 if (_isDisposed) return;
                 Debug.WriteLine("[MainViewModelRemoteClient] Starting property change listener...");
@@ -142,16 +142,19 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
                         updateCount++;
                         if (_isDisposed) { Debug.WriteLine("[MainViewModelRemoteClient] Disposed during update " + updateCount + ", exiting property update loop."); break; }
                         Debug.WriteLine($"[MainViewModelRemoteClient] RAW UPDATE #" + updateCount + " RECEIVED: PropertyName=\"" + update.PropertyName + "\", ValueTypeUrl=\"" + (update.NewValue?.TypeUrl ?? "null_type_url") + "\"");
-                        Action updateAction = () => {
-                           try {
+                        Action updateAction = () =>
+                        {
+                           try
+                           {
                                Debug.WriteLine("[MainViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
                                switch (update.PropertyName)
                                {
                                    case nameof(Devices):
                                        Debug.WriteLine($"[ClientProxy:MainViewModel] Unpacking for Devices with WKT Any not fully implemented or is Any."); break;
-                                   default: Debug.WriteLine($"[ClientProxy:MainViewModel] Unknown property in notification: \"{update.PropertyName}\""); break;
+                                   default: Debug.WriteLine("[ClientProxy:MainViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
-                           } catch (Exception exInAction) { Debug.WriteLine($"[ClientProxy:MainViewModel] EXCEPTION INSIDE updateAction for \"{update.PropertyName}\": " + exInAction.ToString()); }
+                           }
+                           catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:MainViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                         };
                         #if WPF_DISPATCHER
                         Application.Current?.Dispatcher.Invoke(updateAction);
@@ -164,7 +167,7 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
                 }
                 catch (RpcException ex) when (ex.StatusCode == StatusCode.Cancelled) { Debug.WriteLine("[ClientProxy:MainViewModel] Property subscription RpcException Cancelled."); }
                 catch (OperationCanceledException) { Debug.WriteLine($"[ClientProxy:MainViewModel] Property subscription OperationCanceledException."); }
-                catch (Exception ex) { if (!_isDisposed) Debug.WriteLine($"[ClientProxy:MainViewModel] Error in property listener: " + ex.GetType().Name + " - " + ex.Message + "\nStackTrace: " + ex.StackTrace); }
+                catch (Exception ex) { if (!_isDisposed) Debug.WriteLine("[ClientProxy:MainViewModel] Error in property listener: " + ex.GetType().Name + " - " + ex.Message + "\nStackTrace: " + ex.StackTrace); }
                 Debug.WriteLine("[MainViewModelRemoteClient] Property change listener task finished.");
             }, cancellationToken);
         }

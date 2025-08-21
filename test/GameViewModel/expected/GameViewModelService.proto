@@ -65,3 +65,4 @@ service GameViewModelService {
   rpc ResetGame (ResetGameRequest) returns (ResetGameResponse);
   rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
 }
+

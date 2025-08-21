@@ -26,7 +26,7 @@ public static class ConversionGenerator
             additionalUsings.AppendLine("using Google.Protobuf.WellKnownTypes;");
         }
 
-        var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ConversionTemplate.cs.tmpl");
+        var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ConversionTemplate.tmpl");
         return GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
         {
             ["<<AUTO_GENERATED_HEADER>>"] = headerSb.ToString().TrimEnd(),

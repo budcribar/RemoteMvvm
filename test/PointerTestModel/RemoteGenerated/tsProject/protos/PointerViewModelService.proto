@@ -103,3 +103,4 @@ service PointerViewModelService {
   rpc FinishTest (FinishTestRequest) returns (FinishTestResponse);
   rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
 }
+

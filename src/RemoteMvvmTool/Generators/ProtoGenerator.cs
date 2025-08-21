@@ -282,7 +282,7 @@ public static class ProtoGenerator
             optionalImports.AppendLine("import \"google/protobuf/duration.proto\";");
         optionalImports.AppendLine();
 
-        var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ProtoTemplate.proto.tmpl");
+        var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ProtoTemplate.tmpl");
         return GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
         {
             ["<<AUTO_GENERATED_HEADER>>"] = headerSb.ToString().TrimEnd(),
