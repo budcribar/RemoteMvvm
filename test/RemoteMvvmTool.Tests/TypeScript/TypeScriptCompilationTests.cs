@@ -112,7 +112,7 @@ export class {serviceName}Client {{
 ");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.js"),
             $"exports.{vmName}State = class {{}};" +
-            "exports.UpdatePropertyValueRequest = class { setPropertyName(){} setNewValue(){} };" +
+            "exports.UpdatePropertyValueRequest = class { constructor(){this._propertyName='';this._newValue=null;} setPropertyName(v){this._propertyName=v;} getPropertyName(){return this._propertyName;} setNewValue(v){this._newValue=v;} getNewValue(){return this._newValue;} };" +
             "exports.SubscribeRequest = class { setClientId(){} };" +
             "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} };" +
             "exports.ConnectionStatusResponse = class { getStatus(){return 0} };" +
@@ -121,7 +121,7 @@ export class {serviceName}Client {{
             "exports.CancelTestRequest = class {};");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.d.ts"),
             $"export class {vmName}State {{}}\n" +
-            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; setNewValue(v:any):void; }\n" +
+            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; }\n" +
             "export class SubscribeRequest { setClientId(v:string):void; }\n" +
             "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; }\n" +
             "export class ConnectionStatusResponse { getStatus():number; }\n" +
@@ -296,4 +296,72 @@ class FakeClient extends {name}ServiceClient {{
 
     RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
 }
+
+    [Fact]
+    public async Task Generated_TypeScript_Compiles_And_Transfers_ObservableCollection()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var vmCode = @"public class ObservablePropertyAttribute : System.Attribute {}\npublic class RelayCommandAttribute : System.Attribute {}\npublic partial class TestViewModel : ObservableObject { [ObservableProperty] public partial System.Collections.ObjectModel.ObservableCollection<int> Numbers { get; set; } = new System.Collections.ObjectModel.ObservableCollection<int>(); }\npublic class ObservableObject {}";
+        var vmFile = Path.Combine(tempDir, "TestViewModel.cs");
+        File.WriteAllText(vmFile, vmCode);
+        var refs = LoadDefaultRefs();
+        var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
+        var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
+        var tsClientFile = Path.Combine(tempDir, name + "RemoteClient.ts");
+        File.WriteAllText(tsClientFile, ts);
+
+        CreateTsStubs(tempDir, name, name + "Service");
+
+        var testTs = $@"declare var process: any;
+import {{ {name}RemoteClient }} from './{name}RemoteClient';
+import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
+class FakeClient extends {name}ServiceClient {{
+  lastReq: any;
+  async getState(_req:any) {{
+    return {{
+      getNumbers: () => [1,2,3]
+    }};
+  }}
+  updatePropertyValue(req:any) {{ this.lastReq = req; return Promise.resolve(); }}
+  subscribeToPropertyChanges(_req:any) {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
+  ping(_req:any) {{ return Promise.resolve({{ getStatus: () => 0 }}); }}
+  stateChanged(_req:any) {{ return Promise.resolve(); }}
+  cancelTest(_req:any) {{ return Promise.resolve(); }}
+}}
+(async () => {{
+  const grpcClient = new FakeClient('');
+  const client = new {name}RemoteClient(grpcClient);
+  (client as any).createAnyValue = (v:any) => v;
+  await client.initializeRemote();
+  if (client.numbers.length !== 3 || client.numbers[1] !== 2) throw new Error('Initial transfer failed');
+  await client.updatePropertyValue('Numbers', [4,5]);
+  if (grpcClient.lastReq.getPropertyName() !== 'Numbers' || JSON.stringify(grpcClient.lastReq.getNewValue()) !== JSON.stringify([4,5])) throw new Error('Update transfer failed');
+  client.dispose();
+}})().catch(e => {{ console.error(e); process.exit(1); }});
+";
+        File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
+
+        var tsconfig = @"{
+  \"compilerOptions\": {
+    \"target\": \"es2018\",
+    \"module\": \"commonjs\",
+    \"strict\": false,
+    \"esModuleInterop\": true,
+    \"lib\": [\"es2018\", \"dom\"],
+    \"outDir\": \"dist\",
+    \"allowJs\": true
+  },
+  \"include\": [\"**/*.ts\", \"**/*.js\"]
+}";
+        File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
+
+        var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+        if (result.StartsWith("Powershell"))
+            RunCmd("tsc", "--project tsconfig.json", tempDir);
+
+        if (result.Length > 0) Assert.Fail(result);
+
+        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+    }
 }
