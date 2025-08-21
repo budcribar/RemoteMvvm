@@ -95,6 +95,11 @@ public class TypeScriptCompilationTests
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.js"),
             "class W{ constructor(){this.value=0;} setValue(v){this.value=v;} getValue(){return this.value;} serializeBinary(){return new Uint8Array();} } exports.StringValue=W; exports.Int32Value=W; exports.BoolValue=W; exports.DoubleValue=W;");
 
+        File.WriteAllText(Path.Combine(gp, "timestamp_pb.d.ts"),
+            "export class Timestamp { static deserializeBinary(b:Uint8Array):Timestamp; static fromDate(d:Date):Timestamp; toDate():Date; serializeBinary():Uint8Array; }");
+        File.WriteAllText(Path.Combine(gp, "timestamp_pb.js"),
+            "class T{ constructor(d=new Date(0)){this.d=d;} static deserializeBinary(){return new T();} static fromDate(d){return new T(d);} toDate(){return this.d;} serializeBinary(){return new Uint8Array();} } exports.Timestamp=T;");
+
         var gen = Path.Combine(dir, "generated");
         Directory.CreateDirectory(gen);
         File.WriteAllText(Path.Combine(gen, serviceName + "ServiceClientPb.ts"), $@"
@@ -130,7 +135,7 @@ export class {serviceName}Client {{
             "export class CancelTestRequest {}\n");
     }
 
-    static async Task RunSimpleCompilationTest(string propertyType, string propertyName, string tsReturnValue, string tsAssertion, string? extraCode = null)
+    static async Task RunSimpleCompilationTest(string propertyType, string propertyName, string tsReturnValue, string tsAssertion, string? extraCode = null, string? extraImports = null)
     {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
@@ -161,6 +166,7 @@ public class ObservableObject {{}}
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
 import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
+{extraImports ?? string.Empty}
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
@@ -227,6 +233,12 @@ public async Task Generated_TypeScript_Compiles_With_Bool_Property()
 public async Task Generated_TypeScript_Compiles_With_Double_Property()
 {
     await RunSimpleCompilationTest("double", "Ratio", "0.5", "if (client.ratio !== 0.5) throw new Error('Double property transfer failed');");
+}
+
+[Fact]
+public async Task Generated_TypeScript_Compiles_With_DateTime_Property()
+{
+    await RunSimpleCompilationTest("System.DateTime", "When", "Timestamp.fromDate(new Date('2020-01-01T00:00:00Z'))", "if (client.when.toISOString() !== '2020-01-01T00:00:00.000Z') throw new Error('Date property transfer failed');", null, "import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';\n");
 }
 
 [Fact]

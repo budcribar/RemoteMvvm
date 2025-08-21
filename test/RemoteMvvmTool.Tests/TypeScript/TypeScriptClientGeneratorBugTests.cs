@@ -114,4 +114,20 @@ public class ObservableObject {}
         var ts = await GenerateTsAsync(code);
         Assert.Contains("FloatValue.deserializeBinary", ts);
     }
+
+    [Fact]
+    public async Task DateTime_property_change_should_be_handled()
+    {
+        var code = @"\
+public class ObservablePropertyAttribute : System.Attribute {}
+public partial class DateViewModel : ObservableObject
+{
+    [ObservableProperty]
+    public System.DateTime When { get; set; }
+}
+public class ObservableObject {}
+";
+        var ts = await GenerateTsAsync(code);
+        Assert.Contains("Timestamp.deserializeBinary", ts);
+    }
 }

@@ -149,4 +149,20 @@ public class ObservableObject {}
         Assert.Contains("DoStuffRequest", ts);
         Assert.Contains("async doStuff(value: any): Promise<void>", ts);
     }
+
+    [Fact]
+    public async Task Maps_DateTime_To_Date()
+    {
+        var code = @"\
+public class ObservablePropertyAttribute : System.Attribute {}
+public partial class DateViewModel : ObservableObject
+{
+    [ObservableProperty]
+    public System.DateTime When { get; set; }
+}
+public class ObservableObject {}
+";
+        var ts = await GenerateTsAsync(code);
+        Assert.Contains("when: Date;", ts);
+    }
 }
