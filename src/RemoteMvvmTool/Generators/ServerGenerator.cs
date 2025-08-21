@@ -336,7 +336,7 @@ public static class ServerGenerator
         sb.AppendLine("            case float f: return Any.Pack(new FloatValue { Value = f });");
         sb.AppendLine("            case long l: return Any.Pack(new Int64Value { Value = l });");
         sb.AppendLine("            case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
-        sb.AppendLine("            case System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });");
+        sb.AppendLine("            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });");
         sb.AppendLine("        }");
         sb.AppendLine("        if (value is IDictionary dict)");
         sb.AppendLine("        {");
@@ -369,7 +369,7 @@ public static class ServerGenerator
         sb.AppendLine("            case long l: return Value.ForNumber(l);");
         sb.AppendLine("            case double d: return Value.ForNumber(d);");
         sb.AppendLine("            case float f: return Value.ForNumber(f);");
-        sb.AppendLine("            case System.Enum e: return Value.ForNumber(Convert.ToInt32(e));");
+        sb.AppendLine("            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));");
         sb.AppendLine("            case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString(\"o\"));");
         sb.AppendLine("        }");
         sb.AppendLine("        if (value is IDictionary dict)");
