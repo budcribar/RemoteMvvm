@@ -247,7 +247,7 @@ public static class TypeScriptClientGenerator
         {
             string expr;
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
-                expr = $"(state as any).get{p.Name}Map()";
+                expr = $"(state as any).get{p.Name}Map().toObject()";
             else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol!, out var elem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
@@ -292,7 +292,7 @@ public static class TypeScriptClientGenerator
         {
             string expr;
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
-                expr = $"(state as any).get{p.Name}Map()";
+                expr = $"(state as any).get{p.Name}Map().toObject()";
             else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol!, out var elem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
