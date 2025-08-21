@@ -3,7 +3,7 @@
 // </auto-generated>
 
 import { CounterServiceClient } from './generated/CounterServiceServiceClientPb';
-import { SampleViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, IncrementCountRequest, DelayedIncrementAsyncRequest, SetNameToValueRequest } from './generated/CounterService_pb.js';
+import { SampleViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, IncrementCountRequest, DelayedIncrementRequest, SetNameToValueRequest } from './generated/CounterService_pb.js';
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
@@ -86,9 +86,9 @@ export class SampleViewModelRemoteClient {
         await this.grpcClient.incrementCount(req);
     }
     async delayedIncrementAsync(delayMilliseconds: any): Promise<void> {
-        const req = new DelayedIncrementAsyncRequest();
+        const req = new DelayedIncrementRequest();
         req.setDelayMilliseconds(delayMilliseconds);
-        await this.grpcClient.delayedIncrementAsync(req);
+        await this.grpcClient.delayedIncrement(req);
     }
     async setNameToValue(value: any): Promise<void> {
         const req = new SetNameToValueRequest();

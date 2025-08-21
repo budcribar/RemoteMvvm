@@ -54,14 +54,18 @@ public static class ConversionGenerator
     static bool IsDateTime(ITypeSymbol type, out bool isNullable)
     {
         isNullable = false;
-        if (type.SpecialType == SpecialType.System_DateTime) return true;
+        if (type.SpecialType == SpecialType.System_DateTime || type.ToDisplayString() == "System.DateTime")
+            return true;
         if (type is INamedTypeSymbol named && named.IsGenericType &&
             named.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T &&
-            named.TypeArguments.Length == 1 &&
-            named.TypeArguments[0].SpecialType == SpecialType.System_DateTime)
+            named.TypeArguments.Length == 1)
         {
-            isNullable = true;
-            return true;
+            var inner = named.TypeArguments[0];
+            if (inner.SpecialType == SpecialType.System_DateTime || inner.ToDisplayString() == "System.DateTime")
+            {
+                isNullable = true;
+                return true;
+            }
         }
         return false;
     }
@@ -176,6 +180,15 @@ public static class ConversionGenerator
                 else valSel = "kv.Value";
                 sb.AppendLine($"        model.{propName} = state.{propName}.ToDictionary(kv => {keySel}, kv => {valSel});");
             }
+            else if (propType is IArrayTypeSymbol arrType)
+            {
+                string sel = string.Empty;
+                var arrElem = arrType.ElementType;
+                if (IsEnumType(arrElem, compilation)) sel = ".Select(e => (" + arrElem.ToDisplayString() + ")e)";
+                else if (IsDateTime(arrElem, out var elemNullable)) { needsTimestamp = true; sel = elemNullable ? ".Select(e => e?.ToDateTime())" : ".Select(e => e.ToDateTime())"; }
+                else if (!GeneratorHelpers.IsWellKnownType(arrElem)) { GenerateForType(arrElem, sb, processed, protoNs, compilation, ref needsTimestamp); sel = ".Select(FromProto)"; }
+                sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToArray();");
+            }
             else if (GeneratorHelpers.TryGetEnumerableElementType(propType, out var elem))
             {
                 string sel = string.Empty;
@@ -195,15 +208,6 @@ public static class ConversionGenerator
                     }
                 }
                 sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToList();");
-            }
-            else if (propType is IArrayTypeSymbol arrType)
-            {
-                string sel = string.Empty;
-                var arrElem = arrType.ElementType;
-                if (IsEnumType(arrElem, compilation)) sel = ".Select(e => (" + arrElem.ToDisplayString() + ")e)";
-                else if (IsDateTime(arrElem, out var elemNullable)) { needsTimestamp = true; sel = elemNullable ? ".Select(e => e?.ToDateTime())" : ".Select(e => e.ToDateTime())"; }
-                else if (!GeneratorHelpers.IsWellKnownType(arrElem)) { GenerateForType(arrElem, sb, processed, protoNs, compilation, ref needsTimestamp); sel = ".Select(FromProto)"; }
-                sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToArray();");
             }
             else
             {

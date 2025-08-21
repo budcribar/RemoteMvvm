@@ -144,7 +144,7 @@ namespace SampleApp.ViewModels.RemoteClients
             Debug.WriteLine("[ClientProxy:SampleViewModel] Executing command DelayedIncrementAsync remotely...");
             try
             {
-                await _grpcClient.DelayedIncrementAsyncAsync(new SampleApp.ViewModels.Protos.DelayedIncrementAsyncRequest { DelayMilliseconds = delayMilliseconds }, cancellationToken: _cts.Token);
+                await _grpcClient.DelayedIncrementAsync(new SampleApp.ViewModels.Protos.DelayedIncrementRequest { DelayMilliseconds = delayMilliseconds }, cancellationToken: _cts.Token);
             }
             catch (RpcException ex) { Debug.WriteLine("[ClientProxy:SampleViewModel] Error executing command DelayedIncrementAsync: " + ex.Status.StatusCode + " - " + ex.Status.Detail); }
             catch (OperationCanceledException) { Debug.WriteLine("[ClientProxy:SampleViewModel] Command DelayedIncrementAsync cancelled."); }

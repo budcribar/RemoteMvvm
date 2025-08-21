@@ -30,10 +30,10 @@ message PropertyChangeNotification {
 message IncrementCountRequest {}
 message IncrementCountResponse {}
 
-message DelayedIncrementAsyncRequest {
+message DelayedIncrementRequest {
   int32 delay_milliseconds = 1; // Original C#: int delayMilliseconds
 }
-message DelayedIncrementAsyncResponse {}
+message DelayedIncrementResponse {}
 
 message SetNameToValueRequest {
   string value = 1; // Original C#: string? value
@@ -59,7 +59,7 @@ service CounterService {
   rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
   rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);
   rpc IncrementCount (IncrementCountRequest) returns (IncrementCountResponse);
-  rpc DelayedIncrementAsync (DelayedIncrementAsyncRequest) returns (DelayedIncrementAsyncResponse);
+  rpc DelayedIncrement (DelayedIncrementRequest) returns (DelayedIncrementResponse);
   rpc SetNameToValue (SetNameToValueRequest) returns (SetNameToValueResponse);
   rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);
 }

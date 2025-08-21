@@ -97,7 +97,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
             AttackMonsterCommand = new RelayCommand(RemoteExecute_AttackMonster);
-            SpecialAttackCommand = new AsyncRelayCommand(RemoteExecute_SpecialAttackAsyncAsync);
+            SpecialAttackCommand = new AsyncRelayCommand(RemoteExecute_SpecialAttackAsync);
             ResetGameCommand = new RelayCommand(RemoteExecute_ResetGame);
         }
 
@@ -190,13 +190,13 @@ namespace MonsterClicker.ViewModels.RemoteClients
             catch (Exception ex) { Debug.WriteLine("[ClientProxy:GameViewModel] Unexpected error executing command AttackMonster: " + ex.Message); }
         }
 
-        private async Task RemoteExecute_SpecialAttackAsyncAsync()
+        private async Task RemoteExecute_SpecialAttackAsync()
         {
             if (!_isInitialized || _isDisposed) { Debug.WriteLine("[ClientProxy:GameViewModel] Not initialized or disposed, command SpecialAttackAsync skipped."); return; }
             Debug.WriteLine("[ClientProxy:GameViewModel] Executing command SpecialAttackAsync remotely...");
             try
             {
-                await _grpcClient.SpecialAttackAsyncAsync(new MonsterClicker.ViewModels.Protos.SpecialAttackAsyncRequest(), cancellationToken: _cts.Token);
+                await _grpcClient.SpecialAttackAsync(new MonsterClicker.ViewModels.Protos.SpecialAttackRequest(), cancellationToken: _cts.Token);
             }
             catch (RpcException ex) { Debug.WriteLine("[ClientProxy:GameViewModel] Error executing command SpecialAttackAsync: " + ex.Status.StatusCode + " - " + ex.Status.Detail); }
             catch (OperationCanceledException) { Debug.WriteLine("[ClientProxy:GameViewModel] Command SpecialAttackAsync cancelled."); }

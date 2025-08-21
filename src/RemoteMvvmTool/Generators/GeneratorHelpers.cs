@@ -181,6 +181,20 @@ public static class GeneratorHelpers
                 valueType = iface.TypeArguments[1];
                 return true;
             }
+            if ((named.Name == "Dictionary" || named.Name == "IDictionary" || named.Name == "IReadOnlyDictionary") &&
+                named.TypeArguments.Length == 2)
+            {
+                keyType = named.TypeArguments[0];
+                valueType = named.TypeArguments[1];
+                return true;
+            }
+            var display = named.ToDisplayString();
+            if (display.StartsWith("System.Collections.Generic.Dictionary<", StringComparison.Ordinal) && named.TypeArguments.Length == 2)
+            {
+                keyType = named.TypeArguments[0];
+                valueType = named.TypeArguments[1];
+                return true;
+            }
         }
         return false;
     }
@@ -211,6 +225,18 @@ public static class GeneratorHelpers
             if (iface != null)
             {
                 elementType = iface.TypeArguments[0];
+                return true;
+            }
+            if ((named.Name == "List" || named.Name == "IEnumerable" || named.Name == "IReadOnlyList" || named.Name == "ICollection") &&
+                named.TypeArguments.Length == 1)
+            {
+                elementType = named.TypeArguments[0];
+                return true;
+            }
+            var display = named.ToDisplayString();
+            if (display.StartsWith("System.Collections.Generic.List<", StringComparison.Ordinal) && named.TypeArguments.Length == 1)
+            {
+                elementType = named.TypeArguments[0];
                 return true;
             }
         }

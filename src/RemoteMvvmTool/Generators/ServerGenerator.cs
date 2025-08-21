@@ -1,5 +1,6 @@
 using GrpcRemoteMvvmModelUtil;
 using Microsoft.CodeAnalysis;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -237,7 +238,10 @@ public static class ServerGenerator
         sb.AppendLine();
         foreach (var cmd in cmds)
         {
-            sb.AppendLine($"    public override async Task<{protoNs}.{cmd.MethodName}Response> {cmd.MethodName}({protoNs}.{cmd.MethodName}Request request, ServerCallContext context)");
+            var baseName = cmd.MethodName.EndsWith("Async", StringComparison.Ordinal)
+                ? cmd.MethodName[..^5]
+                : cmd.MethodName;
+            sb.AppendLine($"    public override async Task<{protoNs}.{baseName}Response> {baseName}({protoNs}.{baseName}Request request, ServerCallContext context)");
             sb.AppendLine("    {");
         if (runType == "wpf")
             sb.AppendLine("        try { await _dispatcher.InvokeAsync(async () => {");
@@ -315,7 +319,7 @@ public static class ServerGenerator
             sb.AppendLine($"        Debug.WriteLine(\"[GrpcService:{vmName}] Exception during command execution for {cmd.MethodName}: \" + ex.ToString());");
             sb.AppendLine("        throw new RpcException(new Status(StatusCode.Internal, \"Error executing command on server: \" + ex.Message));");
             sb.AppendLine("        }");
-            sb.AppendLine($"        return new {protoNs}.{cmd.MethodName}Response();");
+            sb.AppendLine($"        return new {protoNs}.{baseName}Response();");
             sb.AppendLine("    }");
             sb.AppendLine();
         }

@@ -217,7 +217,7 @@ public static class ClientGenerator
                 ? cmd.MethodName[..^5]
                 : cmd.MethodName;
             string paramListWithType = string.Join(", ", cmd.Parameters.Select(p => $"{p.TypeString} {GeneratorHelpers.LowercaseFirst(p.Name)}"));
-            string requestCreation = $"new {protoNs}.{cmd.MethodName}Request()";
+            string requestCreation = $"new {protoNs}.{baseMethodName}Request()";
             if (cmd.Parameters.Any())
             {
                 var paramAssignments = cmd.Parameters.Select(p =>
@@ -230,7 +230,7 @@ public static class ClientGenerator
                             : varName);
                     return $"{GeneratorHelpers.ToPascalCase(p.Name)} = {expr}";
                 });
-                requestCreation = $"new {protoNs}.{cmd.MethodName}Request {{ {string.Join(", ", paramAssignments)} }}";
+                requestCreation = $"new {protoNs}.{baseMethodName}Request {{ {string.Join(", ", paramAssignments)} }}";
             }
             string methodSignature = cmd.IsAsync ? $"private async Task RemoteExecute_{baseMethodName}Async({paramListWithType})" : $"private void RemoteExecute_{baseMethodName}({paramListWithType})";
             commandMethods.AppendLine($"        {methodSignature}");
@@ -240,10 +240,11 @@ public static class ClientGenerator
             commandMethods.AppendLine($"            Debug.WriteLine(\"[ClientProxy:{vmName}] Executing command {cmdMethodNameForLog} remotely...\");");
             commandMethods.AppendLine("            try");
             commandMethods.AppendLine("            {");
+            var grpcMethod = baseMethodName + "Async";
             if (cmd.IsAsync)
-                commandMethods.AppendLine($"                await _grpcClient.{cmd.MethodName}Async({requestCreation}, cancellationToken: _cts.Token);");
+                commandMethods.AppendLine($"                await _grpcClient.{grpcMethod}({requestCreation}, cancellationToken: _cts.Token);");
             else
-                commandMethods.AppendLine($"                _ = _grpcClient.{cmd.MethodName}Async({requestCreation}, cancellationToken: _cts.Token);");
+                commandMethods.AppendLine($"                _ = _grpcClient.{grpcMethod}({requestCreation}, cancellationToken: _cts.Token);");
             commandMethods.AppendLine("            }");
             commandMethods.AppendLine($"            catch (RpcException ex) {{ Debug.WriteLine(\"[ClientProxy:{vmName}] Error executing command {cmdMethodNameForLog}: \" + ex.Status.StatusCode + \" - \" + ex.Status.Detail); }}");
             commandMethods.AppendLine($"            catch (OperationCanceledException) {{ Debug.WriteLine(\"[ClientProxy:{vmName}] Command {cmdMethodNameForLog} cancelled.\"); }}");

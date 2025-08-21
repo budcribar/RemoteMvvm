@@ -181,7 +181,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         return new MonsterClicker.ViewModels.Protos.AttackMonsterResponse();
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.SpecialAttackAsyncResponse> SpecialAttackAsync(MonsterClicker.ViewModels.Protos.SpecialAttackAsyncRequest request, ServerCallContext context)
+    public override async Task<MonsterClicker.ViewModels.Protos.SpecialAttackResponse> SpecialAttack(MonsterClicker.ViewModels.Protos.SpecialAttackRequest request, ServerCallContext context)
     {
         try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.SpecialAttackCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
@@ -194,7 +194,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         Debug.WriteLine("[GrpcService:GameViewModel] Exception during command execution for SpecialAttackAsync: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new MonsterClicker.ViewModels.Protos.SpecialAttackAsyncResponse();
+        return new MonsterClicker.ViewModels.Protos.SpecialAttackResponse();
     }
 
     public override async Task<MonsterClicker.ViewModels.Protos.ResetGameResponse> ResetGame(MonsterClicker.ViewModels.Protos.ResetGameRequest request, ServerCallContext context)

@@ -3,7 +3,7 @@
 // </auto-generated>
 
 import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
-import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, AttackMonsterRequest, SpecialAttackAsyncRequest, ResetGameRequest } from './generated/GameViewModelService_pb.js';
+import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, AttackMonsterRequest, SpecialAttackRequest, ResetGameRequest } from './generated/GameViewModelService_pb.js';
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
@@ -104,8 +104,8 @@ export class GameViewModelRemoteClient {
         await this.grpcClient.attackMonster(req);
     }
     async specialAttackAsync(): Promise<void> {
-        const req = new SpecialAttackAsyncRequest();
-        await this.grpcClient.specialAttackAsync(req);
+        const req = new SpecialAttackRequest();
+        await this.grpcClient.specialAttack(req);
     }
     async resetGame(): Promise<void> {
         const req = new ResetGameRequest();

@@ -198,7 +198,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
             Debug.WriteLine("[ClientProxy:GameViewModel] Executing command SpecialAttackAsync remotely...");
             try
             {
-                await _grpcClient.SpecialAttackAsyncAsync(new MonsterClicker.ViewModels.Protos.SpecialAttackAsyncRequest(), cancellationToken: _cts.Token);
+                await _grpcClient.SpecialAttackAsync(new MonsterClicker.ViewModels.Protos.SpecialAttackRequest(), cancellationToken: _cts.Token);
             }
             catch (RpcException ex) { Debug.WriteLine("[ClientProxy:GameViewModel] Error executing command SpecialAttackAsync: " + ex.Status.StatusCode + " - " + ex.Status.Detail); }
             catch (OperationCanceledException) { Debug.WriteLine("[ClientProxy:GameViewModel] Command SpecialAttackAsync cancelled."); }
