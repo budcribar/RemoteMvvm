@@ -125,4 +125,48 @@ public partial class Vm : ObservableObject {
         var cmds = ViewModelAnalyzer.GetRelayCommands(classSymbol, "Test.RelayCommandAttribute", compilation);
         Assert.Empty(cmds);
     }
+
+    [Fact]
+    public void GetRelayCommands_MethodEndingWithAsyncButNotAsync_PreservesName()
+    {
+        var code = @"namespace Test {
+using System;
+public class ObservableObject {}
+[AttributeUsage(AttributeTargets.Method)] public class RelayCommandAttribute : Attribute {}
+public partial class Vm : ObservableObject {
+    [RelayCommand]
+    public void SaveAsync() {}
+}}";
+        var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Latest));
+        var compilation = CSharpCompilation.Create("Test", new[] { tree }, new[] {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
+        }, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        var classSymbol = compilation.GetTypeByMetadataName("Test.Vm")!;
+        var cmds = ViewModelAnalyzer.GetRelayCommands(classSymbol, "Test.RelayCommandAttribute", compilation);
+        Assert.Equal("SaveAsyncCommand", cmds[0].CommandPropertyName);
+    }
+
+    [Fact]
+    public void GetObservableProperties_DoesNotIncludeBaseClassMembers()
+    {
+        var code = @"namespace Test {
+using System;
+public class ObservableObject {}
+[AttributeUsage(AttributeTargets.Field)] public class ObservablePropertyAttribute : Attribute {}
+public class Base : ObservableObject {
+    [ObservableProperty]
+    private int baseValue;
+}
+public partial class Derived : Base {
+    [ObservableProperty]
+    private int derivedValue;
+}}";
+        var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Latest));
+        var compilation = CSharpCompilation.Create("Test", new[] { tree }, new[] {
+            MetadataReference.CreateFromFile(typeof(object).Assembly.Location)
+        }, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        var classSymbol = compilation.GetTypeByMetadataName("Test.Derived")!;
+        var props = ViewModelAnalyzer.GetObservableProperties(classSymbol, "Test.ObservablePropertyAttribute", compilation);
+        Assert.Single(props);
+    }
 }
