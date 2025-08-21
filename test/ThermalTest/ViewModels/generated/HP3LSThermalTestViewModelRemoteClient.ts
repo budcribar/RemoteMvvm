@@ -7,7 +7,7 @@ import { HP3LSThermalTestViewModelState, UpdatePropertyValueRequest, SubscribeRe
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { BoolValue, DoubleValue, Int32Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, DoubleValue, Int32Value, Int64Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export interface ThermalZoneState {
   zone: number;
