@@ -9,25 +9,25 @@ using MonsterClicker.ViewModels.Protos;
 using MonsterClicker.ViewModels.RemoteClients;
 using System;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using System.Windows.Threading;
 using PeakSWC.Mvvm.Remote;
 
 namespace MonsterClicker.ViewModels
 {
-    public partial class GameViewModel : IDisposable
+    public partial class GameViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private GameViewModelGrpcServiceImpl? _grpcService;
+        private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private MonsterClicker.ViewModels.RemoteClients.GameViewModelRemoteClient? _remoteClient;
-        private readonly Dispatcher _dispatcher;
 
-        public GameViewModel(ServerOptions options) : this()
+        public GameViewModel(ServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -54,12 +54,12 @@ namespace MonsterClicker.ViewModels
             }));
 
             // Register the gRPC service implementation with ASP.NET Core DI
-            builder.Services.AddSingleton(_grpcService);
+            builder.Services.AddSingleton(_grpcService!);
 
             // Configure Kestrel to listen on the specified port with HTTP/2 support
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
-                kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>
+                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });
@@ -87,10 +87,10 @@ namespace MonsterClicker.ViewModels
             Task.Run(() => app.RunAsync()); // Run the server in a background thread
         }
 
-        public GameViewModel(ClientOptions options) : this()
+        public GameViewModel(ClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
+            _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
             var client = new GameViewModelService.GameViewModelServiceClient(_channel);
             _remoteClient = new GameViewModelRemoteClient(client);

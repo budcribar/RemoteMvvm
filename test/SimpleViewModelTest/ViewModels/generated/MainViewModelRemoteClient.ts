@@ -7,7 +7,7 @@ import { MainViewModelState, UpdatePropertyValueRequest, SubscribeRequest, Prope
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, DoubleValue, Int32Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export interface DeviceInfoState {
   name: string;
@@ -37,7 +37,7 @@ export class MainViewModelRemoteClient {
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.devices = (state as any).getDevices();
+        this.devices = (state as any).getDevicesList();
         this.connectionStatus = 'Connected';
         this.notifyChange();
         this.startListeningToPropertyChanges();
@@ -46,7 +46,7 @@ export class MainViewModelRemoteClient {
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.devices = (state as any).getDevices();
+        this.devices = (state as any).getDevicesList();
         this.notifyChange();
     }
 
@@ -65,9 +65,15 @@ export class MainViewModelRemoteClient {
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
         } else if (typeof value === 'number') {
             if (Number.isInteger(value)) {
-                const wrapper = new Int32Value();
-                wrapper.setValue(value);
-                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+                if (value > 2147483647 || value < -2147483648) {
+                    const wrapper = new Int64Value();
+                    wrapper.setValue(value);
+                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int64Value');
+                } else {
+                    const wrapper = new Int32Value();
+                    wrapper.setValue(value);
+                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+                }
             } else {
                 const wrapper = new DoubleValue();
                 wrapper.setValue(value);

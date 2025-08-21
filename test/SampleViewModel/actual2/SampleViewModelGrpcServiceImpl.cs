@@ -139,7 +139,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         return new SampleApp.ViewModels.Protos.IncrementCountResponse();
     }
 
-    public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse> DelayedIncrementAsync(SampleApp.ViewModels.Protos.DelayedIncrementAsyncRequest request, ServerCallContext context)
+    public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementResponse> DelayedIncrement(SampleApp.ViewModels.Protos.DelayedIncrementRequest request, ServerCallContext context)
     {
         try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
@@ -153,7 +153,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for DelayedIncrementAsync: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse();
+        return new SampleApp.ViewModels.Protos.DelayedIncrementResponse();
     }
 
     public override async Task<SampleApp.ViewModels.Protos.SetNameToValueResponse> SetNameToValue(SampleApp.ViewModels.Protos.SetNameToValueRequest request, ServerCallContext context)

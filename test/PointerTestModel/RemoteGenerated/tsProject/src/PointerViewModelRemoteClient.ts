@@ -7,7 +7,7 @@ import { PointerViewModelState, UpdatePropertyValueRequest, SubscribeRequest, Pr
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, DoubleValue, Int32Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export class PointerViewModelRemoteClient {
     private readonly grpcClient: PointerViewModelServiceClient;
@@ -99,9 +99,15 @@ export class PointerViewModelRemoteClient {
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
         } else if (typeof value === 'number') {
             if (Number.isInteger(value)) {
-                const wrapper = new Int32Value();
-                wrapper.setValue(value);
-                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+                if (value > 2147483647 || value < -2147483648) {
+                    const wrapper = new Int64Value();
+                    wrapper.setValue(value);
+                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int64Value');
+                } else {
+                    const wrapper = new Int32Value();
+                    wrapper.setValue(value);
+                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+                }
             } else {
                 const wrapper = new DoubleValue();
                 wrapper.setValue(value);

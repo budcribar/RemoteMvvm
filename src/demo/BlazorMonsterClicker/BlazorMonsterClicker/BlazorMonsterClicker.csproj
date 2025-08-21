@@ -20,7 +20,7 @@
                 <PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
                 <PackageReference Include="Google.Protobuf" Version="3.31.1" />
                 <PackageReference Include="Grpc.Tools" Version="2.71.0" PrivateAssets="all" />
-                <Protobuf Include="protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="protos\" Access="Public" />
+			<Protobuf Include="protos\GameViewModelService.proto" GrpcServices="Client" ProtoRoot="protos\" Access="Public" />
         </ItemGroup>
 
 	<ItemGroup>
@@ -30,7 +30,7 @@
 
 	<Target Name="RunRemoteMvvmTool" BeforeTargets="CoreCompile">
 		<Message Text="Running remotemvvm on @(RemoteMvvmViewModel)" Importance="high" />
-		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos --clientNamespace MonsterClicker.ViewModels.RemoteClients @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')"  />
+		<Exec Command="remotemvvm --generate proto,client --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace MonsterClicker.ViewModels.Protos --clientNamespace MonsterClicker.ViewModels.RemoteClients @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" />
 	</Target>
 
 	<Target Name="BeforeBuild" DependsOnTargets="RunRemoteMvvmTool" />
@@ -39,6 +39,11 @@
 		<Content Update="wwwroot\index.html">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="protos\" />
+	  <Folder Include="RemoteGenerated\" />
 	</ItemGroup>
 
 </Project>

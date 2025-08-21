@@ -10,4 +10,5 @@ namespace MonsterClicker.ViewModels;
 
 public static class ProtoStateConverters
 {
+
 }
