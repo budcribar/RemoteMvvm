@@ -48,3 +48,20 @@ remotemvvm --generate proto,server,client,ts \
 
 The command above analyzes `MyViewModel.cs` and writes the generated files into `generated/` and `protos/`.
 
+### Supported Types
+
+| C# type | Server | C# client | TS client | Update direction |
+|---------|:------:|:---------:|:---------:|-----------------|
+| `string` | ✅ | ✅ | ✅ | 2‑way |
+| `bool` | ✅ | ✅ | ✅ | 2‑way |
+| `int` | ✅ | ✅ | ✅ | 2‑way |
+| `long` | ✅ | ✅ | ✅ | 2‑way |
+| `uint` | ✅ | ✅ | ✅ | 2‑way |
+| `float` | ✅ | ✅ | ✅ | 2‑way |
+| `double` | ✅ | ✅ | ✅ | 2‑way |
+| Other numeric types (`byte`, `sbyte`, `short`, `ushort`, `ulong`, `decimal`, `char`, etc.) | ✅ | ✅ | ✅ | server → client |
+| `Guid`, `enum` | ✅ | ✅ | ✅ | server → client |
+| Arrays & lists (`T[]`, `List<T>`, `ObservableCollection<T>`) | ✅ | ✅ | ✅ | server → client |
+| `Dictionary<TKey,TValue>` (scalar keys) | ✅ | ✅ | ✅ | server → client |
+| Custom classes/structs | ✅ | ✅ | ✅ | server → client |
+| Date/time types (`DateTime`, `TimeSpan`, etc.) | ✅ | ❌ | ❌ | n/a |
