@@ -7,6 +7,8 @@ using GrpcRemoteMvvmModelUtil;
 using RemoteMvvmTool.Generators;
 using Xunit;
 
+namespace RemoteMvvmTool.Tests.TypeScript;
+
 public class TypeScriptCompilationTests
 {
     static List<string> LoadDefaultRefs()
