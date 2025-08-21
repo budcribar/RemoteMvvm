@@ -158,7 +158,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             case float f: return Any.Pack(new FloatValue { Value = f });
             case long l: return Any.Pack(new Int64Value { Value = l });
             case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
-            case System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
+            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
         }
         if (value is IDictionary dict)
         {
@@ -191,7 +191,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             case long l: return Value.ForNumber(l);
             case double d: return Value.ForNumber(d);
             case float f: return Value.ForNumber(f);
-            case System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
+            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
             case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString("o"));
         }
         if (value is IDictionary dict)

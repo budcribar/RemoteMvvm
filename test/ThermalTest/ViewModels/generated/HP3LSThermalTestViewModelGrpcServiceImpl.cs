@@ -195,7 +195,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             case float f: return Any.Pack(new FloatValue { Value = f });
             case long l: return Any.Pack(new Int64Value { Value = l });
             case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
-            case System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
+            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
         }
         if (value is IDictionary dict)
         {
@@ -228,7 +228,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             case long l: return Value.ForNumber(l);
             case double d: return Value.ForNumber(d);
             case float f: return Value.ForNumber(f);
-            case System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
+            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
             case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString("o"));
         }
         if (value is IDictionary dict)
@@ -242,8 +242,8 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         {
             var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Add(ToValue(item));
-            return Value.ForList(lv);
+                lv.Values.Add(ToValue(item));
+            return Value.ForList(lv.Values.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())

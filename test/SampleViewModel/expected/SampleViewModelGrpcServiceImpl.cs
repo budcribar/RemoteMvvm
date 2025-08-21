@@ -243,7 +243,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         }
         if (value is IEnumerable enumerable && value is not string)
         {
-            var lv = new ListValue();
+            var lv = new List<Value>();
             foreach (var item in enumerable)
                 lv.Values.Add(ToValue(item));
             return Value.ForList(lv.Values.ToArray());
