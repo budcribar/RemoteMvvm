@@ -100,6 +100,19 @@ public static class ConversionGenerator
             }
             else if (GeneratorHelpers.IsWellKnownType(propType))
                 sb.AppendLine($"        state.{propName} = model.{propName};");
+            else if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
+            {
+                if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
+                    GenerateForType(valT, sb, processed, protoNs, compilation, ref needsTimestamp);
+                string keySel = IsEnumType(keyT!, compilation) ? "kv.Key" : "kv.Key";
+                if (IsEnumType(keyT!, compilation)) keySel = $"(int){keySel}";
+                string valSel;
+                if (IsEnumType(valT!, compilation)) valSel = $"(int)kv.Value";
+                else if (IsDateTime(valT!, out var vNullable)) { needsTimestamp = true; valSel = vNullable ? "Timestamp.FromDateTime(kv.Value.Value.ToUniversalTime())" : "Timestamp.FromDateTime(kv.Value.ToUniversalTime())"; }
+                else if (!GeneratorHelpers.IsWellKnownType(valT!)) valSel = "ToProto(kv.Value)";
+                else valSel = "kv.Value";
+                sb.AppendLine($"        if (model.{propName} != null) state.{propName}.Add(model.{propName}.ToDictionary(kv => {keySel}, kv => {valSel}));");
+            }
             else if (GeneratorHelpers.TryGetEnumerableElementType(propType, out var elem))
             {
                 string sel = string.Empty;
@@ -107,10 +120,10 @@ public static class ConversionGenerator
                 {
                     if (IsEnumType(elem, compilation))
                         sel = ".Select(e => (int)e)";
-                    else if (IsDateTime(elem, out _))
+                    else if (IsDateTime(elem, out var elemNullable))
                     {
                         needsTimestamp = true;
-                        sel = ".Select(e => Timestamp.FromDateTime(e.ToUniversalTime()))";
+                        sel = elemNullable ? ".Select(e => Timestamp.FromDateTime(e.Value.ToUniversalTime()))" : ".Select(e => Timestamp.FromDateTime(e.ToUniversalTime()))";
                     }
                     else if (!GeneratorHelpers.IsWellKnownType(elem))
                     {
@@ -131,11 +144,12 @@ public static class ConversionGenerator
         sb.AppendLine();
         sb.AppendLine($"    public static {fullName} FromProto({protoNs}.{stateName} state)");
         sb.AppendLine("    {");
-        sb.AppendLine($"        var model = new {fullName}();");
+        string initializer = named.TypeKind == TypeKind.Interface ? $"default({fullName})!" : $"new {fullName}()";
+        sb.AppendLine($"        var model = {initializer};");
         foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
         {
             if (prop.IsStatic) continue;
-            if (prop.DeclaredAccessibility != Accessibility.Public || prop.SetMethod == null) continue;
+            if (prop.DeclaredAccessibility != Accessibility.Public || prop.SetMethod == null || prop.SetMethod.DeclaredAccessibility != Accessibility.Public) continue;
             var propType = prop.Type;
             string propName = prop.Name;
             if (IsEnumType(propType, compilation))
@@ -150,6 +164,18 @@ public static class ConversionGenerator
             }
             else if (GeneratorHelpers.IsWellKnownType(propType))
                 sb.AppendLine($"        model.{propName} = state.{propName};");
+            else if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
+            {
+                if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
+                    GenerateForType(valT, sb, processed, protoNs, compilation, ref needsTimestamp);
+                string keySel = IsEnumType(keyT!, compilation) ? $"({keyT!.ToDisplayString()})kv.Key" : "kv.Key";
+                string valSel;
+                if (IsEnumType(valT!, compilation)) valSel = $"({valT!.ToDisplayString()})kv.Value";
+                else if (IsDateTime(valT!, out var vNullable)) { needsTimestamp = true; valSel = vNullable ? "kv.Value?.ToDateTime()" : "kv.Value.ToDateTime()"; }
+                else if (!GeneratorHelpers.IsWellKnownType(valT!)) valSel = "FromProto(kv.Value)";
+                else valSel = "kv.Value";
+                sb.AppendLine($"        model.{propName} = state.{propName}.ToDictionary(kv => {keySel}, kv => {valSel});");
+            }
             else if (GeneratorHelpers.TryGetEnumerableElementType(propType, out var elem))
             {
                 string sel = string.Empty;
@@ -157,10 +183,10 @@ public static class ConversionGenerator
                 {
                     if (IsEnumType(elem, compilation))
                         sel = ".Select(e => (" + elem.ToDisplayString() + ")e)";
-                    else if (IsDateTime(elem, out _))
+                    else if (IsDateTime(elem, out var elemNullable))
                     {
                         needsTimestamp = true;
-                        sel = ".Select(e => e.ToDateTime())";
+                        sel = elemNullable ? ".Select(e => e?.ToDateTime())" : ".Select(e => e.ToDateTime())";
                     }
                     else if (!GeneratorHelpers.IsWellKnownType(elem))
                     {
@@ -169,6 +195,15 @@ public static class ConversionGenerator
                     }
                 }
                 sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToList();");
+            }
+            else if (propType is IArrayTypeSymbol arrType)
+            {
+                string sel = string.Empty;
+                var arrElem = arrType.ElementType;
+                if (IsEnumType(arrElem, compilation)) sel = ".Select(e => (" + arrElem.ToDisplayString() + ")e)";
+                else if (IsDateTime(arrElem, out var elemNullable)) { needsTimestamp = true; sel = elemNullable ? ".Select(e => e?.ToDateTime())" : ".Select(e => e.ToDateTime())"; }
+                else if (!GeneratorHelpers.IsWellKnownType(arrElem)) { GenerateForType(arrElem, sb, processed, protoNs, compilation, ref needsTimestamp); sel = ".Select(FromProto)"; }
+                sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToArray();");
             }
             else
             {
