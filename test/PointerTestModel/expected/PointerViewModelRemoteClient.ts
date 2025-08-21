@@ -7,7 +7,8 @@ import { PointerViewModelState, UpdatePropertyValueRequest, SubscribeRequest, Pr
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { BoolValue, DoubleValue, Int32Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, DoubleValue, Int32Value, Int64Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 export class PointerViewModelRemoteClient {
     private readonly grpcClient: PointerViewModelServiceClient;
@@ -117,6 +118,9 @@ export class PointerViewModelRemoteClient {
             const wrapper = new BoolValue();
             wrapper.setValue(value);
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.BoolValue');
+        } else if (value instanceof Date) {
+            const wrapper = Timestamp.fromDate(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Timestamp');
         } else {
             throw new Error('Unsupported value type');
         }
