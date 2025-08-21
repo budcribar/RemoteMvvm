@@ -131,7 +131,7 @@ export class {serviceName}Client {{
 ");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.js"),
             $"exports.{vmName}State = class {{}};" +
-            "exports.UpdatePropertyValueRequest = class { setPropertyName(){} setNewValue(){} };" +
+            "exports.UpdatePropertyValueRequest = class { constructor(){ this.p=''; this.v=undefined; } setPropertyName(v){ this.p=v; } getPropertyName(){ return this.p; } setNewValue(v){ this.v=v; } getNewValue(){ return this.v; } };" +
             "exports.SubscribeRequest = class { setClientId(){} };" +
             "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} };" +
             "exports.ConnectionStatusResponse = class { getStatus(){return 0} };" +
@@ -140,7 +140,7 @@ export class {serviceName}Client {{
             "exports.CancelTestRequest = class {};");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.d.ts"),
             $"export class {vmName}State {{}}\n" +
-            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; setNewValue(v:any):void; }\n" +
+            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; }\n" +
             "export class SubscribeRequest { setClientId(v:string):void; }\n" +
             "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; }\n" +
             "export class ConnectionStatusResponse { getStatus():number; }\n" +
