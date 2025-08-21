@@ -16,7 +16,7 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 foreach (var member in currentType.GetMembers())
                 {
-                    if (seen.Add(member))
+                    if (!member.IsStatic && seen.Add(member))
                         yield return member;
                 }
                 currentType = currentType.BaseType;
@@ -26,7 +26,7 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 foreach (var member in iface.GetMembers())
                 {
-                    if (seen.Add(member))
+                    if (!member.IsStatic && seen.Add(member))
                         yield return member;
                 }
             }
@@ -51,7 +51,7 @@ namespace GrpcRemoteMvvmModelUtil
             }
 
             var attrFull = Normalize(attrClass.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)));
-            var targetFull = Normalize(fullyQualifiedAttributeName);
+            var targetFull = Normalize(fullyQualifiedAttributeName.Trim());
 
             // If the target does not specify a qualifier, compare using the simple name only.
             if (!targetFull.Contains('.'))
@@ -77,13 +77,34 @@ namespace GrpcRemoteMvvmModelUtil
 
         public static bool InheritsFrom(INamedTypeSymbol? typeSymbol, string baseTypeFullName)
         {
-            static string Normalize(string name) =>
-                name.StartsWith("global::", StringComparison.Ordinal) ? name.Substring("global::".Length) : name;
+            static string Normalize(string name)
+            {
+                if (name.StartsWith("global::", StringComparison.Ordinal))
+                    name = name.Substring("global::".Length);
+
+                return name;
+            }
+
+            static string StripGenerics(string name)
+            {
+                var index = name.IndexOf('<');
+                return index >= 0 ? name.Substring(0, index) : name;
+            }
 
             static bool SymbolMatches(INamedTypeSymbol symbol, string fullName)
             {
                 var fqn = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                return string.Equals(Normalize(fqn), Normalize(fullName), StringComparison.OrdinalIgnoreCase);
+                var symbolNorm = Normalize(fqn);
+                var targetNorm = Normalize(fullName);
+
+                if (string.Equals(symbolNorm, targetNorm, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                // Allow matching open generic type definitions by comparing without generic arguments
+                if (!targetNorm.Contains('<') && string.Equals(StripGenerics(symbolNorm), targetNorm, StringComparison.OrdinalIgnoreCase))
+                    return true;
+
+                return false;
             }
 
             static bool InterfaceMatches(INamedTypeSymbol symbol, string fullName)
