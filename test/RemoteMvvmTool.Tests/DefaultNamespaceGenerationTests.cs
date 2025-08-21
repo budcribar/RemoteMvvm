@@ -7,6 +7,7 @@ using Xunit;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Runtime.InteropServices;
+namespace ToolExecution;
 
 public class DefaultNamespaceGenerationTests
 {

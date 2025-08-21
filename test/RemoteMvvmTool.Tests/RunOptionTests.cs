@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Xunit;
 using GrpcRemoteMvvmModelUtil;
 using RemoteMvvmTool.Generators;
-
+namespace ToolExecution;
 public class RunOptionTests
 {
     [Fact]

@@ -10,6 +10,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using RemoteMvvmTool;
 using Xunit;
 
+namespace ToolExecution;
 [CollectionDefinition("Compile", DisableParallelization = true)]
 public class CompileCollectionDefinition { }
 
