@@ -179,7 +179,17 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        const state = await this.grpcClient.getState(new Empty());");
         foreach (var p in props)
         {
-            sb.AppendLine($"        this.{GeneratorHelpers.ToCamelCase(p.Name)} = (state as any).get{p.Name}();");
+            string expr;
+            if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
+                expr = $"(state as any).get{p.Name}Map().toObject()";
+            else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
+                     (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
+                     !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
+                     p.FullTypeSymbol!.TypeKind != TypeKind.Enum)
+                expr = $"(state as any).get{p.Name}()?.toObject()";
+            else
+                expr = $"(state as any).get{p.Name}()";
+            sb.AppendLine($"        this.{GeneratorHelpers.ToCamelCase(p.Name)} = {expr};");
         }
         sb.AppendLine("        this.connectionStatus = 'Connected';");
         sb.AppendLine("        this.notifyChange();");
@@ -191,7 +201,17 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        const state = await this.grpcClient.getState(new Empty());");
         foreach (var p in props)
         {
-            sb.AppendLine($"        this.{GeneratorHelpers.ToCamelCase(p.Name)} = (state as any).get{p.Name}();");
+            string expr;
+            if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
+                expr = $"(state as any).get{p.Name}Map().toObject()";
+            else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
+                     (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
+                     !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
+                     p.FullTypeSymbol!.TypeKind != TypeKind.Enum)
+                expr = $"(state as any).get{p.Name}()?.toObject()";
+            else
+                expr = $"(state as any).get{p.Name}()";
+            sb.AppendLine($"        this.{GeneratorHelpers.ToCamelCase(p.Name)} = {expr};");
         }
         sb.AppendLine("        this.notifyChange();");
         sb.AppendLine("    }");
