@@ -99,7 +99,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
             AttackMonsterCommand = new RelayCommand(RemoteExecute_AttackMonster);
-            SpecialAttackCommand = new AsyncRelayCommand(RemoteExecute_SpecialAttackAsyncAsync);
+            SpecialAttackCommand = new AsyncRelayCommand(RemoteExecute_SpecialAttackAsync);
             ResetGameCommand = new RelayCommand(RemoteExecute_ResetGame);
         }
 
@@ -192,7 +192,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
             catch (Exception ex) { Debug.WriteLine("[ClientProxy:GameViewModel] Unexpected error executing command AttackMonster: " + ex.Message); }
         }
 
-        private async Task RemoteExecute_SpecialAttackAsyncAsync()
+        private async Task RemoteExecute_SpecialAttackAsync()
         {
             if (!_isInitialized || _isDisposed) { Debug.WriteLine("[ClientProxy:GameViewModel] Not initialized or disposed, command SpecialAttackAsync skipped."); return; }
             Debug.WriteLine("[ClientProxy:GameViewModel] Executing command SpecialAttackAsync remotely...");
@@ -243,21 +243,21 @@ namespace MonsterClicker.ViewModels.RemoteClients
                                switch (update.PropertyName)
                                {
                                    case nameof(MonsterName):
-                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating MonsterName from \"{this.MonsterName}\" to '\"{val}\"."); this.MonsterName = val; Debug.WriteLine($"After update, MonsterName is '\"{this.MonsterName}\"."); } else { Debug.WriteLine($"Mismatched descriptor for MonsterName, expected StringValue."); } break;
+                 if (update.NewValue!.Is(StringValue.Descriptor)) this.MonsterName = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(MonsterMaxHealth):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating MonsterMaxHealth from {this.MonsterMaxHealth} to {val}."); this.MonsterMaxHealth = val; Debug.WriteLine($"After update, MonsterMaxHealth is {this.MonsterMaxHealth}."); } else { Debug.WriteLine($"Mismatched descriptor for MonsterMaxHealth, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.MonsterMaxHealth = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(MonsterCurrentHealth):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating MonsterCurrentHealth from {this.MonsterCurrentHealth} to {val}."); this.MonsterCurrentHealth = val; Debug.WriteLine($"After update, MonsterCurrentHealth is {this.MonsterCurrentHealth}."); } else { Debug.WriteLine($"Mismatched descriptor for MonsterCurrentHealth, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.MonsterCurrentHealth = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(PlayerDamage):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating PlayerDamage from {this.PlayerDamage} to {val}."); this.PlayerDamage = val; Debug.WriteLine($"After update, PlayerDamage is {this.PlayerDamage}."); } else { Debug.WriteLine($"Mismatched descriptor for PlayerDamage, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.PlayerDamage = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(GameMessage):
-                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating GameMessage from \"{this.GameMessage}\" to '\"{val}\"."); this.GameMessage = val; Debug.WriteLine($"After update, GameMessage is '\"{this.GameMessage}\"."); } else { Debug.WriteLine($"Mismatched descriptor for GameMessage, expected StringValue."); } break;
+                 if (update.NewValue!.Is(StringValue.Descriptor)) this.GameMessage = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(IsMonsterDefeated):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating IsMonsterDefeated from {this.IsMonsterDefeated} to {val}."); this.IsMonsterDefeated = val; Debug.WriteLine($"After update, IsMonsterDefeated is {this.IsMonsterDefeated}."); } else { Debug.WriteLine($"Mismatched descriptor for IsMonsterDefeated, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.IsMonsterDefeated = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(CanUseSpecialAttack):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating CanUseSpecialAttack from {this.CanUseSpecialAttack} to {val}."); this.CanUseSpecialAttack = val; Debug.WriteLine($"After update, CanUseSpecialAttack is {this.CanUseSpecialAttack}."); } else { Debug.WriteLine($"Mismatched descriptor for CanUseSpecialAttack, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.CanUseSpecialAttack = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(IsSpecialAttackOnCooldown):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating IsSpecialAttackOnCooldown from {this.IsSpecialAttackOnCooldown} to {val}."); this.IsSpecialAttackOnCooldown = val; Debug.WriteLine($"After update, IsSpecialAttackOnCooldown is {this.IsSpecialAttackOnCooldown}."); } else { Debug.WriteLine($"Mismatched descriptor for IsSpecialAttackOnCooldown, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.IsSpecialAttackOnCooldown = update.NewValue.Unpack<BoolValue>().Value; break;
                                    default: Debug.WriteLine("[ClientProxy:GameViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
                            }

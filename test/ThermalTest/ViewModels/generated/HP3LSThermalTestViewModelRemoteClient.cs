@@ -219,19 +219,19 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                switch (update.PropertyName)
                                {
                                    case nameof(CpuTemperatureThreshold):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating CpuTemperatureThreshold from {this.CpuTemperatureThreshold} to {val}."); this.CpuTemperatureThreshold = val; Debug.WriteLine($"After update, CpuTemperatureThreshold is {this.CpuTemperatureThreshold}."); } else { Debug.WriteLine($"Mismatched descriptor for CpuTemperatureThreshold, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuTemperatureThreshold = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(CpuLoadThreshold):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating CpuLoadThreshold from {this.CpuLoadThreshold} to {val}."); this.CpuLoadThreshold = val; Debug.WriteLine($"After update, CpuLoadThreshold is {this.CpuLoadThreshold}."); } else { Debug.WriteLine($"Mismatched descriptor for CpuLoadThreshold, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadThreshold = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(CpuLoadTimeSpan):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating CpuLoadTimeSpan from {this.CpuLoadTimeSpan} to {val}."); this.CpuLoadTimeSpan = val; Debug.WriteLine($"After update, CpuLoadTimeSpan is {this.CpuLoadTimeSpan}."); } else { Debug.WriteLine($"Mismatched descriptor for CpuLoadTimeSpan, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadTimeSpan = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(ZoneList):
                                        Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for ZoneList with WKT Any not fully implemented or is Any."); break;
                                    case nameof(TestSettings):
                                        Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for TestSettings with WKT Any not fully implemented or is Any."); break;
                                    case nameof(ShowDescription):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowDescription from {this.ShowDescription} to {val}."); this.ShowDescription = val; Debug.WriteLine($"After update, ShowDescription is {this.ShowDescription}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowDescription, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowDescription = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowReadme):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowReadme from {this.ShowReadme} to {val}."); this.ShowReadme = val; Debug.WriteLine($"After update, ShowReadme is {this.ShowReadme}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowReadme, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowReadme = update.NewValue.Unpack<BoolValue>().Value; break;
                                    default: Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
                            }

@@ -387,33 +387,33 @@ namespace Pointer.ViewModels.RemoteClients
                                switch (update.PropertyName)
                                {
                                    case nameof(Show):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating Show from {this.Show} to {val}."); this.Show = val; Debug.WriteLine($"After update, Show is {this.Show}."); } else { Debug.WriteLine($"Mismatched descriptor for Show, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.Show = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowSpinner):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowSpinner from {this.ShowSpinner} to {val}."); this.ShowSpinner = val; Debug.WriteLine($"After update, ShowSpinner is {this.ShowSpinner}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowSpinner, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowSpinner = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ClicksToPass):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating ClicksToPass from {this.ClicksToPass} to {val}."); this.ClicksToPass = val; Debug.WriteLine($"After update, ClicksToPass is {this.ClicksToPass}."); } else { Debug.WriteLine($"Mismatched descriptor for ClicksToPass, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.ClicksToPass = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(Is3Btn):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating Is3Btn from {this.Is3Btn} to {val}."); this.Is3Btn = val; Debug.WriteLine($"After update, Is3Btn is {this.Is3Btn}."); } else { Debug.WriteLine($"Mismatched descriptor for Is3Btn, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.Is3Btn = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(TestTimeoutSec):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating TestTimeoutSec from {this.TestTimeoutSec} to {val}."); this.TestTimeoutSec = val; Debug.WriteLine($"After update, TestTimeoutSec is {this.TestTimeoutSec}."); } else { Debug.WriteLine($"Mismatched descriptor for TestTimeoutSec, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.TestTimeoutSec = update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(Instructions):
-                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating Instructions from \"{this.Instructions}\" to '\"{val}\"."); this.Instructions = val; Debug.WriteLine($"After update, Instructions is '\"{this.Instructions}\"."); } else { Debug.WriteLine($"Mismatched descriptor for Instructions, expected StringValue."); } break;
+                 if (update.NewValue!.Is(StringValue.Descriptor)) this.Instructions = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(ShowCursorTest):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowCursorTest from {this.ShowCursorTest} to {val}."); this.ShowCursorTest = val; Debug.WriteLine($"After update, ShowCursorTest is {this.ShowCursorTest}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowCursorTest, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowCursorTest = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowConfigSelection):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowConfigSelection from {this.ShowConfigSelection} to {val}."); this.ShowConfigSelection = val; Debug.WriteLine($"After update, ShowConfigSelection is {this.ShowConfigSelection}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowConfigSelection, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowConfigSelection = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowClickInstructions):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowClickInstructions from {this.ShowClickInstructions} to {val}."); this.ShowClickInstructions = val; Debug.WriteLine($"After update, ShowClickInstructions is {this.ShowClickInstructions}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowClickInstructions, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowClickInstructions = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowTimer):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowTimer from {this.ShowTimer} to {val}."); this.ShowTimer = val; Debug.WriteLine($"After update, ShowTimer is {this.ShowTimer}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowTimer, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowTimer = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowBottom):
-                    if (update.NewValue!.Is(BoolValue.Descriptor)) { var val = update.NewValue.Unpack<BoolValue>().Value; Debug.WriteLine($"Updating ShowBottom from {this.ShowBottom} to {val}."); this.ShowBottom = val; Debug.WriteLine($"After update, ShowBottom is {this.ShowBottom}."); } else { Debug.WriteLine($"Mismatched descriptor for ShowBottom, expected BoolValue."); } break;
+                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowBottom = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(TimerText):
-                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating TimerText from \"{this.TimerText}\" to '\"{val}\"."); this.TimerText = val; Debug.WriteLine($"After update, TimerText is '\"{this.TimerText}\"."); } else { Debug.WriteLine($"Mismatched descriptor for TimerText, expected StringValue."); } break;
+                 if (update.NewValue!.Is(StringValue.Descriptor)) this.TimerText = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(SelectedDevice):
-                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating SelectedDevice from \"{this.SelectedDevice}\" to '\"{val}\"."); this.SelectedDevice = val; Debug.WriteLine($"After update, SelectedDevice is '\"{this.SelectedDevice}\"."); } else { Debug.WriteLine($"Mismatched descriptor for SelectedDevice, expected StringValue."); } break;
+                 if (update.NewValue!.Is(StringValue.Descriptor)) this.SelectedDevice = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(LastClickCount):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating LastClickCount from {this.LastClickCount} to {val}."); this.LastClickCount = val; Debug.WriteLine($"After update, LastClickCount is {this.LastClickCount}."); } else { Debug.WriteLine($"Mismatched descriptor for LastClickCount, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.LastClickCount = update.NewValue.Unpack<Int32Value>().Value; break;
                                    default: Debug.WriteLine("[ClientProxy:PointerViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
                            }

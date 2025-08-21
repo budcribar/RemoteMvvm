@@ -57,7 +57,7 @@ namespace SampleApp.ViewModels.RemoteClients
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
             IncrementCountCommand = new RelayCommand(RemoteExecute_IncrementCount);
-            DelayedIncrementCommand = new AsyncRelayCommand<int>(RemoteExecute_DelayedIncrementAsyncAsync);
+            DelayedIncrementCommand = new AsyncRelayCommand<int>(RemoteExecute_DelayedIncrementAsync);
             SetNameToValueCommand = new RelayCommand<string?>(RemoteExecute_SetNameToValue);
         }
 
@@ -138,7 +138,7 @@ namespace SampleApp.ViewModels.RemoteClients
             catch (Exception ex) { Debug.WriteLine("[ClientProxy:SampleViewModel] Unexpected error executing command IncrementCount: " + ex.Message); }
         }
 
-        private async Task RemoteExecute_DelayedIncrementAsyncAsync(int delayMilliseconds)
+        private async Task RemoteExecute_DelayedIncrementAsync(int delayMilliseconds)
         {
             if (!_isInitialized || _isDisposed) { Debug.WriteLine("[ClientProxy:SampleViewModel] Not initialized or disposed, command DelayedIncrementAsync skipped."); return; }
             Debug.WriteLine("[ClientProxy:SampleViewModel] Executing command DelayedIncrementAsync remotely...");
@@ -189,9 +189,9 @@ namespace SampleApp.ViewModels.RemoteClients
                                switch (update.PropertyName)
                                {
                                    case nameof(Name):
-                 if (update.NewValue!.Is(StringValue.Descriptor)) { var val = update.NewValue.Unpack<StringValue>().Value; Debug.WriteLine($"Updating Name from \"{this.Name}\" to '\"{val}\"."); this.Name = val; Debug.WriteLine($"After update, Name is '\"{this.Name}\"."); } else { Debug.WriteLine($"Mismatched descriptor for Name, expected StringValue."); } break;
+                 if (update.NewValue!.Is(StringValue.Descriptor)) this.Name = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(Count):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating Count from {this.Count} to {val}."); this.Count = val; Debug.WriteLine($"After update, Count is {this.Count}."); } else { Debug.WriteLine($"Mismatched descriptor for Count, expected Int32Value."); } break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.Count = update.NewValue.Unpack<Int32Value>().Value; break;
                                    default: Debug.WriteLine("[ClientProxy:SampleViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
                            }

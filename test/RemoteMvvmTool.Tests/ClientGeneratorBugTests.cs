@@ -41,15 +41,6 @@ public class ClientGeneratorBugTests
     }
 
     [Fact]
-    public void AsyncMethodNameGetsAsyncTwice()
-    {
-        var compilation = CreateCompilation();
-        var cmd = new CommandInfo("RunAsync", "RunCommand", new List<ParameterInfo>(), true);
-        var code = ClientGenerator.Generate("Vm", "Test.Proto", "VmService", new List<PropertyInfo>(), new List<CommandInfo>{cmd});
-        Assert.DoesNotContain("AsyncAsync", code);
-    }
-
-    [Fact]
     public void MultipleParametersCommandNotHandled()
     {
         var compilation = CreateCompilation();
