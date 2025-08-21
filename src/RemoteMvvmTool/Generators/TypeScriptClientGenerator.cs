@@ -45,58 +45,107 @@ public static class TypeScriptClientGenerator
 
         string MapTsType(ITypeSymbol type)
         {
-            if (type is IArrayTypeSymbol arr)
-                return MapTsType(arr.ElementType) + "[]";
+            bool isNullable = false;
+            if (type is INamedTypeSymbol nullable && nullable.IsGenericType &&
+                nullable.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
+            {
+                isNullable = true;
+                type = nullable.TypeArguments[0];
+            }
 
-            if (type is INamedTypeSymbol named && named.IsGenericType)
+            string result;
+
+            if (type is IArrayTypeSymbol arr)
+            {
+                result = MapTsType(arr.ElementType) + "[]";
+            }
+            else if (type is INamedTypeSymbol named && named.IsGenericType)
             {
                 if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
                 {
-                    return MapTsType(named.TypeArguments[0]) + "[]";
+                    result = MapTsType(named.TypeArguments[0]) + "[]";
                 }
-                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var key, out var val))
+                else if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var key, out var val))
                 {
                     var keyTs = MapKeyType(key!);
                     var valTs = MapTsType(val!);
-                    return $"Record<{keyTs}, {valTs}>";
+                    result = $"Record<{keyTs}, {valTs}>";
                 }
-                if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
+                else if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
                 {
-                    return MapTsType(memElem!) + "[]";
+                    result = MapTsType(memElem!) + "[]";
                 }
-                if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
+                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
-                    return MapTsType(elem!) + "[]";
+                    result = MapTsType(elem!) + "[]";
+                }
+                else
+                {
+                    var wktNamed = GeneratorHelpers.GetProtoWellKnownTypeFor(named);
+                    result = wktNamed switch
+                    {
+                        "StringValue" => "string",
+                        "BoolValue" => "boolean",
+                        "Int32Value" or "Int64Value" or "UInt32Value" or "UInt64Value" or "FloatValue" or "DoubleValue" => "number",
+                        "Timestamp" => "string",
+                        "Duration" => "number",
+                        _ => null
+                    } ?? string.Empty;
+                    if (string.IsNullOrEmpty(result))
+                    {
+                        if (named.TypeKind == TypeKind.Enum)
+                        {
+                            result = "number";
+                        }
+                        else if ((named.TypeKind == TypeKind.Class || named.TypeKind == TypeKind.Struct) &&
+                                 !(named.ContainingNamespace?.ToDisplayString() ?? string.Empty).StartsWith("System"))
+                        {
+                            if (processed.Add(named)) queue.Enqueue(named);
+                            result = GetStateName(named);
+                        }
+                        else
+                        {
+                            result = "any";
+                        }
+                    }
+                }
+            }
+            else
+            {
+                var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
+                result = wkt switch
+                {
+                    "StringValue" => "string",
+                    "BoolValue" => "boolean",
+                    "Int32Value" or "Int64Value" or "UInt32Value" or "UInt64Value" or "FloatValue" or "DoubleValue" => "number",
+                    "Timestamp" => "string",
+                    "Duration" => "number",
+                    _ => null
+                } ?? string.Empty;
+
+                if (string.IsNullOrEmpty(result))
+                {
+                    if (type.TypeKind == TypeKind.Enum)
+                    {
+                        result = "number";
+                    }
+                    else if (type is INamedTypeSymbol nt &&
+                             (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct) &&
+                             !(nt.ContainingNamespace?.ToDisplayString() ?? string.Empty).StartsWith("System"))
+                    {
+                        if (processed.Add(nt)) queue.Enqueue(nt);
+                        result = GetStateName(nt);
+                    }
+                    else
+                    {
+                        result = "any";
+                    }
                 }
             }
 
-            var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
-            switch (wkt)
-            {
-                case "StringValue": return "string";
-                case "BoolValue": return "boolean";
-                case "Int32Value":
-                case "Int64Value":
-                case "UInt32Value":
-                case "UInt64Value":
-                case "FloatValue":
-                case "DoubleValue": return "number";
-                case "Timestamp": return "string";
-                case "Duration": return "number";
-            }
-
-            if (type.TypeKind == TypeKind.Enum)
-                return "number";
-
-            if (type is INamedTypeSymbol nt &&
-                (type.TypeKind == TypeKind.Class || type.TypeKind == TypeKind.Struct) &&
-                !(nt.ContainingNamespace?.ToDisplayString() ?? string.Empty).StartsWith("System"))
-            {
-                if (processed.Add(nt)) queue.Enqueue(nt);
-                return GetStateName(nt);
-            }
-
-            return "any";
+            if (isNullable)
+                result += " | undefined";
+            return result;
         }
 
         string MapKeyType(ITypeSymbol type)
@@ -154,7 +203,13 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
         sb.AppendLine("import { Any } from 'google-protobuf/google/protobuf/any_pb';");
-        sb.AppendLine("import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';");
+        var wrapperImports = new HashSet<string> { "StringValue", "Int32Value", "BoolValue", "DoubleValue" };
+        foreach (var p in props)
+        {
+            var w = GeneratorHelpers.GetWrapperType(p.TypeString);
+            if (w != null) wrapperImports.Add(w);
+        }
+        sb.AppendLine($"import {{ {string.Join(", ", wrapperImports.OrderBy(s => s))} }} from 'google-protobuf/google/protobuf/wrappers_pb';");
         sb.AppendLine();
 
         // generate state interfaces for complex types
@@ -191,7 +246,11 @@ public static class TypeScriptClientGenerator
         {
             string expr;
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
-                expr = $"(state as any).get{p.Name}()";
+                expr = $"(state as any).get{p.Name}Map()";
+            else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol!, out _) ||
+                     p.FullTypeSymbol is IArrayTypeSymbol ||
+                     GeneratorHelpers.TryGetMemoryElementType(p.FullTypeSymbol!, out _))
+                expr = $"(state as any).get{p.Name}List()";
             else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
                      !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
@@ -213,7 +272,11 @@ public static class TypeScriptClientGenerator
         {
             string expr;
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
-                expr = $"(state as any).get{p.Name}()";
+                expr = $"(state as any).get{p.Name}Map()";
+            else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol!, out _) ||
+                     p.FullTypeSymbol is IArrayTypeSymbol ||
+                     GeneratorHelpers.TryGetMemoryElementType(p.FullTypeSymbol!, out _))
+                expr = $"(state as any).get{p.Name}List()";
             else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
                      !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
@@ -241,9 +304,15 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');");
         sb.AppendLine("        } else if (typeof value === 'number') {");
         sb.AppendLine("            if (Number.isInteger(value)) {");
-        sb.AppendLine("                const wrapper = new Int32Value();");
-        sb.AppendLine("                wrapper.setValue(value);");
-        sb.AppendLine("                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');");
+        sb.AppendLine("                if (value > 2147483647 || value < -2147483648) {");
+        sb.AppendLine("                    const wrapper = new Int64Value();");
+        sb.AppendLine("                    wrapper.setValue(value);");
+        sb.AppendLine("                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int64Value');");
+        sb.AppendLine("                } else {");
+        sb.AppendLine("                    const wrapper = new Int32Value();");
+        sb.AppendLine("                    wrapper.setValue(value);");
+        sb.AppendLine("                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');");
+        sb.AppendLine("                }");
         sb.AppendLine("            } else {");
         sb.AppendLine("                const wrapper = new DoubleValue();");
         sb.AppendLine("                wrapper.setValue(value);");
@@ -312,7 +381,11 @@ public static class TypeScriptClientGenerator
                 {
                     "StringValue" => "StringValue.deserializeBinary",
                     "Int32Value" => "Int32Value.deserializeBinary",
+                    "Int64Value" => "Int64Value.deserializeBinary",
+                    "UInt32Value" => "UInt32Value.deserializeBinary",
+                    "UInt64Value" => "UInt64Value.deserializeBinary",
                     "BoolValue" => "BoolValue.deserializeBinary",
+                    "FloatValue" => "FloatValue.deserializeBinary",
                     "DoubleValue" => "DoubleValue.deserializeBinary",
                     _ => ""
                 };
