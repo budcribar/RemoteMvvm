@@ -256,7 +256,10 @@ public static class ServerGenerator
                         sb.AppendLine("                command.ExecuteAsync(null).GetAwaiter().GetResult();");
                 }
                 else
+                {
                     sb.AppendLine("                command.Execute(null);");
+                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
+                }
             }
                 else if (cmd.Parameters.Count == 1)
             {
@@ -277,7 +280,10 @@ public static class ServerGenerator
                         sb.AppendLine($"                if (typedCommand != null) typedCommand.ExecuteAsync({paramConv}).GetAwaiter().GetResult(); else command.ExecuteAsync(request).GetAwaiter().GetResult();");
                 }
                 else
+                {
                     sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute({paramConv}); else command.Execute(request);");
+                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
+                }
             }
             else
             {
@@ -289,7 +295,10 @@ public static class ServerGenerator
                         sb.AppendLine("                command.ExecuteAsync(request).GetAwaiter().GetResult();");
                 }
                 else
+                {
                     sb.AppendLine("                command.Execute(request);");
+                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
+                }
             }
             sb.AppendLine("            }");
             sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:{vmName}] Command {cmd.CommandPropertyName} not found or not {relayTypeShort}.\"); }}");
@@ -383,8 +392,8 @@ public static class ServerGenerator
         sb.AppendLine("        {");
         sb.AppendLine("            var lv = new List<Value>();");
         sb.AppendLine("            foreach (var item in enumerable)");
-        sb.AppendLine("                lv.Values.Add(ToValue(item));");
-        sb.AppendLine("            return Value.ForList(lv.Values.ToArray());");
+        sb.AppendLine("                lv.Add(ToValue(item));");
+        sb.AppendLine("            return Value.ForList(lv.ToArray());");
         sb.AppendLine("        }");
         sb.AppendLine("        var structValue = new Struct();");
         sb.AppendLine("        foreach (var prop in value.GetType().GetProperties())");
