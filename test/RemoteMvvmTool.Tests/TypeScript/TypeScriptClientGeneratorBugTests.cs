@@ -35,7 +35,7 @@ public class TypeScriptClientGeneratorBugTests
         return TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
     }
 
-    [Fact(Skip="Bug: Nullable properties should generate optional types")]
+    [Fact]
     public async Task Nullable_property_should_generate_optional_type()
     {
         var code = @"\
@@ -51,7 +51,7 @@ public class ObservableObject {}
         Assert.Contains("count: number | undefined;", ts);
     }
 
-    [Fact(Skip="Bug: Array properties should use getXList in initializeRemote")]
+    [Fact]
     public async Task Array_property_should_use_get_list_method()
     {
         var code = @"\
@@ -67,7 +67,7 @@ public class ObservableObject {}
         Assert.Contains("getNumbersList()", ts);
     }
 
-    [Fact(Skip="Bug: Dictionary properties should use getXMap in initializeRemote")]
+    [Fact]
     public async Task Dictionary_property_should_use_get_map_method()
     {
         var code = @"\
@@ -83,7 +83,7 @@ public class ObservableObject {}
         Assert.Contains("getValuesMap()", ts);
     }
 
-    [Fact(Skip="Bug: Long properties require Int64Value wrapper")]
+    [Fact]
     public async Task Long_property_should_import_int64_wrapper()
     {
         var code = @"\
@@ -99,7 +99,7 @@ public class ObservableObject {}
         Assert.Contains("Int64Value", ts);
     }
 
-    [Fact(Skip="Bug: Float properties are missing change notification handling")]
+    [Fact]
     public async Task Float_property_change_should_be_handled()
     {
         var code = @"\
