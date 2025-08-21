@@ -256,7 +256,10 @@ public static class ServerGenerator
                         sb.AppendLine("                command.ExecuteAsync(null).GetAwaiter().GetResult();");
                 }
                 else
+                {
                     sb.AppendLine("                command.Execute(null);");
+                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
+                }
             }
                 else if (cmd.Parameters.Count == 1)
             {
@@ -277,7 +280,10 @@ public static class ServerGenerator
                         sb.AppendLine($"                if (typedCommand != null) typedCommand.ExecuteAsync({paramConv}).GetAwaiter().GetResult(); else command.ExecuteAsync(request).GetAwaiter().GetResult();");
                 }
                 else
+                {
                     sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute({paramConv}); else command.Execute(request);");
+                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
+                }
             }
             else
             {
@@ -289,7 +295,10 @@ public static class ServerGenerator
                         sb.AppendLine("                command.ExecuteAsync(request).GetAwaiter().GetResult();");
                 }
                 else
+                {
                     sb.AppendLine("                command.Execute(request);");
+                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
+                }
             }
             sb.AppendLine("            }");
             sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:{vmName}] Command {cmd.CommandPropertyName} not found or not {relayTypeShort}.\"); }}");
@@ -336,7 +345,7 @@ public static class ServerGenerator
         sb.AppendLine("            case float f: return Any.Pack(new FloatValue { Value = f });");
         sb.AppendLine("            case long l: return Any.Pack(new Int64Value { Value = l });");
         sb.AppendLine("            case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
-        sb.AppendLine("            case Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });");
+        sb.AppendLine("            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });");
         sb.AppendLine("        }");
         sb.AppendLine("        if (value is IDictionary dict)");
         sb.AppendLine("        {");
@@ -369,7 +378,7 @@ public static class ServerGenerator
         sb.AppendLine("            case long l: return Value.ForNumber(l);");
         sb.AppendLine("            case double d: return Value.ForNumber(d);");
         sb.AppendLine("            case float f: return Value.ForNumber(f);");
-        sb.AppendLine("            case Enum e: return Value.ForNumber(Convert.ToInt32(e));");
+        sb.AppendLine("            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));");
         sb.AppendLine("            case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString(\"o\"));");
         sb.AppendLine("        }");
         sb.AppendLine("        if (value is IDictionary dict)");
@@ -381,10 +390,10 @@ public static class ServerGenerator
         sb.AppendLine("        }");
         sb.AppendLine("        if (value is IEnumerable enumerable && value is not string)");
         sb.AppendLine("        {");
-        sb.AppendLine("            var lv = new ListValue();");
+        sb.AppendLine("            var lv = new List<Value>();");
         sb.AppendLine("            foreach (var item in enumerable)");
-        sb.AppendLine("                lv.Values.Add(ToValue(item));");
-        sb.AppendLine("            return Value.ForList(lv);");
+        sb.AppendLine("                lv.Add(ToValue(item));");
+        sb.AppendLine("            return Value.ForList(lv.ToArray());");
         sb.AppendLine("        }");
         sb.AppendLine("        var structValue = new Struct();");
         sb.AppendLine("        foreach (var prop in value.GetType().GetProperties())");

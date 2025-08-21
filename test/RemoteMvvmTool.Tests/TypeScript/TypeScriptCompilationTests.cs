@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -23,7 +23,7 @@ public class TypeScriptCompilationTests
         return list;
     }
 
-    static void RunPs(string scriptPath, string args, string workDir)
+    static string RunPs(string scriptPath, string args, string workDir)
     {
         var psi = new ProcessStartInfo("powershell", $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {args}")
         {
@@ -38,10 +38,17 @@ public class TypeScriptCompilationTests
         var stderr = p.StandardError.ReadToEnd();
         p.WaitForExit();
 
+        if (p.ExitCode > 0)
+        {
+            return $"STDOUT:\n{stdout}\nSTDERR:\n{stderr}";
+        }
+           
+
         if (p.ExitCode != 0)
         {
-            throw new Exception($"PowerShell script failed with {p.ExitCode}:\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}");
+            return $"PowerShell script failed with {p.ExitCode}:\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}";
         }
+        return "";
     }
 
     static void RunCmd(string file, string args, string workDir)
@@ -81,9 +88,9 @@ public class TypeScriptCompilationTests
         File.WriteAllText(Path.Combine(gp, "any_pb.js"),
             "exports.Any = class { pack(){} unpack(){ return null; } };");
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.d.ts"),
-            "export class StringValue { setValue(v:string):void; getValue():string; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):StringValue; }\n"+
-            "export class Int32Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int32Value; }\n"+
-            "export class BoolValue { setValue(v:boolean):void; getValue():boolean; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):BoolValue; }\n"+
+            "export class StringValue { setValue(v:string):void; getValue():string; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):StringValue; }\n" +
+            "export class Int32Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int32Value; }\n" +
+            "export class BoolValue { setValue(v:boolean):void; getValue():boolean; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):BoolValue; }\n" +
             "export class DoubleValue { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):DoubleValue; }");
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.js"),
             "class W{ constructor(){this.value=0;} setValue(v){this.value=v;} getValue(){return this.value;} serializeBinary(){return new Uint8Array();} } exports.StringValue=W; exports.Int32Value=W; exports.BoolValue=W; exports.DoubleValue=W;");
@@ -104,22 +111,22 @@ export class {serviceName}Client {{
 }}
 ");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.js"),
-            $"exports.{vmName}State = class {{}};"+
-            "exports.UpdatePropertyValueRequest = class { setPropertyName(){} setNewValue(){} };"+
-            "exports.SubscribeRequest = class { setClientId(){} };"+
-            "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} };"+
-            "exports.ConnectionStatusResponse = class { getStatus(){return 0} };"+
-            "exports.ConnectionStatus = { CONNECTED:0, DISCONNECTED:1 };"+
-            "exports.StateChangedRequest = class { setState(){} };"+
+            $"exports.{vmName}State = class {{}};" +
+            "exports.UpdatePropertyValueRequest = class { setPropertyName(){} setNewValue(){} };" +
+            "exports.SubscribeRequest = class { setClientId(){} };" +
+            "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} };" +
+            "exports.ConnectionStatusResponse = class { getStatus(){return 0} };" +
+            "exports.ConnectionStatus = { CONNECTED:0, DISCONNECTED:1 };" +
+            "exports.StateChangedRequest = class { setState(){} };" +
             "exports.CancelTestRequest = class {};");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.d.ts"),
-            $"export class {vmName}State {{}}\n"+
-            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; setNewValue(v:any):void; }\n"+
-            "export class SubscribeRequest { setClientId(v:string):void; }\n"+
-            "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; }\n"+
-            "export class ConnectionStatusResponse { getStatus():number; }\n"+
-            "export enum ConnectionStatus { CONNECTED=0, DISCONNECTED=1 }\n"+
-            "export class StateChangedRequest { setState(v:any):void; }\n"+
+            $"export class {vmName}State {{}}\n" +
+            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; setNewValue(v:any):void; }\n" +
+            "export class SubscribeRequest { setClientId(v:string):void; }\n" +
+            "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; }\n" +
+            "export class ConnectionStatusResponse { getStatus():number; }\n" +
+            "export enum ConnectionStatus { CONNECTED=0, DISCONNECTED=1 }\n" +
+            "export class StateChangedRequest { setState(v:any):void; }\n" +
             "export class CancelTestRequest {}\n");
     }
 
@@ -127,11 +134,15 @@ export class {serviceName}Client {{
     {
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
-        var vmCode = "public class ObservablePropertyAttribute : System.Attribute {}\n" +
-                     "public class RelayCommandAttribute : System.Attribute {}\n" +
-                     (extraCode ?? string.Empty) +
-                     $"public partial class TestViewModel : ObservableObject {{ [ObservableProperty] public partial {propertyType} {propertyName} {{ get; set; }} }}\n" +
-                     "public class ObservableObject {}";
+        var vmCode = $@"
+public class ObservablePropertyAttribute : System.Attribute {{}}
+public class RelayCommandAttribute : System.Attribute {{}}
+{extraCode ?? string.Empty}
+public partial class TestViewModel : ObservableObject {{
+    [ObservableProperty] public partial {propertyType} {propertyName} {{ get; set; }}
+}}
+public class ObservableObject {{}}
+";
         var vmFile = Path.Combine(tempDir, "TestViewModel.cs");
         File.WriteAllText(vmFile, vmCode);
         var refs = LoadDefaultRefs();
@@ -184,65 +195,63 @@ class FakeClient extends {name}ServiceClient {{
   ""include"": [""**/*.ts"", ""**/*.js""]
 }";
         File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
-        try
-        {
-            RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
-        }
-        catch
-        {
+            
+        var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+        if (result.StartsWith("Powershell"))
             RunCmd("tsc", "--project tsconfig.json", tempDir);
-        }
 
+        if (result.Length > 0) Assert.Fail(result);
+       
         RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
     }
 
     [Fact]
-    public async Task Generated_TypeScript_Compiles_With_Int_Property()
-    {
-        await RunSimpleCompilationTest("int", "Value", "42", "if (client.value !== 42) throw new Error('Int property transfer failed');");
-    }
+public async Task Generated_TypeScript_Compiles_With_Int_Property()
+{
+    await RunSimpleCompilationTest("int", "Value", "42", "if (client.value !== 42) throw new Error('Int property transfer failed');");
+}
 
-    [Fact]
-    public async Task Generated_TypeScript_Compiles_With_String_Property()
-    {
-        await RunSimpleCompilationTest("string", "Text", "'hello'", "if (client.text !== 'hello') throw new Error('String property transfer failed');");
-    }
+[Fact]
+public async Task Generated_TypeScript_Compiles_With_String_Property()
+{
+    await RunSimpleCompilationTest("string", "Text", "'hello'", "if (client.text !== 'hello') throw new Error('String property transfer failed');");
+}
 
-    [Fact]
-    public async Task Generated_TypeScript_Compiles_With_Bool_Property()
-    {
-        await RunSimpleCompilationTest("bool", "Enabled", "true", "if (!client.enabled) throw new Error('Bool property transfer failed');");
-    }
+[Fact]
+public async Task Generated_TypeScript_Compiles_With_Bool_Property()
+{
+    await RunSimpleCompilationTest("bool", "Enabled", "true", "if (!client.enabled) throw new Error('Bool property transfer failed');");
+}
 
-    [Fact]
-    public async Task Generated_TypeScript_Compiles_With_Double_Property()
-    {
-        await RunSimpleCompilationTest("double", "Ratio", "0.5", "if (client.ratio !== 0.5) throw new Error('Double property transfer failed');");
-    }
+[Fact]
+public async Task Generated_TypeScript_Compiles_With_Double_Property()
+{
+    await RunSimpleCompilationTest("double", "Ratio", "0.5", "if (client.ratio !== 0.5) throw new Error('Double property transfer failed');");
+}
 
-    [Fact]
-    public async Task Generated_TypeScript_Compiles_With_Enum_Property()
-    {
-        await RunSimpleCompilationTest("Mode", "Mode", "1", "if (client.mode !== 1) throw new Error('Enum property transfer failed');", "public enum Mode { A, B }\\n");
-    }
+[Fact]
+public async Task Generated_TypeScript_Compiles_With_Enum_Property()
+{
+    await RunSimpleCompilationTest("Mode", "Mode", "1", "if (client.mode !== 1) throw new Error('Enum property transfer failed');", "public enum Mode { A, B }\\n");
+}
 
-    [Fact]
-    public async Task Generated_TypeScript_Compiles_And_Transfers_Dictionary()
-    {
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempDir);
-        var vmCode = @"public class ObservablePropertyAttribute : System.Attribute {}\npublic class RelayCommandAttribute : System.Attribute {}\nnamespace HP.Telemetry { public enum Zone { CPUZ_0, CPUZ_1 } }\nnamespace HPSystemsTools.ViewModels { public class ThermalZoneComponentViewModel { public HP.Telemetry.Zone Zone { get; set; } public int Temperature { get; set; } } }\npublic partial class TestViewModel : ObservableObject { [ObservableProperty] public partial System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones { get; set; } }\npublic class ObservableObject {}";
-        var vmFile = Path.Combine(tempDir, "TestViewModel.cs");
-        File.WriteAllText(vmFile, vmCode);
-        var refs = LoadDefaultRefs();
-        var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
-        var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
-        var tsClientFile = Path.Combine(tempDir, name + "RemoteClient.ts");
-        File.WriteAllText(tsClientFile, ts);
+[Fact]
+public async Task Generated_TypeScript_Compiles_And_Transfers_Dictionary()
+{
+    var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(tempDir);
+    var vmCode = @"public class ObservablePropertyAttribute : System.Attribute {}\npublic class RelayCommandAttribute : System.Attribute {}\nnamespace HP.Telemetry { public enum Zone { CPUZ_0, CPUZ_1 } }\nnamespace HPSystemsTools.ViewModels { public class ThermalZoneComponentViewModel { public HP.Telemetry.Zone Zone { get; set; } public int Temperature { get; set; } } }\npublic partial class TestViewModel : ObservableObject { [ObservableProperty] public partial System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones { get; set; } }\npublic class ObservableObject {}";
+    var vmFile = Path.Combine(tempDir, "TestViewModel.cs");
+    File.WriteAllText(vmFile, vmCode);
+    var refs = LoadDefaultRefs();
+    var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
+    var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
+    var tsClientFile = Path.Combine(tempDir, name + "RemoteClient.ts");
+    File.WriteAllText(tsClientFile, ts);
 
-        CreateTsStubs(tempDir, name, name + "Service");
+    CreateTsStubs(tempDir, name, name + "Service");
 
-        var testTs = $@"
+    var testTs = $@"
 declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
 import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
@@ -268,9 +277,9 @@ class FakeClient extends {name}ServiceClient {{
   client.dispose();
 }})().catch(e => {{ console.error(e); process.exit(1); }});
 ";
-        File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
+    File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
 
-        var tsconfig = @"{
+    var tsconfig = @"{
   ""compilerOptions"": {
     ""target"": ""es2018"",
     ""module"": ""commonjs"",
@@ -282,16 +291,14 @@ class FakeClient extends {name}ServiceClient {{
   },
   ""include"": [""**/*.ts"", ""**/*.js""]
 }";
-        File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
-        try
-        {
-            RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
-        }
-        catch
-        {
-            RunCmd("tsc", "--project tsconfig.json", tempDir);
-        }
+    File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
 
-        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
-    }
+    var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+    if (result.StartsWith("Powershell"))
+        RunCmd("tsc", "--project tsconfig.json", tempDir);
+
+    if (result.Length > 0) Assert.Fail(result);
+
+    RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+}
 }

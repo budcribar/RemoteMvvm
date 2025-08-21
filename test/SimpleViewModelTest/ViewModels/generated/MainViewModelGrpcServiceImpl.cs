@@ -10,6 +10,7 @@ using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel;
@@ -118,6 +119,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             {
                 var typedCommand = _viewModel.UpdateStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus>;
                 if (typedCommand != null) typedCommand.Execute((SimpleViewModelTest.ViewModels.DeviceStatus)request.Status); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:MainViewModel] Command UpdateStatusCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -135,15 +137,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
 
         var notification = new Generated.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
-        if (newValue == null) notification.NewValue = Any.Pack(new Empty());
-        else if (newValue is string s) notification.NewValue = Any.Pack(new StringValue { Value = s });
-        else if (newValue is int i) notification.NewValue = Any.Pack(new Int32Value { Value = i });
-        else if (newValue is bool b) notification.NewValue = Any.Pack(new BoolValue { Value = b });
-        else if (newValue is double d) notification.NewValue = Any.Pack(new DoubleValue { Value = d });
-        else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });
-        else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });
-        else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
-        else { Debug.WriteLine($"[GrpcService:MainViewModel] PropertyChanged: Packing not implemented for type {(newValue?.GetType().FullName ?? "null")} of property {e.PropertyName}."); notification.NewValue = Any.Pack(new StringValue { Value = newValue.ToString() }); }
+        notification.NewValue = PackToAny(newValue);
 
         foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
         {
@@ -151,5 +145,73 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:MainViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
             catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
         }
+    }
+
+    private static Any PackToAny(object? value)
+    {
+        if (value == null) return Any.Pack(new Empty());
+        switch (value)
+        {
+            case string s: return Any.Pack(new StringValue { Value = s });
+            case int i: return Any.Pack(new Int32Value { Value = i });
+            case bool b: return Any.Pack(new BoolValue { Value = b });
+            case double d: return Any.Pack(new DoubleValue { Value = d });
+            case float f: return Any.Pack(new FloatValue { Value = f });
+            case long l: return Any.Pack(new Int64Value { Value = l });
+            case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
+            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
+        }
+        if (value is IDictionary dict)
+        {
+            var sv = new Struct();
+            foreach (DictionaryEntry entry in dict)
+                sv.Fields[entry.Key?.ToString() ?? string.Empty] = ToValue(entry.Value);
+            return Any.Pack(sv);
+        }
+        if (value is IEnumerable enumerable && value is not string)
+        {
+            var lv = new ListValue();
+            foreach (var item in enumerable)
+                lv.Values.Add(ToValue(item));
+            return Any.Pack(lv);
+        }
+        var structValue = new Struct();
+        foreach (var prop in value.GetType().GetProperties())
+            structValue.Fields[prop.Name] = ToValue(prop.GetValue(value));
+        return Any.Pack(structValue);
+    }
+
+    private static Value ToValue(object? value)
+    {
+        if (value == null) return Value.ForNull();
+        switch (value)
+        {
+            case string s: return Value.ForString(s);
+            case bool b: return Value.ForBool(b);
+            case int i: return Value.ForNumber(i);
+            case long l: return Value.ForNumber(l);
+            case double d: return Value.ForNumber(d);
+            case float f: return Value.ForNumber(f);
+            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
+            case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString("o"));
+        }
+        if (value is IDictionary dict)
+        {
+            var sv = new Struct();
+            foreach (DictionaryEntry entry in dict)
+                sv.Fields[entry.Key?.ToString() ?? string.Empty] = ToValue(entry.Value);
+            return Value.ForStruct(sv);
+        }
+        if (value is IEnumerable enumerable && value is not string)
+        {
+            var lv = new List<Value>();
+            foreach (var item in enumerable)
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
+        }
+        var structValue = new Struct();
+        foreach (var prop in value.GetType().GetProperties())
+            structValue.Fields[prop.Name] = ToValue(prop.GetValue(value));
+        return Value.ForStruct(structValue);
     }
 }

@@ -73,13 +73,15 @@ namespace SampleViewModel
         [Fact]
         public async Task GeneratedOutputs_MatchExpected()
         {
-            var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
-            var (_, files) = await GenerateAsync(tempDir);
             var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+            var actualDir = Path.Combine(root, "test", "SampleViewModel", "actual2");
+           
+            var (_, files) = await GenerateAsync(actualDir);
+           
             var expectedDir = Path.Combine(root, "test", "SampleViewModel", "expected");
             foreach (var expected in Directory.GetFiles(expectedDir))
             {
-                var generatedPath = Path.Combine(tempDir, Path.GetFileName(expected));
+                var generatedPath = Path.Combine(actualDir, Path.GetFileName(expected));
                 Assert.True(File.Exists(generatedPath), $"Expected output {generatedPath} not found");
                 AssertFileEqual(expected, generatedPath);
             }

@@ -82,7 +82,7 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("            }));");
         sb.AppendLine();
         sb.AppendLine("            // Register the gRPC service implementation with ASP.NET Core DI");
-        sb.AppendLine("            builder.Services.AddSingleton(_grpcService);");
+        sb.AppendLine("            builder.Services.AddSingleton(_grpcService!);");
         sb.AppendLine();
         sb.AppendLine("            // Configure Kestrel to listen on the specified port with HTTP/2 support");
         sb.AppendLine("            builder.WebHost.ConfigureKestrel(kestrelOptions =>");
@@ -118,6 +118,7 @@ public static class ViewModelPartialGenerator
         sb.AppendLine($"        public {vmName}(ClientOptions options)");
         sb.AppendLine("        {");
         sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
+        if (runType == "wpf" || runType == "winforms") sb.AppendLine("            _dispatcher = null!;");
         sb.AppendLine("            _channel = GrpcChannel.ForAddress(options.Address);");
         sb.AppendLine($"            var client = new {serviceName}.{serviceName}Client(_channel);");
         sb.AppendLine($"            _remoteClient = new {vmName}RemoteClient(client);");

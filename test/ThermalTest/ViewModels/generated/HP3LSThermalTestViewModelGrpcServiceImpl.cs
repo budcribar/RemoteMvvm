@@ -140,6 +140,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             {
                 var typedCommand = _viewModel.StateChangedCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<HPSystemsTools.Models.ThermalStateEnum>;
                 if (typedCommand != null) typedCommand.Execute((HPSystemsTools.Models.ThermalStateEnum)request.State); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Command StateChangedCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -156,6 +157,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Command CancelTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -195,7 +197,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             case float f: return Any.Pack(new FloatValue { Value = f });
             case long l: return Any.Pack(new Int64Value { Value = l });
             case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
-            case Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
+            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
         }
         if (value is IDictionary dict)
         {
@@ -228,7 +230,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             case long l: return Value.ForNumber(l);
             case double d: return Value.ForNumber(d);
             case float f: return Value.ForNumber(f);
-            case Enum e: return Value.ForNumber(Convert.ToInt32(e));
+            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
             case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString("o"));
         }
         if (value is IDictionary dict)
@@ -240,10 +242,10 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         }
         if (value is IEnumerable enumerable && value is not string)
         {
-            var lv = new ListValue();
+            var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Values.Add(ToValue(item));
-            return Value.ForList(lv);
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())

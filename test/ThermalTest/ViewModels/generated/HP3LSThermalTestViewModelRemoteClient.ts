@@ -7,7 +7,7 @@ import { HP3LSThermalTestViewModelState, UpdatePropertyValueRequest, SubscribeRe
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export interface ThermalZoneState {
   zone: number;
@@ -57,7 +57,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZonesMap().toObject();
+        this.zones = (state as any).getZones();
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -69,7 +69,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZonesMap().toObject();
+        this.zones = (state as any).getZones();
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -89,10 +89,16 @@ export class HP3LSThermalTestViewModelRemoteClient {
             const wrapper = new StringValue();
             wrapper.setValue(value);
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
-        } else if (typeof value === 'number' && Number.isInteger(value)) {
-            const wrapper = new Int32Value();
-            wrapper.setValue(value);
-            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+        } else if (typeof value === 'number') {
+            if (Number.isInteger(value)) {
+                const wrapper = new Int32Value();
+                wrapper.setValue(value);
+                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+            } else {
+                const wrapper = new DoubleValue();
+                wrapper.setValue(value);
+                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.DoubleValue');
+            }
         } else if (typeof value === 'boolean') {
             const wrapper = new BoolValue();
             wrapper.setValue(value);
