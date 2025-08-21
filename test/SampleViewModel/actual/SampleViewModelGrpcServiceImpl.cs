@@ -4,8 +4,8 @@
 
 #nullable enable
 using Grpc.Core;
-using Generated.Protos;
-using SimpleViewModelTest.ViewModels;
+using SampleApp.ViewModels.Protos;
+using SampleApp.ViewModels;
 using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Linq;
@@ -20,7 +20,7 @@ using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
 using System.Windows.Threading;
 
-public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainViewModelServiceBase
+public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServiceBase
 {
     public static event System.EventHandler<int>? ClientCountChanged;
     private static int _clientCount = -1;
@@ -37,17 +37,17 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         }
     }
 
-    static MainViewModelGrpcServiceImpl()
+    static SampleViewModelGrpcServiceImpl()
     {
         ClientCount = 0;
     }
 
-    private readonly MainViewModel _viewModel;
-    private static readonly ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>>();
+    private readonly SampleViewModel _viewModel;
+    private static readonly ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>>();
     private readonly Dispatcher _dispatcher;
     private readonly ILogger? _logger;
 
-    public MainViewModelGrpcServiceImpl(MainViewModel viewModel, Dispatcher dispatcher, ILogger<MainViewModelGrpcServiceImpl>? logger = null)
+    public SampleViewModelGrpcServiceImpl(SampleViewModel viewModel, Dispatcher dispatcher, ILogger<SampleViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
@@ -55,22 +55,29 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
     }
 
-    public override Task<MainViewModelState> GetState(Empty request, ServerCallContext context)
+    public override Task<SampleViewModelState> GetState(Empty request, ServerCallContext context)
     {
-        var state = new MainViewModelState();
-        // Mapping property: Devices to state.Devices
+        var state = new SampleViewModelState();
+        // Mapping property: Name to state.Name
         try
         {
-            var propValue = _viewModel.Devices;
-            if (propValue != null) state.Devices.Add(propValue.Select(ProtoStateConverters.ToProto));
+            var propValue = _viewModel.Name;
+            state.Name = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error mapping property Devices to state.Devices: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Name to state.Name: " + ex.Message); }
+        // Mapping property: Count to state.Count
+        try
+        {
+            var propValue = _viewModel.Count;
+            state.Count = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Count to state.Count: " + ex.Message); }
         return Task.FromResult(state);
     }
 
-    public override async Task SubscribeToPropertyChanges(Generated.Protos.SubscribeRequest request, IServerStreamWriter<Generated.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
+    public override async Task SubscribeToPropertyChanges(SampleApp.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
-        var channel = Channel.CreateUnbounded<Generated.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
+        var channel = Channel.CreateUnbounded<SampleApp.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         _subscriberChannels.TryAdd(responseStream, channel);
         ClientCount = _subscriberChannels.Count;
         try
@@ -88,7 +95,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         }
     }
 
-    public override Task<Empty> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override Task<Empty> UpdatePropertyValue(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
         _dispatcher.Invoke(() => {
         var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
@@ -98,10 +105,10 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
                 if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
                 else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
                 else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
-                else { Debug.WriteLine("[GrpcService:MainViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-            } catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+                else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
+            } catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
         }
-        else { Debug.WriteLine("[GrpcService:MainViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+        else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
         });
         return Task.FromResult(new Empty());
     }
@@ -111,21 +118,54 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });
     }
 
-    public override async Task<Generated.Protos.UpdateStatusResponse> UpdateStatus(Generated.Protos.UpdateStatusRequest request, ServerCallContext context)
+    public override async Task<SampleApp.ViewModels.Protos.IncrementCountResponse> IncrementCount(SampleApp.ViewModels.Protos.IncrementCountRequest request, ServerCallContext context)
     {
         try { await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.UpdateStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            var command = _viewModel.IncrementCountCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
             if (command != null)
             {
-                var typedCommand = _viewModel.UpdateStatusCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus>;
-                if (typedCommand != null) typedCommand.Execute((SimpleViewModelTest.ViewModels.DeviceStatus)request.Status); else command.Execute(request);
+                command.Execute(null);
             }
-            else { Debug.WriteLine("[GrpcService:MainViewModel] Command UpdateStatusCommand not found or not IRelayCommand."); }
+            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command IncrementCountCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
-        Debug.WriteLine("[GrpcService:MainViewModel] Exception during command execution for UpdateStatus: " + ex.ToString());
+        Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for IncrementCount: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new Generated.Protos.UpdateStatusResponse();
+        return new SampleApp.ViewModels.Protos.IncrementCountResponse();
+    }
+
+    public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse> DelayedIncrementAsync(SampleApp.ViewModels.Protos.DelayedIncrementAsyncRequest request, ServerCallContext context)
+    {
+        try { await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<int>;
+                if (typedCommand != null) await typedCommand.ExecuteAsync(request.DelayMilliseconds); else await command.ExecuteAsync(request);
+            }
+            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command DelayedIncrementCommand not found or not IAsyncRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for DelayedIncrementAsync: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse();
+    }
+
+    public override async Task<SampleApp.ViewModels.Protos.SetNameToValueResponse> SetNameToValue(SampleApp.ViewModels.Protos.SetNameToValueRequest request, ServerCallContext context)
+    {
+        try { await _dispatcher.InvokeAsync(async () => {
+            var command = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
+            if (command != null)
+            {
+                var typedCommand = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string?>;
+                if (typedCommand != null) typedCommand.Execute(request.Value); else command.Execute(request);
+            }
+            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command SetNameToValueCommand not found or not IRelayCommand."); }
+        }); } catch (Exception ex) {
+        Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for SetNameToValue: " + ex.ToString());
+        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        }
+        return new SampleApp.ViewModels.Protos.SetNameToValueResponse();
     }
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -133,16 +173,16 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         if (string.IsNullOrEmpty(e.PropertyName)) return;
         object? newValue = null;
         try { newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
 
-        var notification = new Generated.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
+        var notification = new SampleApp.ViewModels.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
         notification.NewValue = PackToAny(newValue);
 
         foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
         {
             try { await channelWriter.WriteAsync(notification); }
-            catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:MainViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
-            catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
+            catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:SampleViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
+            catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
         }
     }
 
