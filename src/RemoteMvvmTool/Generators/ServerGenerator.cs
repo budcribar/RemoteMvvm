@@ -55,7 +55,7 @@ public static class ServerGenerator
         sb.AppendLine();
         sb.AppendLine($"    private readonly {vmName} _viewModel;");
         sb.AppendLine($"    private static readonly ConcurrentDictionary<IServerStreamWriter<{protoNs}.PropertyChangeNotification>, Channel<{protoNs}.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<{protoNs}.PropertyChangeNotification>, Channel<{protoNs}.PropertyChangeNotification>>();");
-        if (runType == "wpf") sb.AppendLine("    private readonly Dispatcher _dispatcher;");
+        if (runType == "wpf") sb.AppendLine("    private readonly Dispatcher? _dispatcher;");
         else if (runType == "winforms") sb.AppendLine("    private readonly Control _dispatcher;");
         sb.AppendLine("    private readonly ILogger? _logger;");
         sb.AppendLine();
