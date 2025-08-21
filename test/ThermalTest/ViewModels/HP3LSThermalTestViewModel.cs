@@ -4,56 +4,55 @@ using HP.Telemetry;
 using HPSystemsTools.Models;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace HPSystemsTools.ViewModels
 {
     public partial class HP3LSThermalTestViewModel : ObservableObject
     {
-
-        private HP3LSThermalTest _test;
-
-        private int _cpuTemperatureThreshold;
-        private int _cpuLoadThreshold;
-        private int _cpuLoadTimeSpan;
+        public Dictionary<Zone, ThermalZoneComponentViewModel> Zones = [];
+        private HP3LSThermalTest _test = default!;
 
         public HP3LSThermalTestViewModel()
         {
-            TestSettings = new TestSettingsModel();
         }
 
-        public int CpuTemperatureThreshold
+        [ObservableProperty]
+        public partial int CpuTemperatureThreshold { get; set; }
+
+        [ObservableProperty]
+        public partial int CpuLoadThreshold { get; set; }
+
+        [ObservableProperty]
+        public partial int CpuLoadTimeSpan { get; set; }
+
+        partial void OnCpuTemperatureThresholdChanged(int value)
         {
-            get => _cpuTemperatureThreshold;
-            set
-            {
+            if (TestSettings != null)
                 TestSettings.CpuTemperatureThreshold = value;
-                SetProperty(ref _cpuTemperatureThreshold, value);
-            }
         }
-        public int CpuLoadThreshold
+
+        partial void OnCpuLoadThresholdChanged(int value)
         {
-            get => _cpuLoadThreshold;
-            set
-            {
+            if (TestSettings != null)
                 TestSettings.CpuLoadThreshold = value;
-                SetProperty(ref _cpuLoadThreshold, value);
-            }
         }
-        public int CpuLoadTimeSpan
+
+        partial void OnCpuLoadTimeSpanChanged(int value)
         {
-            get => _cpuLoadTimeSpan;
-            set
-            {
+            if (TestSettings != null)
                 TestSettings.CpuLoadTimeSpan = value;
-                SetProperty(ref _cpuLoadTimeSpan, value);
-            }
         }
-        [ObservableProperty]
-        public partial Dictionary<Zone, ThermalZoneComponentViewModel> Zones { get; set; }
+
+
 
         [ObservableProperty]
-        internal partial TestSettingsModel TestSettings { get; set; }
+        public partial ObservableCollection<ThermalZoneComponentViewModel> ZoneList { get; set; } = [];
+
+        [ObservableProperty]
+        internal partial TestSettingsModel TestSettings { get; set; } = default!;
 
         /// <summary>
         /// Controls the visibility of the description section.
@@ -73,11 +72,13 @@ namespace HPSystemsTools.ViewModels
 
             TestSettings = new TestSettingsModel();
 
-            Zones = new Dictionary<Zone, ThermalZoneComponentViewModel>
+            var zones = new[]
             {
-                { Zone.CPUZ_0, new ThermalZoneComponentViewModel(Zone.CPUZ_0) },
-                { Zone.CPUZ_1, new ThermalZoneComponentViewModel(Zone.CPUZ_1) }
+                new ThermalZoneComponentViewModel(Zone.CPUZ_0),
+                new ThermalZoneComponentViewModel(Zone.CPUZ_1)
             };
+            Zones = zones.ToDictionary(z => z.Zone, z => z);
+            ZoneList = new ObservableCollection<ThermalZoneComponentViewModel>(zones);
 
             CpuLoadThreshold = TestSettings.CpuLoadThreshold;
             CpuTemperatureThreshold = TestSettings.CpuTemperatureThreshold;

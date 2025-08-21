@@ -44,7 +44,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     private readonly HP3LSThermalTestViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher _dispatcher;
+    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
     public HP3LSThermalTestViewModelGrpcServiceImpl(HP3LSThermalTestViewModel viewModel, Dispatcher dispatcher, ILogger<HP3LSThermalTestViewModelGrpcServiceImpl>? logger = null)
@@ -58,13 +58,34 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
     public override Task<HP3LSThermalTestViewModelState> GetState(Empty request, ServerCallContext context)
     {
         var state = new HP3LSThermalTestViewModelState();
-        // Mapping property: Zones to state.Zones
+        // Mapping property: CpuTemperatureThreshold to state.CpuTemperatureThreshold
         try
         {
-            var propValue = _viewModel.Zones;
-            if (propValue != null) state.Zones.Add(propValue.ToDictionary(kv => (int)kv.Key, kv => ProtoStateConverters.ToProto(kv.Value)));
+            var propValue = _viewModel.CpuTemperatureThreshold;
+            state.CpuTemperatureThreshold = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property Zones to state.Zones: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuTemperatureThreshold to state.CpuTemperatureThreshold: " + ex.Message); }
+        // Mapping property: CpuLoadThreshold to state.CpuLoadThreshold
+        try
+        {
+            var propValue = _viewModel.CpuLoadThreshold;
+            state.CpuLoadThreshold = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuLoadThreshold to state.CpuLoadThreshold: " + ex.Message); }
+        // Mapping property: CpuLoadTimeSpan to state.CpuLoadTimeSpan
+        try
+        {
+            var propValue = _viewModel.CpuLoadTimeSpan;
+            state.CpuLoadTimeSpan = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuLoadTimeSpan to state.CpuLoadTimeSpan: " + ex.Message); }
+        // Mapping property: ZoneList to state.ZoneList
+        try
+        {
+            var propValue = _viewModel.ZoneList;
+            if (propValue != null) state.ZoneList.Add(propValue.Select(ProtoStateConverters.ToProto));
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ZoneList to state.ZoneList: " + ex.Message); }
         // Mapping property: TestSettings to state.TestSettings
         try
         {

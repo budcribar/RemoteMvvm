@@ -35,11 +35,32 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        private System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> _zones = default!;
-        public System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> Zones
+        private int _cpuTemperatureThreshold = default!;
+        public int CpuTemperatureThreshold
         {
-            get => _zones;
-            private set => SetProperty(ref _zones, value);
+            get => _cpuTemperatureThreshold;
+            private set => SetProperty(ref _cpuTemperatureThreshold, value);
+        }
+
+        private int _cpuLoadThreshold = default!;
+        public int CpuLoadThreshold
+        {
+            get => _cpuLoadThreshold;
+            private set => SetProperty(ref _cpuLoadThreshold, value);
+        }
+
+        private int _cpuLoadTimeSpan = default!;
+        public int CpuLoadTimeSpan
+        {
+            get => _cpuLoadTimeSpan;
+            private set => SetProperty(ref _cpuLoadTimeSpan, value);
+        }
+
+        private System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> _zoneList = default!;
+        public System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> ZoneList
+        {
+            get => _zoneList;
+            private set => SetProperty(ref _zoneList, value);
         }
 
         private HPSystemsTools.Models.TestSettingsModel _testSettings = default!;
@@ -88,7 +109,10 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                             try
                             {
                                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);
-                                this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => (HP.Telemetry.Zone)k.Key, v => ProtoStateConverters.FromProto(v.Value)));
+                                this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
+                                this.CpuLoadThreshold = state.CpuLoadThreshold;
+                                this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
+                                this.ZoneList = new System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.ZoneList.Select(ProtoStateConverters.FromProto));
                                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                                 this.ShowDescription = state.ShowDescription;
                                 this.ShowReadme = state.ShowReadme;
@@ -127,7 +151,10 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Initial state received.");
-                this.Zones = new System.Collections.Generic.Dictionary<HP.Telemetry.Zone, HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.Zones.ToDictionary(k => (HP.Telemetry.Zone)k.Key, v => ProtoStateConverters.FromProto(v.Value)));
+                this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
+                this.CpuLoadThreshold = state.CpuLoadThreshold;
+                this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
+                this.ZoneList = new System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.ZoneList.Select(ProtoStateConverters.FromProto));
                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                 this.ShowDescription = state.ShowDescription;
                 this.ShowReadme = state.ShowReadme;
@@ -191,8 +218,14 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
                                switch (update.PropertyName)
                                {
-                                   case nameof(Zones):
-                                       Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for Zones with WKT Any not fully implemented or is Any."); break;
+                                   case nameof(CpuTemperatureThreshold):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating CpuTemperatureThreshold from {this.CpuTemperatureThreshold} to {val}."); this.CpuTemperatureThreshold = val; Debug.WriteLine($"After update, CpuTemperatureThreshold is {this.CpuTemperatureThreshold}."); } else { Debug.WriteLine($"Mismatched descriptor for CpuTemperatureThreshold, expected Int32Value."); } break;
+                                   case nameof(CpuLoadThreshold):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating CpuLoadThreshold from {this.CpuLoadThreshold} to {val}."); this.CpuLoadThreshold = val; Debug.WriteLine($"After update, CpuLoadThreshold is {this.CpuLoadThreshold}."); } else { Debug.WriteLine($"Mismatched descriptor for CpuLoadThreshold, expected Int32Value."); } break;
+                                   case nameof(CpuLoadTimeSpan):
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) { var val = update.NewValue.Unpack<Int32Value>().Value; Debug.WriteLine($"Updating CpuLoadTimeSpan from {this.CpuLoadTimeSpan} to {val}."); this.CpuLoadTimeSpan = val; Debug.WriteLine($"After update, CpuLoadTimeSpan is {this.CpuLoadTimeSpan}."); } else { Debug.WriteLine($"Mismatched descriptor for CpuLoadTimeSpan, expected Int32Value."); } break;
+                                   case nameof(ZoneList):
+                                       Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for ZoneList with WKT Any not fully implemented or is Any."); break;
                                    case nameof(TestSettings):
                                        Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for TestSettings with WKT Any not fully implemented or is Any."); break;
                                    case nameof(ShowDescription):
