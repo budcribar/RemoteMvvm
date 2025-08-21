@@ -101,6 +101,50 @@ public class ThermalViewModelGenerationTests
         Assert.Contains("ThermalZoneComponentViewModelState", conv);
     }
 
+    [Fact]
+    public async Task Generated_Server_Packs_PropertyChanges_For_Supported_Types()
+    {
+        var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
+        var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
+        var refs = LoadDefaultRefs();
+
+        var files = new[]
+        {
+            Path.Combine(vmDir, "HP3LSThermalTestViewModel.cs"),
+            Path.Combine(vmDir, "ThermalZoneComponentViewModel.cs"),
+            Path.Combine(vmDir, "ThermalStateEnum.cs"),
+            Path.Combine(vmDir, "IHpMonitor.cs"),
+            Path.Combine(vmDir, "TestSettingsModel.cs"),
+        };
+
+        var result = await ViewModelAnalyzer.AnalyzeAsync(
+            files,
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs);
+        var vmNamespace = result.ViewModelSymbol!.ContainingNamespace.ToDisplayString();
+        var server = ServerGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", result.Properties, result.Commands, vmNamespace);
+        Assert.Contains("notification.NewValue = PackToAny(newValue);", server);
+        Assert.Contains("private static Any PackToAny", server);
+        Assert.DoesNotContain("newValue is HPSystemsTools.Models.TestSettingsModel", server);
+
+        var tzResult = await ViewModelAnalyzer.AnalyzeAsync(
+            new[]
+            {
+                Path.Combine(vmDir, "ThermalZoneComponentViewModel.cs"),
+                Path.Combine(vmDir, "ThermalStateEnum.cs"),
+                Path.Combine(vmDir, "IHpMonitor.cs"),
+                Path.Combine(vmDir, "TestSettingsModel.cs"),
+            },
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs);
+        var tzNs = tzResult.ViewModelSymbol!.ContainingNamespace.ToDisplayString();
+        var tzServer = ServerGenerator.Generate(tzResult.ViewModelName, "Generated.Protos", tzResult.ViewModelName + "Service", tzResult.Properties, tzResult.Commands, tzNs);
+        Assert.Contains("notification.NewValue = PackToAny(newValue);", tzServer);
+        Assert.DoesNotContain("newValue is HP.Telemetry.Zone", tzServer);
+    }
+
 
     [Fact]
     public async Task RemoteMvvmTool_Generates_Code_Successfully()
