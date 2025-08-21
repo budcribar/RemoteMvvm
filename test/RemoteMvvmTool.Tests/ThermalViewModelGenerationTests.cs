@@ -74,7 +74,7 @@ public class ThermalViewModelGenerationTests
     }
 
     [Fact]
-    public async Task Generated_Client_Handles_Dictionary_Property()
+    public async Task Generated_Code_Handles_ObservableCollection_Property()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
         var vmDir = Path.Combine(root, "test", "ThermalTest", "ViewModels");
@@ -93,9 +93,27 @@ public class ThermalViewModelGenerationTests
             "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
             "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
             refs);
-        var client = ClientGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", result.Properties, result.Commands, string.Empty);
-        Assert.Contains("ToDictionary(k => (HP.Telemetry.Zone)k.Key, v => ProtoStateConverters.FromProto(v.Value))", client);
-        var rootTypes = result.Properties.Select(p => p.FullTypeSymbol!)
+
+        // Manually add an ObservableCollection-based property to ensure generators handle it
+        var tzType = result.Compilation.GetTypeByMetadataName("HPSystemsTools.ViewModels.ThermalZoneComponentViewModel")!;
+        var ocDef = result.Compilation.GetTypeByMetadataName("System.Collections.ObjectModel.ObservableCollection`1")!;
+        var ocType = ocDef.Construct(tzType);
+        var zoneListProp = new PropertyInfo(
+            "ZoneList",
+            $"System.Collections.ObjectModel.ObservableCollection<{tzType.ToDisplayString()}>",
+            ocType);
+        var props = result.Properties.Concat(new[] { zoneListProp }).ToList();
+
+        var client = ClientGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", props, result.Commands, string.Empty);
+        Assert.Contains("new System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.ZoneList.Select(ProtoStateConverters.FromProto))", client);
+
+        var server = ServerGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", props, result.Commands, result.ViewModelSymbol!.ContainingNamespace.ToDisplayString());
+        Assert.Contains("state.ZoneList.Add(propValue.Select(ProtoStateConverters.ToProto))", server);
+
+        var tsClient = TypeScriptClientGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", props, result.Commands);
+        Assert.Contains("zoneList: ThermalZoneState[]", tsClient);
+
+        var rootTypes = props.Select(p => p.FullTypeSymbol!)
             .Concat(result.Commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!)));
         var conv = ConversionGenerator.Generate("Generated.Protos", result.ViewModelSymbol!.ContainingNamespace.ToDisplayString(), rootTypes, result.Compilation);
         Assert.Contains("ThermalZoneComponentViewModelState", conv);
