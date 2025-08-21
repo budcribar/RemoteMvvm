@@ -57,8 +57,8 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZones();
-        this.testSettings = (state as any).getTestSettings();
+        this.zones = (state as any).getZonesMap().toObject();
+        this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
         this.connectionStatus = 'Connected';
@@ -69,8 +69,8 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.zones = (state as any).getZones();
-        this.testSettings = (state as any).getTestSettings();
+        this.zones = (state as any).getZonesMap().toObject();
+        this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
         this.notifyChange();
