@@ -92,7 +92,11 @@ namespace GrpcRemoteMvvmModelUtil
                     name = name.Substring(0, genericPos);
                 return name;
             }
-
+            static string StripGenerics(string name)
+            {
+                var index = name.IndexOf('<');
+                return index >= 0 ? name.Substring(0, index) : name;
+            }
             static bool SymbolMatches(INamedTypeSymbol symbol, string fullName)
             {
                 var fqn = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
