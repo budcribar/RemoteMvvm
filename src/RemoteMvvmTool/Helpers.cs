@@ -16,6 +16,8 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 foreach (var member in currentType.GetMembers())
                 {
+                    if (member.IsStatic)
+                        continue;
                     if (seen.Add(member))
                         yield return member;
                 }
@@ -26,6 +28,8 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 foreach (var member in iface.GetMembers())
                 {
+                    if (member.IsStatic)
+                        continue;
                     if (seen.Add(member))
                         yield return member;
                 }
@@ -42,6 +46,7 @@ namespace GrpcRemoteMvvmModelUtil
 
             static string Normalize(string name)
             {
+                name = name.Trim();
                 if (name.StartsWith("global::", StringComparison.Ordinal))
                     name = name.Substring("global::".Length);
 
@@ -77,13 +82,30 @@ namespace GrpcRemoteMvvmModelUtil
 
         public static bool InheritsFrom(INamedTypeSymbol? typeSymbol, string baseTypeFullName)
         {
-            static string Normalize(string name) =>
-                name.StartsWith("global::", StringComparison.Ordinal) ? name.Substring("global::".Length) : name;
+            static string Normalize(string name)
+            {
+                name = name.Trim();
+                if (name.StartsWith("global::", StringComparison.Ordinal))
+                    name = name.Substring("global::".Length);
+                var genericPos = name.IndexOf('<');
+                if (genericPos >= 0)
+                    name = name.Substring(0, genericPos);
+                return name;
+            }
 
             static bool SymbolMatches(INamedTypeSymbol symbol, string fullName)
             {
-                var fqn = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted));
-                return string.Equals(Normalize(fqn), Normalize(fullName), StringComparison.OrdinalIgnoreCase);
+                var normalizedTarget = Normalize(fullName);
+                var fqn = Normalize(symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)));
+                if (string.Equals(fqn, normalizedTarget, StringComparison.OrdinalIgnoreCase))
+                    return true;
+                if (symbol.IsGenericType)
+                {
+                    var generic = Normalize(symbol.ConstructedFrom.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat.WithGlobalNamespaceStyle(SymbolDisplayGlobalNamespaceStyle.Omitted)));
+                    if (string.Equals(generic, normalizedTarget, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+                return false;
             }
 
             static bool InterfaceMatches(INamedTypeSymbol symbol, string fullName)
