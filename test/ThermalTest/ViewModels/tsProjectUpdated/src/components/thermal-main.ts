@@ -1,0 +1,249 @@
+// Web Component: <x-thermal-main>
+// Encapsulates the main CPU Thermal Test page UI translated from the Razor snippet.
+// Attributes:
+// - title: string (default "CPU Thermal Test")
+// - show-description: boolean
+// - instructions: string (text content for description)
+// - show-readme: boolean
+// - label-temp-threshold, label-processor-max-load, label-monitoring-period: strings
+// - temp-threshold: number (50-100)
+// - cpu-load-threshold: number (0-100)
+// - cpu-load-time: number (seconds 30-600)
+// - readme-show-previous: boolean (passes to <x-readme>)
+// - label-show-readme, label-hide-readme, label-show-description, label-hide-description, label-cancel: strings
+// - zones: JSON string array of zone objects to render using <x-thermal-zone>
+//
+// Events dispatched:
+// - change-temp-threshold { detail: { value: number } }
+// - change-cpu-load-threshold { detail: { value: number } }
+// - change-cpu-load-time { detail: { value: number } }
+// - toggle-readme { detail: { value: boolean } }
+// - toggle-description { detail: { value: boolean } }
+// - cancel { detail: {} }
+
+import './thermal-zone';
+import './readme';
+
+export class ThermalMainElement extends HTMLElement {
+  static get observedAttributes() {
+    return [
+      'title', 'show-description', 'instructions', 'show-readme',
+      'label-temp-threshold', 'label-processor-max-load', 'label-monitoring-period',
+      'temp-threshold', 'cpu-load-threshold', 'cpu-load-time',
+      'readme-show-previous',
+      'label-show-readme', 'label-hide-readme', 'label-show-description', 'label-hide-description', 'label-cancel',
+      'zones'
+    ];
+  }
+
+  private root: ShadowRoot;
+
+  constructor() {
+    super();
+    this.root = this.attachShadow({ mode: 'open' });
+    this.root.innerHTML = `
+      <style>
+        :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; }
+        .main-page-container { display: grid; gap: 16px; }
+        .test-title { font-size: 1.25rem; font-weight: 700; }
+        .test-description { background: #f7f7fa; padding: 10px 12px; border-radius: 8px; }
+        .test-parameters { display: grid; gap: 12px; }
+        .slider { background: #fff; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+        .slider-title { font-weight: 600; margin-bottom: 8px; }
+        .slider-content { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+        .slider-input input[type=range] { width: 100%; }
+        .slider-label label { font-weight: 600; min-width: 48px; display: inline-block; text-align: right; }
+        .thermal-zones-container { display: grid; gap: 12px; }
+        .show-hide-options { display: flex; gap: 8px; }
+        button { appearance: none; border: 1px solid rgba(0,0,0,0.1); background: #f4f6f8; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #eef1f5; }
+        .bottom { display: flex; justify-content: flex-end; }
+        .hidden { display: none; }
+      </style>
+      <div class="main-page-container">
+        <div class="test-title" id="title"></div>
+        <div id="descriptionWrap" class="test-description" hidden>
+          <span id="instructions"></span>
+        </div>
+
+        <div class="test-parameters">
+          <div class="slider">
+            <div class="slider-title" id="lblTemp"></div>
+            <div class="slider-content">
+              <div class="slider-input"><input id="sliderTemp" type="range" min="50" max="100" step="5"></div>
+              <div class="slider-label"><label id="valTemp" for="sliderTemp">0%</label></div>
+            </div>
+          </div>
+          <div class="slider">
+            <div class="slider-title" id="lblCpuLoad"></div>
+            <div class="slider-content">
+              <div class="slider-input"><input id="sliderCpuLoad" type="range" min="0" max="100" step="5"></div>
+              <div class="slider-label"><label id="valCpuLoad" for="sliderCpuLoad">0%</label></div>
+            </div>
+          </div>
+          <div class="slider">
+            <div class="slider-title" id="lblMonitor"></div>
+            <div class="slider-content">
+              <div class="slider-input"><input id="sliderTime" type="range" min="30" max="600" step="10"></div>
+              <div class="slider-label"><label id="valTime" for="sliderTime">0s</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="zones" class="thermal-zones-container"></div>
+
+        <div class="show-hide-options">
+          <button id="btnReadme"></button>
+          <button id="btnDesc"></button>
+        </div>
+
+        <div class="bottom full-width hidden" id="wirelessBtnContainer">
+          <button id="btnCancel" class="hp-btn secondary btn-margin"></button>
+        </div>
+
+        <div id="readmeWrap" hidden>
+          <x-readme id="readme"></x-readme>
+        </div>
+      </div>
+    `;
+  }
+
+  connectedCallback() {
+    const $ = (id: string) => this.root.getElementById(id)!;
+    // Wire slider events
+    ($('sliderTemp') as HTMLInputElement).addEventListener('input', () => {
+      const v = Number(($('sliderTemp') as HTMLInputElement).value);
+      ($('valTemp') as HTMLLabelElement).textContent = `${v}%`;
+      this.dispatchEvent(new CustomEvent('change-temp-threshold', { detail: { value: v } }));
+    });
+    ($('sliderCpuLoad') as HTMLInputElement).addEventListener('input', () => {
+      const v = Number(($('sliderCpuLoad') as HTMLInputElement).value);
+      ($('valCpuLoad') as HTMLLabelElement).textContent = `${v}%`;
+      this.dispatchEvent(new CustomEvent('change-cpu-load-threshold', { detail: { value: v } }));
+    });
+    ($('sliderTime') as HTMLInputElement).addEventListener('input', () => {
+      const v = Number(($('sliderTime') as HTMLInputElement).value);
+      ($('valTime') as HTMLLabelElement).textContent = `${v}s`;
+      this.dispatchEvent(new CustomEvent('change-cpu-load-time', { detail: { value: v } }));
+    });
+
+    // Toggle buttons
+    $('btnReadme').addEventListener('click', () => {
+      const curr = this.bool('show-readme');
+      this.setAttribute('show-readme', String(!curr));
+      this.dispatchEvent(new CustomEvent('toggle-readme', { detail: { value: !curr } }));
+    });
+    $('btnDesc').addEventListener('click', () => {
+      const curr = this.bool('show-description');
+      this.setAttribute('show-description', String(!curr));
+      this.dispatchEvent(new CustomEvent('toggle-description', { detail: { value: !curr } }));
+    });
+
+    // Cancel button
+    $('btnCancel').addEventListener('click', () => {
+      this.dispatchEvent(new CustomEvent('cancel', { detail: {} }));
+    });
+
+    this.renderAll();
+  }
+
+  attributeChangedCallback() {
+    if (!this.isConnected) return;
+    this.renderAll();
+  }
+
+  // Helpers
+  private str(name: string, def = ''): string {
+    const v = this.getAttribute(name);
+    return v == null ? def : v;
+  }
+  private num(name: string, def = 0): number {
+    const v = this.getAttribute(name);
+    const n = v == null ? NaN : Number(v);
+    return Number.isFinite(n) ? n : def;
+  }
+  private bool(name: string, def = false): boolean {
+    const v = this.getAttribute(name);
+    if (v == null) return def;
+    return v === '' || v.toLowerCase() === 'true' || v === '1';
+  }
+
+  private renderAll() {
+    const $ = (id: string) => this.root.getElementById(id)!;
+
+    // Title
+    $('title').textContent = this.str('title', 'CPU Thermal Test');
+
+    // Description
+    const showDesc = this.bool('show-description');
+    const descWrap = $('descriptionWrap');
+    descWrap.toggleAttribute('hidden', !showDesc);
+    $('instructions').textContent = this.str('instructions');
+
+    // Labels
+    $('lblTemp').textContent = this.str('label-temp-threshold', 'Temperature threshold to DTS');
+    $('lblCpuLoad').textContent = this.str('label-processor-max-load', 'Processor maximum load');
+    $('lblMonitor').textContent = this.str('label-monitoring-period', 'Monitoring period');
+
+    // Slider values (respect provided current values)
+    const temp = this.num('temp-threshold', 90);
+    const cpuLoad = this.num('cpu-load-threshold', 15);
+    const time = this.num('cpu-load-time', 60);
+    ( $('sliderTemp') as HTMLInputElement ).value = String(temp);
+    ( $('sliderCpuLoad') as HTMLInputElement ).value = String(cpuLoad);
+    ( $('sliderTime') as HTMLInputElement ).value = String(time);
+    ( $('valTemp') as HTMLLabelElement ).textContent = `${temp}%`;
+    ( $('valCpuLoad') as HTMLLabelElement ).textContent = `${cpuLoad}%`;
+    ( $('valTime') as HTMLLabelElement ).textContent = `${time}s`;
+
+    // Readme
+    const showReadme = this.bool('show-readme');
+    const readmeWrap = $('readmeWrap');
+    readmeWrap.toggleAttribute('hidden', !showReadme);
+    const readme = $('readme') as HTMLElement;
+    if (this.bool('readme-show-previous')) readme.setAttribute('show-previous', 'true'); else readme.removeAttribute('show-previous');
+
+    // Buttons
+    const lblShowReadme = this.str('label-show-readme', 'Show README');
+    const lblHideReadme = this.str('label-hide-readme', 'Hide README');
+    ( $('btnReadme') as HTMLButtonElement ).textContent = showReadme ? lblHideReadme : lblShowReadme;
+
+    const lblShowDesc = this.str('label-show-description', 'Show description');
+    const lblHideDesc = this.str('label-hide-description', 'Hide description');
+    ( $('btnDesc') as HTMLButtonElement ).textContent = showDesc ? lblHideDesc : lblShowDesc;
+
+    ( $('btnCancel') as HTMLButtonElement ).textContent = this.str('label-cancel', 'Cancel');
+
+    // Zones
+    const zonesHost = $('zones');
+    zonesHost.innerHTML = '';
+    try {
+      const zonesAttr = this.getAttribute('zones');
+      if (zonesAttr) {
+        const zones = JSON.parse(zonesAttr) as Array<any>;
+        for (const z of zones) {
+          const el = document.createElement('x-thermal-zone');
+          if (z.active !== undefined) el.setAttribute('active', String(!!z.active));
+          if (z.background) el.setAttribute('background', z.background);
+          if (z.status) el.setAttribute('status', z.status);
+          if (z.state) el.setAttribute('state', z.state);
+          if (z.progress !== undefined) el.setAttribute('progress', String(z.progress));
+          if (z.zone) el.setAttribute('zone', String(z.zone));
+          if (z.fanSpeed !== undefined) el.setAttribute('fan-speed', String(z.fanSpeed));
+          if (z.deviceName) el.setAttribute('device-name', z.deviceName);
+          if (z.temperature !== undefined) el.setAttribute('temperature', String(z.temperature));
+          if (z.maxTemp !== undefined) el.setAttribute('max-temp', String(z.maxTemp));
+          if (z.processorLoadName) el.setAttribute('processor-load-name', z.processorLoadName);
+          if (z.processorLoad !== undefined) el.setAttribute('processor-load', String(z.processorLoad));
+          if (z.cpuLoadThreshold !== undefined) el.setAttribute('cpu-load-threshold', String(z.cpuLoadThreshold));
+          if (z.stateDescriptions) el.setAttribute('state-descriptions', JSON.stringify(z.stateDescriptions));
+          zonesHost.appendChild(el);
+        }
+      }
+    } catch {
+      // ignore invalid JSON
+    }
+  }
+}
+
+customElements.define('x-thermal-main', ThermalMainElement);

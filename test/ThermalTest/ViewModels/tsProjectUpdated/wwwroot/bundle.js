@@ -2404,8 +2404,8 @@ class HP3LSThermalTestViewModelRemoteClient {
     }
     async initializeRemote() {
         const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
-        this.zones = state.getZones();
-        this.testSettings = state.getTestSettings();
+        this.zones = state.getZonesMap().toObject();
+        this.testSettings = state.getTestSettings()?.toObject();
         this.showDescription = state.getShowDescription();
         this.showReadme = state.getShowReadme();
         this.connectionStatus = 'Connected';
@@ -2415,8 +2415,8 @@ class HP3LSThermalTestViewModelRemoteClient {
     }
     async refreshState() {
         const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
-        this.zones = state.getZones();
-        this.testSettings = state.getTestSettings();
+        this.zones = state.getZonesMap().toObject();
+        this.testSettings = state.getTestSettings()?.toObject();
         this.showDescription = state.getShowDescription();
         this.showReadme = state.getShowReadme();
         this.notifyChange();
@@ -2516,6 +2516,634 @@ class HP3LSThermalTestViewModelRemoteClient {
         }
     }
 }
+
+
+/***/ }),
+
+/***/ "./src/components/gauge.ts":
+/*!*********************************!*\
+  !*** ./src/components/gauge.ts ***!
+  \*********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   GaugeElement: () => (/* binding */ GaugeElement)
+/* harmony export */ });
+// A lightweight Web Component for the gauge markup provided.
+// Usage:
+// <x-gauge title="My Gauge" text="65%" background="#4caf50" transform="scaleX(0.65)"></x-gauge>
+class GaugeElement extends HTMLElement {
+    static get observedAttributes() {
+        return ['title', 'text', 'background', 'transform'];
+    }
+    constructor() {
+        super();
+        this.root = this.attachShadow({ mode: 'open' });
+        this.root.innerHTML = `
+            <style>
+                :host { display: inline-block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; }
+                .gauge-container { min-width: 220px; }
+                .gauge-title { font-weight: 600; margin-bottom: 6px; color: #222; }
+                .gauge-title span { font-size: 0.95rem; }
+                .gauge-body { position: relative; height: 24px; background: #f2f2f2; border-radius: 12px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+                .gauge-filler { position: absolute; inset: 0 auto 0 0; width: 100%; transform-origin: left center; background: #4caf50; }
+                .gauge-cover { position: absolute; inset: 0; display: grid; place-items: center; color: #111; font-weight: 600; font-size: 0.9rem; text-shadow: 0 1px 0 rgba(255,255,255,0.6); pointer-events: none; }
+            </style>
+            <div class="gauge-container">
+                <div class="gauge-title">
+                    <span id="titleSpan"></span>
+                </div>
+                <div class="gauge-body">
+                    <div id="filler" class="gauge-filler"></div>
+                    <div class="gauge-cover">
+                        <div id="textDiv"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+        this.els = {
+            title: this.root.getElementById('titleSpan'),
+            filler: this.root.getElementById('filler'),
+            text: this.root.getElementById('textDiv'),
+        };
+    }
+    connectedCallback() {
+        // Initialize with current attributes
+        this.syncAllFromAttributes();
+    }
+    attributeChangedCallback(name, _old, _val) {
+        this.applyAttribute(name, _val ?? undefined);
+    }
+    // Property accessors for convenience
+    get titleText() { return this.getAttribute('title') ?? ''; }
+    set titleText(v) { this.setAttribute('title', v ?? ''); }
+    get text() { return this.getAttribute('text') ?? ''; }
+    set text(v) { this.setAttribute('text', v ?? ''); }
+    get background() { return this.getAttribute('background') ?? ''; }
+    set background(v) { this.setAttribute('background', v ?? ''); }
+    get transformStyle() { return this.getAttribute('transform') ?? ''; }
+    set transformStyle(v) { this.setAttribute('transform', v ?? ''); }
+    syncAllFromAttributes() {
+        ['title', 'text', 'background', 'transform'].forEach(k => this.applyAttribute(k, this.getAttribute(k) ?? undefined));
+    }
+    applyAttribute(name, value) {
+        switch (name) {
+            case 'title':
+                this.els.title.textContent = value ?? '';
+                break;
+            case 'text':
+                this.els.text.textContent = value ?? '';
+                break;
+            case 'background':
+                if (value)
+                    this.els.filler.style.background = value;
+                else
+                    this.els.filler.style.removeProperty('background');
+                break;
+            case 'transform':
+                if (value)
+                    this.els.filler.style.transform = value;
+                else
+                    this.els.filler.style.removeProperty('transform');
+                break;
+        }
+    }
+}
+customElements.define('x-gauge', GaugeElement);
+
+
+/***/ }),
+
+/***/ "./src/components/readme.ts":
+/*!**********************************!*\
+  !*** ./src/components/readme.ts ***!
+  \**********************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ReadmeElement: () => (/* binding */ ReadmeElement)
+/* harmony export */ });
+// Web Component to render the provided README content.
+// <x-readme show-previous="true|false"></x-readme>
+class ReadmeElement extends HTMLElement {
+    static get observedAttributes() { return ['show-previous']; }
+    constructor() {
+        super();
+        this.root = this.attachShadow({ mode: 'open' });
+        this.root.innerHTML = `
+      <style>
+        :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; line-height: 1.4; color: #1a1a1a; }
+        .readme-container { padding: 12px 0; }
+        .readme-paragraph { margin: 8px 0; }
+        .reference-name { font-weight: 600; }
+        .emphasis { font-weight: 600; }
+        .previous-content { display: none; opacity: 0.8; }
+        :host([show-previous="true"]) .previous-content { display: inline; }
+        a { color: #0a6cff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+      </style>
+      <div class="readme-container">
+        <div class="readme-paragraph">
+          The <span class="reference-name">HP 3LS thermal tool</span> requires administrator permissions.
+          <span class="previous-content">To use: Run BlazorCorrosionTest.exe.Requires administrator permissions.</span>
+        </div>
+        <div class="readme-paragraph">
+          This software is designed to be run with no or minimal other applications running.
+        </div>
+        <div class="readme-paragraph">
+          Running the test alongside other applications may skew results.<span class="previous-content">, or the test may flat-out refuse to run.</span>
+        </div>
+        <div class="readme-paragraph">
+          <span class="reference-name">Temperature threshold to DTS</span>, <span class="reference-name">Processor maximum load</span>, and <span class="reference-name">Monitoring period</span> are all adjustable, but are set to default values based on testing performed on known good/failing systems (90%, 15%, 60s, respectively).
+        </div>
+        <div class="readme-paragraph">
+          The host platform, cooler disposition, system environment, software in use, Operating System and CPU SKU will also affect results and may necessitate additional tweaking.
+        </div>
+        <div class="readme-paragraph">
+          There is a known issue where the software will fail to detect a failure using the Balanced power plan.
+          If possible, <span class="emphasis">ensure that the Windows OS Power Plan is set to <span class="reference-name">Ultimate Performance</span></span>.
+        </div>
+        <div class="readme-paragraph">
+          On supported CPUs for Z4 G5, Z6 G5, and Z8 Fury G5, the software uses the DTS Max temperatures published by Intel for Max Temperature.
+          For other systems this information is not included, and so the default of 100C is used.
+          For a more accurate result, look up the installed CPU on <a href="https://ark.intel.com/content/www/us/en/ark.html" target="_blank" rel="noopener noreferrer">Intel ARK</a>, and set the 'Temperature threshold to DTS' slider to a value that is ~90% of the reported DTS Max.
+          This will work for other unsupported processors like Core-i series as well, although that is out of scope for this tool's intended use.
+        </div>
+        <div class="readme-paragraph">
+          Literally no assertions, warranties, or guarantees are made or claimed about this software.
+          It is completely experimental and not meant for distribution outside of HP. Use at your own risk.
+        </div>
+        <div class="readme-paragraph">
+          The tool was developed in collaboration with the <a href="https://www.microsoft.com/store/apps/9P4PNDG7L782" target="_blank" rel="noopener noreferrer">HP PC Hardware Diagnostics Windows</a> development team.
+          <span class="previous-content">I (Max) didn't write this code (Guy did - thanks Guy!), but I requested it, tested it, wrote its README, and probably gave it to you in the first place.
+          So I'm the point of contact if you need anything.</span>
+        </div>
+        <div class="readme-paragraph">
+          Contact 3LS Engineer Max Knaver (CW) - max.knaver@hp.com for feedback or questions.
+        </div>
+      </div>
+    `;
+    }
+    attributeChangedCallback(name, _oldVal, newVal) {
+        if (name === 'show-previous') {
+            // boolean attribute support: if present without value, interpret as true
+            if (newVal === '' || newVal === null) {
+                // reflect a default false unless explicitly set to "true"
+                // No-op: styling is controlled via attribute value, kept as-is
+            }
+        }
+    }
+}
+customElements.define('x-readme', ReadmeElement);
+
+
+/***/ }),
+
+/***/ "./src/components/thermal-main.ts":
+/*!****************************************!*\
+  !*** ./src/components/thermal-main.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ThermalMainElement: () => (/* binding */ ThermalMainElement)
+/* harmony export */ });
+/* harmony import */ var _thermal_zone__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./thermal-zone */ "./src/components/thermal-zone.ts");
+/* harmony import */ var _readme__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./readme */ "./src/components/readme.ts");
+// Web Component: <x-thermal-main>
+// Encapsulates the main CPU Thermal Test page UI translated from the Razor snippet.
+// Attributes:
+// - title: string (default "CPU Thermal Test")
+// - show-description: boolean
+// - instructions: string (text content for description)
+// - show-readme: boolean
+// - label-temp-threshold, label-processor-max-load, label-monitoring-period: strings
+// - temp-threshold: number (50-100)
+// - cpu-load-threshold: number (0-100)
+// - cpu-load-time: number (seconds 30-600)
+// - readme-show-previous: boolean (passes to <x-readme>)
+// - label-show-readme, label-hide-readme, label-show-description, label-hide-description, label-cancel: strings
+// - zones: JSON string array of zone objects to render using <x-thermal-zone>
+//
+// Events dispatched:
+// - change-temp-threshold { detail: { value: number } }
+// - change-cpu-load-threshold { detail: { value: number } }
+// - change-cpu-load-time { detail: { value: number } }
+// - toggle-readme { detail: { value: boolean } }
+// - toggle-description { detail: { value: boolean } }
+// - cancel { detail: {} }
+
+
+class ThermalMainElement extends HTMLElement {
+    static get observedAttributes() {
+        return [
+            'title', 'show-description', 'instructions', 'show-readme',
+            'label-temp-threshold', 'label-processor-max-load', 'label-monitoring-period',
+            'temp-threshold', 'cpu-load-threshold', 'cpu-load-time',
+            'readme-show-previous',
+            'label-show-readme', 'label-hide-readme', 'label-show-description', 'label-hide-description', 'label-cancel',
+            'zones'
+        ];
+    }
+    constructor() {
+        super();
+        this.root = this.attachShadow({ mode: 'open' });
+        this.root.innerHTML = `
+      <style>
+        :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; }
+        .main-page-container { display: grid; gap: 16px; }
+        .test-title { font-size: 1.25rem; font-weight: 700; }
+        .test-description { background: #f7f7fa; padding: 10px 12px; border-radius: 8px; }
+        .test-parameters { display: grid; gap: 12px; }
+        .slider { background: #fff; border-radius: 8px; padding: 10px 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); }
+        .slider-title { font-weight: 600; margin-bottom: 8px; }
+        .slider-content { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+        .slider-input input[type=range] { width: 100%; }
+        .slider-label label { font-weight: 600; min-width: 48px; display: inline-block; text-align: right; }
+        .thermal-zones-container { display: grid; gap: 12px; }
+        .show-hide-options { display: flex; gap: 8px; }
+        button { appearance: none; border: 1px solid rgba(0,0,0,0.1); background: #f4f6f8; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
+        button:hover { background: #eef1f5; }
+        .bottom { display: flex; justify-content: flex-end; }
+        .hidden { display: none; }
+      </style>
+      <div class="main-page-container">
+        <div class="test-title" id="title"></div>
+        <div id="descriptionWrap" class="test-description" hidden>
+          <span id="instructions"></span>
+        </div>
+
+        <div class="test-parameters">
+          <div class="slider">
+            <div class="slider-title" id="lblTemp"></div>
+            <div class="slider-content">
+              <div class="slider-input"><input id="sliderTemp" type="range" min="50" max="100" step="5"></div>
+              <div class="slider-label"><label id="valTemp" for="sliderTemp">0%</label></div>
+            </div>
+          </div>
+          <div class="slider">
+            <div class="slider-title" id="lblCpuLoad"></div>
+            <div class="slider-content">
+              <div class="slider-input"><input id="sliderCpuLoad" type="range" min="0" max="100" step="5"></div>
+              <div class="slider-label"><label id="valCpuLoad" for="sliderCpuLoad">0%</label></div>
+            </div>
+          </div>
+          <div class="slider">
+            <div class="slider-title" id="lblMonitor"></div>
+            <div class="slider-content">
+              <div class="slider-input"><input id="sliderTime" type="range" min="30" max="600" step="10"></div>
+              <div class="slider-label"><label id="valTime" for="sliderTime">0s</label></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="zones" class="thermal-zones-container"></div>
+
+        <div class="show-hide-options">
+          <button id="btnReadme"></button>
+          <button id="btnDesc"></button>
+        </div>
+
+        <div class="bottom full-width hidden" id="wirelessBtnContainer">
+          <button id="btnCancel" class="hp-btn secondary btn-margin"></button>
+        </div>
+
+        <div id="readmeWrap" hidden>
+          <x-readme id="readme"></x-readme>
+        </div>
+      </div>
+    `;
+    }
+    connectedCallback() {
+        const $ = (id) => this.root.getElementById(id);
+        // Wire slider events
+        $('sliderTemp').addEventListener('input', () => {
+            const v = Number($('sliderTemp').value);
+            $('valTemp').textContent = `${v}%`;
+            this.dispatchEvent(new CustomEvent('change-temp-threshold', { detail: { value: v } }));
+        });
+        $('sliderCpuLoad').addEventListener('input', () => {
+            const v = Number($('sliderCpuLoad').value);
+            $('valCpuLoad').textContent = `${v}%`;
+            this.dispatchEvent(new CustomEvent('change-cpu-load-threshold', { detail: { value: v } }));
+        });
+        $('sliderTime').addEventListener('input', () => {
+            const v = Number($('sliderTime').value);
+            $('valTime').textContent = `${v}s`;
+            this.dispatchEvent(new CustomEvent('change-cpu-load-time', { detail: { value: v } }));
+        });
+        // Toggle buttons
+        $('btnReadme').addEventListener('click', () => {
+            const curr = this.bool('show-readme');
+            this.setAttribute('show-readme', String(!curr));
+            this.dispatchEvent(new CustomEvent('toggle-readme', { detail: { value: !curr } }));
+        });
+        $('btnDesc').addEventListener('click', () => {
+            const curr = this.bool('show-description');
+            this.setAttribute('show-description', String(!curr));
+            this.dispatchEvent(new CustomEvent('toggle-description', { detail: { value: !curr } }));
+        });
+        // Cancel button
+        $('btnCancel').addEventListener('click', () => {
+            this.dispatchEvent(new CustomEvent('cancel', { detail: {} }));
+        });
+        this.renderAll();
+    }
+    attributeChangedCallback() {
+        if (!this.isConnected)
+            return;
+        this.renderAll();
+    }
+    // Helpers
+    str(name, def = '') {
+        const v = this.getAttribute(name);
+        return v == null ? def : v;
+    }
+    num(name, def = 0) {
+        const v = this.getAttribute(name);
+        const n = v == null ? NaN : Number(v);
+        return Number.isFinite(n) ? n : def;
+    }
+    bool(name, def = false) {
+        const v = this.getAttribute(name);
+        if (v == null)
+            return def;
+        return v === '' || v.toLowerCase() === 'true' || v === '1';
+    }
+    renderAll() {
+        const $ = (id) => this.root.getElementById(id);
+        // Title
+        $('title').textContent = this.str('title', 'CPU Thermal Test');
+        // Description
+        const showDesc = this.bool('show-description');
+        const descWrap = $('descriptionWrap');
+        descWrap.toggleAttribute('hidden', !showDesc);
+        $('instructions').textContent = this.str('instructions');
+        // Labels
+        $('lblTemp').textContent = this.str('label-temp-threshold', 'Temperature threshold to DTS');
+        $('lblCpuLoad').textContent = this.str('label-processor-max-load', 'Processor maximum load');
+        $('lblMonitor').textContent = this.str('label-monitoring-period', 'Monitoring period');
+        // Slider values (respect provided current values)
+        const temp = this.num('temp-threshold', 90);
+        const cpuLoad = this.num('cpu-load-threshold', 15);
+        const time = this.num('cpu-load-time', 60);
+        $('sliderTemp').value = String(temp);
+        $('sliderCpuLoad').value = String(cpuLoad);
+        $('sliderTime').value = String(time);
+        $('valTemp').textContent = `${temp}%`;
+        $('valCpuLoad').textContent = `${cpuLoad}%`;
+        $('valTime').textContent = `${time}s`;
+        // Readme
+        const showReadme = this.bool('show-readme');
+        const readmeWrap = $('readmeWrap');
+        readmeWrap.toggleAttribute('hidden', !showReadme);
+        const readme = $('readme');
+        if (this.bool('readme-show-previous'))
+            readme.setAttribute('show-previous', 'true');
+        else
+            readme.removeAttribute('show-previous');
+        // Buttons
+        const lblShowReadme = this.str('label-show-readme', 'Show README');
+        const lblHideReadme = this.str('label-hide-readme', 'Hide README');
+        $('btnReadme').textContent = showReadme ? lblHideReadme : lblShowReadme;
+        const lblShowDesc = this.str('label-show-description', 'Show description');
+        const lblHideDesc = this.str('label-hide-description', 'Hide description');
+        $('btnDesc').textContent = showDesc ? lblHideDesc : lblShowDesc;
+        $('btnCancel').textContent = this.str('label-cancel', 'Cancel');
+        // Zones
+        const zonesHost = $('zones');
+        zonesHost.innerHTML = '';
+        try {
+            const zonesAttr = this.getAttribute('zones');
+            if (zonesAttr) {
+                const zones = JSON.parse(zonesAttr);
+                for (const z of zones) {
+                    const el = document.createElement('x-thermal-zone');
+                    if (z.active !== undefined)
+                        el.setAttribute('active', String(!!z.active));
+                    if (z.background)
+                        el.setAttribute('background', z.background);
+                    if (z.status)
+                        el.setAttribute('status', z.status);
+                    if (z.state)
+                        el.setAttribute('state', z.state);
+                    if (z.progress !== undefined)
+                        el.setAttribute('progress', String(z.progress));
+                    if (z.zone)
+                        el.setAttribute('zone', String(z.zone));
+                    if (z.fanSpeed !== undefined)
+                        el.setAttribute('fan-speed', String(z.fanSpeed));
+                    if (z.deviceName)
+                        el.setAttribute('device-name', z.deviceName);
+                    if (z.temperature !== undefined)
+                        el.setAttribute('temperature', String(z.temperature));
+                    if (z.maxTemp !== undefined)
+                        el.setAttribute('max-temp', String(z.maxTemp));
+                    if (z.processorLoadName)
+                        el.setAttribute('processor-load-name', z.processorLoadName);
+                    if (z.processorLoad !== undefined)
+                        el.setAttribute('processor-load', String(z.processorLoad));
+                    if (z.cpuLoadThreshold !== undefined)
+                        el.setAttribute('cpu-load-threshold', String(z.cpuLoadThreshold));
+                    if (z.stateDescriptions)
+                        el.setAttribute('state-descriptions', JSON.stringify(z.stateDescriptions));
+                    zonesHost.appendChild(el);
+                }
+            }
+        }
+        catch {
+            // ignore invalid JSON
+        }
+    }
+}
+customElements.define('x-thermal-main', ThermalMainElement);
+
+
+/***/ }),
+
+/***/ "./src/components/thermal-zone.ts":
+/*!****************************************!*\
+  !*** ./src/components/thermal-zone.ts ***!
+  \****************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ThermalZoneElement: () => (/* binding */ ThermalZoneElement)
+/* harmony export */ });
+/* harmony import */ var _gauge__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./gauge */ "./src/components/gauge.ts");
+// Web Component: <x-thermal-zone>
+// Mirrors the Razor fragment for a thermal zone with progress, properties, gauges, and details.
+// Attributes:
+// - active: "true" | "false" (if falsey, the component hides itself)
+// - background: CSS color string for container background
+// - status: string (e.g., CheckInProgress)
+// - state: string
+// - progress: number 0-100
+// - zone: string
+// - fan-speed: number (RPM)
+// - device-name: string
+// - temperature: number (current temp)
+// - max-temp: number (threshold)
+// - processor-load-name: string (title for CPU load gauge)
+// - processor-load: number (current CPU load percent)
+// - cpu-load-threshold: number (max for CPU load)
+// - state-descriptions: JSON string mapping { [key: string]: string }
+//
+// Uses the existing <x-gauge> component for the gauges.
+
+class ThermalZoneElement extends HTMLElement {
+    static get observedAttributes() {
+        return [
+            'active', 'background', 'status', 'state', 'progress', 'zone', 'fan-speed',
+            'device-name', 'temperature', 'max-temp', 'processor-load-name',
+            'processor-load', 'cpu-load-threshold', 'state-descriptions'
+        ];
+    }
+    constructor() {
+        super();
+        this.desc = {};
+        this.root = this.attachShadow({ mode: 'open' });
+        this.root.innerHTML = `
+      <style>
+        :host { display: block; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; color: #1a1a1a; }
+        .thermal-zone-container { border-radius: 8px; padding: 12px; background: #fafafa; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.06); }
+        .progress-bar { position: relative; height: 14px; border-radius: 7px; background: #e9e9e9; overflow: hidden; margin-bottom: 10px; }
+        .progress-bar .value { display: block; height: 100%; background: linear-gradient(90deg,#4caf50,#81c784); width: 0; transition: width 200ms ease; }
+        .progress-bar::after { content: attr(data-label); position: absolute; inset: 0; display: grid; place-items: center; font-size: 12px; color: #222; text-shadow: 0 1px 0 rgba(255,255,255,0.5); }
+
+        .runtime-properties-container { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 8px 0; }
+        .runtime-property { background: #fff; border-radius: 6px; padding: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.06); text-align: center; font-weight: 600; }
+
+        .gauges-container { display: grid; grid-template-columns: repeat(2, minmax(220px, 1fr)); gap: 12px; align-items: center; margin: 8px 0; }
+        .runtime-details { margin-top: 8px; color: #333; }
+      </style>
+      <div id="container" class="thermal-zone-container">
+        <div id="progressWrap" class="progress-wrap" hidden>
+          <div id="progress" class="progress-bar" data-label="0%">
+            <span id="progressValue" class="value" style="width: 0%"></span>
+          </div>
+        </div>
+
+        <div id="runtimeProps" class="runtime-properties-container">
+          <div id="propPrimary" class="runtime-property"></div>
+          <div id="propMaxTemp" class="runtime-property"></div>
+          <div id="propZone" class="runtime-property"></div>
+          <div id="propFan" class="runtime-property"></div>
+        </div>
+
+        <div class="gauges-container">
+          <x-gauge id="gaugeCpu" title="" text="" background="#2196f3" transform="scaleX(0)"></x-gauge>
+          <x-gauge id="gaugeTemp" title="" text="" background="#e53935" transform="scaleX(0)"></x-gauge>
+        </div>
+
+        <div id="details" class="runtime-details"></div>
+      </div>
+    `;
+    }
+    connectedCallback() {
+        this.renderAll();
+    }
+    attributeChangedCallback() {
+        if (!this.isConnected)
+            return;
+        this.renderAll();
+    }
+    // Helpers to read attributes safely
+    str(name, def = '') {
+        const v = this.getAttribute(name);
+        return v == null ? def : v;
+    }
+    num(name, def = 0) {
+        const v = this.getAttribute(name);
+        const n = v == null ? NaN : Number(v);
+        return Number.isFinite(n) ? n : def;
+    }
+    bool(name, def = false) {
+        const v = this.getAttribute(name);
+        if (v == null)
+            return def;
+        return v === '' || v.toLowerCase() === 'true' || v === '1';
+    }
+    renderAll() {
+        const container = this.root.getElementById('container');
+        const active = this.bool('active', true);
+        if (!active) {
+            container.style.display = 'none';
+            return;
+        }
+        container.style.display = '';
+        // Background
+        container.style.background = this.str('background', '#fafafa');
+        // Progress visibility
+        const status = this.str('status');
+        const state = this.str('state');
+        const progress = this.num('progress');
+        const showProgress = status === 'CheckInProgress' || progress > 0;
+        const progressWrap = this.root.getElementById('progressWrap');
+        const progressBar = this.root.getElementById('progress');
+        const progressValue = this.root.getElementById('progressValue');
+        progressWrap.hidden = !showProgress;
+        if (showProgress) {
+            const pct = Math.max(0, Math.min(100, progress));
+            progressBar.setAttribute('data-label', `${pct}%`);
+            progressValue.style.width = `${pct}%`;
+        }
+        // Runtime props
+        const propPrimary = this.root.getElementById('propPrimary');
+        const propMaxTemp = this.root.getElementById('propMaxTemp');
+        const propZone = this.root.getElementById('propZone');
+        const propFan = this.root.getElementById('propFan');
+        const maxTemp = this.num('max-temp');
+        const zone = this.str('zone');
+        const fan = this.num('fan-speed');
+        const primary = status === 'CheckInProgress' ? state : status;
+        propPrimary.textContent = primary;
+        propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
+        propZone.textContent = zone;
+        propFan.textContent = `${fan} RPM`;
+        // Parse descriptions JSON lazily
+        try {
+            const descAttr = this.getAttribute('state-descriptions');
+            if (descAttr)
+                this.desc = JSON.parse(descAttr);
+        }
+        catch {
+            // ignore bad JSON
+        }
+        // Gauges
+        const gaugeCpu = this.root.getElementById('gaugeCpu');
+        const gaugeTemp = this.root.getElementById('gaugeTemp');
+        const cpuTitle = this.str('processor-load-name');
+        const cpuVal = this.num('processor-load');
+        const cpuMax = this.num('cpu-load-threshold');
+        const cpuRatio = cpuMax > 0 ? Math.max(0, Math.min(1, cpuVal / cpuMax)) : 0;
+        gaugeCpu.setAttribute('title', cpuTitle);
+        gaugeCpu.setAttribute('text', `${cpuVal}%`);
+        gaugeCpu.setAttribute('transform', `scaleX(${cpuRatio.toFixed(3)})`);
+        const deviceName = this.str('device-name');
+        const tempVal = this.num('temperature');
+        const tempMax = maxTemp;
+        const tempRatio = tempMax > 0 ? Math.max(0, Math.min(1, tempVal / tempMax)) : 0;
+        gaugeTemp.setAttribute('title', deviceName);
+        gaugeTemp.setAttribute('text', `${tempVal}\u00B0 C`);
+        gaugeTemp.setAttribute('transform', `scaleX(${tempRatio.toFixed(3)})`);
+        // Details
+        const details = this.root.getElementById('details');
+        const sdStatus = this.desc[status] ?? status;
+        const sdState = this.desc[state] ?? state;
+        const detailText = status === 'CheckInProgress' ? `${sdStatus} ${sdState}`.trim() : sdStatus;
+        details.textContent = detailText;
+    }
+}
+customElements.define('x-thermal-zone', ThermalZoneElement);
 
 
 /***/ }),
@@ -4977,20 +5605,78 @@ var __webpack_exports__ = {};
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _generated_HP3LSThermalTestViewModelServiceServiceClientPb__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/HP3LSThermalTestViewModelServiceServiceClientPb */ "./src/generated/HP3LSThermalTestViewModelServiceServiceClientPb.ts");
 /* harmony import */ var _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./HP3LSThermalTestViewModelRemoteClient */ "./src/HP3LSThermalTestViewModelRemoteClient.ts");
+/* harmony import */ var _components_gauge__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./components/gauge */ "./src/components/gauge.ts");
+/* harmony import */ var _components_readme__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./components/readme */ "./src/components/readme.ts");
+/* harmony import */ var _components_thermal_zone__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./components/thermal-zone */ "./src/components/thermal-zone.ts");
+/* harmony import */ var _components_thermal_main__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./components/thermal-main */ "./src/components/thermal-main.ts");
 // <auto-generated>
 // Generated by RemoteMvvmTool.
 // </auto-generated>
 
 
+
+
+
+
 const grpcHost = 'http://localhost:50052';
 const grpcClient = new _generated_HP3LSThermalTestViewModelServiceServiceClientPb__WEBPACK_IMPORTED_MODULE_0__.HP3LSThermalTestViewModelServiceClient(grpcHost);
 const vm = new _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.HP3LSThermalTestViewModelRemoteClient(grpcClient);
+function computeMaxTempC(deviceName) {
+    const pct = vm?.testSettings?.cpuTemperatureThreshold ?? 100;
+    const dts = vm?.testSettings?.dTS;
+    const max = deviceName && dts ? dts[deviceName] : undefined;
+    if (typeof max === 'number' && Number.isFinite(max)) {
+        return Math.round(max * (pct / 100));
+    }
+    // Fallback if DTS unknown
+    return 100;
+}
+function buildZonesPayload() {
+    const zonesObj = vm.zones ?? {};
+    const arr = Object.values(zonesObj);
+    return arr.map(z => ({
+        active: !!z.isActive,
+        background: z.background ?? '#fafafa',
+        status: String(z.status),
+        state: String(z.state),
+        progress: Number(z.progress ?? 0),
+        zone: z.deviceName ? `${z.deviceName}` : String(z.zone ?? ''),
+        fanSpeed: Number(z.fanSpeed ?? 0),
+        deviceName: z.deviceName ?? 'Device',
+        temperature: Number(z.temperature ?? 0),
+        maxTemp: computeMaxTempC(z.deviceName),
+        processorLoadName: 'Processor Load',
+        processorLoad: Number(z.processorLoad ?? 0),
+        cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
+        // stateDescriptions can be provided if available; omitted by default
+    }));
+}
 async function render() {
-    document.getElementById('zones').value = JSON.stringify(vm.zones);
-    document.getElementById('testSettings').value = JSON.stringify(vm.testSettings);
-    document.getElementById('showDescription').value = JSON.stringify(vm.showDescription);
-    document.getElementById('showReadme').value = JSON.stringify(vm.showReadme);
-    document.getElementById('connection-status').textContent = vm.connectionStatus;
+    const main = document.querySelector('x-thermal-main');
+    if (main) {
+        // Toggle sections
+        main.setAttribute('show-description', String(!!vm.showDescription));
+        main.setAttribute('show-readme', String(!!vm.showReadme));
+        // Sliders from TestSettings
+        const ts = vm.testSettings ?? {};
+        if (ts.cpuTemperatureThreshold != null)
+            main.setAttribute('temp-threshold', String(ts.cpuTemperatureThreshold));
+        if (ts.cpuLoadThreshold != null)
+            main.setAttribute('cpu-load-threshold', String(ts.cpuLoadThreshold));
+        if (ts.cpuLoadTimeSpan != null)
+            main.setAttribute('cpu-load-time', String(ts.cpuLoadTimeSpan));
+        // Zones
+        try {
+            const zones = buildZonesPayload();
+            main.setAttribute('zones', JSON.stringify(zones));
+        }
+        catch {
+            // ignore serialization errors
+        }
+    }
+    const statusEl = document.getElementById('connection-status');
+    if (statusEl)
+        statusEl.textContent = vm.connectionStatus;
 }
 async function init() {
     await vm.initializeRemote();
@@ -4999,24 +5685,27 @@ async function init() {
 }
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    document.getElementById('zones').addEventListener('change', async () => {
-        await vm.updatePropertyValue('Zones', document.getElementById('zones').value);
-    });
-    document.getElementById('testSettings').addEventListener('change', async () => {
-        await vm.updatePropertyValue('TestSettings', document.getElementById('testSettings').value);
-    });
-    document.getElementById('showDescription').addEventListener('change', async () => {
-        await vm.updatePropertyValue('ShowDescription', document.getElementById('showDescription').value);
-    });
-    document.getElementById('showReadme').addEventListener('change', async () => {
-        await vm.updatePropertyValue('ShowReadme', document.getElementById('showReadme').value);
-    });
-    document.getElementById('stateChanged-btn').addEventListener('click', async () => {
-        await vm.stateChanged(undefined);
-    });
-    document.getElementById('cancelTest-btn').addEventListener('click', async () => {
-        await vm.cancelTest();
-    });
+    const main = document.querySelector('x-thermal-main');
+    if (main) {
+        main.addEventListener('change-temp-threshold', async (e) => {
+            await vm.updatePropertyValue('CpuTemperatureThreshold', Number(e?.detail?.value ?? 0));
+        });
+        main.addEventListener('change-cpu-load-threshold', async (e) => {
+            await vm.updatePropertyValue('CpuLoadThreshold', Number(e?.detail?.value ?? 0));
+        });
+        main.addEventListener('change-cpu-load-time', async (e) => {
+            await vm.updatePropertyValue('CpuLoadTimeSpan', Number(e?.detail?.value ?? 0));
+        });
+        main.addEventListener('toggle-readme', async (e) => {
+            await vm.updatePropertyValue('ShowReadme', Boolean(e?.detail?.value));
+        });
+        main.addEventListener('toggle-description', async (e) => {
+            await vm.updatePropertyValue('ShowDescription', Boolean(e?.detail?.value));
+        });
+        main.addEventListener('cancel', async () => {
+            await vm.cancelTest();
+        });
+    }
 });
 
 })();

@@ -9,14 +9,32 @@
     <title>HP3LSThermalTestViewModel Client</title>
 </head>
 <body>
-    <h3>Remote ViewModel</h3>
-    <div><label>Zones: <input id='zones'/></label></div>
-    <div><label>TestSettings: <input id='testSettings'/></label></div>
-    <div><label>ShowDescription: <input id='showDescription'/></label></div>
-    <div><label>ShowReadme: <input id='showReadme'/></label></div>
-    <button id='stateChanged-btn'>StateChanged</button>
-    <button id='cancelTest-btn'>CancelTest</button>
+    <div id='app'>
+<div style="margin-top:20px"></div>
+        <x-thermal-main
+            title="CPU Thermal Test"
+            show-description="true"
+            instructions="Follow the steps to configure CPU thermal test."
+            show-readme="false"
+            label-temp-threshold="Temperature threshold to DTS"
+            label-processor-max-load="Processor maximum load"
+            label-monitoring-period="Monitoring period"
+            label-show-readme="Show README"
+            label-hide-readme="Hide README"
+            label-show-description="Show description"
+            label-hide-description="Hide description"
+            label-cancel="Cancel"
+            zones='[
+                {"active":true,"background":"#fbfdff","status":"CheckInProgress","state":"Warmup","progress":35,"zone":"CPU Zone","fanSpeed":1700,"deviceName":"CPU","temperature":60,"maxTemp":90,"processorLoadName":"Processor Load","processorLoad":50,"cpuLoadThreshold":90,"stateDescriptions":{"CheckInProgress":"Running:","Warmup":"Warming up"}}
+            ]'
+        ></x-thermal-main>
+
+    </div>
+     <hr/>
     <div id='connection-status'></div>
+   
+    
+        
     <script src='bundle.js'></script>
 </body>
 </html>

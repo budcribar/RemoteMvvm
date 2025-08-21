@@ -4,17 +4,70 @@
 
 import { HP3LSThermalTestViewModelServiceClient } from './generated/HP3LSThermalTestViewModelServiceServiceClientPb';
 import { HP3LSThermalTestViewModelRemoteClient } from './HP3LSThermalTestViewModelRemoteClient';
+import './components/gauge';
+import './components/readme';
+import './components/thermal-zone';
+import './components/thermal-main';
 
 const grpcHost = 'http://localhost:50052';
 const grpcClient = new HP3LSThermalTestViewModelServiceClient(grpcHost);
 const vm = new HP3LSThermalTestViewModelRemoteClient(grpcClient);
 
+function computeMaxTempC(deviceName: string | undefined): number {
+    const pct = vm?.testSettings?.cpuTemperatureThreshold ?? 100;
+    const dts = vm?.testSettings?.dTS as Record<string, number> | undefined;
+    const max = deviceName && dts ? dts[deviceName] : undefined;
+    if (typeof max === 'number' && Number.isFinite(max)) {
+        return Math.round(max * (pct / 100));
+    }
+    // Fallback if DTS unknown
+    return 100;
+}
+
+function buildZonesPayload(): any[] {
+    const zonesObj = vm.zones ?? {} as Record<string, any>;
+    const arr = Object.values(zonesObj) as Array<any>;
+    return arr.map(z => ({
+        active: !!z.isActive,
+        background: z.background ?? '#fafafa',
+        status: String(z.status),
+        state: String(z.state),
+        progress: Number(z.progress ?? 0),
+        zone: z.deviceName ? `${z.deviceName}` : String(z.zone ?? ''),
+        fanSpeed: Number(z.fanSpeed ?? 0),
+        deviceName: z.deviceName ?? 'Device',
+        temperature: Number(z.temperature ?? 0),
+        maxTemp: computeMaxTempC(z.deviceName),
+        processorLoadName: 'Processor Load',
+        processorLoad: Number(z.processorLoad ?? 0),
+        cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
+        // stateDescriptions can be provided if available; omitted by default
+    }));
+}
+
 async function render() {
-    (document.getElementById('zones') as HTMLInputElement).value = JSON.stringify(vm.zones);
-    (document.getElementById('testSettings') as HTMLInputElement).value = JSON.stringify(vm.testSettings);
-    (document.getElementById('showDescription') as HTMLInputElement).value = JSON.stringify(vm.showDescription);
-    (document.getElementById('showReadme') as HTMLInputElement).value = JSON.stringify(vm.showReadme);
-    (document.getElementById('connection-status') as HTMLElement).textContent = vm.connectionStatus;
+    const main = document.querySelector('x-thermal-main') as HTMLElement | null;
+    if (main) {
+        // Toggle sections
+        main.setAttribute('show-description', String(!!vm.showDescription));
+        main.setAttribute('show-readme', String(!!vm.showReadme));
+
+        // Sliders from TestSettings
+        const ts = vm.testSettings ?? ({} as any);
+        if (ts.cpuTemperatureThreshold != null) main.setAttribute('temp-threshold', String(ts.cpuTemperatureThreshold));
+        if (ts.cpuLoadThreshold != null) main.setAttribute('cpu-load-threshold', String(ts.cpuLoadThreshold));
+        if (ts.cpuLoadTimeSpan != null) main.setAttribute('cpu-load-time', String(ts.cpuLoadTimeSpan));
+
+        // Zones
+        try {
+            const zones = buildZonesPayload();
+            main.setAttribute('zones', JSON.stringify(zones));
+        } catch {
+            // ignore serialization errors
+        }
+    }
+    const statusEl = document.getElementById('connection-status');
+    if (statusEl) statusEl.textContent = vm.connectionStatus;
 }
 
 async function init() {
@@ -25,22 +78,25 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    (document.getElementById('zones') as HTMLInputElement).addEventListener('change', async () => {
-        await vm.updatePropertyValue('Zones', (document.getElementById('zones') as HTMLInputElement).value);
-    });
-    (document.getElementById('testSettings') as HTMLInputElement).addEventListener('change', async () => {
-        await vm.updatePropertyValue('TestSettings', (document.getElementById('testSettings') as HTMLInputElement).value);
-    });
-    (document.getElementById('showDescription') as HTMLInputElement).addEventListener('change', async () => {
-        await vm.updatePropertyValue('ShowDescription', (document.getElementById('showDescription') as HTMLInputElement).value);
-    });
-    (document.getElementById('showReadme') as HTMLInputElement).addEventListener('change', async () => {
-        await vm.updatePropertyValue('ShowReadme', (document.getElementById('showReadme') as HTMLInputElement).value);
-    });
-    (document.getElementById('stateChanged-btn') as HTMLButtonElement).addEventListener('click', async () => {
-        await vm.stateChanged(undefined);
-    });
-    (document.getElementById('cancelTest-btn') as HTMLButtonElement).addEventListener('click', async () => {
-        await vm.cancelTest();
-    });
+    const main = document.querySelector('x-thermal-main');
+    if (main) {
+        main.addEventListener('change-temp-threshold', async (e: any) => {
+            await vm.updatePropertyValue('CpuTemperatureThreshold', Number(e?.detail?.value ?? 0));
+        });
+        main.addEventListener('change-cpu-load-threshold', async (e: any) => {
+            await vm.updatePropertyValue('CpuLoadThreshold', Number(e?.detail?.value ?? 0));
+        });
+        main.addEventListener('change-cpu-load-time', async (e: any) => {
+            await vm.updatePropertyValue('CpuLoadTimeSpan', Number(e?.detail?.value ?? 0));
+        });
+        main.addEventListener('toggle-readme', async (e: any) => {
+            await vm.updatePropertyValue('ShowReadme', Boolean(e?.detail?.value));
+        });
+        main.addEventListener('toggle-description', async (e: any) => {
+            await vm.updatePropertyValue('ShowDescription', Boolean(e?.detail?.value));
+        });
+        main.addEventListener('cancel', async () => {
+            await vm.cancelTest();
+        });
+    }
 });
