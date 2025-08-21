@@ -25,7 +25,20 @@ public class TypeScriptCompilationTests
 
     static string RunPs(string scriptPath, string args, string workDir)
     {
-        var psi = new ProcessStartInfo("powershell", $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {args}")
+        string file;
+        string fileArgs;
+        if (OperatingSystem.IsWindows())
+        {
+            file = "powershell";
+            fileArgs = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {args}";
+        }
+        else
+        {
+            file = "tsc";
+            fileArgs = args;
+        }
+
+        var psi = new ProcessStartInfo(file, fileArgs)
         {
             WorkingDirectory = workDir,
             RedirectStandardOutput = true,
@@ -42,7 +55,7 @@ public class TypeScriptCompilationTests
         {
             return $"STDOUT:\n{stdout}\nSTDERR:\n{stderr}";
         }
-           
+
 
         if (p.ExitCode != 0)
         {
@@ -90,10 +103,11 @@ public class TypeScriptCompilationTests
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.d.ts"),
             "export class StringValue { setValue(v:string):void; getValue():string; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):StringValue; }\n" +
             "export class Int32Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int32Value; }\n" +
+            "export class Int64Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int64Value; }\n" +
             "export class BoolValue { setValue(v:boolean):void; getValue():boolean; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):BoolValue; }\n" +
             "export class DoubleValue { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):DoubleValue; }");
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.js"),
-            "class W{ constructor(){this.value=0;} setValue(v){this.value=v;} getValue(){return this.value;} serializeBinary(){return new Uint8Array();} } exports.StringValue=W; exports.Int32Value=W; exports.BoolValue=W; exports.DoubleValue=W;");
+            "class W{ constructor(){this.value=0;} setValue(v){this.value=v;} getValue(){return this.value;} serializeBinary(){return new Uint8Array();} } exports.StringValue=W; exports.Int32Value=W; exports.Int64Value=W; exports.BoolValue=W; exports.DoubleValue=W;");
 
         var gen = Path.Combine(dir, "generated");
         Directory.CreateDirectory(gen);
@@ -299,7 +313,8 @@ class FakeClient extends {name}ServiceClient {{
 
     if (result.Length > 0) Assert.Fail(result);
 
-    RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+    if (OperatingSystem.IsWindows())
+        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
 }
 
     [Fact]
@@ -325,7 +340,7 @@ class FakeClient extends {name}ServiceClient {{
   lastReq: any;
   async getState(_req:any) {{
     return {{
-      getNumbers: () => [1,2,3]
+      getNumbersList: () => [1,2,3]
     }};
   }}
   updatePropertyValue(req:any) {{ this.lastReq = req; return Promise.resolve(); }}
@@ -362,12 +377,13 @@ class FakeClient extends {name}ServiceClient {{
 }}";
         File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
 
-        var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
-        if (result.StartsWith("Powershell"))
-            RunCmd("tsc", "--project tsconfig.json", tempDir);
+    var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+    if (result.StartsWith("Powershell"))
+        RunCmd("tsc", "--project tsconfig.json", tempDir);
 
-        if (result.Length > 0) Assert.Fail(result);
+    if (result.Length > 0) Assert.Fail(result);
 
-    RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+    if (OperatingSystem.IsWindows())
+        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
 }
 }
