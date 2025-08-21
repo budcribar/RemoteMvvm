@@ -203,7 +203,7 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
         sb.AppendLine("import { Any } from 'google-protobuf/google/protobuf/any_pb';");
-        var wrapperImports = new HashSet<string> { "StringValue", "Int32Value", "BoolValue", "DoubleValue" };
+        var wrapperImports = new HashSet<string> { "StringValue", "Int32Value", "Int64Value", "BoolValue", "DoubleValue" };
         foreach (var p in props)
         {
             var w = GeneratorHelpers.GetWrapperType(p.TypeString);

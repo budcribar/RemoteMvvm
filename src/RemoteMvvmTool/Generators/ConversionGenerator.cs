@@ -102,8 +102,6 @@ public static class ConversionGenerator
                 else
                     sb.AppendLine($"        state.{propName} = Timestamp.FromDateTime(model.{propName}.ToUniversalTime());");
             }
-            else if (GeneratorHelpers.IsWellKnownType(propType))
-                sb.AppendLine($"        state.{propName} = model.{propName};");
             else if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
             {
                 if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
@@ -137,6 +135,8 @@ public static class ConversionGenerator
                 }
                 sb.AppendLine($"        if (model.{propName} != null) state.{propName}.Add(model.{propName}{sel});");
             }
+            else if (GeneratorHelpers.IsWellKnownType(propType))
+                sb.AppendLine($"        state.{propName} = model.{propName};");
             else
             {
                 GenerateForType(propType, sb, processed, protoNs, compilation, ref needsTimestamp);
@@ -166,8 +166,6 @@ public static class ConversionGenerator
                 else
                     sb.AppendLine($"        model.{propName} = state.{propName}?.ToDateTime() ?? DateTime.MinValue;");
             }
-            else if (GeneratorHelpers.IsWellKnownType(propType))
-                sb.AppendLine($"        model.{propName} = state.{propName};");
             else if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
             {
                 if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
@@ -209,6 +207,8 @@ public static class ConversionGenerator
                 }
                 sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToList();");
             }
+            else if (GeneratorHelpers.IsWellKnownType(propType))
+                sb.AppendLine($"        model.{propName} = state.{propName};");
             else
             {
                 GenerateForType(propType, sb, processed, protoNs, compilation, ref needsTimestamp);
