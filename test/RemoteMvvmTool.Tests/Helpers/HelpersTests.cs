@@ -119,4 +119,36 @@ public class Foo : IFoo { }";
         var derivedSymbol = compilation.GetTypeByMetadataName("Derived");
         Assert.True(Helpers.InheritsFrom(derivedSymbol, "global::BaseClass"));
     }
+
+    [Fact]
+    public void GetAllMembers_DoesNotReturnStaticMembers()
+    {
+        var code = @"public class Foo { public static int Count; public int Value; }";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var compilation = CSharpCompilation.Create("Test", new[] { tree }, new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var classSymbol = compilation.GetTypeByMetadataName("Foo");
+        var members = Helpers.GetAllMembers(classSymbol!).ToList();
+        Assert.DoesNotContain(members, m => m.Name == "Count");
+    }
+
+    [Fact]
+    public void AttributeMatches_IgnoresWhitespace()
+    {
+        var code = "[System.Obsolete] public class TestClass {}";
+        var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Latest));
+        var compilation = CSharpCompilation.Create("Test", new[] { tree }, new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) }, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
+        var classSymbol = compilation.GetTypeByMetadataName("TestClass");
+        var attribute = classSymbol!.GetAttributes().Single();
+        Assert.True(Helpers.AttributeMatches(attribute, " System.ObsoleteAttribute "));
+    }
+
+    [Fact]
+    public void InheritsFrom_OpenGenericInterfaceDefinition()
+    {
+        var code = @"using System.Collections.Generic; class MyList : List<int> { }";
+        var tree = CSharpSyntaxTree.ParseText(code);
+        var compilation = CSharpCompilation.Create("Test", new[] { tree }, new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var classSymbol = compilation.GetTypeByMetadataName("MyList");
+        Assert.True(Helpers.InheritsFrom(classSymbol, "System.Collections.Generic.IEnumerable"));
+    }
 }
