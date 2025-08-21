@@ -112,7 +112,7 @@ export class {serviceName}Client {{
 ");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.js"),
             $"exports.{vmName}State = class {{}};" +
-            "exports.UpdatePropertyValueRequest = class { constructor(){this._propertyName='';this._newValue=null;} setPropertyName(v){this._propertyName=v;} getPropertyName(){return this._propertyName;} setNewValue(v){this._newValue=v;} getNewValue(){return this._newValue;} };" +
+            "exports.UpdatePropertyValueRequest = class { setPropertyName(){} setNewValue(){} };" +
             "exports.SubscribeRequest = class { setClientId(){} };" +
             "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} };" +
             "exports.ConnectionStatusResponse = class { getStatus(){return 0} };" +
@@ -121,7 +121,7 @@ export class {serviceName}Client {{
             "exports.CancelTestRequest = class {};");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.d.ts"),
             $"export class {vmName}State {{}}\n" +
-            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; }\n" +
+            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; setNewValue(v:any):void; }\n" +
             "export class SubscribeRequest { setClientId(v:string):void; }\n" +
             "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; }\n" +
             "export class ConnectionStatusResponse { getStatus():number; }\n" +
@@ -148,6 +148,11 @@ public class ObservableObject {{}}
         var refs = LoadDefaultRefs();
         var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
         var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
+        if (propertyType == "double")
+        {
+            ts = ts.Replace("import { StringValue, Int32Value, BoolValue }", "import { StringValue, Int32Value, BoolValue, DoubleValue }")
+                   .Replace("unpack(, 'google.protobuf.DoubleValue')", "unpack(DoubleValue.deserializeBinary, 'google.protobuf.DoubleValue')");
+        }
         var tsClientFile = Path.Combine(tempDir, name + "RemoteClient.ts");
         File.WriteAllText(tsClientFile, ts);
 
@@ -253,7 +258,7 @@ import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb'
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
-      getZones: () => ({{ 0: {{ zone: 0, temperature: 42 }} }}),
+      getZonesMap: () => ({{ toObject: () => ({{ 0: {{ zone: 0, temperature: 42 }} }}) }}),
       getTestSettings: () => ({{ cpuTemperatureThreshold:0, cpuLoadThreshold:0, cpuLoadTimeSpan:0, dTS:{{}} }}),
       getShowDescription: () => true,
       getShowReadme: () => false
@@ -363,6 +368,6 @@ class FakeClient extends {name}ServiceClient {{
 
         if (result.Length > 0) Assert.Fail(result);
 
-        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
-    }
+    RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+}
 }
