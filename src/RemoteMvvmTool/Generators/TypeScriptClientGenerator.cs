@@ -181,7 +181,7 @@ public static class TypeScriptClientGenerator
         {
             string expr;
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
-                expr = $"(state as any).get{p.Name}Map().toObject()";
+                expr = $"(state as any).get{p.Name}()";
             else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
                      !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
@@ -203,7 +203,7 @@ public static class TypeScriptClientGenerator
         {
             string expr;
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
-                expr = $"(state as any).get{p.Name}Map().toObject()";
+                expr = $"(state as any).get{p.Name}()";
             else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
                      !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
