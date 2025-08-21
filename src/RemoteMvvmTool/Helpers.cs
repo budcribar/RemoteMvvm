@@ -16,7 +16,9 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 foreach (var member in currentType.GetMembers())
                 {
-                    if (!member.IsStatic && seen.Add(member))
+                    if (member.IsStatic)
+                        continue;
+                    if (seen.Add(member))
                         yield return member;
                 }
                 currentType = currentType.BaseType;
@@ -26,7 +28,9 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 foreach (var member in iface.GetMembers())
                 {
-                    if (!member.IsStatic && seen.Add(member))
+                    if (member.IsStatic)
+                        continue;
+                    if (seen.Add(member))
                         yield return member;
                 }
             }
@@ -42,6 +46,7 @@ namespace GrpcRemoteMvvmModelUtil
 
             static string Normalize(string name)
             {
+                name = name.Trim();
                 if (name.StartsWith("global::", StringComparison.Ordinal))
                     name = name.Substring("global::".Length);
 
@@ -79,16 +84,13 @@ namespace GrpcRemoteMvvmModelUtil
         {
             static string Normalize(string name)
             {
+                name = name.Trim();
                 if (name.StartsWith("global::", StringComparison.Ordinal))
                     name = name.Substring("global::".Length);
-
+                var genericPos = name.IndexOf('<');
+                if (genericPos >= 0)
+                    name = name.Substring(0, genericPos);
                 return name;
-            }
-
-            static string StripGenerics(string name)
-            {
-                var index = name.IndexOf('<');
-                return index >= 0 ? name.Substring(0, index) : name;
             }
 
             static bool SymbolMatches(INamedTypeSymbol symbol, string fullName)

@@ -126,7 +126,7 @@ namespace GrpcRemoteMvvmModelUtil
         public static List<PropertyInfo> GetObservableProperties(INamedTypeSymbol classSymbol, string observablePropertyAttributeFullName, Compilation compilation)
         {
             var props = new List<PropertyInfo>();
-            foreach (var member in Helpers.GetAllMembers(classSymbol))
+            foreach (var member in classSymbol.GetMembers())
             {
                 if (member is IFieldSymbol fieldSymbol)
                 {
@@ -166,17 +166,11 @@ namespace GrpcRemoteMvvmModelUtil
             {
                 if (member is IMethodSymbol methodSymbol)
                 {
-                if (methodSymbol.IsStatic) continue;
-                var relayCmdAttribute = methodSymbol.GetAttributes().FirstOrDefault(a =>
-                    Helpers.AttributeMatches(a, relayCommandAttributeFullName));
+                    if (methodSymbol.IsStatic) continue;
+                    var relayCmdAttribute = methodSymbol.GetAttributes().FirstOrDefault(a =>
+                        Helpers.AttributeMatches(a, relayCommandAttributeFullName));
                     if (relayCmdAttribute != null)
                     {
-                        string baseMethodName = methodSymbol.Name;
-                        if (baseMethodName.EndsWith("Async", System.StringComparison.Ordinal))
-                        {
-                            baseMethodName = baseMethodName.Substring(0, baseMethodName.Length - "Async".Length);
-                        }
-                        string commandPropertyName = baseMethodName + "Command";
                         var parameters = methodSymbol.Parameters
                             .Select(p => new ParameterInfo(p.Name, p.Type.ToDisplayString(FullNameFormat).Replace("global::", ""), p.Type))
                             .ToList();
@@ -186,6 +180,12 @@ namespace GrpcRemoteMvvmModelUtil
                                  (rtSym.IsGenericType &&
                                     (rtSym.ConstructedFrom?.ToDisplayString() == "System.Threading.Tasks.Task" ||
                                      rtSym.ConstructedFrom?.ToDisplayString() == "System.Threading.Tasks.ValueTask"))));
+                        string baseMethodName = methodSymbol.Name;
+                        if (isAsync && baseMethodName.EndsWith("Async", System.StringComparison.Ordinal))
+                        {
+                            baseMethodName = baseMethodName.Substring(0, baseMethodName.Length - "Async".Length);
+                        }
+                        string commandPropertyName = baseMethodName + "Command";
                         cmds.Add(new CommandInfo(methodSymbol.Name, commandPropertyName, parameters, isAsync));
                     }
                 }
