@@ -104,6 +104,10 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             try {
                 if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
                 else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
+                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);
+                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);
+                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);
+                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);
                 else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
                 else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
             } catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
@@ -135,7 +139,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         return new SampleApp.ViewModels.Protos.IncrementCountResponse();
     }
 
-    public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse> DelayedIncrementAsync(SampleApp.ViewModels.Protos.DelayedIncrementAsyncRequest request, ServerCallContext context)
+    public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementResponse> DelayedIncrement(SampleApp.ViewModels.Protos.DelayedIncrementRequest request, ServerCallContext context)
     {
         try { await _dispatcher.InvokeAsync(async () => {
             var command = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
@@ -149,7 +153,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for DelayedIncrementAsync: " + ex.ToString());
         throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new SampleApp.ViewModels.Protos.DelayedIncrementAsyncResponse();
+        return new SampleApp.ViewModels.Protos.DelayedIncrementResponse();
     }
 
     public override async Task<SampleApp.ViewModels.Protos.SetNameToValueResponse> SetNameToValue(SampleApp.ViewModels.Protos.SetNameToValueRequest request, ServerCallContext context)
@@ -195,6 +199,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         {
             case string s: return Any.Pack(new StringValue { Value = s });
             case int i: return Any.Pack(new Int32Value { Value = i });
+            case uint ui: return Any.Pack(new UInt32Value { Value = ui });
             case bool b: return Any.Pack(new BoolValue { Value = b });
             case double d: return Any.Pack(new DoubleValue { Value = d });
             case float f: return Any.Pack(new FloatValue { Value = f });
@@ -230,6 +235,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             case string s: return Value.ForString(s);
             case bool b: return Value.ForBool(b);
             case int i: return Value.ForNumber(i);
+            case uint ui: return Value.ForNumber(ui);
             case long l: return Value.ForNumber(l);
             case double d: return Value.ForNumber(d);
             case float f: return Value.ForNumber(f);

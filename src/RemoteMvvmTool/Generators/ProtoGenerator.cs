@@ -190,6 +190,64 @@ public static class ProtoGenerator
             body.AppendLine();
         }
 
+        body.AppendLine("message UpdatePropertyValueRequest {");
+        body.AppendLine("  string property_name = 1;");
+        body.AppendLine("  google.protobuf.Any new_value = 2;");
+        body.AppendLine("}");
+        body.AppendLine();
+        body.AppendLine("message PropertyChangeNotification {");
+        body.AppendLine("  string property_name = 1;");
+        body.AppendLine("  google.protobuf.Any new_value = 2;");
+        body.AppendLine("}");
+        foreach (var c in cmds)
+        {
+            var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal)
+                ? c.MethodName[..^5]
+                : c.MethodName;
+
+            body.AppendLine();
+            if (c.Parameters.Count == 0)
+            {
+                body.AppendLine($"message {baseName}Request {{}}");
+            }
+            else
+            {
+                body.AppendLine($"message {baseName}Request {{");
+                int paramField = 1;
+                foreach (var p in c.Parameters)
+                {
+                    string protoType = MapProtoType(p.FullTypeSymbol!, allowMessage: true);
+                    body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(p.Name)} = {paramField++}; // Original C#: {p.TypeString} {p.Name}");
+                }
+                body.AppendLine("}");
+            }
+            body.AppendLine($"message {baseName}Response {{}}");
+        }
+
+        while (pendingMessages.Count > 0)
+        {
+            var msgType = pendingMessages.Dequeue();
+
+            List<IPropertySymbol> propsForMsg = new();
+            if (msgType.TypeKind != TypeKind.Error)
+            {
+                propsForMsg = Helpers.GetAllMembers(msgType)
+                    .OfType<IPropertySymbol>()
+                    .Where(p => !p.IsStatic && p.GetMethod != null && p.Parameters.Length == 0)
+                    .ToList();
+            }
+
+            body.AppendLine($"message {msgType.Name}State {{");
+            int msgField = 1;
+            foreach (var prop in propsForMsg)
+            {
+                string protoType = MapProtoType(prop.Type, allowMessage: true);
+                body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(prop.Name)} = {msgField++}; // Original C#: {prop.Type.ToDisplayString()} {prop.Name}");
+            }
+            body.AppendLine("}");
+            body.AppendLine();
+        }
+
         var processedEntries = new HashSet<string>();
         while (processedEntries.Count < mapEntryMessages.Count)
         {
@@ -206,36 +264,6 @@ public static class ProtoGenerator
                 body.AppendLine("}");
                 body.AppendLine();
             }
-        }
-
-        body.AppendLine("message UpdatePropertyValueRequest {");
-        body.AppendLine("  string property_name = 1;");
-        body.AppendLine("  google.protobuf.Any new_value = 2;");
-        body.AppendLine("}");
-        body.AppendLine();
-        body.AppendLine("message PropertyChangeNotification {");
-        body.AppendLine("  string property_name = 1;");
-        body.AppendLine("  google.protobuf.Any new_value = 2;");
-        body.AppendLine("}");
-        foreach (var c in cmds)
-        {
-            body.AppendLine();
-            if (c.Parameters.Count == 0)
-            {
-                body.AppendLine($"message {c.MethodName}Request {{}}");
-            }
-            else
-            {
-                body.AppendLine($"message {c.MethodName}Request {{");
-                int paramField = 1;
-                foreach (var p in c.Parameters)
-                {
-                    string protoType = MapProtoType(p.FullTypeSymbol!, allowMessage: true);
-                    body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(p.Name)} = {paramField++}; // Original C#: {p.TypeString} {p.Name}");
-                }
-                body.AppendLine("}");
-            }
-            body.AppendLine($"message {c.MethodName}Response {{}}");
         }
 
         body.AppendLine();
@@ -261,7 +289,10 @@ public static class ProtoGenerator
         body.AppendLine($"  rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);");
         foreach (var c in cmds)
         {
-            body.AppendLine($"  rpc {c.MethodName} ({c.MethodName}Request) returns ({c.MethodName}Response);");
+            var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal)
+                ? c.MethodName[..^5]
+                : c.MethodName;
+            body.AppendLine($"  rpc {baseName} ({baseName}Request) returns ({baseName}Response);");
         }
         body.AppendLine("  rpc Ping (google.protobuf.Empty) returns (ConnectionStatusResponse);");
         body.AppendLine("}");
