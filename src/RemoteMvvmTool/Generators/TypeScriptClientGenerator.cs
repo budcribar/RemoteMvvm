@@ -50,6 +50,10 @@ public static class TypeScriptClientGenerator
 
             if (type is INamedTypeSymbol named && named.IsGenericType)
             {
+                if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
+                {
+                    return MapTsType(named.TypeArguments[0]) + "[]";
+                }
                 if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var key, out var val))
                 {
                     var keyTs = MapKeyType(key!);

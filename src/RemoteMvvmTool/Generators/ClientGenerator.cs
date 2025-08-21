@@ -156,6 +156,8 @@ public static class ClientGenerator
                             sel = ".Select(ProtoStateConverters.FromProto)";
                         if (named.TypeKind == TypeKind.Interface)
                             psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
+                        else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
+                            psb.AppendLine($"{ind}this.{prop.Name} = new System.Collections.ObjectModel.ObservableCollection<{elem.ToDisplayString()}>(state.{protoStateFieldName}{sel});");
                         else
                             psb.AppendLine($"{ind}this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}{sel});");
                     }
