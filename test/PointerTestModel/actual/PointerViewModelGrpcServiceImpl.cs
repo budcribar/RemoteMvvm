@@ -427,8 +427,8 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         {
             var lv = new List<Value>();
             foreach (var item in enumerable)
-                lv.Add(ToValue(item));
-            return Value.ForList(lv);
+                lv.Values.Add(ToValue(item));
+            return Value.ForList(lv.Values.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())

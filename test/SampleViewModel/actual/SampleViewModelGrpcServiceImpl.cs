@@ -198,7 +198,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             case float f: return Any.Pack(new FloatValue { Value = f });
             case long l: return Any.Pack(new Int64Value { Value = l });
             case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
-            case Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
+            case System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
         }
         if (value is IDictionary dict)
         {
@@ -231,7 +231,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             case long l: return Value.ForNumber(l);
             case double d: return Value.ForNumber(d);
             case float f: return Value.ForNumber(f);
-            case Enum e: return Value.ForNumber(Convert.ToInt32(e));
+            case System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
             case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString("o"));
         }
         if (value is IDictionary dict)
@@ -243,10 +243,10 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         }
         if (value is IEnumerable enumerable && value is not string)
         {
-            var lv = new ListValue();
+            var lv = new List<Value>();
             foreach (var item in enumerable)
                 lv.Values.Add(ToValue(item));
-            return Value.ForList(lv);
+            return Value.ForList(lv.Values.ToArray());
         }
         var structValue = new Struct();
         foreach (var prop in value.GetType().GetProperties())
