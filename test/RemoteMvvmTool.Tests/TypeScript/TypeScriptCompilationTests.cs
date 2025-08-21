@@ -90,9 +90,10 @@ public class TypeScriptCompilationTests
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.d.ts"),
             "export class StringValue { setValue(v:string):void; getValue():string; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):StringValue; }\n" +
             "export class Int32Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int32Value; }\n" +
-            "export class BoolValue { setValue(v:boolean):void; getValue():boolean; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):BoolValue; }");
+            "export class BoolValue { setValue(v:boolean):void; getValue():boolean; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):BoolValue; }\n" +
+            "export class DoubleValue { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):DoubleValue; }");
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.js"),
-            "class W{ constructor(){this.value=0;} setValue(v){this.value=v;} getValue(){return this.value;} serializeBinary(){return new Uint8Array();} } exports.StringValue=W; exports.Int32Value=W; exports.BoolValue=W;");
+            "class W{ constructor(){this.value=0;} setValue(v){this.value=v;} getValue(){return this.value;} serializeBinary(){return new Uint8Array();} } exports.StringValue=W; exports.Int32Value=W; exports.BoolValue=W; exports.DoubleValue=W;");
 
         var gen = Path.Combine(dir, "generated");
         Directory.CreateDirectory(gen);

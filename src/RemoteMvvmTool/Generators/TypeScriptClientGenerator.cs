@@ -144,7 +144,7 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
         sb.AppendLine("import { Any } from 'google-protobuf/google/protobuf/any_pb';");
-        sb.AppendLine("import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';");
+        sb.AppendLine("import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';");
         sb.AppendLine();
 
         // generate state interfaces for complex types
@@ -229,10 +229,16 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("            const wrapper = new StringValue();");
         sb.AppendLine("            wrapper.setValue(value);");
         sb.AppendLine("            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');");
-        sb.AppendLine("        } else if (typeof value === 'number' && Number.isInteger(value)) {");
-        sb.AppendLine("            const wrapper = new Int32Value();");
-        sb.AppendLine("            wrapper.setValue(value);");
-        sb.AppendLine("            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');");
+        sb.AppendLine("        } else if (typeof value === 'number') {");
+        sb.AppendLine("            if (Number.isInteger(value)) {");
+        sb.AppendLine("                const wrapper = new Int32Value();");
+        sb.AppendLine("                wrapper.setValue(value);");
+        sb.AppendLine("                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');");
+        sb.AppendLine("            } else {");
+        sb.AppendLine("                const wrapper = new DoubleValue();");
+        sb.AppendLine("                wrapper.setValue(value);");
+        sb.AppendLine("                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.DoubleValue');");
+        sb.AppendLine("            }");
         sb.AppendLine("        } else if (typeof value === 'boolean') {");
         sb.AppendLine("            const wrapper = new BoolValue();");
         sb.AppendLine("            wrapper.setValue(value);");
@@ -294,6 +300,7 @@ public static class TypeScriptClientGenerator
                     "StringValue" => "StringValue.deserializeBinary",
                     "Int32Value" => "Int32Value.deserializeBinary",
                     "BoolValue" => "BoolValue.deserializeBinary",
+                    "DoubleValue" => "DoubleValue.deserializeBinary",
                     _ => ""
                 };
                 sb.AppendLine($"                case '{p.Name}':");

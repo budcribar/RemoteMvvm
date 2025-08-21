@@ -7,7 +7,7 @@ import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, Prope
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { StringValue, Int32Value, BoolValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 
 export class GameViewModelRemoteClient {
     private readonly grpcClient: GameViewModelServiceClient;
@@ -79,10 +79,16 @@ export class GameViewModelRemoteClient {
             const wrapper = new StringValue();
             wrapper.setValue(value);
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
-        } else if (typeof value === 'number' && Number.isInteger(value)) {
-            const wrapper = new Int32Value();
-            wrapper.setValue(value);
-            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+        } else if (typeof value === 'number') {
+            if (Number.isInteger(value)) {
+                const wrapper = new Int32Value();
+                wrapper.setValue(value);
+                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+            } else {
+                const wrapper = new DoubleValue();
+                wrapper.setValue(value);
+                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.DoubleValue');
+            }
         } else if (typeof value === 'boolean') {
             const wrapper = new BoolValue();
             wrapper.setValue(value);
