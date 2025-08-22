@@ -368,7 +368,7 @@ class FakeClient extends {name}ServiceClient {{
 }})().catch(e => {{ console.error(e); process.exit(1); }});";
     File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
 
-        var tsconfig = @"{
+    var tsconfig = @"{
   ""compilerOptions"": {
     ""target"": ""es2018"",
     ""module"": ""commonjs"",
