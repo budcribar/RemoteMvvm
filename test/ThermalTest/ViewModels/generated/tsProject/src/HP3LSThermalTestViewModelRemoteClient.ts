@@ -7,7 +7,8 @@ import { HP3LSThermalTestViewModelState, UpdatePropertyValueRequest, SubscribeRe
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { StringValue, Int32Value, BoolValue, DoubleValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, DoubleValue, Int32Value, Int64Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 export interface ThermalZoneState {
   zone: number;
@@ -17,7 +18,7 @@ export interface ThermalZoneState {
   processorLoad: number;
   fanSpeed: number;
   secondsInState: number;
-  firstSeenInState: string;
+  firstSeenInState: Date;
   progress: number;
   background: string;
   status: number;
@@ -62,7 +63,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zoneList = (state as any).getZoneList();
+        this.zoneList = (state as any).getZoneListList();
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -77,7 +78,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zoneList = (state as any).getZoneList();
+        this.zoneList = (state as any).getZoneListList();
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -99,9 +100,15 @@ export class HP3LSThermalTestViewModelRemoteClient {
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
         } else if (typeof value === 'number') {
             if (Number.isInteger(value)) {
-                const wrapper = new Int32Value();
-                wrapper.setValue(value);
-                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+                if (value > 2147483647 || value < -2147483648) {
+                    const wrapper = new Int64Value();
+                    wrapper.setValue(value);
+                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int64Value');
+                } else {
+                    const wrapper = new Int32Value();
+                    wrapper.setValue(value);
+                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
+                }
             } else {
                 const wrapper = new DoubleValue();
                 wrapper.setValue(value);
@@ -111,6 +118,9 @@ export class HP3LSThermalTestViewModelRemoteClient {
             const wrapper = new BoolValue();
             wrapper.setValue(value);
             anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.BoolValue');
+        } else if (value instanceof Date) {
+            const wrapper = Timestamp.fromDate(value);
+            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Timestamp');
         } else {
             throw new Error('Unsupported value type');
         }

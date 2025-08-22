@@ -14,20 +14,41 @@ const grpcHost = 'http://localhost:50052';
 const grpcClient = new HP3LSThermalTestViewModelServiceClient(grpcHost);
 const vm = new HP3LSThermalTestViewModelRemoteClient(grpcClient);
 
+// Centralized error reporting
+function handleError(err: any, context?: string) {
+    try {
+        const msg = err?.message ?? String(err);
+        console.error(context ? `${context}:` : 'Error:', err);
+        const statusEl = document.getElementById('connection-status');
+        if (statusEl) {
+            statusEl.textContent = context ? `${context}: ${msg}` : msg;
+        }
+    } catch { /* no-op */ }
+}
+
+// Catch any unhandled promise rejections and global errors
+window.addEventListener('unhandledrejection', (ev: PromiseRejectionEvent) => {
+    handleError(ev.reason, 'Unhandled promise');
+    ev.preventDefault?.();
+});
+window.addEventListener('error', (ev: ErrorEvent) => {
+    handleError(ev.error ?? ev.message, 'Global error');
+});
+
 function computeMaxTempC(deviceName: string | undefined): number {
     const pct = vm?.testSettings?.cpuTemperatureThreshold ?? 100;
-    const dts = vm?.testSettings?.dTS as Record<string, number> | undefined;
-    const max = deviceName && dts ? dts[deviceName] : undefined;
-    if (typeof max === 'number' && Number.isFinite(max)) {
-        return Math.round(max * (pct / 100));
-    }
+    //const dts = vm?.testSettings?.dTS as Record<string, number> | undefined;
+    //const max = deviceName && dts ? dts[deviceName] : undefined;
+    // if (typeof max === 'number' && Number.isFinite(max)) {
+    //     return Math.round(max * (pct / 100));
+    // }
     // Fallback if DTS unknown
     return 100;
 }
 
 function buildZonesPayload(): any[] {
-    const zonesObj = vm.zones ?? {} as Record<string, any>;
-    const arr = Object.values(zonesObj) as Array<any>;
+    //const zonesObj = vm.zones ?? {} as Record<string, any>;
+    /* const arr = Object.values(zonesObj) as Array<any>;
     return arr.map(z => ({
         active: !!z.isActive,
         background: z.background ?? '#fafafa',
@@ -43,10 +64,11 @@ function buildZonesPayload(): any[] {
         processorLoad: Number(z.processorLoad ?? 0),
         cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
         // stateDescriptions can be provided if available; omitted by default
-    }));
+    })); */
+    return [];
 }
 
-async function render() {
+function render() {
     const main = document.querySelector('x-thermal-main') as HTMLElement | null;
     if (main) {
         // Toggle sections
@@ -62,9 +84,9 @@ async function render() {
         // Zones
         try {
             const zones = buildZonesPayload();
-            main.setAttribute('zones', JSON.stringify(zones));
-        } catch {
-            // ignore serialization errors
+            //main.setAttribute('zones', JSON.stringify(zones));
+        } catch (err) {
+            handleError(err, 'Render zones');
         }
     }
     const statusEl = document.getElementById('connection-status');
@@ -72,9 +94,13 @@ async function render() {
 }
 
 async function init() {
-    await vm.initializeRemote();
-    vm.addChangeListener(render);
-    await render();
+    try {
+        await vm.initializeRemote();
+        vm.addChangeListener(render);
+        render();
+    } catch (err) {
+        handleError(err, 'Initialize remote');
+    }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -82,44 +108,66 @@ document.addEventListener('DOMContentLoaded', () => {
     const main = document.querySelector('x-thermal-main');
     if (main) {
         main.addEventListener('change-temp-threshold', async (e: any) => {
-            await vm.updatePropertyValue('CpuTemperatureThreshold', Number(e?.detail?.value ?? 0));
+            try {
+                await vm.updatePropertyValue('CpuTemperatureThreshold', Number(e?.detail?.value ?? 0));
+            } catch (err) { handleError(err, 'Update CpuTemperatureThreshold'); }
         });
         main.addEventListener('change-cpu-load-threshold', async (e: any) => {
-            await vm.updatePropertyValue('CpuLoadThreshold', Number(e?.detail?.value ?? 0));
+            try {
+                await vm.updatePropertyValue('CpuLoadThreshold', Number(e?.detail?.value ?? 0));
+            } catch (err) { handleError(err, 'Update CpuLoadThreshold'); }
         });
         main.addEventListener('change-cpu-load-time', async (e: any) => {
-            await vm.updatePropertyValue('CpuLoadTimeSpan', Number(e?.detail?.value ?? 0));
+            try {
+                await vm.updatePropertyValue('CpuLoadTimeSpan', Number(e?.detail?.value ?? 0));
+            } catch (err) { handleError(err, 'Update CpuLoadTimeSpan'); }
         });
         main.addEventListener('toggle-readme', async (e: any) => {
-            const show = Boolean(e?.detail?.value);
-            await vm.updatePropertyValue('ShowReadme', show);
-            if (show) {
-                // Create or reuse a notification element to show the README
-                let note = document.querySelector('x-notification') as any;
-                if (!note) {
-                    note = document.createElement('x-notification') as any;
-                    note.setAttribute('title', 'README');
-                    const readme = document.createElement('x-readme');
-                    // Mirror show-previous from main, if present
-                    if ((main as HTMLElement).getAttribute('readme-show-previous') === 'true') {
-                        readme.setAttribute('show-previous', 'true');
+            try {
+                const show = Boolean(e?.detail?.value);
+                await vm.updatePropertyValue('ShowReadme', show);
+                if (show) {
+                    // Create or reuse a notification element to show the README
+                    let note = document.querySelector('x-notification') as any;
+                    if (!note) {
+                        note = document.createElement('x-notification') as any;
+                        note.setAttribute('title', 'README');
+                        const readme = document.createElement('x-readme');
+                        // Mirror show-previous from main, if present
+                        if ((main as HTMLElement).getAttribute('readme-show-previous') === 'true') {
+                            readme.setAttribute('show-previous', 'true');
+                        }
+                        note.appendChild(readme);
+                        document.body.appendChild(note);
                     }
-                    note.appendChild(readme);
-                    document.body.appendChild(note);
-                    note.addEventListener('close', async () => {
-                        // When the notification closes, turn off ShowReadme in VM and reflect to main
-                        await vm.updatePropertyValue('ShowReadme', false);
-                        (main as HTMLElement).setAttribute('show-readme', 'false');
-                    });
+                    // Always ensure we have a close handler bound
+                    const onClose = async () => {
+                        try {
+                            // When the notification closes, turn off ShowReadme in VM and reflect to main
+                            await vm.updatePropertyValue('ShowReadme', false);
+                            (main as HTMLElement).setAttribute('show-readme', 'false');
+                        } catch (err) { handleError(err, 'Close README'); }
+                    };
+                    // Avoid duplicate listeners by removing and re-adding
+                    note.removeEventListener?.('close', onClose as any);
+                    note.addEventListener?.('close', onClose as any);
+                    if (typeof note.show === 'function') note.show(); else note.setAttribute('open', '');
+                } else {
+                    // If toggled off, close any open notification
+                    const note = document.querySelector('x-notification') as any;
+                    if (note) {
+                        if (typeof note.hide === 'function') note.hide(); else note.removeAttribute('open');
+                    }
                 }
-                if (typeof note.show === 'function') note.show(); else note.setAttribute('open', '');
-            }
+            } catch (err) { handleError(err, 'Toggle README'); }
         });
         main.addEventListener('toggle-description', async (e: any) => {
-            await vm.updatePropertyValue('ShowDescription', Boolean(e?.detail?.value));
+            try { await vm.updatePropertyValue('ShowDescription', Boolean(e?.detail?.value)); }
+            catch (err) { handleError(err, 'Toggle description'); }
         });
         main.addEventListener('cancel', async () => {
-            await vm.cancelTest();
+            try { await vm.cancelTest(); }
+            catch (err) { handleError(err, 'Cancel test'); }
         });
     }
 });

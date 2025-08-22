@@ -44,7 +44,7 @@ goog.exportSymbol('proto.generated_protos.UpdatePropertyValueRequest', null, glo
  * @constructor
  */
 proto.generated_protos.HP3LSThermalTestViewModelState = function(opt_data) {
-  jspb.Message.initialize(this, opt_data, 0, -1, null, null);
+  jspb.Message.initialize(this, opt_data, 0, -1, proto.generated_protos.HP3LSThermalTestViewModelState.repeatedFields_, null);
 };
 goog.inherits(proto.generated_protos.HP3LSThermalTestViewModelState, jspb.Message);
 if (goog.DEBUG && !COMPILED) {
@@ -265,6 +265,13 @@ if (goog.DEBUG && !COMPILED) {
   proto.generated_protos.ConnectionStatusResponse.displayName = 'proto.generated_protos.ConnectionStatusResponse';
 }
 
+/**
+ * List of repeated fields within this message type.
+ * @private {!Array<number>}
+ * @const
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.repeatedFields_ = [4];
+
 
 
 if (jspb.Message.GENERATE_TO_OBJECT) {
@@ -296,10 +303,14 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.toObject = funct
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.toObject = function(includeInstance, msg) {
   var f, obj = {
-    zonesMap: (f = msg.getZonesMap()) ? f.toObject(includeInstance, proto.generated_protos.ThermalZoneComponentViewModelState.toObject) : [],
+    cpuTemperatureThreshold: jspb.Message.getFieldWithDefault(msg, 1, 0),
+    cpuLoadThreshold: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    cpuLoadTimeSpan: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    zoneListList: jspb.Message.toObjectList(msg.getZoneListList(),
+    proto.generated_protos.ThermalZoneComponentViewModelState.toObject, includeInstance),
     testSettings: (f = msg.getTestSettings()) && proto.generated_protos.TestSettingsModelState.toObject(includeInstance, f),
-    showDescription: jspb.Message.getBooleanFieldWithDefault(msg, 3, false),
-    showReadme: jspb.Message.getBooleanFieldWithDefault(msg, 4, false)
+    showDescription: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
+    showReadme: jspb.Message.getBooleanFieldWithDefault(msg, 7, false)
   };
 
   if (includeInstance) {
@@ -337,21 +348,32 @@ proto.generated_protos.HP3LSThermalTestViewModelState.deserializeBinaryFromReade
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = msg.getZonesMap();
-      reader.readMessage(value, function(message, reader) {
-        jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readInt32, jspb.BinaryReader.prototype.readMessage, proto.generated_protos.ThermalZoneComponentViewModelState.deserializeBinaryFromReader, 0, new proto.generated_protos.ThermalZoneComponentViewModelState());
-         });
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setCpuTemperatureThreshold(value);
       break;
     case 2:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setCpuLoadThreshold(value);
+      break;
+    case 3:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setCpuLoadTimeSpan(value);
+      break;
+    case 4:
+      var value = new proto.generated_protos.ThermalZoneComponentViewModelState;
+      reader.readMessage(value,proto.generated_protos.ThermalZoneComponentViewModelState.deserializeBinaryFromReader);
+      msg.addZoneList(value);
+      break;
+    case 5:
       var value = new proto.generated_protos.TestSettingsModelState;
       reader.readMessage(value,proto.generated_protos.TestSettingsModelState.deserializeBinaryFromReader);
       msg.setTestSettings(value);
       break;
-    case 3:
+    case 6:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setShowDescription(value);
       break;
-    case 4:
+    case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setShowReadme(value);
       break;
@@ -384,14 +406,39 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.serializeBinary 
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getZonesMap(true);
-  if (f && f.getLength() > 0) {
-    f.serializeBinary(1, writer, jspb.BinaryWriter.prototype.writeInt32, jspb.BinaryWriter.prototype.writeMessage, proto.generated_protos.ThermalZoneComponentViewModelState.serializeBinaryToWriter);
+  f = message.getCpuTemperatureThreshold();
+  if (f !== 0) {
+    writer.writeInt32(
+      1,
+      f
+    );
+  }
+  f = message.getCpuLoadThreshold();
+  if (f !== 0) {
+    writer.writeInt32(
+      2,
+      f
+    );
+  }
+  f = message.getCpuLoadTimeSpan();
+  if (f !== 0) {
+    writer.writeInt32(
+      3,
+      f
+    );
+  }
+  f = message.getZoneListList();
+  if (f.length > 0) {
+    writer.writeRepeatedMessage(
+      4,
+      f,
+      proto.generated_protos.ThermalZoneComponentViewModelState.serializeBinaryToWriter
+    );
   }
   f = message.getTestSettings();
   if (f != null) {
     writer.writeMessage(
-      2,
+      5,
       f,
       proto.generated_protos.TestSettingsModelState.serializeBinaryToWriter
     );
@@ -399,14 +446,14 @@ proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = 
   f = message.getShowDescription();
   if (f) {
     writer.writeBool(
-      3,
+      6,
       f
     );
   }
   f = message.getShowReadme();
   if (f) {
     writer.writeBool(
-      4,
+      7,
       f
     );
   }
@@ -414,34 +461,104 @@ proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = 
 
 
 /**
- * map<int32, ThermalZoneComponentViewModelState> zones = 1;
- * @param {boolean=} opt_noLazyCreate Do not create the map if
- * empty, instead returning `undefined`
- * @return {!jspb.Map<number,!proto.generated_protos.ThermalZoneComponentViewModelState>}
+ * optional int32 cpu_temperature_threshold = 1;
+ * @return {number}
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getZonesMap = function(opt_noLazyCreate) {
-  return /** @type {!jspb.Map<number,!proto.generated_protos.ThermalZoneComponentViewModelState>} */ (
-      jspb.Message.getMapField(this, 1, opt_noLazyCreate,
-      proto.generated_protos.ThermalZoneComponentViewModelState));
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuTemperatureThreshold = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
 };
 
 
 /**
- * Clears values from the map. The map will be non-null.
+ * @param {number} value
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.clearZonesMap = function() {
-  this.getZonesMap().clear();
-  return this;};
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuTemperatureThreshold = function(value) {
+  return jspb.Message.setProto3IntField(this, 1, value);
+};
 
 
 /**
- * optional TestSettingsModelState test_settings = 2;
+ * optional int32 cpu_load_threshold = 2;
+ * @return {number}
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadThreshold = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuLoadThreshold = function(value) {
+  return jspb.Message.setProto3IntField(this, 2, value);
+};
+
+
+/**
+ * optional int32 cpu_load_time_span = 3;
+ * @return {number}
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadTimeSpan = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuLoadTimeSpan = function(value) {
+  return jspb.Message.setProto3IntField(this, 3, value);
+};
+
+
+/**
+ * repeated ThermalZoneComponentViewModelState zone_list = 4;
+ * @return {!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>}
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getZoneListList = function() {
+  return /** @type{!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>} */ (
+    jspb.Message.getRepeatedWrapperField(this, proto.generated_protos.ThermalZoneComponentViewModelState, 4));
+};
+
+
+/**
+ * @param {!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>} value
+ * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
+*/
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setZoneListList = function(value) {
+  return jspb.Message.setRepeatedWrapperField(this, 4, value);
+};
+
+
+/**
+ * @param {!proto.generated_protos.ThermalZoneComponentViewModelState=} opt_value
+ * @param {number=} opt_index
+ * @return {!proto.generated_protos.ThermalZoneComponentViewModelState}
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.addZoneList = function(opt_value, opt_index) {
+  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.generated_protos.ThermalZoneComponentViewModelState, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.clearZoneListList = function() {
+  return this.setZoneListList([]);
+};
+
+
+/**
+ * optional TestSettingsModelState test_settings = 5;
  * @return {?proto.generated_protos.TestSettingsModelState}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getTestSettings = function() {
   return /** @type{?proto.generated_protos.TestSettingsModelState} */ (
-    jspb.Message.getWrapperField(this, proto.generated_protos.TestSettingsModelState, 2));
+    jspb.Message.getWrapperField(this, proto.generated_protos.TestSettingsModelState, 5));
 };
 
 
@@ -450,7 +567,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getTestSettings 
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
 */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setTestSettings = function(value) {
-  return jspb.Message.setWrapperField(this, 2, value);
+  return jspb.Message.setWrapperField(this, 5, value);
 };
 
 
@@ -468,16 +585,16 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.clearTestSetting
  * @return {boolean}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.hasTestSettings = function() {
-  return jspb.Message.getField(this, 2) != null;
+  return jspb.Message.getField(this, 5) != null;
 };
 
 
 /**
- * optional bool show_description = 3;
+ * optional bool show_description = 6;
  * @return {boolean}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowDescription = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 3, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
 };
 
 
@@ -486,16 +603,16 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowDescripti
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setShowDescription = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 3, value);
+  return jspb.Message.setProto3BooleanField(this, 6, value);
 };
 
 
 /**
- * optional bool show_readme = 4;
+ * optional bool show_readme = 7;
  * @return {boolean}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowReadme = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 4, false));
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
 };
 
 
@@ -504,7 +621,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowReadme = 
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setShowReadme = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 4, value);
+  return jspb.Message.setProto3BooleanField(this, 7, value);
 };
 
 
