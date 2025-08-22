@@ -13,3 +13,5 @@ This repository contains both .NET and TypeScript sources. If you modify any cod
    ```
 
 Add the output of these commands to the **Testing** section of your pull request description. If the commands fail because of missing dependencies or network restrictions, mention that in the Testing section.
+
+Files under `test/**/actual/` and `test/**/actual2/` are generated during test runs. Revert any changes to these directories before committing.
