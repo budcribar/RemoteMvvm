@@ -109,19 +109,19 @@ public static class ServerGenerator
         {
             if (GeneratorHelpers.CanUseProtoMap(kType, vType))
             {
-                string keySel = KeyToProto($"{kvVar}.Key", kType);
-                string valSel = ValueToProto($"{kvVar}.Value", vType, kvVar + "1");
-                return $"{dictExpr}.ToDictionary({kvVar} => {keySel}, {kvVar} => {valSel})";
+                string keySel = KeyToProto($"{{kvVar}}.Key", kType);
+                string valSel = ValueToProto($"{{kvVar}}.Value", vType, $"{{kvVar}}1");
+                return $"{{dictExpr}}.ToDictionary({kvVar} => {keySel}, {kvVar} => {valSel})";
             }
             else
             {
                 string entryName = GeneratorHelpers.GetDictionaryEntryName(kType, vType);
-                string keySel = KeyToProto($"{kvVar}.Key", kType);
-                string valSel = ValueToProto($"{kvVar}.Value", vType, kvVar + "1");
+                string keySel = KeyToProto($"{{kvVar}}.Key", kType);
+                string valSel = ValueToProto($"{{kvVar}}.Value", vType, $"{{kvVar}}1");
                 if (GeneratorHelpers.TryGetDictionaryTypeArgs(vType, out _, out _))
-                    return $"{dictExpr}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {{ {valSel} }} }})";
+                    return $"{{dictExpr}}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {{ {valSel} }} }})";
                 else
-                    return $"{dictExpr}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {valSel} }})";
+                    return $"{{dictExpr}}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {valSel} }})";
             }
         }
 
@@ -202,7 +202,7 @@ public static class ServerGenerator
                     sb.AppendLine($"            state.{p.Name} = propValue;");
             }
             sb.AppendLine("        }");
-            sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.Message); Debug.WriteLine(\"[GrpcService:{vmName}] Exception details: \" + ex.ToString()); }}");
+            sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.ToString()); }}");
         }
         sb.AppendLine("        return Task.FromResult(state);");
         sb.AppendLine("    }");

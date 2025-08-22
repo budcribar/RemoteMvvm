@@ -16,17 +16,18 @@ Add the output of these commands to the **Testing** section of your pull request
 
 Files under `test/**/actual/` and `test/**/actual2/` are generated during test runs. Revert any changes to these directories before committing.
 
-Here is a hint of how to set up the TypeScript project:
-
-var tsconfig = @"{
-  ""compilerOptions"": {
-    ""target"": ""es2018"",
-    ""module"": ""commonjs"",
-    ""strict"": false,
-    ""esModuleInterop"": true,
-    ""lib"": [""es2018"", ""dom""],
-    ""outDir"": ""dist"",
-    ""allowJs"": true
+use c#11 raw string literal syntax to avoid escaping quotes and backslashes.
+var tsconfig = """
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "strict": false,
+    "esModuleInterop": true,
+    "lib": ["es2018", "dom"],
+    "outDir": "dist",
+    "allowJs": true
   },
-  ""include"": [""**/*.ts"", ""**/*.js""]
-}";
+  "include": ["**/*.ts", "**/*.js"]
+}
+""";
