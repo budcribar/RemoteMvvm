@@ -22,7 +22,7 @@ namespace RemoteMvvmTool.Tests;
 
 public class GrpcWebEndToEndTests
 {
-    static void RunCmd(string file, string args, string workDir)
+    static void RunCmd(string file, string args, string workDir, out string stdout, out string stderr)
     {
         var psi = new ProcessStartInfo(file, args)
         {
@@ -37,12 +37,12 @@ public class GrpcWebEndToEndTests
 
         Console.WriteLine($"Running command: {file} {args}");
 
-        var stdout = new StringBuilder();
-        var stderr = new StringBuilder();
+        var stdoutBuilder = new StringBuilder();
+        var stderrBuilder = new StringBuilder();
 
         using var p = new Process { StartInfo = psi, EnableRaisingEvents = false };
-        p.OutputDataReceived += (s, e) => { if (e.Data != null) { Console.WriteLine(e.Data); stdout.AppendLine(e.Data); } };
-        p.ErrorDataReceived += (s, e) => { if (e.Data != null) { Console.Error.WriteLine(e.Data); stderr.AppendLine(e.Data); } };
+        p.OutputDataReceived += (s, e) => { if (e.Data != null) { Console.WriteLine(e.Data); stdoutBuilder.AppendLine(e.Data); } };
+        p.ErrorDataReceived += (s, e) => { if (e.Data != null) { Console.Error.WriteLine(e.Data); stderrBuilder.AppendLine(e.Data); } };
 
         if (!p.Start())
             throw new Exception($"Failed to start process: {file}");
@@ -51,10 +51,18 @@ public class GrpcWebEndToEndTests
         p.BeginErrorReadLine();
         p.WaitForExit();
 
+        stdout = stdoutBuilder.ToString();
+        stderr = stderrBuilder.ToString();
+
         if (p.ExitCode != 0)
         {
             throw new Exception($"{file} {args} failed with exit code {p.ExitCode}.{Environment.NewLine}STDOUT:{Environment.NewLine}{stdout}{Environment.NewLine}STDERR:{Environment.NewLine}{stderr}");
         }
+    }
+
+    static void RunCmd(string file, string args, string workDir)
+    {
+        RunCmd(file, args, workDir, out _, out _);
     }
 
     static int GetFreePort()
@@ -474,15 +482,27 @@ public class GrpcWebEndToEndTests
         };
         
         bool testSuccess = false;
+        string? successOutput = null;
         foreach (var nodePath in nodePaths)
         {
             try
             {
                 Console.WriteLine($"Running Node.js test with: {nodePath}");
-                RunCmd(nodePath, $"test-protoc.js {port}", testProjectDir);
-                testSuccess = true;
-                Console.WriteLine("✅ Node.js client test passed");
-                break;
+                RunCmd(nodePath, $"test-protoc.js {port}", testProjectDir, out var stdout, out var stderr);
+                
+                // Check if the output contains success indicators
+                if (stdout.Contains("Test passed") || stdout.Contains("✅ Test passed"))
+                {
+                    testSuccess = true;
+                    successOutput = stdout;
+                    Console.WriteLine("✅ Node.js client test passed - found success message in output");
+                    break;
+                }
+                else
+                {
+                    Console.WriteLine($"⚠️ Node.js test ran but didn't find 'Test passed' message");
+                    Console.WriteLine($"Output was: {stdout.Substring(0, Math.Min(200, stdout.Length))}...");
+                }
             }
             catch (Exception ex)
             {
@@ -492,7 +512,27 @@ public class GrpcWebEndToEndTests
         
         if (!testSuccess)
         {
-            Console.WriteLine("⚠️ Node.js client test failed, but this doesn't fail the overall test since the primary goal is testing server generation.");
+            throw new Exception("Node.js client test failed - did not find 'Test passed' message in output or process failed to run.");
+        }
+        
+        // Show some details from the successful test
+        if (successOutput != null)
+        {
+            var lines = successOutput.Split('\n');
+            var relevantLines = lines.Where(line => 
+                line.Contains("zones") || 
+                line.Contains("Temperatures") || 
+                line.Contains("Test passed") ||
+                line.Contains("Successfully retrieved")).ToArray();
+            
+            if (relevantLines.Any())
+            {
+                Console.WriteLine("Node.js test details:");
+                foreach (var line in relevantLines)
+                {
+                    Console.WriteLine($"  {line.Trim()}");
+                }
+            }
         }
     }
 
