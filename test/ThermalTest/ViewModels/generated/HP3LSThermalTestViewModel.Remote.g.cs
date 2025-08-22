@@ -27,7 +27,7 @@ namespace HPSystemsTools.ViewModels
         private GrpcChannel? _channel;
         private HPSystemsTools.ViewModels.RemoteClients.HP3LSThermalTestViewModelRemoteClient? _remoteClient;
 
-        public HP3LSThermalTestViewModel(ServerOptions options)
+        public HP3LSThermalTestViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -87,7 +87,7 @@ namespace HPSystemsTools.ViewModels
             Task.Run(() => app.RunAsync()); // Run the server in a background thread
         }
 
-        public HP3LSThermalTestViewModel(ClientOptions options)
+        public HP3LSThermalTestViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = null!;

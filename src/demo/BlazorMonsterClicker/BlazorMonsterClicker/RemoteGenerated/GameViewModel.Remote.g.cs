@@ -27,7 +27,7 @@ namespace MonsterClicker.ViewModels
         private GrpcChannel? _channel;
         private MonsterClicker.ViewModels.RemoteClients.GameViewModelRemoteClient? _remoteClient;
 
-        public GameViewModel(ServerOptions options)
+        public GameViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
@@ -87,7 +87,7 @@ namespace MonsterClicker.ViewModels
             Task.Run(() => app.RunAsync()); // Run the server in a background thread
         }
 
-        public GameViewModel(ClientOptions options)
+        public GameViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = null!;
