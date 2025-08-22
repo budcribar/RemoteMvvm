@@ -87,7 +87,7 @@ namespace HPSystemsTools.ViewModels
             Task.Run(() => app.RunAsync()); // Run the server in a background thread
         }
 
-        public HP3LSThermalTestViewModel(ClientOptions options)
+        public HP3LSThermalTestViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = null!;

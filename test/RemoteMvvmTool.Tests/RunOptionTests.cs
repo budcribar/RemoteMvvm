@@ -92,7 +92,8 @@ public class RunOptionTests
             refs);
         var vmNamespace = sym?.ContainingNamespace.ToDisplayString() ?? string.Empty;
         var baseClass = sym?.BaseType?.ToDisplayString() ?? string.Empty;
-        var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "wpf");
+        var hasParameterlessCtor = sym?.Constructors.Any(c => c.Parameters.Length == 0 && !c.IsImplicitlyDeclared) ?? false;
+        var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "wpf", hasParameterlessCtor);
         Assert.Contains("Dispatcher _dispatcher", partial);
         Assert.Contains("Dispatcher.CurrentDispatcher", partial);
         Assert.Contains($"new {name}GrpcServiceImpl(this, _dispatcher)", partial);
@@ -117,7 +118,8 @@ public class RunOptionTests
             refs);
         var vmNamespace = sym?.ContainingNamespace.ToDisplayString() ?? string.Empty;
         var baseClass = sym?.BaseType?.ToDisplayString() ?? string.Empty;
-        var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "winforms");
+        var hasParameterlessCtor = sym?.Constructors.Any(c => c.Parameters.Length == 0 && !c.IsImplicitlyDeclared) ?? false;
+        var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "winforms", hasParameterlessCtor);
         Assert.Contains("Control _dispatcher", partial);
         Assert.Contains("new Control()", partial);
         Assert.Contains($"new {name}GrpcServiceImpl(this, _dispatcher)", partial);
@@ -142,7 +144,8 @@ public class RunOptionTests
             refs);
         var vmNamespace = sym?.ContainingNamespace.ToDisplayString() ?? string.Empty;
         var baseClass = sym?.BaseType?.ToDisplayString() ?? string.Empty;
-        var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "console");
+        var hasParameterlessCtor = sym?.Constructors.Any(c => c.Parameters.Length == 0 && !c.IsImplicitlyDeclared) ?? false;
+        var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "console", hasParameterlessCtor);
         Assert.DoesNotContain("Dispatcher", partial);
         Assert.DoesNotContain("Control _dispatcher", partial);
         Assert.Contains($"new {name}GrpcServiceImpl(this)", partial);
@@ -151,8 +154,15 @@ public class RunOptionTests
     [Fact]
     public void ViewModelPartialGeneration_UsesOptionsPort()
     {
-        var partial = ViewModelPartialGenerator.Generate("TestViewModel", "Generated.Protos", "TestViewModelService", "Generated.ViewModels", "Generated.Clients", string.Empty, "console");
+        var partial = ViewModelPartialGenerator.Generate("TestViewModel", "Generated.Protos", "TestViewModelService", "Generated.ViewModels", "Generated.Clients", string.Empty, "console", true);
         Assert.Contains("kestrelOptions.ListenLocalhost(options.Port", partial);
         Assert.DoesNotContain("NetworkConfig.Port", partial);
+    }
+
+    [Fact]
+    public void ViewModelPartialGeneration_NoParameterlessCtor_OmitsThisCall()
+    {
+        var partial = ViewModelPartialGenerator.Generate("NoDefaultViewModel", "Generated.Protos", "NoDefaultViewModelService", "Generated.ViewModels", "Generated.Clients", string.Empty, "console", false);
+        Assert.DoesNotContain(": this()", partial);
     }
 }

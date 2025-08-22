@@ -87,7 +87,7 @@ namespace MonsterClicker.ViewModels
             Task.Run(() => app.RunAsync()); // Run the server in a background thread
         }
 
-        public GameViewModel(ClientOptions options)
+        public GameViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = null!;
