@@ -101,7 +101,7 @@ public static class ServerGenerator
             if (type.TypeKind == TypeKind.Enum) return $"(int){expr}";
             var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
             if (wkt == "Timestamp") return $"Timestamp.FromDateTime({expr}.ToUniversalTime())";
-            if (!GeneratorHelpers.IsWellKnownType(type)) return $"ProtoStateConverters.ToProto({expr})";
+            if (!GeneratorHelpers.IsWellKnownType(type)) return $"{viewModelNamespace}.ProtoStateConverters.ToProto({expr})";
             return expr;
         }
 
@@ -138,11 +138,11 @@ public static class ServerGenerator
                     var keyType = named.TypeArguments[0];
                     var valueType = named.TypeArguments[1];
                     var dictExpr = DictToProto("propValue", keyType, valueType, "kv");
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add({dictExpr});");
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({dictExpr});");
                 }
                 else if (GeneratorHelpers.TryGetMemoryElementType(named, out _))
                 {
-                    sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name}.Add(propValue.ToArray());");
+                    sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name}.AddRange(propValue.ToArray());");
                 }
                 else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
@@ -152,15 +152,15 @@ public static class ServerGenerator
                     if (elem.TypeKind == TypeKind.Enum)
                         expr += ".Select(e => (int)e)";
                     else if (!GeneratorHelpers.IsWellKnownType(elem))
-                        expr += ".Select(ProtoStateConverters.ToProto).Where(s => s != null)";
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add({expr});");
+                        expr += $".Select({viewModelNamespace}.ProtoStateConverters.ToProto).Where(s => s != null)";
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({expr});");
                 }
                 else
                 {
                     if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
                         sb.AppendLine($"            state.{p.Name} = (int)propValue;");
                     else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
-                        sb.AppendLine($"            state.{p.Name} = ProtoStateConverters.ToProto(propValue);");
+                        sb.AppendLine($"            state.{p.Name} = {viewModelNamespace}.ProtoStateConverters.ToProto(propValue);");
                     else
                         sb.AppendLine($"            state.{p.Name} = propValue;");
                 }
@@ -174,20 +174,20 @@ public static class ServerGenerator
                 if (elem.TypeKind == TypeKind.Enum)
                     expr += ".Select(e => (int)e)";
                 else if (!GeneratorHelpers.IsWellKnownType(elem))
-                    expr += ".Select(ProtoStateConverters.ToProto).Where(s => s != null)";
-                sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add({expr});");
+                    expr += $".Select({viewModelNamespace}.ProtoStateConverters.ToProto).Where(s => s != null)";
+                sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({expr});");
             }
             else
             {
                 if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
                     sb.AppendLine($"            state.{p.Name} = (int)propValue;");
                 else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
-                    sb.AppendLine($"            state.{p.Name} = ProtoStateConverters.ToProto(propValue);");
+                    sb.AppendLine($"            state.{p.Name} = {viewModelNamespace}.ProtoStateConverters.ToProto(propValue);");
                 else
                     sb.AppendLine($"            state.{p.Name} = propValue;");
             }
             sb.AppendLine("        }");
-            sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.Message); }}");
+            sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.Message); Debug.WriteLine(\"[GrpcService:{vmName}] Exception details: \" + ex.ToString()); }}");
         }
         sb.AppendLine("        return Task.FromResult(state);");
         sb.AppendLine("    }");
@@ -343,7 +343,7 @@ public static class ServerGenerator
                 string paramConv = param.FullTypeSymbol.TypeKind == TypeKind.Enum
                     ? $"({param.TypeString})request.{paramProp}"
                     : (!GeneratorHelpers.IsWellKnownType(param.FullTypeSymbol)
-                        ? $"ProtoStateConverters.FromProto(request.{paramProp})"
+                        ? $"{viewModelNamespace}.ProtoStateConverters.FromProto(request.{paramProp})"
                         : $"request.{paramProp}");
                 if (cmd.IsAsync)
                 {
