@@ -12,6 +12,7 @@ using RemoteMvvmTool.Generators;
 using Xunit;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using System.Text.RegularExpressions;
 
 namespace RemoteMvvmTool.Tests;
 
@@ -92,6 +93,39 @@ public class GrpcWebEndToEndTests
 
     static void CreateTsGrpcWebClient(string dir, string vmName, string serviceName, string protoContent)
     {
+        var pkgMatch = Regex.Match(protoContent, @"package\s+([^\s;]+);");
+        var pkg = pkgMatch.Success ? pkgMatch.Groups[1].Value : "generated_protos";
+
+        var stateMatch = Regex.Match(protoContent, @$"message\s+{vmName}State\s*\{{(?<body>[\s\S]*?)\}}", RegexOptions.Multiline);
+        if (!stateMatch.Success) throw new InvalidOperationException("State message not found");
+        var stateBody = stateMatch.Groups["body"].Value;
+        var repMatch = Regex.Match(stateBody, @"repeated\s+(\w+)State\s+([a-zA-Z0-9_]+)\s*=\s*(\d+);");
+        if (!repMatch.Success) throw new InvalidOperationException("Repeated field not found");
+        var elemType = repMatch.Groups[1].Value;
+        var snakeName = repMatch.Groups[2].Value;
+        var fieldNum = int.Parse(repMatch.Groups[3].Value);
+
+        var elemMatch = Regex.Match(protoContent, @$"message\s+{elemType}State\s*\{{(?<body>[\s\S]*?)\}}", RegexOptions.Multiline);
+        var elemBody = elemMatch.Groups["body"].Value;
+        var fieldMatches = Regex.Matches(elemBody, @"(int32|int64|uint32|uint64|bool)\s+([a-zA-Z0-9_]+)\s*=\s*(\d+);");
+
+        var decElem = new System.Text.StringBuilder();
+        decElem.Append($"function d{elemType}(buf:Uint8Array){{let i=0;const r:any={{}};while(i<buf.length){{const tag=buf[i++];");
+        bool first = true;
+        foreach (Match f in fieldMatches)
+        {
+            int fn = int.Parse(f.Groups[3].Value);
+            int tag = fn << 3;
+            var name = f.Groups[2].Value;
+            decElem.Append(first ? $"if(tag=={tag}){{[r.{name},i]=dv(buf,i);}}" : $"else if(tag=={tag}){{[r.{name},i]=dv(buf,i);}}" );
+            first = false;
+        }
+        decElem.Append("else break;} return r;}");
+
+        string pascal = string.Concat(snakeName.Split('_').Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1)));
+        int topTag = (fieldNum << 3) | 2;
+        var ds = $"function ds(buf:Uint8Array){{let i=0;const list:any[]=[];while(i<buf.length){{const tag=buf[i++];if(tag=={topTag}){{let l;i=(l=dv(buf,i))[1];const len=l[0];const sub=buf.slice(i,i+len);i+=len;list.push(d{elemType}(sub));}}else break;}}return {{ get{pascal}List: () => list }};}}";
+
         var nodeModules = Path.Combine(dir, "node_modules");
         Directory.CreateDirectory(Path.Combine(nodeModules, "grpc-web"));
         File.WriteAllText(Path.Combine(nodeModules, "grpc-web", "index.d.ts"),
@@ -126,13 +160,13 @@ public class GrpcWebEndToEndTests
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, StateChangedRequest, CancelTestRequest }} from './{serviceName}_pb.js';");
         sb.AppendLine("function dv(buf:Uint8Array,o:number):[number,number]{let v=0,s=0,i=o;for(;;){const b=buf[i++];v|=(b&0x7f)<<s;if((b&0x80)==0)break;s+=7;}return [v,i];}");
-        sb.AppendLine("function dz(buf:Uint8Array){let i=0,z=0,t=0;while(i<buf.length){const tag=buf[i++];if(tag==8){[z,i]=dv(buf,i);}else if(tag==16){[t,i]=dv(buf,i);}else break;}return { zone:z, temperature:t };}");
-        sb.AppendLine("function ds(buf:Uint8Array){let i=0;const list:any[]=[];while(i<buf.length){const tag=buf[i++];if(tag==10){let l;i=(l=dv(buf,i))[1];const len=l[0];const sub=buf.slice(i,i+len);i+=len;list.push(dz(sub));}else break;}return { getZoneListList: () => list };}");
+        sb.AppendLine(decElem.ToString());
+        sb.AppendLine(ds);
         sb.AppendLine($"export class {serviceName}Client {{");
         sb.AppendLine("  constructor(private hostname: string) {}");
         sb.AppendLine("  async getState(_req:any): Promise<any> {");
         sb.AppendLine("    const body = new Uint8Array([0,0,0,0,0]);");
-        sb.AppendLine($"    const res = await fetch(this.hostname + '/generated_protos.{serviceName}/GetState', {{ method:'POST', headers:{{'Content-Type':'application/grpc-web+proto'}}, body }});");
+        sb.AppendLine($"    const res = await fetch(this.hostname + '/{pkg}.{serviceName}/GetState', {{ method:'POST', headers:{{'Content-Type':'application/grpc-web+proto'}}, body }});");
         sb.AppendLine("    const buf = new Uint8Array(await res.arrayBuffer());");
         sb.AppendLine("    const len = (buf[1]<<24)|(buf[2]<<16)|(buf[3]<<8)|buf[4];");
         sb.AppendLine("    const msg = buf.slice(5,5+len);");
@@ -164,7 +198,6 @@ public class GrpcWebEndToEndTests
             "export class StateChangedRequest { setState(v:any):void; }\n" +
             "export class CancelTestRequest {}\n");
     }
-
     static string RunPs(string scriptPath, string args, string workDir)
     {
         string file;
