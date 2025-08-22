@@ -165,6 +165,47 @@ public class GrpcWebEndToEndTests
             "export class CancelTestRequest {}\n");
     }
 
+    static string RunPs(string scriptPath, string args, string workDir)
+    {
+        string file;
+        string fileArgs;
+        if (OperatingSystem.IsWindows())
+        {
+            file = "powershell";
+            fileArgs = $"-ExecutionPolicy Bypass -File \"{scriptPath}\" {args}";
+        }
+        else
+        {
+            file = "tsc";
+            fileArgs = args;
+        }
+
+        var psi = new ProcessStartInfo(file, fileArgs)
+        {
+            WorkingDirectory = workDir,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false
+        };
+
+        using var p = Process.Start(psi)!;
+        var stdout = p.StandardOutput.ReadToEnd();
+        var stderr = p.StandardError.ReadToEnd();
+        p.WaitForExit();
+
+        if (p.ExitCode > 0)
+        {
+            return $"STDOUT:\n{stdout}\nSTDERR:\n{stderr}";
+        }
+
+
+        if (p.ExitCode != 0)
+        {
+            return $"PowerShell script failed with {p.ExitCode}:\nSTDOUT:\n{stdout}\nSTDERR:\n{stderr}";
+        }
+        return "";
+    }
+
     [Fact]
     public async Task TypeScript_Client_Can_Retrieve_Collection_From_Server()
     {
@@ -267,7 +308,12 @@ import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb'
   ""include"": [""**/*.ts"", ""**/*.js""]
 }";
         File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
-        RunCmd("tsc", "--project tsconfig.json", tempDir);
+
+        if (OperatingSystem.IsWindows())
+            RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+        else
+            RunCmd("tsc", "--project tsconfig.json", tempDir);
+        
         RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
 
         (vm as IDisposable).Dispose();
