@@ -233,7 +233,8 @@ public static class ServerGenerator
         sb.AppendLine();
         sb.AppendLine("    public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)");
         sb.AppendLine("    {");
-        sb.AppendLine("        return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });");
+        sb.AppendLine("        var status = ClientCount > 0 ? ConnectionStatus.Connected : ConnectionStatus.Disconnected;");
+        sb.AppendLine("        return Task.FromResult(new ConnectionStatusResponse { Status = status });");
         sb.AppendLine("    }");
         sb.AppendLine();
         foreach (var cmd in cmds)
