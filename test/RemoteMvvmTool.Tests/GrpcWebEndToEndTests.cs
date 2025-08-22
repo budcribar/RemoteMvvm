@@ -110,21 +110,21 @@ public class GrpcWebEndToEndTests
         var fieldMatches = Regex.Matches(elemBody, @"(int32|int64|uint32|uint64|bool)\s+([a-zA-Z0-9_]+)\s*=\s*(\d+);");
 
         var decElem = new System.Text.StringBuilder();
-        decElem.Append($"function d{elemType}(buf:Uint8Array){{let i=0;const r:any={{}};while(i<buf.length){{const tag=buf[i++];");
+        decElem.Append($"function d{elemType}(buf:Uint8Array){{let i=0;const r:any={{}};while(i<buf.length){{const tg=dv(buf,i);const tag=tg[0];i=tg[1];");
         bool first = true;
         foreach (Match f in fieldMatches)
         {
             int fn = int.Parse(f.Groups[3].Value);
             int tag = fn << 3;
             var name = f.Groups[2].Value;
-            decElem.Append(first ? $"if(tag=={tag}){{[r.{name},i]=dv(buf,i);}}" : $"else if(tag=={tag}){{[r.{name},i]=dv(buf,i);}}" );
+            decElem.Append(first ? $"if(tag=={tag}){{const v=dv(buf,i);r.{name}=v[0];i=v[1];}}" : $"else if(tag=={tag}){{const v=dv(buf,i);r.{name}=v[0];i=v[1];}}" );
             first = false;
         }
         decElem.Append("else break;} return r;}");
 
         string pascal = string.Concat(snakeName.Split('_').Select(s => char.ToUpperInvariant(s[0]) + s.Substring(1)));
         int topTag = (fieldNum << 3) | 2;
-        var ds = $"function ds(buf:Uint8Array){{let i=0;const list:any[]=[];while(i<buf.length){{const tag=buf[i++];if(tag=={topTag}){{let l;i=(l=dv(buf,i))[1];const len=l[0];const sub=buf.slice(i,i+len);i+=len;list.push(d{elemType}(sub));}}else break;}}return {{ get{pascal}List: () => list }};}}";
+        var ds = $"function ds(buf:Uint8Array){{let i=0;const list:any[]=[];while(i<buf.length){{const tg=dv(buf,i);const tag=tg[0];i=tg[1];if(tag=={topTag}){{const l=dv(buf,i);i=l[1];const len=l[0];const sub=buf.slice(i,i+len);i+=len;list.push(d{elemType}(sub));}}else break;}}return {{ get{pascal}List: () => list }};}}";
 
         var nodeModules = Path.Combine(dir, "node_modules");
         Directory.CreateDirectory(Path.Combine(nodeModules, "grpc-web"));
@@ -245,13 +245,13 @@ public class GrpcWebEndToEndTests
         var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(tempDir);
 
-        var vmCode = @"public class ObservablePropertyAttribute : System.Attribute {}
-public class RelayCommandAttribute : System.Attribute {}
+        var vmCode = @"public class TestObservablePropertyAttribute : System.Attribute {}
+public class TestRelayCommandAttribute : System.Attribute {}
 namespace HP.Telemetry { public enum Zone { CPUZ_0, CPUZ_1 } }
 namespace Generated.ViewModels {
   public class ThermalZoneComponentViewModel { public HP.Telemetry.Zone Zone { get; set; } public int Temperature { get; set; } }
   public partial class TestViewModel : ObservableObject {
-    [ObservableProperty]
+    [TestObservableProperty]
     private System.Collections.ObjectModel.ObservableCollection<ThermalZoneComponentViewModel> zoneList;
   }
 }
@@ -263,7 +263,7 @@ public class ObservableObject {}";
         var clientStub = @"namespace Generated.Clients { public class TestViewModelRemoteClient { public TestViewModelRemoteClient(object c) {} public System.Threading.Tasks.Task InitializeRemoteAsync() => System.Threading.Tasks.Task.CompletedTask; } }";
         File.WriteAllText(Path.Combine(tempDir, "TestViewModelRemoteClient.cs"), clientStub);
         var refs = LoadDefaultRefs();
-        var (vmSymbol, name, props, cmds, compilation) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
+        var (vmSymbol, name, props, cmds, compilation) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "TestObservablePropertyAttribute", "TestRelayCommandAttribute", refs, "ObservableObject");
 
         var proto = ProtoGenerator.Generate("Test.Protos", name + "Service", name, props, cmds, compilation);
         var protoDir = Path.Combine(tempDir, "protos");
@@ -316,6 +316,7 @@ public class ObservableObject {}";
 
         var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
         File.WriteAllText(Path.Combine(tempDir, name + "RemoteClient.ts"), ts);
+        // Compile and execute the generated client to verify real TypeScript code can consume gRPC-web services
         CreateTsGrpcWebClient(tempDir, name, name + "Service", proto);
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
