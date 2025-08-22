@@ -221,12 +221,15 @@ public static class ServerGenerator
                     switch (typeDisplayString)
                     {
                         case "System.Half":
+                        case "Half":
                             sb.AppendLine($"            state.{p.Name} = (float)propValue;");
                             break;
                         case "System.Char":
+                        case "char":
                             sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
                             break;
                         case "System.Guid":
+                        case "Guid":
                             sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
                             break;
                         default:
