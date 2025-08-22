@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -14,10 +14,16 @@
     <Compile Remove="TestData\Work\**" />
     <EmbeddedResource Remove="TestData\GrpcWebEndToEnd\**" />
     <EmbeddedResource Remove="TestData\Work\**" />
-    <None Remove="TestData\GrpcWebEndToEnd\**" />
+   
     <None Remove="TestData\Work\**" />
     <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
     <TypeScriptCompile Remove="TestData\Work\**" />
+  </ItemGroup>
+
+  
+  <ItemGroup>
+   
+    <Content Include="TestData\GrpcWebEndToEnd\tsconfig.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,7 +59,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="TestData\GrpcWebEndToEnd\TestProject.csproj" />
+	  <None Include="TestData\GrpcWebEndToEnd\*.*" />
   </ItemGroup>
 
 </Project>

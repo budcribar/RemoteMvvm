@@ -17,6 +17,8 @@ namespace Generated.ViewModels
 
     public partial class TestViewModel : ObservableObject 
     { 
+	    public TestViewModel() {}
+
         [ObservableProperty] 
         private ObservableCollection<ThermalZoneComponentViewModel> _zoneList = new();
         
