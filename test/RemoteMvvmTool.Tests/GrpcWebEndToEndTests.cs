@@ -334,9 +334,12 @@ module.exports = protobuf;");
             var protoFile = Path.Combine(protoDir, name + "Service.proto");
             File.WriteAllText(protoFile, proto);
 
-            // Generate JavaScript protobuf files using protoc
-            Console.WriteLine("Generating JavaScript protobuf files with protoc...");
-            GenerateJavaScriptProtos(protoFile, testProjectDir);
+            // Install npm dependencies and generate JavaScript protobuf files
+            Console.WriteLine("Installing npm packages for gRPC-Web...");
+            RunCmd("npm", "install", testProjectDir);
+
+            Console.WriteLine("Generating JavaScript protobuf files with npm run protoc...");
+            RunCmd("npm", "run protoc", testProjectDir);
 
             var grpcOut = Path.Combine(testProjectDir, "grpc");
             Directory.CreateDirectory(grpcOut);
