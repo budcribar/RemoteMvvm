@@ -1,0 +1,9 @@
+{
+  "name": "grpc-web-test",
+  "version": "1.0.0",
+  "dependencies": {
+    "grpc-web": "^1.4.2",
+    "google-protobuf": "^3.21.2",
+    "@types/google-protobuf": "^3.15.5"
+  }
+}
