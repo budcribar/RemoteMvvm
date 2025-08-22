@@ -210,6 +210,14 @@ public class Program
                     await File.WriteAllTextAsync(partialPath, partial);
                 }
             }
+
+            if (genTs || genTsProject)
+            {
+                foreach (var stub in Directory.EnumerateFiles(output, "*ServiceClientPb.ts", SearchOption.AllDirectories))
+                {
+                    GrpcWebClientPatcher.AddErrorLogging(stub);
+                }
+            }
         }, generateOption, outputOption, protoOutputOption, vmArgument, protoNsOption, serviceNameOption, clientNsOption, runOption);
 
         return await root.InvokeAsync(args);
