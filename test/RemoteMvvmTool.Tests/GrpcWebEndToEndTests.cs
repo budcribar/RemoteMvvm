@@ -75,7 +75,7 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-    [Fact] 
+    [Fact]
     public async Task SimpleStringProperty_EndToEnd_Test()
     {
         var modelCode = """
@@ -111,6 +111,110 @@ public class GrpcWebEndToEndTests
 
         // Expected data: Counter (42), number from Message string (44), bool as int (1 for true)
         var expectedDataValues = "1,42,44";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task TwoWayPrimitiveTypes_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject
+                {
+                    public TestViewModel()
+                    {
+                        Message = "123";
+                        IsEnabled = true;
+                        Counter = 9876543210;
+                        PlayerLevel = 4000000000;
+                        HasBonus = 3.14f;
+                        BonusMultiplier = 6.28;
+                    }
+
+                    [ObservableProperty]
+                    private string _message = "";
+
+                    [ObservableProperty]
+                    private bool _isEnabled = false;
+
+                    [ObservableProperty]
+                    private long _counter = 0;
+
+                    [ObservableProperty]
+                    private uint _playerLevel = 0;
+
+                    [ObservableProperty]
+                    private float _hasBonus = 0;
+
+                    [ObservableProperty]
+                    private double _bonusMultiplier = 0;
+                }
+            }
+            """;
+
+        var expectedDataValues = "1,3.14,6.28,123,4000000000,9876543210";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task ServerOnlyPrimitiveTypes_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace Generated.ViewModels
+            {
+                public enum Mode { Idle = 1, Done = 2 }
+
+                public partial class TestViewModel : ObservableObject
+                {
+                    public TestViewModel()
+                    {
+                        Counter = (byte)1;
+                        PlayerLevel = (ushort)4;
+                        HasBonus = (sbyte)(-2);
+                        BonusMultiplier = (Half)1.5;
+                        IsEnabled = (nint)9;
+                        Status = '8';
+                        Message = new Guid("00000000-0000-0000-0000-000000000020");
+                        CurrentStatus = Mode.Done;
+                    }
+
+                    [ObservableProperty]
+                    private byte _counter;
+
+                    [ObservableProperty]
+                    private ushort _playerLevel;
+
+                    [ObservableProperty]
+                    private sbyte _hasBonus;
+
+                    [ObservableProperty]
+                    private Half _bonusMultiplier;
+
+                    [ObservableProperty]
+                    private nint _isEnabled;
+
+                    [ObservableProperty]
+                    private char _status;
+
+                    [ObservableProperty]
+                    private Guid _message = Guid.Empty;
+
+                    [ObservableProperty]
+                    private Mode _currentStatus = Mode.Idle;
+                }
+            }
+            """;
+
+        var expectedDataValues = "-2,0,0,0,0,1,1.5,2,4,8,9,20";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
