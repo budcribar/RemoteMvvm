@@ -1,0 +1,1 @@
+namespace Generated.ViewModels { public partial class TestViewModel : ObservableObject { public TestViewModel() {} public System.Collections.ObjectModel.ObservableCollection<ThermalZoneComponentViewModel> ZoneList { get; set; } = new System.Collections.ObjectModel.ObservableCollection<ThermalZoneComponentViewModel>(); } }
