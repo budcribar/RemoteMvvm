@@ -137,8 +137,23 @@ public static class ServerGenerator
                 {
                     var keyType = named.TypeArguments[0];
                     var valueType = named.TypeArguments[1];
-                    var dictExpr = DictToProto("propValue", keyType, valueType, "kv");
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({dictExpr});");
+                    if (GeneratorHelpers.CanUseProtoMap(keyType, valueType))
+                    {
+                        // Use protobuf map - add individual key-value pairs
+                        string keySel = KeyToProto("kv.Key", keyType);
+                        string valSel = ValueToProto("kv.Value", valueType, "kv1");
+                        sb.AppendLine($"            if (propValue != null)");
+                        sb.AppendLine($"            {{");
+                        sb.AppendLine($"                foreach (var kv in propValue)");
+                        sb.AppendLine($"                    state.{p.Name}.Add({keySel}, {valSel});");
+                        sb.AppendLine($"            }}");
+                    }
+                    else
+                    {
+                        // Use repeated message entries - can use AddRange
+                        var dictExpr = DictToProto("propValue", keyType, valueType, "kv");
+                        sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({dictExpr});");
+                    }
                 }
                 else if (GeneratorHelpers.TryGetMemoryElementType(named, out _))
                 {

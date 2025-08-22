@@ -31,35 +31,36 @@ public class GrpcWebEndToEndTests
             using CommunityToolkit.Mvvm.ComponentModel;
             using CommunityToolkit.Mvvm.Input;
 
-            namespace Generated.ViewModels;
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        ZoneList.Add(new ThermalZoneComponentViewModel 
+                        { 
+                            Zone = HP.Telemetry.Zone.CPUZ_0, 
+                            Temperature = 42 
+                        });
+                        ZoneList.Add(new ThermalZoneComponentViewModel 
+                        { 
+                            Zone = HP.Telemetry.Zone.CPUZ_1, 
+                            Temperature = 43 
+                        });
+                    }
 
-            public partial class TestViewModel : ObservableObject 
-            { 
-                public TestViewModel() 
-                {
-                    ZoneList.Add(new ThermalZoneComponentViewModel 
-                    { 
-                        Zone = HP.Telemetry.Zone.CPUZ_0, 
-                        Temperature = 42 
-                    });
-                    ZoneList.Add(new ThermalZoneComponentViewModel 
-                    { 
-                        Zone = HP.Telemetry.Zone.CPUZ_1, 
-                        Temperature = 43 
-                    });
+                    [ObservableProperty] 
+                    private ObservableCollection<ThermalZoneComponentViewModel> _zoneList = new();
+                    
+                    [ObservableProperty]
+                    private string _status = "Ready";
                 }
 
-                [ObservableProperty] 
-                private ObservableCollection<ThermalZoneComponentViewModel> _zoneList = new();
-                
-                [ObservableProperty]
-                private string _status = "Ready";
-            }
-
-            public class ThermalZoneComponentViewModel 
-            {
-                public HP.Telemetry.Zone Zone { get; set; }
-                public int Temperature { get; set; }
+                public class ThermalZoneComponentViewModel 
+                {
+                    public HP.Telemetry.Zone Zone { get; set; }
+                    public int Temperature { get; set; }
+                }
             }
 
             namespace HP.Telemetry 
@@ -82,28 +83,29 @@ public class GrpcWebEndToEndTests
             using CommunityToolkit.Mvvm.ComponentModel;
             using CommunityToolkit.Mvvm.Input;
 
-            namespace Generated.ViewModels;
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        Message = "44";
+                        Counter = 42;
+                        IsEnabled = true;
+                    }
 
-            public partial class TestViewModel : ObservableObject 
-            { 
-                public TestViewModel() 
-                {
-                    Message = "44";
-                    Counter = 42;
-                    IsEnabled = true;
+                    [ObservableProperty]
+                    private string _message = "";
+                    
+                    [ObservableProperty]
+                    private int _counter = 0;
+
+                    [ObservableProperty]
+                    private bool _isEnabled = false;
+
+                    [RelayCommand]
+                    private void Increment() => Counter++;
                 }
-
-                [ObservableProperty]
-                private string _message = "";
-                
-                [ObservableProperty]
-                private int _counter = 0;
-
-                [ObservableProperty]
-                private bool _isEnabled = false;
-
-                [RelayCommand]
-                private void Increment() => Counter++;
             }
             """;
 
@@ -122,33 +124,34 @@ public class GrpcWebEndToEndTests
             using CommunityToolkit.Mvvm.ComponentModel;
             using CommunityToolkit.Mvvm.Input;
 
-            namespace Generated.ViewModels;
-
-            public partial class TestViewModel : ObservableObject 
-            { 
-                public TestViewModel() 
-                {
-                    StatusMap = new Dictionary<Status, string>
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
                     {
-                        { Status.Active, "System Running" },
-                        { Status.Idle, "System Idle" },
-                        { Status.Error, "System Error" }
-                    };
-                    CurrentStatus = Status.Active;
+                        StatusMap = new Dictionary<Status, string>
+                        {
+                            { Status.Active, "System Running" },
+                            { Status.Idle, "System Idle" },
+                            { Status.Error, "System Error" }
+                        };
+                        CurrentStatus = Status.Active;
+                    }
+
+                    [ObservableProperty]
+                    private Dictionary<Status, string> _statusMap = new();
+                    
+                    [ObservableProperty]
+                    private Status _currentStatus = Status.Active;
                 }
 
-                [ObservableProperty]
-                private Dictionary<Status, string> _statusMap = new();
-                
-                [ObservableProperty]
-                private Status _currentStatus = Status.Active;
-            }
-
-            public enum Status
-            {
-                Active = 1,
-                Idle = 2, 
-                Error = 3
+                public enum Status
+                {
+                    Active = 1,
+                    Idle = 2, 
+                    Error = 3
+                }
             }
             """;
 
@@ -168,49 +171,49 @@ public class GrpcWebEndToEndTests
             using CommunityToolkit.Mvvm.ComponentModel;
             using CommunityToolkit.Mvvm.Input;
 
-            namespace Generated.ViewModels;
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        ScoreList.Add(100);
+                        ScoreList.Add(200);
+                        ScoreList.Add(300);
+                        PlayerLevel = 15;
+                        HasBonus = false;
+                        BonusMultiplier = 2.5; // Will be converted to 2.5 as a double
+                        Status = GameStatus.Playing;
+                    }
 
-            public partial class TestViewModel : ObservableObject 
-            { 
-                public TestViewModel() 
-                {
-                    ScoreList.Add(100);
-                    ScoreList.Add(200);
-                    ScoreList.Add(300);
-                    PlayerLevel = 15;
-                    HasBonus = false;
-                    BonusMultiplier = 2.5; // Will be converted to 2.5 as a double
-                    Status = GameStatus.Playing;
+                    [ObservableProperty]
+                    private ObservableCollection<int> _scoreList = new();
+                    
+                    [ObservableProperty]
+                    private int _playerLevel = 1;
+
+                    [ObservableProperty]
+                    private bool _hasBonus = false;
+
+                    [ObservableProperty]
+                    private double _bonusMultiplier = 1.0;
+
+                    [ObservableProperty]
+                    private GameStatus _status = GameStatus.Menu;
                 }
 
-                [ObservableProperty]
-                private ObservableCollection<int> _scoreList = new();
-                
-                [ObservableProperty]
-                private int _playerLevel = 1;
-
-                [ObservableProperty]
-                private bool _hasBonus = false;
-
-                [ObservableProperty]
-                private double _bonusMultiplier = 1.0;
-
-                [ObservableProperty]
-                private GameStatus _status = GameStatus.Menu;
-            }
-
-            public enum GameStatus
-            {
-                Menu = 10,
-                Playing = 20, 
-                Paused = 30,
-                GameOver = 40
+                public enum GameStatus
+                {
+                    Menu = 10,
+                    Playing = 20, 
+                    Paused = 30,
+                    GameOver = 40
+                }
             }
             """;
-
         // Expected data: ScoreList (100,200,300), PlayerLevel (15), HasBonus (0 for false), 
-        // BonusMultiplier (2.5), GameStatus.Playing (20) - all sorted
-        var expectedDataValues = "0,2.5,15,20,100,200,300";
+        // BonusMultiplier (2.5), GameStatus.Playing (20 twice - status and gameStatus) - all sorted
+        var expectedDataValues = "0,2.5,15,20,20,100,200,300";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -760,13 +763,15 @@ public class GrpcWebEndToEndTests
     /// <summary>
     /// Extracts numeric values from the Node.js output by looking for the FLAT_DATA JSON line.
     /// Also converts booleans to 0/1 and handles both integers and doubles.
+    /// Preserves duplicate values for validation.
     /// </summary>
     private static string ExtractNumericDataFromOutput(string output)
     {
-        var numbers = new HashSet<double>(); // Use HashSet to avoid duplicates
+        var numbers = new List<double>(); // Use List to preserve duplicates
         
         // Look for lines that might contain JSON data or numeric values
         var lines = output.Split('\n');
+        bool foundFlatData = false;
         
         foreach (var line in lines)
         {
@@ -791,14 +796,31 @@ public class GrpcWebEndToEndTests
                 {
                     var jsonData = trimmedLine.Substring(jsonStart);
                     ExtractNumbersFromLine(jsonData, numbers);
+                    foundFlatData = true;
                 }
                 break; // We found our data, no need to continue
             }
-            else if (!trimmedLine.Contains("=== TestViewModel Data") && 
-                     !trimmedLine.StartsWith("RESPONSE_DATA:"))
+        }
+        
+        // Fallback: if no FLAT_DATA was found, try regular parsing (exclude structured markers)
+        if (!foundFlatData)
+        {
+            foreach (var line in lines)
             {
-                // Fallback: Regular line parsing for backward compatibility 
-                // (skip the structured data markers to avoid confusion)
+                var trimmedLine = line.Trim();
+                
+                // Skip structured data markers and log messages
+                if (string.IsNullOrWhiteSpace(trimmedLine) || 
+                    trimmedLine.StartsWith("Starting gRPC-Web test") ||
+                    trimmedLine.StartsWith("npm ") ||
+                    trimmedLine.StartsWith("✅") ||
+                    trimmedLine.StartsWith("node:") ||
+                    trimmedLine.Contains("=== TestViewModel Data") || 
+                    trimmedLine.StartsWith("RESPONSE_DATA:"))
+                {
+                    continue;
+                }
+                
                 ExtractNumbersFromLine(trimmedLine, numbers);
             }
         }
@@ -808,7 +830,7 @@ public class GrpcWebEndToEndTests
         return string.Join(",", sortedNumbers.Select(n => n % 1 == 0 ? n.ToString("F0") : n.ToString("G")));
     }
 
-    private static void ExtractNumbersFromLine(string line, HashSet<double> numbers)
+    private static void ExtractNumbersFromLine(string line, List<double> numbers)
     {
         // Handle boolean values - convert to 0/1
         var processedLine = line
@@ -826,7 +848,7 @@ public class GrpcWebEndToEndTests
             // Try parsing as double (handles both integers and decimals)
             if (double.TryParse(cleanWord, out var number))
             {
-                numbers.Add(number); // HashSet automatically handles duplicates
+                numbers.Add(number); // List preserves duplicates
             }
             else
             {
