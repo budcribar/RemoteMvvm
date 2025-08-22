@@ -81,6 +81,20 @@ export class HP3LSThermalTestViewModelServiceClient {
         }
         callback(err, response);
       };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.HP3LSThermalTestViewModelState) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.getState RPC error:', err);
+        }
+        callback(err, response);
+      };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.HP3LSThermalTestViewModelState) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.getState RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/GetState',
@@ -94,7 +108,13 @@ export class HP3LSThermalTestViewModelServiceClient {
       '/generated_protos.HP3LSThermalTestViewModelService/GetState',
     request,
     metadata || {},
-    this.methodDescriptorGetState).catch((err: any) => {).catch((err: any) => {
+    this.methodDescriptorGetState).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.getState Promise error:', err);
+      throw err;
+    });
+      console.error('HP3LSThermalTestViewModelServiceClient.getState Promise error:', err);
+      throw err;
+    });
       console.error('HP3LSThermalTestViewModelServiceClient.getState Promise error:', err);
       throw err;
     });
@@ -144,6 +164,20 @@ export class HP3LSThermalTestViewModelServiceClient {
         }
         callback(err, response);
       };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: google_protobuf_empty_pb.Empty) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue RPC error:', err);
+        }
+        callback(err, response);
+      };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: google_protobuf_empty_pb.Empty) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue',
@@ -157,7 +191,13 @@ export class HP3LSThermalTestViewModelServiceClient {
       '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue',
     request,
     metadata || {},
-    this.methodDescriptorUpdatePropertyValue).catch((err: any) => {).catch((err: any) => {
+    this.methodDescriptorUpdatePropertyValue).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue Promise error:', err);
+      throw err;
+    });
+      console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue Promise error:', err);
+      throw err;
+    });
       console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue Promise error:', err);
       throw err;
     });
@@ -235,6 +275,20 @@ export class HP3LSThermalTestViewModelServiceClient {
         }
         callback(err, response);
       };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.StateChangedResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.stateChanged RPC error:', err);
+        }
+        callback(err, response);
+      };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.StateChangedResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.stateChanged RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/StateChanged',
@@ -248,7 +302,13 @@ export class HP3LSThermalTestViewModelServiceClient {
       '/generated_protos.HP3LSThermalTestViewModelService/StateChanged',
     request,
     metadata || {},
-    this.methodDescriptorStateChanged).catch((err: any) => {).catch((err: any) => {
+    this.methodDescriptorStateChanged).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.stateChanged Promise error:', err);
+      throw err;
+    });
+      console.error('HP3LSThermalTestViewModelServiceClient.stateChanged Promise error:', err);
+      throw err;
+    });
       console.error('HP3LSThermalTestViewModelServiceClient.stateChanged Promise error:', err);
       throw err;
     });
@@ -298,6 +358,20 @@ export class HP3LSThermalTestViewModelServiceClient {
         }
         callback(err, response);
       };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.CancelTestResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.cancelTest RPC error:', err);
+        }
+        callback(err, response);
+      };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.CancelTestResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.cancelTest RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/CancelTest',
@@ -311,7 +385,13 @@ export class HP3LSThermalTestViewModelServiceClient {
       '/generated_protos.HP3LSThermalTestViewModelService/CancelTest',
     request,
     metadata || {},
-    this.methodDescriptorCancelTest).catch((err: any) => {).catch((err: any) => {
+    this.methodDescriptorCancelTest).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.cancelTest Promise error:', err);
+      throw err;
+    });
+      console.error('HP3LSThermalTestViewModelServiceClient.cancelTest Promise error:', err);
+      throw err;
+    });
       console.error('HP3LSThermalTestViewModelServiceClient.cancelTest Promise error:', err);
       throw err;
     });
@@ -361,6 +441,20 @@ export class HP3LSThermalTestViewModelServiceClient {
         }
         callback(err, response);
       };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.ConnectionStatusResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.ping RPC error:', err);
+        }
+        callback(err, response);
+      };
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.ConnectionStatusResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.ping RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/Ping',
@@ -374,7 +468,13 @@ export class HP3LSThermalTestViewModelServiceClient {
       '/generated_protos.HP3LSThermalTestViewModelService/Ping',
     request,
     metadata || {},
-    this.methodDescriptorPing).catch((err: any) => {).catch((err: any) => {
+    this.methodDescriptorPing).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.ping Promise error:', err);
+      throw err;
+    });
+      console.error('HP3LSThermalTestViewModelServiceClient.ping Promise error:', err);
+      throw err;
+    });
       console.error('HP3LSThermalTestViewModelServiceClient.ping Promise error:', err);
       throw err;
     });
