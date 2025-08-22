@@ -89,7 +89,13 @@ public static class ServerGenerator
                 "UInt32Value" => $"(uint){expr}",
                 "Int64Value" => expr,
                 "UInt64Value" => expr,
-                "StringValue" => type.ToDisplayString() == "System.Guid" ? $"{expr}.ToString()" : expr,
+                "StringValue" => type.ToDisplayString() switch
+                {
+                    "System.Guid" => $"{expr}.ToString()",
+                    "System.Char" => $"{expr}.ToString()",
+                    _ => expr
+                },
+                "FloatValue" => type.ToDisplayString() == "System.Half" ? $"(float){expr}" : expr,
                 _ => expr
             };
         }
@@ -101,8 +107,18 @@ public static class ServerGenerator
             if (type.TypeKind == TypeKind.Enum) return $"(int){expr}";
             var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
             if (wkt == "Timestamp") return $"Timestamp.FromDateTime({expr}.ToUniversalTime())";
-            if (!GeneratorHelpers.IsWellKnownType(type)) return $"{viewModelNamespace}.ProtoStateConverters.ToProto({expr})";
-            return expr;
+            if (!GeneratorHelpers.IsWellKnownType(type))
+                return $"{viewModelNamespace}.ProtoStateConverters.ToProto({expr})";
+            
+            // Handle special type conversions
+            var typeDisplayString = type.ToDisplayString();
+            return typeDisplayString switch
+            {
+                "System.Half" => $"(float){expr}",
+                "System.Char" => $"{expr}.ToString()",
+                "System.Guid" => $"{expr}.ToString()",
+                _ => expr
+            };
         }
 
         string DictToProto(string dictExpr, ITypeSymbol kType, ITypeSymbol vType, string kvVar)
@@ -199,7 +215,25 @@ public static class ServerGenerator
                 else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
                     sb.AppendLine($"            state.{p.Name} = {viewModelNamespace}.ProtoStateConverters.ToProto(propValue);");
                 else
-                    sb.AppendLine($"            state.{p.Name} = propValue;");
+                {
+                    // Handle special type conversions
+                    var typeDisplayString = p.FullTypeSymbol.ToDisplayString();
+                    switch (typeDisplayString)
+                    {
+                        case "System.Half":
+                            sb.AppendLine($"            state.{p.Name} = (float)propValue;");
+                            break;
+                        case "System.Char":
+                            sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
+                            break;
+                        case "System.Guid":
+                            sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
+                            break;
+                        default:
+                            sb.AppendLine($"            state.{p.Name} = propValue;");
+                            break;
+                    }
+                }
             }
             sb.AppendLine("        }");
             sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.ToString()); }}");
@@ -434,6 +468,9 @@ public static class ServerGenerator
         sb.AppendLine("            case float f: return Any.Pack(new FloatValue { Value = f });");
         sb.AppendLine("            case long l: return Any.Pack(new Int64Value { Value = l });");
         sb.AppendLine("            case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));");
+        sb.AppendLine("            case char c: return Any.Pack(new StringValue { Value = c.ToString() });");
+        sb.AppendLine("            case Half h: return Any.Pack(new FloatValue { Value = (float)h });");
+        sb.AppendLine("            case Guid g: return Any.Pack(new StringValue { Value = g.ToString() });");
         sb.AppendLine("            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });");
         sb.AppendLine("        }");
         sb.AppendLine("        if (value is IDictionary dict)");
@@ -468,6 +505,9 @@ public static class ServerGenerator
         sb.AppendLine("            case long l: return Value.ForNumber(l);");
         sb.AppendLine("            case double d: return Value.ForNumber(d);");
         sb.AppendLine("            case float f: return Value.ForNumber(f);");
+        sb.AppendLine("            case char c: return Value.ForString(c.ToString());");
+        sb.AppendLine("            case Half h: return Value.ForNumber((double)(float)h);");
+        sb.AppendLine("            case Guid g: return Value.ForString(g.ToString());");
         sb.AppendLine("            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));");
         sb.AppendLine("            case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString(\"o\"));");
         sb.AppendLine("        }");

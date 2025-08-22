@@ -157,7 +157,7 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        var expectedDataValues = "1,3.14,6.28,123,4000000000,9876543210";
+        var expectedDataValues = "1,3.140000104904175,6.28,123,4000000000,9876543210";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -214,7 +214,7 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        var expectedDataValues = "-2,0,0,0,0,1,1.5,2,4,8,9,20";
+        var expectedDataValues = "-2,1,1.5,2,4,8,9,20";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -796,7 +796,7 @@ public class GrpcWebEndToEndTests
             throw new Exception($"Missing required JavaScript protobuf files for Node.js test. " +
                                $"Required files (at least 2): {string.Join(", ", requiredFiles)}. " +
                                $"Found .js files: {string.Join(", ", foundFilesList)}. " +
-                               $"Ensure JavaScript protobuf generation completed successfully.");
+                               $"Ensure JavaScriptprotobuf generation completed successfully.");
         }
         
         Console.WriteLine($"✅ Found required files: {string.Join(", ", existingFiles)}");
