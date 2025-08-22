@@ -369,16 +369,16 @@ class FakeClient extends {name}ServiceClient {{
     File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
 
     var tsconfig = @"{
-  \"compilerOptions\": {
-    \"target\": \"es2018\",
-    \"module\": \"commonjs\",
-    \"strict\": false,
-    \"esModuleInterop\": true,
-    \"lib\": [\"es2018\", \"dom\"],
-    \"outDir\": \"dist\",
-    \"allowJs\": true
+  ""compilerOptions"": {
+    ""target"": ""es2018"",
+    ""module"": ""commonjs"",
+    ""strict"": false,
+    ""esModuleInterop"": true,
+    ""lib"": [""es2018"", ""dom""],
+    ""outDir"": ""dist"",
+    ""allowJs"": true
   },
-  \"include\": [\"**/*.ts\", \"**/*.js\"]
+  ""include"": [""**/*.ts"", ""**/*.js""]
 }";
     File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
 
