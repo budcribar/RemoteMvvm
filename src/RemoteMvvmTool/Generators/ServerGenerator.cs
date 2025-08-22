@@ -146,12 +146,14 @@ public static class ServerGenerator
                 }
                 else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
-                    string sel = string.Empty;
-                    if (elem!.TypeKind == TypeKind.Enum)
-                        sel = ".Select(e => (int)e)";
+                    string expr = "propValue";
+                    if (!elem!.IsValueType)
+                        expr += ".Where(e => e != null)";
+                    if (elem.TypeKind == TypeKind.Enum)
+                        expr += ".Select(e => (int)e)";
                     else if (!GeneratorHelpers.IsWellKnownType(elem))
-                        sel = ".Select(ProtoStateConverters.ToProto)";
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue{sel});");
+                        expr += ".Select(ProtoStateConverters.ToProto).Where(s => s != null)";
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add({expr});");
                 }
                 else
                 {
@@ -165,13 +167,15 @@ public static class ServerGenerator
             }
             else if (p.FullTypeSymbol is IArrayTypeSymbol arr)
             {
-                string sel = string.Empty;
                 var elem = arr.ElementType;
+                string expr = "propValue";
+                if (!elem.IsValueType)
+                    expr += ".Where(e => e != null)";
                 if (elem.TypeKind == TypeKind.Enum)
-                    sel = ".Select(e => (int)e)";
+                    expr += ".Select(e => (int)e)";
                 else if (!GeneratorHelpers.IsWellKnownType(elem))
-                    sel = ".Select(ProtoStateConverters.ToProto)";
-                sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add(propValue{sel});");
+                    expr += ".Select(ProtoStateConverters.ToProto).Where(s => s != null)";
+                sb.AppendLine($"            if (propValue != null) state.{p.Name}.Add({expr});");
             }
             else
             {
