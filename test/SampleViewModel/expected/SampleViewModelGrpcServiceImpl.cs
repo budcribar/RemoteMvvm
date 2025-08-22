@@ -119,7 +119,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
     {
-        return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });
+        var status = ClientCount > 0 ? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
+        return Task.FromResult(new ConnectionStatusResponse { Status = status });
     }
 
     public override async Task<SampleApp.ViewModels.Protos.IncrementCountResponse> IncrementCount(SampleApp.ViewModels.Protos.IncrementCountRequest request, ServerCallContext context)

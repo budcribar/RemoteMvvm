@@ -154,7 +154,8 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
     {
-        return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });
+        var status = ClientCount > 0 ? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
+        return Task.FromResult(new ConnectionStatusResponse { Status = status });
     }
 
     public override async Task<Generated.Protos.StateChangedResponse> StateChanged(Generated.Protos.StateChangedRequest request, ServerCallContext context)

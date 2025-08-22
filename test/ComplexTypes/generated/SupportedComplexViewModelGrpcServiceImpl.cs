@@ -166,7 +166,8 @@ public partial class SupportedComplexViewModelGrpcServiceImpl : SupportedComplex
 
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
     {
-        return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });
+        var status = ClientCount > 0 ? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
+        return Task.FromResult(new ConnectionStatusResponse { Status = status });
     }
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)

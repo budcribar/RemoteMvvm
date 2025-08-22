@@ -161,7 +161,8 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
     {
-        return Task.FromResult(new ConnectionStatusResponse { Status = ConnectionStatus.Connected });
+        var status = ClientCount > 0 ? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
+        return Task.FromResult(new ConnectionStatusResponse { Status = status });
     }
 
     public override async Task<MonsterClicker.ViewModels.Protos.AttackMonsterResponse> AttackMonster(MonsterClicker.ViewModels.Protos.AttackMonsterRequest request, ServerCallContext context)
