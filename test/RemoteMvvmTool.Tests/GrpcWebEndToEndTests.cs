@@ -279,8 +279,7 @@ public class GrpcWebEndToEndTests
         var jsTestFile = Path.Combine(testProjectDir, "test-protoc.js");
         if (!File.Exists(jsTestFile))
         {
-            Console.WriteLine("No Node.js test file found - skipping JavaScript generation");
-            return;
+            throw new Exception($"Node.js test file not found at: {jsTestFile}. This test requires a JavaScript client test to verify end-to-end functionality.");
         }
 
         Console.WriteLine("Found Node.js test file - generating JavaScript protobuf files...");
@@ -292,6 +291,10 @@ public class GrpcWebEndToEndTests
             Console.WriteLine("Installing npm packages...");
             await InstallNpmPackages(testProjectDir);
         }
+        else
+        {
+            Console.WriteLine("✅ Node.js packages already installed");
+        }
 
         // Generate JavaScript files using npm script
         await RunNpmProtocScript(testProjectDir);
@@ -302,38 +305,29 @@ public class GrpcWebEndToEndTests
 
     private static async Task RunNpmProtocScript(string testProjectDir)
     {
-        try
+        Console.WriteLine("Running npm protoc script to generate JavaScript protobuf files...");
+        var npmPaths = new []
         {
-            Console.WriteLine("Running npm protoc script to generate JavaScript protobuf files...");
-            var npmPaths = new []
+            @"C:\Program Files\nodejs\npm.cmd",
+            "npm.cmd",
+            "npm"
+        };
+        
+        foreach (var npmPath in npmPaths)
+        {
+            try
             {
-                @"C:\Program Files\nodejs\npm.cmd",
-                "npm.cmd",
-                "npm"
-            };
-            
-            foreach (var npmPath in npmPaths)
-            {
-                try
-                {
-                    RunCmd(npmPath, "run protoc", testProjectDir);
-                    Console.WriteLine("✅ JavaScript protobuf files generated successfully");
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Failed to run protoc with {npmPath}: {ex.Message}");
-                }
+                RunCmd(npmPath, "run protoc", testProjectDir);
+                Console.WriteLine("✅ JavaScript protobuf files generated successfully");
+                return;
             }
-            
-            Console.WriteLine("⚠️ Could not generate JavaScript protobuf files using npm script");
-            Console.WriteLine("Node.js test may still work if files already exist");
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to run protoc with {npmPath}: {ex.Message}");
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"⚠️ JavaScript protobuf generation failed: {ex.Message}");
-            Console.WriteLine("Continuing with test - Node.js test will be skipped if files are missing");
-        }
+        
+        throw new Exception("Could not generate JavaScript protobuf files using npm script. Ensure Node.js is installed and npm is in PATH, or that package.json has a 'protoc' script defined.");
     }
 
     private static void ListGeneratedJavaScriptFiles(string testProjectDir)
@@ -345,6 +339,10 @@ public class GrpcWebEndToEndTests
         if (jsFiles.Length > 0)
         {
             Console.WriteLine($"✅ Found JavaScript files: {string.Join(", ", jsFiles.Select(Path.GetFileName))}");
+        }
+        else
+        {
+            throw new Exception("No JavaScript protobuf files were generated. The test requires generated JavaScript files to validate client-server communication.");
         }
     }
 
@@ -367,12 +365,19 @@ public class GrpcWebEndToEndTests
     {
         // Check if we have Node.js test files
         var jsTestFile = Path.Combine(testProjectDir, "test-protoc.js");
-        var hasNodeTest = File.Exists(jsTestFile) && File.Exists(Path.Combine(testProjectDir, "package.json"));
+        var packageJsonFile = Path.Combine(testProjectDir, "package.json");
         
-        if (hasNodeTest)
+        if (!File.Exists(jsTestFile))
         {
-            Console.WriteLine("Node.js test files found - will test after server starts");
+            throw new Exception($"Node.js test file not found at: {jsTestFile}. This test requires a JavaScript client test to verify end-to-end functionality.");
         }
+        
+        if (!File.Exists(packageJsonFile))
+        {
+            throw new Exception($"package.json file not found at: {packageJsonFile}. This test requires Node.js package configuration for JavaScript client testing.");
+        }
+        
+        Console.WriteLine("✅ Node.js test files found - proceeding with end-to-end test");
 
         // Get a free port and start the server
         int port = GetFreePort();
@@ -390,13 +395,9 @@ public class GrpcWebEndToEndTests
             // Wait for server to be ready
             await WaitForServerReady(port);
 
-            // Run tests
+            // Run tests - both are required to pass
             await TestServerEndpoint(port);
-            
-            if (hasNodeTest)
-            {
-                await TestNodeJsClient(testProjectDir, port);
-            }
+            await TestNodeJsClient(testProjectDir, port);
         }
         finally
         {
@@ -556,11 +557,11 @@ public class GrpcWebEndToEndTests
         
         if (existingFiles.Length < 2)
         {
-            Console.WriteLine($"⚠️ Missing required JavaScript protobuf files for Node.js test.");
-            Console.WriteLine($"Required files (at least 2): {string.Join(", ", requiredFiles)}");
-            Console.WriteLine($"Found files: {string.Join(", ", existingFiles)}");
-            Console.WriteLine("Skipping Node.js client test - this is not a failure as we're testing server generation primarily.");
-            return;
+            var foundFilesList = Directory.GetFiles(testProjectDir, "*.js").Select(Path.GetFileName).ToArray();
+            throw new Exception($"Missing required JavaScript protobuf files for Node.js test. " +
+                               $"Required files (at least 2): {string.Join(", ", requiredFiles)}. " +
+                               $"Found .js files: {string.Join(", ", foundFilesList)}. " +
+                               $"Ensure JavaScript protobuf generation completed successfully.");
         }
         
         Console.WriteLine($"✅ Found required files: {string.Join(", ", existingFiles)}");
@@ -575,6 +576,8 @@ public class GrpcWebEndToEndTests
         
         bool testSuccess = false;
         string? successOutput = null;
+        string? lastError = null;
+        
         foreach (var nodePath in nodePaths)
         {
             try
@@ -592,19 +595,21 @@ public class GrpcWebEndToEndTests
                 }
                 else
                 {
-                    Console.WriteLine($"⚠️ Node.js test ran but didn't find 'Test passed' message");
-                    Console.WriteLine($"Output was: {stdout.Substring(0, Math.Min(200, stdout.Length))}...");
+                    lastError = $"Node.js test ran but didn't find 'Test passed' message. Output: {stdout.Substring(0, Math.Min(500, stdout.Length))}";
+                    Console.WriteLine($"⚠️ {lastError}");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed with {nodePath}: {ex.Message}");
+                lastError = $"Failed to run Node.js test with {nodePath}: {ex.Message}";
+                Console.WriteLine(lastError);
             }
         }
         
         if (!testSuccess)
         {
-            throw new Exception("Node.js client test failed - did not find 'Test passed' message in output or process failed to run.");
+            throw new Exception($"Node.js client test failed. {lastError ?? "No Node.js executable found or all attempts failed."} " +
+                               "Ensure Node.js is installed and the test-protoc.js script outputs 'Test passed' message when successful.");
         }
         
         // Show some details from the successful test
