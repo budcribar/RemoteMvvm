@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 using GrpcRemoteMvvmModelUtil;
 using RemoteMvvmTool.Generators;
@@ -86,9 +87,59 @@ public class GrpcWebEndToEndTests
         }
     }
 
+    static void KillExistingTestProcesses()
+    {
+        try
+        {
+            Console.WriteLine("Checking for existing TestProject processes...");
+            
+            // Find all processes named TestProject
+            var testProcesses = Process.GetProcessesByName("TestProject");
+            
+            if (testProcesses.Length > 0)
+            {
+                Console.WriteLine($"Found {testProcesses.Length} existing TestProject process(es). Terminating...");
+                
+                foreach (var process in testProcesses)
+                {
+                    try
+                    {
+                        Console.WriteLine($"Killing process {process.Id}: {process.ProcessName}");
+                        process.Kill();
+                        process.WaitForExit(5000); // Wait up to 5 seconds for clean exit
+                        Console.WriteLine($"? Process {process.Id} terminated");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"?? Could not kill process {process.Id}: {ex.Message}");
+                    }
+                    finally
+                    {
+                        process.Dispose();
+                    }
+                }
+                
+                // Give the system a moment to clean up
+                Thread.Sleep(1000);
+            }
+            else
+            {
+                Console.WriteLine("No existing TestProject processes found");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"?? Error checking for existing processes: {ex.Message}");
+            // Don't fail the test for this - it's just cleanup
+        }
+    }
+
     [Fact]
     public async Task TypeScript_Client_Can_Retrieve_Collection_From_Server()
     {
+        // Kill any existing TestProject processes from previous test runs
+        KillExistingTestProcesses();
+        
         // Setup paths
         var baseTestDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
         var repoRoot = Path.GetFullPath(Path.Combine(baseTestDir, "../../../../.."));
@@ -181,11 +232,8 @@ public class GrpcWebEndToEndTests
             var jsTestFile = Path.Combine(testProjectDir, "test-protoc.js");
             if (File.Exists(jsTestFile))
             {
-                // Update the Node.js test to use the correct port
-                var originalJs = File.ReadAllText(jsTestFile);
-                var updatedJs = originalJs.Replace("const port = process.argv[2] || '5000';", 
-                    "const port = process.argv[2] || '5000';");
-                File.WriteAllText(jsTestFile, updatedJs);
+                // The JavaScript protobuf files should already be generated at this point
+                Console.WriteLine("JavaScript protobuf files should be available for Node.js test");
             }
 
             // Get a free port and start the server
@@ -270,7 +318,13 @@ public class GrpcWebEndToEndTests
                 {
                     Console.WriteLine($"Warning: Could not stop server: {ex.Message}");
                 }
-                serverProcess.Dispose();
+                finally
+                {
+                    serverProcess.Dispose();
+                }
+                
+                // Additional cleanup - ensure no TestProject processes are left running
+                KillExistingTestProcesses();
             }
         }
         catch (Exception ex)
@@ -324,26 +378,130 @@ public class GrpcWebEndToEndTests
 
     private static async Task TestNodeJsClient(string testProjectDir, int port)
     {
+        Console.WriteLine("Testing Node.js client...");
+        
+        // Try different node executable locations
+        var nodePaths = new[]
+        {
+            @"C:\Program Files\nodejs\node.exe",
+            "node.exe", 
+            "node"
+        };
+        
+        bool testSuccess = false;
+        foreach (var nodePath in nodePaths)
+        {
+            try
+            {
+                Console.WriteLine($"Running Node.js test with: {nodePath}");
+                RunCmd(nodePath, $"test-protoc.js {port}", testProjectDir);
+                testSuccess = true;
+                Console.WriteLine("? Node.js client test passed");
+                break;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed with {nodePath}: {ex.Message}");
+            }
+        }
+        
+        if (!testSuccess)
+        {
+            throw new Exception("Node.js client test failed. Ensure Node.js is installed and accessible.");
+        }
+    }
+
+    static async Task InstallNpmPackages(string projectDir)
+    {
+        var npmPaths = new[]
+        {
+            @"C:\Program Files\nodejs\npm.cmd",
+            "npm.cmd",
+            "npm"
+        };
+        
+        foreach (var npmPath in npmPaths)
+        {
+            try
+            {
+                Console.WriteLine($"Trying npm at: {npmPath}");
+                RunCmd(npmPath, "install", projectDir);
+                Console.WriteLine("? npm install completed successfully");
+                return;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed with {npmPath}: {ex.Message}");
+            }
+        }
+        
+        throw new Exception("Could not find npm executable or npm install failed. Ensure Node.js is installed and npm is in PATH.");
+    }
+
+    static async Task GenerateJavaScriptProtobuf(string projectDir, string protoFile, string serviceName)
+    {
         try
         {
-            Console.WriteLine("Testing Node.js client...");
-            
-            // Check if npm install is needed
-            var nodeModulesDir = Path.Combine(testProjectDir, "node_modules");
-            if (!Directory.Exists(nodeModulesDir))
+            // Use protoc from Grpc.Tools package to generate JavaScript files
+            var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            var toolsRoot = Path.Combine(home, ".nuget", "packages", "grpc.tools");
+            var versionDir = Directory.GetDirectories(toolsRoot).OrderBy(p => p).Last();
+            string osPart = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : RuntimeInformation.IsOSPlatform(OSPlatform.OSX) ? "macosx" : "linux";
+            string archPart = RuntimeInformation.ProcessArchitecture switch
             {
-                Console.WriteLine("Installing npm packages...");
-                RunCmd("npm", "install", testProjectDir);
+                Architecture.X64 => "x64",
+                Architecture.X86 => "x86",
+                Architecture.Arm64 => "arm64",
+                _ => "x64"
+            };
+            bool isWin = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+            var protoc = Path.Combine(versionDir, "tools", $"{osPart}_{archPart}", isWin ? "protoc.exe" : "protoc");
+            var includeDir = Path.Combine(versionDir, "build", "native", "include");
+            
+            var protoDir = Path.GetDirectoryName(protoFile)!;
+            var protoFileName = Path.GetFileName(protoFile);
+            
+            // Generate JavaScript files using protoc with grpc-web plugin
+            var args = $"--js_out=import_style=commonjs,binary:{projectDir} " +
+                      $"--grpc-web_out=import_style=commonjs,mode=grpcwebtext:{projectDir} " +
+                      $"-I\"{protoDir}\" " +
+                      $"-I\"{includeDir}\" " +
+                      $"\"{protoFile}\"";
+            
+            Console.WriteLine($"Running protoc: {protoc} {args}");
+            
+            var psi = new ProcessStartInfo
+            {
+                FileName = protoc,
+                Arguments = args,
+                RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                UseShellExecute = false,
+                WorkingDirectory = projectDir
+            };
+            
+            using var proc = Process.Start(psi)!;
+            proc.WaitForExit();
+            
+            if (proc.ExitCode != 0)
+            {
+                var error = proc.StandardError.ReadToEnd();
+                var output = proc.StandardOutput.ReadToEnd();
+                Console.WriteLine($"protoc stdout: {output}");
+                Console.WriteLine($"protoc stderr: {error}");
+                throw new Exception($"protoc failed with exit code {proc.ExitCode}: {error}");
             }
-
-            // Run the Node.js test
-            RunCmd("node", $"test-protoc.js {port}", testProjectDir);
-            Console.WriteLine("? Node.js client test passed");
+            
+            Console.WriteLine("? protoc completed successfully");
+            
+            // List generated files for debugging
+            var jsFiles = Directory.GetFiles(projectDir, "*.js");
+            Console.WriteLine($"Generated JavaScript files: {string.Join(", ", jsFiles.Select(Path.GetFileName))}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"?? Node.js test failed: {ex.Message}");
-            // Don't fail the whole test for Node.js issues
+            Console.WriteLine($"? JavaScript protobuf generation failed: {ex.Message}");
+            throw;
         }
     }
 }
