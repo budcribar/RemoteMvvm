@@ -88,13 +88,18 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         }
     }
 
-    public override Task<Empty> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override async Task<Empty> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatcher.Invoke(() => {
-        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-        if (propertyInfo != null && propertyInfo.CanWrite)
+        if (_dispatcher != null)
         {
-            try {
+            await _dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
+                    if (propertyInfo != null && propertyInfo.CanWrite)
+                    {
+                        try {
                 if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
                 else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
                 else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);
@@ -103,11 +108,14 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
                 else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);
                 else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
                 else { Debug.WriteLine("[GrpcService:MainViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-            } catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+                        } catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+                    }
+                    else { Debug.WriteLine("[GrpcService:MainViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+                }
+                catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Exception during UpdatePropertyValue: " + ex.ToString()); }
+            });
         }
-        else { Debug.WriteLine("[GrpcService:MainViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
-        });
-        return Task.FromResult(new Empty());
+        return new Empty();
     }
 
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)

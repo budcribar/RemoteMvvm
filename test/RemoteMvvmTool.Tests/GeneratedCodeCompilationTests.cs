@@ -69,7 +69,7 @@ public class GeneratedCodeCompilationTests
         File.WriteAllText(stubFile, stubCode);
         sourceFiles.Add(stubFile);
 
-        var dispatcherStub = "namespace System.Windows.Threading { public class Dispatcher { public void Invoke(System.Action a) => a(); public System.Threading.Tasks.Task InvokeAsync(System.Func<System.Threading.Tasks.Task> f) => f(); public static Dispatcher CurrentDispatcher { get; } = new Dispatcher(); } }";
+        var dispatcherStub = "namespace System.Windows.Threading { public class Dispatcher { public void Invoke(System.Action a) => a(); public System.Threading.Tasks.Task InvokeAsync(System.Action a) { a(); return System.Threading.Tasks.Task.CompletedTask; } public static Dispatcher CurrentDispatcher { get; } = new Dispatcher(); } }";
         var serviceCtorStub = "public partial class TestViewModelGrpcServiceImpl { public TestViewModelGrpcServiceImpl(GeneratedTests.TestViewModel vm) : this(vm, System.Windows.Threading.Dispatcher.CurrentDispatcher, null) {} }";
 
         var trees = sourceFiles.Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f)).ToList();

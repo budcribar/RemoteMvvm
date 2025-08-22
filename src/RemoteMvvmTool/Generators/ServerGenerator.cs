@@ -208,27 +208,87 @@ public static class ServerGenerator
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine($"    public override Task<Empty> UpdatePropertyValue({protoNs}.UpdatePropertyValueRequest request, ServerCallContext context)");
+        sb.AppendLine($"    public override async Task<Empty> UpdatePropertyValue({protoNs}.UpdatePropertyValueRequest request, ServerCallContext context)");
         sb.AppendLine("    {");
-        if (runType == "wpf") sb.AppendLine("        _dispatcher.Invoke(() => {");
-        else if (runType == "winforms") sb.AppendLine("        _dispatcher.Invoke(() => {");
-        sb.AppendLine("        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
-        sb.AppendLine("        if (propertyInfo != null && propertyInfo.CanWrite)");
-        sb.AppendLine("        {");
-        sb.AppendLine("            try {");
-        sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
-        sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
-        sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
-        sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
-        sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
-        sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
-        sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
-        sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
-        sb.AppendLine("            } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
-        sb.AppendLine("        }");
-        sb.AppendLine("        else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
-        if (runType == "wpf" || runType == "winforms") sb.AppendLine("        });");
-        sb.AppendLine("        return Task.FromResult(new Empty());");
+        if (runType == "wpf")
+        {
+            sb.AppendLine("        if (_dispatcher != null)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            await _dispatcher.InvokeAsync(() =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                try");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
+            sb.AppendLine("                    if (propertyInfo != null && propertyInfo.CanWrite)");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        try {");
+            sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
+            sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
+            sb.AppendLine("                        } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
+            sb.AppendLine("                }");
+            sb.AppendLine("                catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Exception during UpdatePropertyValue: \" + ex.ToString()); }");
+            sb.AppendLine("            });");
+            sb.AppendLine("        }");
+        }
+        else if (runType == "winforms")
+        {
+            sb.AppendLine("        if (_dispatcher != null)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            await Task.Run(() => _dispatcher.Invoke(new Action(() =>");
+            sb.AppendLine("            {");
+            sb.AppendLine("                try");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
+            sb.AppendLine("                    if (propertyInfo != null && propertyInfo.CanWrite)");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        try {");
+            sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
+            sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
+            sb.AppendLine("                        } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
+            sb.AppendLine("                }");
+            sb.AppendLine("                catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Exception during UpdatePropertyValue: \" + ex.ToString()); }");
+            sb.AppendLine("            })));");
+            sb.AppendLine("        }");
+        }
+        else
+        {
+            sb.AppendLine("        try");
+            sb.AppendLine("        {");
+            sb.AppendLine("            var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
+            sb.AppendLine("            if (propertyInfo != null && propertyInfo.CanWrite)");
+            sb.AppendLine("            {");
+            sb.AppendLine("                try {");
+            sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
+            sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
+            sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
+            sb.AppendLine("                } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
+            sb.AppendLine("            }");
+            sb.AppendLine("            else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
+            sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Exception during UpdatePropertyValue: \" + ex.ToString()); }");
+        }
+        sb.AppendLine("        return new Empty();");
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine("    public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)");

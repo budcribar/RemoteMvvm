@@ -10,6 +10,7 @@ using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel;
@@ -43,7 +44,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     private readonly PointerViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher _dispatcher;
+    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
     public PointerViewModelGrpcServiceImpl(PointerViewModel viewModel, Dispatcher dispatcher, ILogger<PointerViewModelGrpcServiceImpl>? logger = null)
@@ -178,22 +179,34 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         }
     }
 
-    public override Task<Empty> UpdatePropertyValue(Pointer.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override async Task<Empty> UpdatePropertyValue(Pointer.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatcher.Invoke(() => {
-            var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-            if (propertyInfo != null && propertyInfo.CanWrite)
+        if (_dispatcher != null)
+        {
+            await _dispatcher.InvokeAsync(() =>
             {
-                try {
-                    if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
-                    else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
-                    else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
-                    else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-                } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
-            }
-            else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
-        });
-        return Task.FromResult(new Empty());
+                try
+                {
+                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
+                    if (propertyInfo != null && propertyInfo.CanWrite)
+                    {
+                        try {
+                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
+                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
+                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);
+                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);
+                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);
+                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);
+                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
+                else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
+                        } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+                    }
+                    else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+                }
+                catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Exception during UpdatePropertyValue: " + ex.ToString()); }
+            });
+        }
+        return new Empty();
     }
 
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
@@ -209,6 +222,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command InitializeCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -225,6 +239,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnCursorTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -242,6 +257,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.OnClickTestCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<int>;
                 if (typedCommand != null) typedCommand.Execute(request.Button); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnClickTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -259,6 +275,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.OnSelectDeviceCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
                 if (typedCommand != null) typedCommand.Execute(request.Device); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectDeviceCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -276,6 +293,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.OnSelectNumButtonsCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<int>;
                 if (typedCommand != null) typedCommand.Execute(request.BtnCount); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command OnSelectNumButtonsCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -293,6 +311,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             {
                 var typedCommand = _viewModel.GetClicksWithoutNotificationCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string>;
                 if (typedCommand != null) typedCommand.Execute(request.Button); else command.Execute(request);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command GetClicksWithoutNotificationCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -309,6 +328,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command ResetClicksCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -325,6 +345,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command CancelTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -341,6 +362,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             if (command != null)
             {
                 command.Execute(null);
+                await Task.CompletedTask;
             }
             else { Debug.WriteLine("[GrpcService:PointerViewModel] Command FinishTestCommand not found or not IRelayCommand."); }
         }); } catch (Exception ex) {
@@ -358,15 +380,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
 
         var notification = new Pointer.ViewModels.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
-        if (newValue == null) notification.NewValue = Any.Pack(new Empty());
-        else if (newValue is string s) notification.NewValue = Any.Pack(new StringValue { Value = s });
-        else if (newValue is int i) notification.NewValue = Any.Pack(new Int32Value { Value = i });
-        else if (newValue is bool b) notification.NewValue = Any.Pack(new BoolValue { Value = b });
-        else if (newValue is double d) notification.NewValue = Any.Pack(new DoubleValue { Value = d });
-        else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });
-        else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });
-        else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
-        else { Debug.WriteLine($"[GrpcService:PointerViewModel] PropertyChanged: Packing not implemented for type {(newValue?.GetType().FullName ?? "null")} of property {e.PropertyName}."); notification.NewValue = Any.Pack(new StringValue { Value = newValue.ToString() }); }
+        notification.NewValue = PackToAny(newValue);
 
         foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
         {
@@ -374,5 +388,75 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:PointerViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
             catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
         }
+    }
+
+    private static Any PackToAny(object? value)
+    {
+        if (value == null) return Any.Pack(new Empty());
+        switch (value)
+        {
+            case string s: return Any.Pack(new StringValue { Value = s });
+            case int i: return Any.Pack(new Int32Value { Value = i });
+            case uint ui: return Any.Pack(new UInt32Value { Value = ui });
+            case bool b: return Any.Pack(new BoolValue { Value = b });
+            case double d: return Any.Pack(new DoubleValue { Value = d });
+            case float f: return Any.Pack(new FloatValue { Value = f });
+            case long l: return Any.Pack(new Int64Value { Value = l });
+            case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
+            case global::System.Enum e: return Any.Pack(new Int32Value { Value = Convert.ToInt32(e) });
+        }
+        if (value is IDictionary dict)
+        {
+            var sv = new Struct();
+            foreach (DictionaryEntry entry in dict)
+                sv.Fields[entry.Key?.ToString() ?? string.Empty] = ToValue(entry.Value);
+            return Any.Pack(sv);
+        }
+        if (value is IEnumerable enumerable && value is not string)
+        {
+            var lv = new ListValue();
+            foreach (var item in enumerable)
+                lv.Values.Add(ToValue(item));
+            return Any.Pack(lv);
+        }
+        var structValue = new Struct();
+        foreach (var prop in value.GetType().GetProperties())
+            structValue.Fields[prop.Name] = ToValue(prop.GetValue(value));
+        return Any.Pack(structValue);
+    }
+
+    private static Value ToValue(object? value)
+    {
+        if (value == null) return Value.ForNull();
+        switch (value)
+        {
+            case string s: return Value.ForString(s);
+            case bool b: return Value.ForBool(b);
+            case int i: return Value.ForNumber(i);
+            case uint ui: return Value.ForNumber(ui);
+            case long l: return Value.ForNumber(l);
+            case double d: return Value.ForNumber(d);
+            case float f: return Value.ForNumber(f);
+            case global::System.Enum e: return Value.ForNumber(Convert.ToInt32(e));
+            case DateTime dt: return Value.ForString(dt.ToUniversalTime().ToString("o"));
+        }
+        if (value is IDictionary dict)
+        {
+            var sv = new Struct();
+            foreach (DictionaryEntry entry in dict)
+                sv.Fields[entry.Key?.ToString() ?? string.Empty] = ToValue(entry.Value);
+            return Value.ForStruct(sv);
+        }
+        if (value is IEnumerable enumerable && value is not string)
+        {
+            var lv = new List<Value>();
+            foreach (var item in enumerable)
+                lv.Add(ToValue(item));
+            return Value.ForList(lv.ToArray());
+        }
+        var structValue = new Struct();
+        foreach (var prop in value.GetType().GetProperties())
+            structValue.Fields[prop.Name] = ToValue(prop.GetValue(value));
+        return Value.ForStruct(structValue);
     }
 }
