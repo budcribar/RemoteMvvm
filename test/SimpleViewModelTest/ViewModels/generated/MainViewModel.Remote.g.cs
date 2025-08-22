@@ -27,7 +27,7 @@ namespace SimpleViewModelTest.ViewModels
         private GrpcChannel? _channel;
         private SimpleViewModelTest.ViewModels.RemoteClients.MainViewModelRemoteClient? _remoteClient;
 
-        public MainViewModel(ServerOptions options)
+        public MainViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;

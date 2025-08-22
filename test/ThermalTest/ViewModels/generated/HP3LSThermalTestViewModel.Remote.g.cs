@@ -27,7 +27,7 @@ namespace HPSystemsTools.ViewModels
         private GrpcChannel? _channel;
         private HPSystemsTools.ViewModels.RemoteClients.HP3LSThermalTestViewModelRemoteClient? _remoteClient;
 
-        public HP3LSThermalTestViewModel(ServerOptions options)
+        public HP3LSThermalTestViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
