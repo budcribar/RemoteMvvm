@@ -11,19 +11,18 @@
 
   <ItemGroup>
     <Compile Remove="TestData\GrpcWebEndToEnd\**" />
+    <Compile Remove="TestData\Work - Copy\**" />
     <Compile Remove="TestData\Work\**" />
     <EmbeddedResource Remove="TestData\GrpcWebEndToEnd\**" />
+    <EmbeddedResource Remove="TestData\Work - Copy\**" />
     <EmbeddedResource Remove="TestData\Work\**" />
+    <None Remove="TestData\GrpcWebEndToEnd\**" />
+    <None Remove="TestData\Work - Copy\**" />
    
     <None Remove="TestData\Work\**" />
     <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
+    <TypeScriptCompile Remove="TestData\Work - Copy\**" />
     <TypeScriptCompile Remove="TestData\Work\**" />
-  </ItemGroup>
-
-  
-  <ItemGroup>
-   
-    <Content Include="TestData\GrpcWebEndToEnd\tsconfig.json" />
   </ItemGroup>
 
   <ItemGroup>
@@ -59,7 +58,7 @@
   </ItemGroup>
 
   <ItemGroup>
-	  <None Include="TestData\GrpcWebEndToEnd\*.*" />
+    <Folder Include="TestData\" />
   </ItemGroup>
 
 </Project>

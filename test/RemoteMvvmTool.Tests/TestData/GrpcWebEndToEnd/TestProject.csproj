@@ -1,23 +1,28 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.71.0" />
-    <PackageReference Include="Google.Protobuf" Version="3.30.2" />
-    <PackageReference Include="Grpc.Tools" Version="2.71.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="Grpc.AspNetCore.Web" Version="2.71.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.1" />
+    <PackageReference Include="Google.Protobuf" Version="3.32.0" />
+    <PackageReference Include="Grpc.Tools" Version="2.72.0" PrivateAssets="all" />
   </ItemGroup>
-
+  
   <ItemGroup>
     <Protobuf Include="protos\*.proto" GrpcServices="Both" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <None Remove="package.json" />
+    <None Remove="test-protoc.js" />
+    <None Remove="test.ts" />
+    <None Remove="testviewmodelservice_pb.js" />
+    <None Remove="tsconfig.json" />
+  </ItemGroup>
 </Project>

@@ -14,7 +14,7 @@ public class Program
         Console.WriteLine($"Starting server on port {port}...");
         
         var serverOpts = new ServerOptions { Port = port };
-        TestViewModel viewModel = new TestViewModel(serverOpts, null);
+        TestViewModel viewModel = new TestViewModel(serverOpts);
         
         // Add test data
         viewModel.ZoneList.Add(new ThermalZoneComponentViewModel 
