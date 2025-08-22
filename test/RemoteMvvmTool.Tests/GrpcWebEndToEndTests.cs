@@ -316,6 +316,6 @@ import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb'
         
         RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
 
-        (vm as IDisposable).Dispose();
+        (vm as IDisposable)?.Dispose();
     }
 }
