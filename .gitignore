@@ -370,3 +370,4 @@ obj/
 /test/RemoteMvvmTool.Tests/TestData/Work/TestViewModel.cs
 /test/RemoteMvvmTool.Tests/TestData/Work - Copy
 /test/RemoteMvvmTool.Tests/TestData/Work - Copy (2)/TestProject
+/test/RemoteMvvmTool.Tests/TestData/GrpcWebEndToEnd/TestViewModel.cs

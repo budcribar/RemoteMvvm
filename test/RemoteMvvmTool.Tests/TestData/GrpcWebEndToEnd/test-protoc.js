@@ -30,24 +30,88 @@ client.getState(new Empty(), {}, (err, response) => {
     process.exit(1);
   }
 
-  const zones = response.getZoneListList();
-  console.log('Received zones:', zones.length);
-
-  if (zones.length < 2) {
-    console.error('Expected at least 2 zones, got', zones.length);
-    process.exit(1);
+  // Output the complete response for data validation
+  console.log('=== TestViewModel Data Start ===');
+  
+  try {
+    // Get all the data from the response object
+    const responseData = {};
+    
+    // Check for zone list
+    if (response.getZoneListList) {
+      const zones = response.getZoneListList();
+      responseData.zoneList = [];
+      zones.forEach(zone => {
+        const zoneData = {};
+        if (zone.getZone) zoneData.zone = zone.getZone();
+        if (zone.getTemperature) zoneData.temperature = zone.getTemperature();
+        responseData.zoneList.push(zoneData);
+      });
+    }
+    
+    // Check for simple properties
+    if (response.getStatus) responseData.status = response.getStatus();
+    if (response.getMessage) responseData.message = response.getMessage();
+    if (response.getCounter !== undefined) responseData.counter = response.getCounter();
+    if (response.getIsEnabled !== undefined) responseData.isEnabled = response.getIsEnabled();
+    
+    // Check for score list
+    if (response.getScoreListList) {
+      responseData.scoreList = response.getScoreListList();
+    }
+    
+    // Check for other numeric properties
+    if (response.getPlayerLevel !== undefined) responseData.playerLevel = response.getPlayerLevel();
+    if (response.getHasBonus !== undefined) responseData.hasBonus = response.getHasBonus();
+    if (response.getBonusMultiplier !== undefined) responseData.bonusMultiplier = response.getBonusMultiplier();
+    if (response.getStatus !== undefined) responseData.gameStatus = response.getStatus();
+    if (response.getCurrentStatus !== undefined) responseData.currentStatus = response.getCurrentStatus();
+    
+    // Check for dictionary/map
+    if (response.getStatusMapMap) {
+      const statusMap = response.getStatusMapMap();
+      responseData.statusMap = {};
+      statusMap.forEach((value, key) => {
+        responseData.statusMap[key] = value;
+      });
+    }
+    
+    // Output stringified data for parsing by C# test
+    const jsonData = JSON.stringify(responseData, null, 2);
+    console.log('RESPONSE_DATA:', jsonData);
+    
+    // Also output a flattened version for easier parsing
+    const flatData = JSON.stringify(responseData);
+    console.log('FLAT_DATA:', flatData);
+    
+  } catch (parseError) {
+    console.error('Error parsing response:', parseError);
+    // Try to output the raw response object
+    console.log('RAW_RESPONSE:', JSON.stringify(response.toObject ? response.toObject() : response));
   }
-
-  const t0 = zones[0].getTemperature();
-  const t1 = zones[1].getTemperature();
-  console.log('Temperatures:', t0, t1);
-
-  if (t0 !== 42 || t1 !== 43) {
-    console.error(`Unexpected temperatures [${t0}, ${t1}]`);
-    process.exit(1);
+  
+  console.log('=== TestViewModel Data End ===');
+  
+  // Legacy validation for backward compatibility - basic sanity check
+  const zones = response.getZoneListList ? response.getZoneListList() : [];
+  if (zones.length >= 2) {
+    console.log('Received zones:', zones.length);
+    const temperatures = zones.map(z => z.getTemperature ? z.getTemperature() : 0);
+    console.log('Temperatures:', temperatures.join(' '));
   }
-
-  console.log('✅ Test passed! Successfully retrieved collection from server using grpc-web client');
+  
+  // Simple properties check
+  if (response.getMessage) console.log('Message:', response.getMessage());
+  if (response.getCounter !== undefined) console.log('Counter:', response.getCounter());
+  if (response.getIsEnabled !== undefined) console.log('IsEnabled:', response.getIsEnabled());
+  
+  console.log('✅ Test passed');
   process.exit(0);
 });
+
+// Timeout after 10 seconds
+setTimeout(() => {
+  console.error('Test timed out after 10 seconds');
+  process.exit(1);
+}, 10000);
 

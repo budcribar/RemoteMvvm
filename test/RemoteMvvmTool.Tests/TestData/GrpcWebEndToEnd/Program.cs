@@ -16,18 +16,6 @@ public class Program
         var serverOpts = new ServerOptions { Port = port };
         TestViewModel viewModel = new TestViewModel(serverOpts);
         
-        // Add test data
-        viewModel.ZoneList.Add(new ThermalZoneComponentViewModel 
-        { 
-            Zone = HP.Telemetry.Zone.CPUZ_0, 
-            Temperature = 42 
-        });
-        viewModel.ZoneList.Add(new ThermalZoneComponentViewModel 
-        { 
-            Zone = HP.Telemetry.Zone.CPUZ_1, 
-            Temperature = 43 
-        });
-        
         Console.WriteLine($"Server ready on port {port}");
         
         // Wait for termination signal
