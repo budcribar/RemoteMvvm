@@ -41,7 +41,7 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("        private GrpcChannel? _channel;");
         sb.AppendLine($"        private {clientNamespace}.{vmName}RemoteClient? _remoteClient;");
         sb.AppendLine();
-        sb.AppendLine($"        public {vmName}(ServerOptions options)");
+        sb.AppendLine($"        public {vmName}(ServerOptions options) : this()");
         sb.AppendLine("        {");
         sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
         if (runType == "wpf")

@@ -27,7 +27,7 @@ namespace MonsterClicker.ViewModels
         private GrpcChannel? _channel;
         private MonsterClicker.ViewModels.RemoteClients.GameViewModelRemoteClient? _remoteClient;
 
-        public GameViewModel(ServerOptions options)
+        public GameViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
