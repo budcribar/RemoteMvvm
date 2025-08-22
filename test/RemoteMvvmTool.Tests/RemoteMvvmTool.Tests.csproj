@@ -10,7 +10,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\test.ts" />
+    <Compile Remove="TestData\GrpcWebEndToEnd\**" />
+    <Compile Remove="TestData\Work\**" />
+    <EmbeddedResource Remove="TestData\GrpcWebEndToEnd\**" />
+    <EmbeddedResource Remove="TestData\Work\**" />
+    <None Remove="TestData\GrpcWebEndToEnd\**" />
+    <None Remove="TestData\Work\**" />
+    <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
+    <TypeScriptCompile Remove="TestData\Work\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -43,6 +50,10 @@
 
   <ItemGroup>
     <Protobuf Include="Protos/Dummy.proto" GrpcServices="Both" ProtoRoot="Protos" Access="Public" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="TestData\GrpcWebEndToEnd\TestProject.csproj" />
   </ItemGroup>
 
 </Project>

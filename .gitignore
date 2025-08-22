@@ -366,3 +366,5 @@ src/demo/MonsterClicker/RemoteGenerated/
 obj/
 /src/demo/TypeScriptMonsterClicker/tsconfig.tsbuildinfo
 /test/PointerTestModel/actual/PointerViewModelRemoteClient.ts
+/test/RemoteMvvmTool.Tests/TestData/Work/
+/test/RemoteMvvmTool.Tests/TestData/Work/TestViewModel.cs

@@ -1,1 +1,0 @@
-namespace Generated.Clients { public class TestViewModelRemoteClient { public TestViewModelRemoteClient(object c) {} public System.Threading.Tasks.Task InitializeRemoteAsync() => System.Threading.Tasks.Task.CompletedTask; } }

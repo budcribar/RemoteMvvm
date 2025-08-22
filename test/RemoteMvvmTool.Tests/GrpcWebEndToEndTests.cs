@@ -259,6 +259,14 @@ module.exports = protobuf;");
         var scripts = root["scripts"] as JsonObject ?? new JsonObject();
         root["scripts"] = scripts;
 
+        // Add xhr2 dependency for XMLHttpRequest polyfill in Node.js (already in base package.json)
+        var dependencies = root["dependencies"] as JsonObject ?? new JsonObject();
+        if (!dependencies.ContainsKey("xhr2"))
+        {
+            dependencies["xhr2"] = "^0.2.1";
+            root["dependencies"] = dependencies;
+        }
+
         // Build protoc script targeting our generated proto (relative to project root)
         var protoArg = Path.Combine("protos", protoFileName).Replace("\\", "/");
         string newProtoc = string.Join(" ", new[]
@@ -289,6 +297,11 @@ module.exports = protobuf;");
         var messagesJs = $"./src/generated/{protoBaseName}_pb.js";
 
         var js = $@"const process = require('process');
+
+// Polyfill XMLHttpRequest for Node.js environment
+if (typeof global !== 'undefined' && typeof global.XMLHttpRequest === 'undefined') {{
+  global.XMLHttpRequest = require('xhr2');
+}}
 
 (async () => {{
   console.log('Starting gRPC-Web test with protoc-generated grpc-web client...');
@@ -342,26 +355,145 @@ module.exports = protobuf;");
     [Fact]
     public async Task TypeScript_Client_Can_Retrieve_Collection_From_Server()
     {
-        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(tempDir);
+        // Use Work directory directly instead of temp directory
+        var baseTestDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+        var repoRoot = Path.GetFullPath(Path.Combine(baseTestDir, "../../../../.."));
+        var workDir = Path.Combine(repoRoot, "test", "RemoteMvvmTool.Tests", "TestData", "Work");
+        
+        var testProjectDir = Path.Combine(workDir, "TestProject");
+        bool testPassed = false;
 
         try
         {
-            // Setup the test project with all necessary files
-            SetupTestProject(tempDir);
-            var testProjectDir = Path.Combine(tempDir, "TestProject");
+            // Only clean up existing Work directory at the start if we're confident
+            // For debugging, we'll preserve the directory unless explicitly cleaning
+            Console.WriteLine($"Working in directory: {workDir}");
+            if (!Directory.Exists(workDir))
+            {
+                Directory.CreateDirectory(workDir);
+            }
 
+            // Setup the test project with all necessary files
+            SetupTestProject(workDir);
 
             // Generate the server code using our generators
             var refs = LoadDefaultRefs();
+            
+            // Add CommunityToolkit.Mvvm reference if not already present
+            var mvvmFound = refs.Any(r => r.Contains("CommunityToolkit.Mvvm"));
+            Console.WriteLine($"CommunityToolkit.Mvvm reference found in existing refs: {mvvmFound}");
+            
+            if (!mvvmFound)
+            {
+                // Try to find CommunityToolkit.Mvvm in NuGet packages
+                var userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+                var nugetPackagesDir = Path.Combine(userProfile, ".nuget", "packages");
+                var communityToolkitDir = Path.Combine(nugetPackagesDir, "communitytoolkit.mvvm");
+                
+                Console.WriteLine($"Looking for CommunityToolkit.Mvvm in: {communityToolkitDir}");
+                Console.WriteLine($"Directory exists: {Directory.Exists(communityToolkitDir)}");
+                
+                if (Directory.Exists(communityToolkitDir))
+                {
+                    var versionDirs = Directory.GetDirectories(communityToolkitDir).OrderByDescending(d => d);
+                    Console.WriteLine($"Found version directories: {string.Join(", ", versionDirs.Select(Path.GetFileName))}");
+                    
+                    foreach (var versionDir in versionDirs)
+                    {
+                        var libDir = Path.Combine(versionDir, "lib", "net6.0");
+                        if (!Directory.Exists(libDir))
+                        {
+                            libDir = Path.Combine(versionDir, "lib", "netstandard2.0");
+                        }
+                        Console.WriteLine($"Checking lib directory: {libDir} (exists: {Directory.Exists(libDir)})");
+                        
+                        if (Directory.Exists(libDir))
+                        {
+                            var mvvmDllPath = Path.Combine(libDir, "CommunityToolkit.Mvvm.dll");
+                            Console.WriteLine($"Checking for DLL: {mvvmDllPath} (exists: {File.Exists(mvvmDllPath)})");
+                            
+                            if (File.Exists(mvvmDllPath))
+                            {
+                                refs.Add(mvvmDllPath);
+                                Console.WriteLine($"Added CommunityToolkit.Mvvm reference: {mvvmDllPath}");
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // Also try to add the reference directly from the loaded assembly
+            try
+            {
+                var mvvmAssemblyPath = typeof(CommunityToolkit.Mvvm.ComponentModel.ObservableObject).Assembly.Location;
+                Console.WriteLine($"CommunityToolkit.Mvvm loaded from: {mvvmAssemblyPath}");
+                if (File.Exists(mvvmAssemblyPath) && !refs.Contains(mvvmAssemblyPath))
+                {
+                    refs.Add(mvvmAssemblyPath);
+                    Console.WriteLine($"Added CommunityToolkit.Mvvm reference from loaded assembly");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error accessing CommunityToolkit.Mvvm assembly: {ex.Message}");
+            }
+            
             var vmFile = Path.Combine(testProjectDir, "TestViewModel.cs");
-            var (vmSymbol, name, props, cmds, compilation) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "TestObservablePropertyAttribute", "TestRelayCommandAttribute", refs, "ObservableObject");
+            
+            Console.WriteLine($"TestViewModel file content:");
+            Console.WriteLine(File.ReadAllText(vmFile));
+            Console.WriteLine();
+            
+            Console.WriteLine($"References being used:");
+            foreach (var refPath in refs.Take(5))
+            {
+                Console.WriteLine($"  - {Path.GetFileName(refPath)}");
+            }
+            if (refs.Count > 5) Console.WriteLine($"  ... and {refs.Count - 5} more");
+            Console.WriteLine();
+            
+            var (vmSymbol, name, props, cmds, compilation) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute", "CommunityToolkit.Mvvm.Input.RelayCommandAttribute", refs, "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
+
+            Console.WriteLine($"Compilation diagnostics:");
+            var diagnostics = compilation.GetDiagnostics().Where(d => d.Severity >= DiagnosticSeverity.Warning).ToArray();
+            foreach (var diag in diagnostics.Take(10))
+            {
+                Console.WriteLine($"  {diag.Severity}: {diag.Id} - {diag.GetMessage()}");
+            }
+            if (diagnostics.Length > 10) Console.WriteLine($"  ... and {diagnostics.Length - 10} more diagnostics");
+            Console.WriteLine();
+
+            // Debug information
+            Console.WriteLine($"Found ViewModel: {name}");
+            Console.WriteLine($"Found properties: {props.Count}");
+            foreach (var prop in props)
+            {
+                Console.WriteLine($"  - Property: {prop.Name} ({prop.TypeString})");
+            }
+            Console.WriteLine($"Found commands: {cmds.Count}");
+            foreach (var cmd in cmds)
+            {
+                Console.WriteLine($"  - Command: {cmd.MethodName}");
+            }
+
+            // Ensure we have at least one property to prevent malformed generation
+            if (props.Count == 0)
+            {
+                throw new Exception($"No properties found in TestViewModel. The ViewModelAnalyzer may not be finding the ObservablePropertyAttribute correctly. " +
+                                  $"TestViewModel file exists: {File.Exists(vmFile)}, " +
+                                  $"CommunityToolkit.Mvvm reference added: {refs.Any(r => r.Contains("CommunityToolkit.Mvvm"))}");
+            }
 
             var proto = ProtoGenerator.Generate("Test.Protos", name + "Service", name, props, cmds, compilation);
             var protoDir = Path.Combine(testProjectDir, "protos");
             Directory.CreateDirectory(protoDir);
             var protoFile = Path.Combine(protoDir, name + "Service.proto");
             File.WriteAllText(protoFile, proto);
+            
+            // Debug: Show the generated proto content
+            Console.WriteLine("Generated proto file content:");
+            Console.WriteLine(proto);
 
             // Prepare npm project: clean node_modules (to avoid minimal stubs), patch package.json, and install deps
             var nodeModulesDir = Path.Combine(testProjectDir, "node_modules");
@@ -381,54 +513,145 @@ module.exports = protobuf;");
             Console.WriteLine("Generating JavaScript protobuf files with npm run protoc...");
             RunCmd(@"C:\\Program Files\\nodejs\\npm.cmd", "run protoc", testProjectDir);
 
-            // Persist a copy of the generated TestProject for inspection
-            DumpWorkCopy(testProjectDir);
-
             var grpcOut = Path.Combine(testProjectDir, "grpc");
             Directory.CreateDirectory(grpcOut);
             RunProtoc(protoDir, protoFile, grpcOut);
 
             var serverCode = ServerGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, "Generated.ViewModels", "console");
+            Console.WriteLine("Generated server code preview (first 500 chars):");
+            Console.WriteLine(serverCode.Substring(0, Math.Min(500, serverCode.Length)));
             File.WriteAllText(Path.Combine(testProjectDir, name + "GrpcServiceImpl.cs"), serverCode);
 
             var rootTypes = props.Select(p => p.FullTypeSymbol!);
             var conv = ConversionGenerator.Generate("Test.Protos", "Generated.ViewModels", rootTypes, compilation);
+            Console.WriteLine("Generated converter code preview (first 500 chars):");
+            Console.WriteLine(conv.Substring(0, Math.Min(500, conv.Length)));
             File.WriteAllText(Path.Combine(testProjectDir, "ProtoStateConverters.cs"), conv);
 
-            var partial = ViewModelPartialGenerator.Generate(name, "Test.Protos", name + "Service", "Generated.ViewModels", "Generated.Clients", "ObservableObject", "console", true);
+            var partial = ViewModelPartialGenerator.Generate(name, "Test.Protos", name + "Service", "Generated.ViewModels", "Generated.Clients", "CommunityToolkit.Mvvm.ComponentModel.ObservableObject", "console", true);
+            Console.WriteLine("Generated partial code preview (first 500 chars):");
+            Console.WriteLine(partial.Substring(0, Math.Min(500, partial.Length)));
             File.WriteAllText(Path.Combine(testProjectDir, name + ".Remote.g.cs"), partial);
-            
 
             // Compile and run the server
             var sourceFiles = Directory.GetFiles(testProjectDir, "*.cs").Concat(Directory.GetFiles(grpcOut, "*.cs"));
-            var trees = sourceFiles.Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f));
+            
+            // Create a stub file if TestViewModelStub.cs is needed
+            var stubFile = Path.Combine(testProjectDir, "TestViewModelStub.cs");
+            var stubContent = @"using CommunityToolkit.Mvvm.ComponentModel;
+using Generated.ViewModels;
+
+namespace Generated.ViewModels
+{
+    // Additional stub content for TestViewModel if needed
+    public partial class TestViewModel
+    {
+        // Stub constructors and methods if needed for compilation
+        public TestViewModel() { }
+    }
+}
+
+// Dispatcher stub for non-WPF environments
+namespace System.Windows.Threading 
+{ 
+    public class Dispatcher 
+    { 
+        public void Invoke(System.Action a) => a(); 
+        public System.Threading.Tasks.Task InvokeAsync(System.Action a) 
+        { 
+            a(); 
+            return System.Threading.Tasks.Task.CompletedTask; 
+        } 
+        public static Dispatcher CurrentDispatcher { get; } = new Dispatcher(); 
+    } 
+}";
+            File.WriteAllText(stubFile, stubContent);
+            
+            var trees = sourceFiles.Concat(new[] { stubFile }).Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f));
             var references = refs.Select(r => MetadataReference.CreateFromFile(r));
             var compilation2 = CSharpCompilation.Create("ServerAsm", trees, references, new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary));
             var dllPath = Path.Combine(testProjectDir, "server.dll");
             var emitResult = compilation2.Emit(dllPath);
+            
+            if (!emitResult.Success)
+            {
+                Console.WriteLine("Compilation errors:");
+                foreach (var diag in emitResult.Diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error))
+                {
+                    Console.WriteLine($"  {diag}");
+                }
+            }
+            
             Assert.True(emitResult.Success, string.Join("\n", emitResult.Diagnostics));
 
+            Console.WriteLine("Loading assembly and creating server...");
             var asm = Assembly.LoadFile(dllPath);
-            var vmType = asm.GetType("Generated.ViewModels.TestViewModel")!;
-            var serverOptsType = asm.GetType("PeakSWC.Mvvm.Remote.ServerOptions")!;
+            Console.WriteLine($"Assembly loaded with types: {string.Join(", ", asm.GetTypes().Select(t => t.FullName))}");
+            
+            var vmType = asm.GetType("Generated.ViewModels.TestViewModel");
+            if (vmType == null)
+            {
+                // Try without namespace
+                vmType = asm.GetType("TestViewModel");
+                if (vmType == null)
+                {
+                    Console.WriteLine($"Available types: {string.Join(", ", asm.GetTypes().Select(t => t.FullName))}");
+                    throw new Exception("TestViewModel type not found in assembly");
+                }
+            }
+            Console.WriteLine($"Found TestViewModel: {vmType.FullName}");
+            
+            var serverOptsType = asm.GetType("PeakSWC.Mvvm.Remote.ServerOptions");
+            if (serverOptsType == null)
+            {
+                throw new Exception("ServerOptions type not found in assembly");
+            }
+            
             var serverOpts = Activator.CreateInstance(serverOptsType)!;
             int port = GetFreePort();
             serverOptsType.GetProperty("Port")!.SetValue(serverOpts, port);
-            var vm = Activator.CreateInstance(vmType, new object[] { serverOpts })!;
+            Console.WriteLine($"Using port: {port}");
             
+            var vm = Activator.CreateInstance(vmType, new object[] { serverOpts })!;
+            Console.WriteLine("Server instance created successfully");
+
             // Setup test data
-            var zoneListProp = vmType.GetProperty("ZoneList")!;
+            Console.WriteLine("Setting up test data...");
+            var zoneListProp = vmType.GetProperty("ZoneList");
+            if (zoneListProp == null)
+            {
+                Console.WriteLine($"Available properties: {string.Join(", ", vmType.GetProperties().Select(p => p.Name))}");
+                throw new Exception("ZoneList property not found");
+            }
+            
             var list = (System.Collections.IList)zoneListProp.GetValue(vm)!;
-            var tzType = asm.GetType("Generated.ViewModels.ThermalZoneComponentViewModel")!;
-            var zoneEnum = asm.GetType("HP.Telemetry.Zone")!;
+            Console.WriteLine($"ZoneList type: {list.GetType()}");
+            
+            var tzType = asm.GetType("Generated.ViewModels.ThermalZoneComponentViewModel");
+            if (tzType == null)
+            {
+                Console.WriteLine($"Available types: {string.Join(", ", asm.GetTypes().Select(t => t.FullName))}");
+                throw new Exception("ThermalZoneComponentViewModel type not found");
+            }
+            
+            var zoneEnum = asm.GetType("HP.Telemetry.Zone");
+            if (zoneEnum == null)
+            {
+                Console.WriteLine($"Zone enum not found in assembly");
+                throw new Exception("Zone enum not found");
+            }
+            
             var z0 = Activator.CreateInstance(tzType)!;
             tzType.GetProperty("Zone")!.SetValue(z0, Enum.Parse(zoneEnum, "CPUZ_0"));
             tzType.GetProperty("Temperature")!.SetValue(z0, 42);
             list.Add(z0);
+            
             var z1 = Activator.CreateInstance(tzType)!;
             tzType.GetProperty("Zone")!.SetValue(z1, Enum.Parse(zoneEnum, "CPUZ_1"));
             tzType.GetProperty("Temperature")!.SetValue(z1, 43);
             list.Add(z1);
+            
+            Console.WriteLine($"Added {list.Count} zones to the collection");
 
             // Wait for server to be ready
             for (int i = 0; i < 10; i++)
@@ -449,22 +672,26 @@ module.exports = protobuf;");
             await Task.Delay(2000); // Additional delay for gRPC services
 
             // Manual verification: try a direct HTTP call to confirm server works
-            using var testHttpClient = new HttpClient();
-            var testResponse = await testHttpClient.PostAsync(
+            using var httpClient2 = new HttpClient();
+            var httpResponse = await httpClient2.PostAsync(
                 $"http://localhost:{port}/test_protos.TestViewModelService/GetState",
                 new ByteArrayContent([0,0,0,0,0])
             );
             
-            if (testResponse.IsSuccessStatusCode)
+            if (httpResponse.IsSuccessStatusCode)
             {
-                var responseBytes = await testResponse.Content.ReadAsByteArrayAsync();
+                var responseBytes = await httpResponse.Content.ReadAsByteArrayAsync();
                 Console.WriteLine($"Server responded with {responseBytes.Length} bytes");
                 Console.WriteLine($"Response bytes: [{string.Join(", ", responseBytes.Take(20))}]");
             }
+            else
+            {
+                Console.WriteLine($"HTTP test failed: {httpResponse.StatusCode} - {httpResponse.ReasonPhrase}");
+            }
 
             // Run the Node test that uses protoc-generated grpc-web JS client
-            var nodeTestFile = Path.Combine(testProjectDir, "test-protoc.js");
-            if (File.Exists(nodeTestFile))
+            var jsTestFile = Path.Combine(testProjectDir, "test-protoc.js");
+            if (File.Exists(jsTestFile))
             {
                 Console.WriteLine("Running Node test with grpc-web generated client...");
                 RunCmd("node", $"test-protoc.js {port}", testProjectDir);
@@ -476,18 +703,38 @@ module.exports = protobuf;");
             }
             
             (vm as IDisposable)?.Dispose();
+
+            // If we reach this point, the test passed!
+            testPassed = true;
+            Console.WriteLine("?? Test completed successfully!");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"? Test failed with error: {ex.Message}");
+            Console.WriteLine($"?? Debug files are preserved in: {workDir}");
+            throw; // Re-throw to fail the test
         }
         finally
         {
-            // Clean up temp directory
-            try
+            if (testPassed)
             {
-                if (Directory.Exists(tempDir))
-                    Directory.Delete(tempDir, true);
+                // Only clean up if the test actually passed
+                Console.WriteLine("? Test passed - cleaning up Work directory for next run");
+                try 
+                { 
+                    if (Directory.Exists(workDir))
+                    {
+                        Directory.Delete(workDir, true); 
+                    }
+                } 
+                catch (Exception ex)
+                { 
+                    Console.WriteLine($"??  Warning: Could not clean Work directory: {ex.Message}");
+                }
             }
-            catch
+            else
             {
-                // Ignore cleanup errors
+                Console.WriteLine($"?? Test failed - Work directory preserved for debugging: {workDir}");
             }
         }
     }

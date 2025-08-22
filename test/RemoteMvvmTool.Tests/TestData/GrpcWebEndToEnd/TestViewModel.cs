@@ -1,11 +1,26 @@
-public class TestObservablePropertyAttribute : System.Attribute {}
-public class TestRelayCommandAttribute : System.Attribute {}
-namespace HP.Telemetry { public enum Zone { CPUZ_0, CPUZ_1 } }
-namespace Generated.ViewModels {
-  public class ThermalZoneComponentViewModel { public HP.Telemetry.Zone Zone { get; set; } public int Temperature { get; set; } }
-  public partial class TestViewModel : ObservableObject {
-    [TestObservableProperty]
-    private System.Collections.ObjectModel.ObservableCollection<ThermalZoneComponentViewModel> zoneList;
-  }
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
+
+namespace HP.Telemetry 
+{ 
+    public enum Zone { CPUZ_0, CPUZ_1 } 
 }
-public class ObservableObject {}
+
+namespace Generated.ViewModels 
+{
+    public class ThermalZoneComponentViewModel 
+    { 
+        public HP.Telemetry.Zone Zone { get; set; } 
+        public int Temperature { get; set; } 
+    }
+
+    public partial class TestViewModel : ObservableObject 
+    { 
+        [ObservableProperty] 
+        private ObservableCollection<ThermalZoneComponentViewModel> _zoneList = new();
+        
+        [ObservableProperty]
+        private string _status = "Ready";
+    }
+}
