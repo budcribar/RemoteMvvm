@@ -64,14 +64,14 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             var propValue = _viewModel.Name;
             state.Name = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Name to state.Name: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Name to state.Name: " + ex.ToString()); }
         // Mapping property: Count to state.Count
         try
         {
             var propValue = _viewModel.Count;
             state.Count = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Count to state.Count: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Count to state.Count: " + ex.ToString()); }
         return Task.FromResult(state);
     }
 

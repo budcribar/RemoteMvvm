@@ -64,49 +64,49 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             var propValue = _viewModel.CpuTemperatureThreshold;
             state.CpuTemperatureThreshold = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuTemperatureThreshold to state.CpuTemperatureThreshold: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuTemperatureThreshold to state.CpuTemperatureThreshold: " + ex.ToString()); }
         // Mapping property: CpuLoadThreshold to state.CpuLoadThreshold
         try
         {
             var propValue = _viewModel.CpuLoadThreshold;
             state.CpuLoadThreshold = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuLoadThreshold to state.CpuLoadThreshold: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuLoadThreshold to state.CpuLoadThreshold: " + ex.ToString()); }
         // Mapping property: CpuLoadTimeSpan to state.CpuLoadTimeSpan
         try
         {
             var propValue = _viewModel.CpuLoadTimeSpan;
             state.CpuLoadTimeSpan = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuLoadTimeSpan to state.CpuLoadTimeSpan: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuLoadTimeSpan to state.CpuLoadTimeSpan: " + ex.ToString()); }
         // Mapping property: ZoneList to state.ZoneList
         try
         {
             var propValue = _viewModel.ZoneList;
-            if (propValue != null) state.ZoneList.Add(propValue.Where(e => e != null).Select(ProtoStateConverters.ToProto).Where(s => s != null));
+            if (propValue != null) state.ZoneList.AddRange(propValue.Where(e => e != null).Select(HPSystemsTools.ViewModels.ProtoStateConverters.ToProto).Where(s => s != null));
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ZoneList to state.ZoneList: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ZoneList to state.ZoneList: " + ex.ToString()); }
         // Mapping property: TestSettings to state.TestSettings
         try
         {
             var propValue = _viewModel.TestSettings;
-            state.TestSettings = ProtoStateConverters.ToProto(propValue);
+            state.TestSettings = HPSystemsTools.ViewModels.ProtoStateConverters.ToProto(propValue);
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property TestSettings to state.TestSettings: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property TestSettings to state.TestSettings: " + ex.ToString()); }
         // Mapping property: ShowDescription to state.ShowDescription
         try
         {
             var propValue = _viewModel.ShowDescription;
             state.ShowDescription = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ShowDescription to state.ShowDescription: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ShowDescription to state.ShowDescription: " + ex.ToString()); }
         // Mapping property: ShowReadme to state.ShowReadme
         try
         {
             var propValue = _viewModel.ShowReadme;
             state.ShowReadme = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ShowReadme to state.ShowReadme: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ShowReadme to state.ShowReadme: " + ex.ToString()); }
         return Task.FromResult(state);
     }
 

@@ -126,7 +126,7 @@ public class ThermalViewModelGenerationTests
         Assert.Contains("new System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.ZoneList.Select(ProtoStateConverters.FromProto))", client);
 
         var server = ServerGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", props, result.Commands, result.ViewModelSymbol!.ContainingNamespace.ToDisplayString());
-        Assert.Contains("state.ZoneList.Add(propValue.Where(e => e != null).Select(ProtoStateConverters.ToProto).Where(s => s != null))", server);
+        Assert.Contains("state.ZoneList.AddRange(propValue.Where(e => e != null).Select(HPSystemsTools.ViewModels.ProtoStateConverters.ToProto).Where(s => s != null))", server);
 
         var tsClient = TypeScriptClientGenerator.Generate(result.ViewModelName, "Generated.Protos", result.ViewModelName + "Service", props, result.Commands);
         Assert.Contains("zoneList: ThermalZoneState[]", tsClient);

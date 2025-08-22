@@ -62,9 +62,9 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         try
         {
             var propValue = _viewModel.Devices;
-            if (propValue != null) state.Devices.Add(propValue.Where(e => e != null).Select(ProtoStateConverters.ToProto).Where(s => s != null));
+            if (propValue != null) state.Devices.AddRange(propValue.Where(e => e != null).Select(SimpleViewModelTest.ViewModels.ProtoStateConverters.ToProto).Where(s => s != null));
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error mapping property Devices to state.Devices: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error mapping property Devices to state.Devices: " + ex.ToString()); }
         return Task.FromResult(state);
     }
 

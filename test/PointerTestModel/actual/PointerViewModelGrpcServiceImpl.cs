@@ -64,98 +64,98 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             var propValue = _viewModel.Show;
             state.Show = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Show to state.Show: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Show to state.Show: " + ex.ToString()); }
         // Mapping property: ShowSpinner to state.ShowSpinner
         try
         {
             var propValue = _viewModel.ShowSpinner;
             state.ShowSpinner = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowSpinner to state.ShowSpinner: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowSpinner to state.ShowSpinner: " + ex.ToString()); }
         // Mapping property: ClicksToPass to state.ClicksToPass
         try
         {
             var propValue = _viewModel.ClicksToPass;
             state.ClicksToPass = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ClicksToPass to state.ClicksToPass: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ClicksToPass to state.ClicksToPass: " + ex.ToString()); }
         // Mapping property: Is3Btn to state.Is3Btn
         try
         {
             var propValue = _viewModel.Is3Btn;
             state.Is3Btn = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Is3Btn to state.Is3Btn: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Is3Btn to state.Is3Btn: " + ex.ToString()); }
         // Mapping property: TestTimeoutSec to state.TestTimeoutSec
         try
         {
             var propValue = _viewModel.TestTimeoutSec;
             state.TestTimeoutSec = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property TestTimeoutSec to state.TestTimeoutSec: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property TestTimeoutSec to state.TestTimeoutSec: " + ex.ToString()); }
         // Mapping property: Instructions to state.Instructions
         try
         {
             var propValue = _viewModel.Instructions;
             state.Instructions = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Instructions to state.Instructions: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property Instructions to state.Instructions: " + ex.ToString()); }
         // Mapping property: ShowCursorTest to state.ShowCursorTest
         try
         {
             var propValue = _viewModel.ShowCursorTest;
             state.ShowCursorTest = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowCursorTest to state.ShowCursorTest: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowCursorTest to state.ShowCursorTest: " + ex.ToString()); }
         // Mapping property: ShowConfigSelection to state.ShowConfigSelection
         try
         {
             var propValue = _viewModel.ShowConfigSelection;
             state.ShowConfigSelection = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowConfigSelection to state.ShowConfigSelection: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowConfigSelection to state.ShowConfigSelection: " + ex.ToString()); }
         // Mapping property: ShowClickInstructions to state.ShowClickInstructions
         try
         {
             var propValue = _viewModel.ShowClickInstructions;
             state.ShowClickInstructions = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowClickInstructions to state.ShowClickInstructions: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowClickInstructions to state.ShowClickInstructions: " + ex.ToString()); }
         // Mapping property: ShowTimer to state.ShowTimer
         try
         {
             var propValue = _viewModel.ShowTimer;
             state.ShowTimer = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowTimer to state.ShowTimer: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowTimer to state.ShowTimer: " + ex.ToString()); }
         // Mapping property: ShowBottom to state.ShowBottom
         try
         {
             var propValue = _viewModel.ShowBottom;
             state.ShowBottom = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowBottom to state.ShowBottom: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property ShowBottom to state.ShowBottom: " + ex.ToString()); }
         // Mapping property: TimerText to state.TimerText
         try
         {
             var propValue = _viewModel.TimerText;
             state.TimerText = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property TimerText to state.TimerText: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property TimerText to state.TimerText: " + ex.ToString()); }
         // Mapping property: SelectedDevice to state.SelectedDevice
         try
         {
             var propValue = _viewModel.SelectedDevice;
             state.SelectedDevice = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property SelectedDevice to state.SelectedDevice: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property SelectedDevice to state.SelectedDevice: " + ex.ToString()); }
         // Mapping property: LastClickCount to state.LastClickCount
         try
         {
             var propValue = _viewModel.LastClickCount;
             state.LastClickCount = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property LastClickCount to state.LastClickCount: " + ex.Message); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error mapping property LastClickCount to state.LastClickCount: " + ex.ToString()); }
         return Task.FromResult(state);
     }
 
@@ -179,13 +179,18 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         }
     }
 
-    public override Task<Empty> UpdatePropertyValue(Pointer.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override async Task<Empty> UpdatePropertyValue(Pointer.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
-        _dispatcher.Invoke(() => {
-        var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-        if (propertyInfo != null && propertyInfo.CanWrite)
+        if (_dispatcher != null)
         {
-            try {
+            await _dispatcher.InvokeAsync(() =>
+            {
+                try
+                {
+                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
+                    if (propertyInfo != null && propertyInfo.CanWrite)
+                    {
+                        try {
                 if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
                 else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
                 else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);
@@ -194,11 +199,14 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
                 else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);
                 else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
                 else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-            } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+                        } catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
+                    }
+                    else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
+                }
+                catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Exception during UpdatePropertyValue: " + ex.ToString()); }
+            });
         }
-        else { Debug.WriteLine("[GrpcService:PointerViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
-        });
-        return Task.FromResult(new Empty());
+        return new Empty();
     }
 
     public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
