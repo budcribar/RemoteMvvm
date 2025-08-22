@@ -1,0 +1,17 @@
+{
+  "name": "grpc-web-test",
+  "version": "1.0.0",
+  "dependencies": {
+    "grpc-web": "^1.4.2",
+    "google-protobuf": "^3.21.2",
+    "@types/google-protobuf": "^3.15.5",
+    "xhr2": "^0.2.1"
+  },
+  "devDependencies": {
+    "grpc-tools": "^1.12.4",
+    "protoc-gen-grpc-web": "^1.4.2"
+  },
+  "scripts": {
+    "protoc": "protoc --plugin=protoc-gen-ts=\u0022.\\node_modules\\.bin\\protoc-gen-ts.cmd\u0022 --plugin=protoc-gen-grpc-web=\u0022.\\node_modules\\protoc-gen-grpc-web\\bin\\protoc-gen-grpc-web.exe\u0022 --js_out=import_style=commonjs,binary:./src/generated --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./src/generated -Iprotos -Inode_modules/protoc/protoc/include protos/TestViewModelService.proto"
+  }
+}
