@@ -1,5 +1,7 @@
 ﻿using Generated.ViewModels;
 using PeakSWC.Mvvm.Remote;
+using System;
+using System.Threading.Tasks;
 
 namespace TestProject;
 
@@ -12,7 +14,7 @@ public class Program
         Console.WriteLine($"Starting server on port {port}...");
         
         var serverOpts = new ServerOptions { Port = port };
-        using var viewModel = new TestViewModel(serverOpts);
+        TestViewModel viewModel = new TestViewModel(serverOpts, null);
         
         // Add test data
         viewModel.ZoneList.Add(new ThermalZoneComponentViewModel 
