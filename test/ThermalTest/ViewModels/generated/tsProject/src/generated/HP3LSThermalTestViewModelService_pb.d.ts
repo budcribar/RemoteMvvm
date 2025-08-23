@@ -6,8 +6,19 @@ import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/t
 
 
 export class HP3LSThermalTestViewModelState extends jspb.Message {
-  getZonesMap(): jspb.Map<number, ThermalZoneComponentViewModelState>;
-  clearZonesMap(): HP3LSThermalTestViewModelState;
+  getCpuTemperatureThreshold(): number;
+  setCpuTemperatureThreshold(value: number): HP3LSThermalTestViewModelState;
+
+  getCpuLoadThreshold(): number;
+  setCpuLoadThreshold(value: number): HP3LSThermalTestViewModelState;
+
+  getCpuLoadTimeSpan(): number;
+  setCpuLoadTimeSpan(value: number): HP3LSThermalTestViewModelState;
+
+  getZoneListList(): Array<ThermalZoneComponentViewModelState>;
+  setZoneListList(value: Array<ThermalZoneComponentViewModelState>): HP3LSThermalTestViewModelState;
+  clearZoneListList(): HP3LSThermalTestViewModelState;
+  addZoneList(value?: ThermalZoneComponentViewModelState, index?: number): ThermalZoneComponentViewModelState;
 
   getTestSettings(): TestSettingsModelState | undefined;
   setTestSettings(value?: TestSettingsModelState): HP3LSThermalTestViewModelState;
@@ -30,7 +41,10 @@ export class HP3LSThermalTestViewModelState extends jspb.Message {
 
 export namespace HP3LSThermalTestViewModelState {
   export type AsObject = {
-    zonesMap: Array<[number, ThermalZoneComponentViewModelState.AsObject]>,
+    cpuTemperatureThreshold: number,
+    cpuLoadThreshold: number,
+    cpuLoadTimeSpan: number,
+    zoneListList: Array<ThermalZoneComponentViewModelState.AsObject>,
     testSettings?: TestSettingsModelState.AsObject,
     showDescription: boolean,
     showReadme: boolean,

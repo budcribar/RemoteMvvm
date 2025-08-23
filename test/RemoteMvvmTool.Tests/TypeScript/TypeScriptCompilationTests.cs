@@ -97,9 +97,9 @@ public class TypeScriptCompilationTests
         File.WriteAllText(Path.Combine(gp, "empty_pb.d.ts"), "export class Empty {}");
         File.WriteAllText(Path.Combine(gp, "empty_pb.js"), "exports.Empty = class {};");
         File.WriteAllText(Path.Combine(gp, "any_pb.d.ts"),
-            "export class Any { pack(a:Uint8Array,b:string):void; unpack(fn:any,name:string):any; }");
+            "export class Any { pack(a:Uint8Array,b:string):void; unpack(fn:any,name:string):any; static pack(data:any):Any; }");
         File.WriteAllText(Path.Combine(gp, "any_pb.js"),
-            "exports.Any = class { pack(){} unpack(){ return null; } };");
+            "class AnyImpl { pack(){} unpack(){ return null; } static pack(data) { return new AnyImpl(); } } exports.Any = AnyImpl;");
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.d.ts"),
             "export class StringValue { setValue(v:string):void; getValue():string; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):StringValue; }\n" +
             "export class Int32Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int32Value; }\n" +
@@ -118,20 +118,22 @@ public class TypeScriptCompilationTests
         Directory.CreateDirectory(gen);
         File.WriteAllText(Path.Combine(gen, serviceName + "ServiceClientPb.ts"), $@"
 import * as grpcWeb from 'grpc-web';
-import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, StateChangedRequest, CancelTestRequest }} from './{serviceName}_pb.js';
+import {{ {vmName}State, UpdatePropertyValueRequest, UpdatePropertyValueResponse, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, StateChangedRequest, CancelTestRequest }} from './{serviceName}_pb.js';
 export class {serviceName}Client {{
   constructor(addr: string) {{}}
   getState(req: any): Promise<{vmName}State> {{ return Promise.resolve(new {vmName}State()); }}
-  updatePropertyValue(req: UpdatePropertyValueRequest): Promise<void> {{ return Promise.resolve(); }}
+  updatePropertyValue(req: UpdatePropertyValueRequest): Promise<UpdatePropertyValueResponse> {{ return Promise.resolve(new UpdatePropertyValueResponse()); }}
   subscribeToPropertyChanges(req: SubscribeRequest): grpcWeb.ClientReadableStream<PropertyChangeNotification> {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
   ping(req:any): Promise<ConnectionStatusResponse> {{ return Promise.resolve(new ConnectionStatusResponse()); }}
   stateChanged(req: StateChangedRequest): Promise<void> {{ return Promise.resolve(); }}
   cancelTest(req: CancelTestRequest): Promise<void> {{ return Promise.resolve(); }}
 }}
+export {{ UpdatePropertyValueResponse }};
 ");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.js"),
             $"exports.{vmName}State = class {{}};" +
-            "exports.UpdatePropertyValueRequest = class { constructor(){ this.p=''; this.v=undefined; } setPropertyName(v){ this.p=v; } getPropertyName(){ return this.p; } setNewValue(v){ this.v=v; } getNewValue(){ return this.v; } };" +
+            "exports.UpdatePropertyValueRequest = class { constructor(){ this.p=''; this.v=undefined; this.path=''; this.key=''; this.idx=-1; this.op=''; } setPropertyName(v){ this.p=v; } getPropertyName(){ return this.p; } setNewValue(v){ this.v=v; } getNewValue(){ return this.v; } setPropertyPath(v){ this.path=v; } getPropertyPath(){ return this.path; } setCollectionKey(v){ this.key=v; } getCollectionKey(){ return this.key; } setArrayIndex(v){ this.idx=v; } getArrayIndex(){ return this.idx; } setOperationType(v){ this.op=v; } getOperationType(){ return this.op; } };" +
+            "exports.UpdatePropertyValueResponse = class { constructor(){ this.success=true; this.error=''; } getSuccess(){ return this.success; } setSuccess(v){ this.success=v; } getErrorMessage(){ return this.error; } setErrorMessage(v){ this.error=v; } };" +
             "exports.SubscribeRequest = class { setClientId(){} };" +
             "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} };" +
             "exports.ConnectionStatusResponse = class { getStatus(){return 0} };" +
@@ -140,7 +142,8 @@ export class {serviceName}Client {{
             "exports.CancelTestRequest = class {};");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.d.ts"),
             $"export class {vmName}State {{}}\n" +
-            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; }\n" +
+            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; setPropertyPath(v:string):void; getPropertyPath():string; setCollectionKey(v:string):void; getCollectionKey():string; setArrayIndex(v:number):void; getArrayIndex():number; setOperationType(v:string):void; getOperationType():string; }\n" +
+            "export class UpdatePropertyValueResponse { getSuccess():boolean; setSuccess(v:boolean):void; getErrorMessage():string; setErrorMessage(v:string):void; }\n" +
             "export class SubscribeRequest { setClientId(v:string):void; }\n" +
             "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; }\n" +
             "export class ConnectionStatusResponse { getStatus():number; }\n" +
@@ -179,7 +182,7 @@ public class ObservableObject {{}}
 
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 {extraImports ?? string.Empty}
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
@@ -187,7 +190,7 @@ class FakeClient extends {name}ServiceClient {{
       get{propertyName}: () => {tsReturnValue}
     }};
   }}
-  updatePropertyValue(_req:any) {{ return Promise.resolve(); }}
+  updatePropertyValue(_req:any) {{ return Promise.resolve(new UpdatePropertyValueResponse()); }}
   subscribeToPropertyChanges(_req:any) {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
   ping(_req:any) {{ return Promise.resolve({{ getStatus: () => 0 }}); }}
   stateChanged(_req:any) {{ return Promise.resolve(); }}
@@ -280,7 +283,7 @@ public async Task Generated_TypeScript_Compiles_And_Transfers_Dictionary()
     var testTs = $@"
 declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
@@ -290,7 +293,7 @@ class FakeClient extends {name}ServiceClient {{
       getShowReadme: () => false
     }};
   }}
-  updatePropertyValue(_req:any) {{ return Promise.resolve(); }}
+  updatePropertyValue(_req:any) {{ return Promise.resolve(new UpdatePropertyValueResponse()); }}
   subscribeToPropertyChanges(_req:any) {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
   ping(_req:any) {{ return Promise.resolve({{ getStatus: () => 0 }}); }}
   stateChanged(_req:any) {{ return Promise.resolve(); }}
@@ -301,8 +304,7 @@ class FakeClient extends {name}ServiceClient {{
   await client.initializeRemote();
   if (client.zones[0].temperature !== 42) throw new Error('Data transfer failed');
   client.dispose();
-}})().catch(e => {{ console.error(e); process.exit(1); }});
-";
+}})().catch(e => {{ console.error(e); process.exit(1); }});";
     File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
 
     var tsconfig = @"{
@@ -347,14 +349,14 @@ public async Task Generated_TypeScript_Compiles_And_Transfers_ThermalZoneCollect
 
     var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
       getZoneListList: () => [{{ zone: 0, temperature: 42 }}, {{ zone: 1, temperature: 43 }}]
     }};
   }}
-  updatePropertyValue(_req:any) {{ return Promise.resolve(); }}
+  updatePropertyValue(_req:any) {{ return Promise.resolve(new UpdatePropertyValueResponse()); }}
   subscribeToPropertyChanges(_req:any) {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
   ping(_req:any) {{ return Promise.resolve({{ getStatus: () => 0 }}); }}
   stateChanged(_req:any) {{ return Promise.resolve(); }}
@@ -410,7 +412,7 @@ class FakeClient extends {name}ServiceClient {{
 
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   lastReq: any;
   async getState(_req:any) {{
@@ -418,7 +420,7 @@ class FakeClient extends {name}ServiceClient {{
       getNumbersList: () => [1,2,3]
     }};
   }}
-  updatePropertyValue(req:any) {{ this.lastReq = req; return Promise.resolve(); }}
+  updatePropertyValue(req:any) {{ this.lastReq = req; return Promise.resolve(new UpdatePropertyValueResponse()); }}
   subscribeToPropertyChanges(_req:any) {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
   ping(_req:any) {{ return Promise.resolve({{ getStatus: () => 0 }}); }}
   stateChanged(_req:any) {{ return Promise.resolve(); }}
@@ -427,6 +429,7 @@ class FakeClient extends {name}ServiceClient {{
 (async () => {{
   const grpcClient = new FakeClient('');
   const client = new {name}RemoteClient(grpcClient);
+  // Override createAnyValue for testing to return the raw value instead of an Any object
   (client as any).createAnyValue = (v:any) => v;
   await client.initializeRemote();
   if (client.numbers.length !== 3 || client.numbers[1] !== 2) throw new Error('Initial transfer failed');

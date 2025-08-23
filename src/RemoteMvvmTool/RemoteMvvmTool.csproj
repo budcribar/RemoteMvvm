@@ -38,6 +38,7 @@
       <EmbeddedResource Include="Resources/ConversionTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.ConversionTemplate.tmpl" />
       <EmbeddedResource Include="Resources/OptionsTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.OptionsTemplate.tmpl" />
       <EmbeddedResource Include="Resources/ProtoTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.ProtoTemplate.tmpl" />
+      <EmbeddedResource Include="Resources/ServerTemplate.tmpl" LogicalName="RemoteMvvmTool.Resources.ServerTemplate.tmpl" />
     </ItemGroup>
     <ItemGroup>
       <Folder Include="publish\" />

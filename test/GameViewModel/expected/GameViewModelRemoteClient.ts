@@ -3,7 +3,7 @@
 // </auto-generated>
 
 import { GameViewModelServiceClient } from './generated/GameViewModelServiceServiceClientPb';
-import { GameViewModelState, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, AttackMonsterRequest, SpecialAttackRequest, ResetGameRequest } from './generated/GameViewModelService_pb.js';
+import { GameViewModelState, UpdatePropertyValueRequest, UpdatePropertyValueResponse, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, AttackMonsterRequest, SpecialAttackRequest, ResetGameRequest } from './generated/GameViewModelService_pb.js';
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
@@ -67,46 +67,34 @@ export class GameViewModelRemoteClient {
         this.notifyChange();
     }
 
-    async updatePropertyValue(propertyName: string, value: any): Promise<void> {
+    async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
-        await this.grpcClient.updatePropertyValue(req);
+        return await this.grpcClient.updatePropertyValue(req);
     }
 
-    private createAnyValue(value: any): Any {
-        const anyVal = new Any();
-        if (typeof value === 'string') {
-            const wrapper = new StringValue();
-            wrapper.setValue(value);
-            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');
-        } else if (typeof value === 'number') {
-            if (Number.isInteger(value)) {
-                if (value > 2147483647 || value < -2147483648) {
-                    const wrapper = new Int64Value();
-                    wrapper.setValue(value);
-                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int64Value');
-                } else {
-                    const wrapper = new Int32Value();
-                    wrapper.setValue(value);
-                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
-                }
-            } else {
-                const wrapper = new DoubleValue();
-                wrapper.setValue(value);
-                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.DoubleValue');
-            }
-        } else if (typeof value === 'boolean') {
-            const wrapper = new BoolValue();
-            wrapper.setValue(value);
-            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.BoolValue');
-        } else if (value instanceof Date) {
-            const wrapper = Timestamp.fromDate(value);
-            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Timestamp');
-        } else {
-            throw new Error('Unsupported value type');
+    // Enhanced updatePropertyValue with support for complex scenarios
+    async updatePropertyValueAdvanced(
+        propertyName: string, 
+        value: any, 
+        options?: {
+            propertyPath?: string;
+            collectionKey?: string;
+            arrayIndex?: number;
+            operationType?: 'set' | 'add' | 'remove' | 'clear' | 'insert';
         }
-        return anyVal;
+    ): Promise<UpdatePropertyValueResponse> {
+        const req = new UpdatePropertyValueRequest();
+        req.setPropertyName(propertyName);
+        req.setNewValue(this.createAnyValue(value));
+        
+        if (options?.propertyPath) req.setPropertyPath(options.propertyPath);
+        if (options?.collectionKey) req.setCollectionKey(options.collectionKey);
+        if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);
+        if (options?.operationType) req.setOperationType(options.operationType);
+        
+        return await this.grpcClient.updatePropertyValue(req);
     }
 
     async attackMonster(): Promise<void> {
@@ -184,6 +172,35 @@ export class GameViewModelRemoteClient {
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
+    }
+
+    private createAnyValue(value: any): Any {
+        if (value == null) return Any.pack(new Empty());
+        switch (typeof value) {
+            case 'string': {
+                const str = new StringValue();
+                str.setValue(value);
+                return Any.pack(str.serializeBinary());
+            }
+            case 'number': {
+                if (Number.isInteger(value)) {
+                    const int32 = new Int32Value();
+                    int32.setValue(value);
+                    return Any.pack(int32.serializeBinary());
+                } else {
+                    const double = new DoubleValue();
+                    double.setValue(value);
+                    return Any.pack(double.serializeBinary());
+                }
+            }
+            case 'boolean': {
+                const bool = new BoolValue();
+                bool.setValue(value);
+                return Any.pack(bool.serializeBinary());
+            }
+            default:
+                return Any.pack(new Empty());
+        }
     }
 
     dispose(): void {

@@ -53,3 +53,7 @@ string tsconfig = """
   "include": ["/*.ts", "/*.js"]
 }
 """.Replace("<<module>>", "commonJs");
+
+To install the RemoteMvvmTool you need to build the RemoteMvvmTool.csproj
+
+   

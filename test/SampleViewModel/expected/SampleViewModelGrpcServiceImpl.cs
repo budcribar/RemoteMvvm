@@ -54,6 +54,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
+        else { Debug.WriteLine("[GrpcService:SampleViewModel] WARNING: ViewModel does not implement INotifyPropertyChanged!"); }
+        Debug.WriteLine("[GrpcService:SampleViewModel] Constructor completed. ViewModel type: " + _viewModel.GetType().FullName);
     }
 
     public override Task<SampleViewModelState> GetState(Empty request, ServerCallContext context)
@@ -78,128 +80,411 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task SubscribeToPropertyChanges(SampleApp.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
+        var clientId = request.ClientId ?? "unknown";
+        Debug.WriteLine("[GrpcService:SampleViewModel] New subscription request from client: " + clientId);
         var channel = Channel.CreateUnbounded<SampleApp.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         _subscriberChannels.TryAdd(responseStream, channel);
         ClientCount = _subscriberChannels.Count;
+        Debug.WriteLine("[GrpcService:SampleViewModel] Subscriber count is now: " + ClientCount);
         try
         {
+            Debug.WriteLine("[GrpcService:SampleViewModel] Starting to read from channel for client: " + clientId);
             await foreach (var notification in channel.Reader.ReadAllAsync(context.CancellationToken))
             {
+                Debug.WriteLine("[GrpcService:SampleViewModel] Sending property change notification: " + notification.PropertyName + " to client: " + clientId);
                 await responseStream.WriteAsync(notification);
             }
         }
+        catch (OperationCanceledException)
+        {
+            Debug.WriteLine("[GrpcService:SampleViewModel] Subscription cancelled for client: " + clientId);
+        }
         finally
         {
+            Debug.WriteLine("[GrpcService:SampleViewModel] Cleaning up subscription for client: " + clientId);
             _subscriberChannels.TryRemove(responseStream, out _);
             channel.Writer.TryComplete();
             ClientCount = _subscriberChannels.Count;
+            Debug.WriteLine("[GrpcService:SampleViewModel] Subscriber count is now: " + ClientCount);
         }
     }
 
-    public override async Task<Empty> UpdatePropertyValue(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override async Task<SampleApp.ViewModels.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        
         if (_dispatcher != null)
         {
             await _dispatcher.InvokeAsync(() =>
             {
-                try
-                {
-                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);
-                    if (propertyInfo != null && propertyInfo.CanWrite)
-                    {
-                        try {
-                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);
-                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);
-                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);
-                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);
-                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);
-                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);
-                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);
-                else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Unpacking not implemented for property " + request.PropertyName + " and type " + request.NewValue.TypeUrl + "."); }
-                        } catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error setting property " + request.PropertyName + ": " + ex.Message); }
-                    }
-                    else { Debug.WriteLine("[GrpcService:SampleViewModel] UpdatePropertyValue: Property " + request.PropertyName + " not found or not writable."); }
-                }
-                catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Exception during UpdatePropertyValue: " + ex.ToString()); }
+                response = UpdatePropertyValueInternal(request);
             });
         }
-        return new Empty();
-    }
-
-    public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
-    {
-        var status = ClientCount > 0 ? ConnectionStatus.Connected : ConnectionStatus.Disconnected;
-        return Task.FromResult(new ConnectionStatusResponse { Status = status });
-    }
-
-    public override async Task<SampleApp.ViewModels.Protos.IncrementCountResponse> IncrementCount(SampleApp.ViewModels.Protos.IncrementCountRequest request, ServerCallContext context)
-    {
-        try { await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.IncrementCountCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
-            {
-                command.Execute(null);
-                await Task.CompletedTask;
-            }
-            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command IncrementCountCommand not found or not IRelayCommand."); }
-        }); } catch (Exception ex) {
-        Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for IncrementCount: " + ex.ToString());
-        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+        else
+        {
+            response.Success = false;
+            response.ErrorMessage = "Dispatcher not available";
         }
-        return new SampleApp.ViewModels.Protos.IncrementCountResponse();
+        
+        Debug.WriteLine($"[GrpcService:SampleViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
+        return response;
     }
 
-    public override async Task<SampleApp.ViewModels.Protos.DelayedIncrementResponse> DelayedIncrement(SampleApp.ViewModels.Protos.DelayedIncrementRequest request, ServerCallContext context)
+    private SampleApp.ViewModels.Protos.UpdatePropertyValueResponse UpdatePropertyValueInternal(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request)
     {
-        try { await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand;
-            if (command != null)
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        
+        try
+        {
+            Debug.WriteLine($"[GrpcService:SampleViewModel] UpdatePropertyValue: Property={request.PropertyName}, Path={request.PropertyPath}, Operation={request.OperationType}");
+            
+            // Handle different operation types
+            var operationType = request.OperationType ?? "set";
+            var propertyPath = !string.IsNullOrEmpty(request.PropertyPath) ? request.PropertyPath : request.PropertyName;
+            
+            switch (operationType.ToLowerInvariant())
             {
-                var typedCommand = _viewModel.DelayedIncrementCommand as CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<int>;
-                if (typedCommand != null) await typedCommand.ExecuteAsync(request.DelayMilliseconds); else await command.ExecuteAsync(request);
+                case "set":
+                case "":
+                    response = HandleSetOperation(request, propertyPath);
+                    break;
+                case "add":
+                    response = HandleAddOperation(request, propertyPath);
+                    break;
+                case "remove":
+                    response = HandleRemoveOperation(request, propertyPath);
+                    break;
+                case "clear":
+                    response = HandleClearOperation(request, propertyPath);
+                    break;
+                case "insert":
+                    response = HandleInsertOperation(request, propertyPath);
+                    break;
+                default:
+                    response.Success = false;
+                    response.ErrorMessage = $"Unsupported operation type: {request.OperationType}";
+                    break;
             }
-            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command DelayedIncrementCommand not found or not IAsyncRelayCommand."); }
-        }); } catch (Exception ex) {
-        Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for DelayedIncrementAsync: " + ex.ToString());
-        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
         }
-        return new SampleApp.ViewModels.Protos.DelayedIncrementResponse();
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[GrpcService:SampleViewModel] Exception in UpdatePropertyValue: {ex}");
+            response.Success = false;
+            response.ErrorMessage = ex.Message;
+        }
+        
+        return response;
     }
 
-    public override async Task<SampleApp.ViewModels.Protos.SetNameToValueResponse> SetNameToValue(SampleApp.ViewModels.Protos.SetNameToValueRequest request, ServerCallContext context)
+    private SampleApp.ViewModels.Protos.UpdatePropertyValueResponse HandleSetOperation(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, string propertyPath)
     {
-        try { await _dispatcher.InvokeAsync(async () => {
-            var command = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand;
-            if (command != null)
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        
+        try
+        {
+            object target = _viewModel;
+            var pathParts = propertyPath.Split('.');
+            
+            // Navigate to nested property if needed
+            for (int i = 0; i < pathParts.Length - 1; i++)
             {
-                var typedCommand = _viewModel.SetNameToValueCommand as CommunityToolkit.Mvvm.Input.IRelayCommand<string?>;
-                if (typedCommand != null) typedCommand.Execute(request.Value); else command.Execute(request);
-                await Task.CompletedTask;
+                var prop = target.GetType().GetProperty(pathParts[i]);
+                if (prop == null)
+                {
+                    response.Success = false;
+                    response.ErrorMessage = $"Property '{pathParts[i]}' not found in path '{propertyPath}'";
+                    return response;
+                }
+                var nextTarget = prop.GetValue(target);
+                if (nextTarget == null)
+                {
+                    response.Success = false;
+                    response.ErrorMessage = $"Null value encountered at '{pathParts[i]}' in path '{propertyPath}'";
+                    return response;
+                }
+                target = nextTarget;
             }
-            else { Debug.WriteLine("[GrpcService:SampleViewModel] Command SetNameToValueCommand not found or not IRelayCommand."); }
-        }); } catch (Exception ex) {
-        Debug.WriteLine("[GrpcService:SampleViewModel] Exception during command execution for SetNameToValue: " + ex.ToString());
-        throw new RpcException(new Status(StatusCode.Internal, "Error executing command on server: " + ex.Message));
+            
+            var finalPropertyName = pathParts[pathParts.Length - 1];
+            var propertyInfo = target.GetType().GetProperty(finalPropertyName);
+            
+            if (propertyInfo == null)
+            {
+                response.Success = false;
+                response.ErrorMessage = $"Property '{finalPropertyName}' not found";
+                return response;
+            }
+            
+            if (!propertyInfo.CanWrite)
+            {
+                response.Success = false;
+                response.ErrorMessage = $"Property '{finalPropertyName}' is read-only";
+                return response;
+            }
+            
+            // Store old value for undo/history
+            var oldValue = propertyInfo.GetValue(target);
+            if (oldValue != null) response.OldValue = PackToAny(oldValue);
+            
+            // **DEADLOCK FIX**: Temporarily remove PropertyChanged event handler to prevent streaming notifications during property updates
+            bool eventHandlerRemoved = false;
+            if (_viewModel is INotifyPropertyChanged inpc)
+            {
+                inpc.PropertyChanged -= ViewModel_PropertyChanged;
+                eventHandlerRemoved = true;
+            }
+            try
+            {
+                // Handle collection indexing
+                if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex >= 0)
+                    response = HandleCollectionUpdate(target, propertyInfo, request);
+                else
+                {
+                    // Direct property assignment
+                    var convertedValue = ConvertAnyToTargetType(request.NewValue, propertyInfo.PropertyType);
+                    if (convertedValue.Success)
+                    {
+                        propertyInfo.SetValue(target, convertedValue.Value);
+                        response.Success = true;
+                    }
+                    else
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = convertedValue.ErrorMessage;
+                    }
+                }
+            }
+            finally
+            {
+                // **ALWAYS re-add the event handler** - even if an exception occurs during property setting
+                if (eventHandlerRemoved && _viewModel is INotifyPropertyChanged inpc2)
+                {
+                    inpc2.PropertyChanged += ViewModel_PropertyChanged;
+                }
+            }
         }
-        return new SampleApp.ViewModels.Protos.SetNameToValueResponse();
+        catch (Exception ex)
+        {
+            response.Success = false;
+            response.ErrorMessage = ex.Message;
+            Debug.WriteLine($"[GrpcService:SampleViewModel] Error in HandleSetOperation: {ex}");
+        }
+        
+        return response;
+    }
+
+    private SampleApp.ViewModels.Protos.UpdatePropertyValueResponse HandleCollectionUpdate(object target, System.Reflection.PropertyInfo propertyInfo, SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request)
+    {
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        
+        var collection = propertyInfo.GetValue(target);
+        if (collection == null)
+        {
+            response.Success = false;
+            response.ErrorMessage = $"Collection property '{propertyInfo.Name}' is null";
+            return response;
+        }
+        
+        // Handle dictionary updates
+        if (collection is System.Collections.IDictionary dict && !string.IsNullOrEmpty(request.CollectionKey))
+        {
+            var keyType = propertyInfo.PropertyType.GetGenericArguments()[0];
+            var valueType = propertyInfo.PropertyType.GetGenericArguments()[1];
+            
+            var convertedKey = ConvertStringToTargetType(request.CollectionKey, keyType);
+            if (!convertedKey.Success)
+            {
+                response.Success = false;
+                response.ErrorMessage = $"Failed to convert key '{request.CollectionKey}': {convertedKey.ErrorMessage}";
+                return response;
+            }
+            
+            var convertedValue = ConvertAnyToTargetType(request.NewValue, valueType);
+            if (!convertedValue.Success)
+            {
+                response.Success = false;
+                response.ErrorMessage = $"Failed to convert value: {convertedValue.ErrorMessage}";
+                return response;
+            }
+            
+            // Store old value if key exists
+            if (convertedKey.Value != null && dict.Contains(convertedKey.Value)) response.OldValue = PackToAny(dict[convertedKey.Value]);
+            
+            dict[convertedKey.Value!] = convertedValue.Value;
+            response.Success = true;
+            Debug.WriteLine($"[GrpcService:SampleViewModel] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'");
+        }
+        // Handle list/array updates
+        else if (collection is System.Collections.IList list && request.ArrayIndex >= 0)
+        {
+            if (request.ArrayIndex >= list.Count)
+            {
+                response.Success = false;
+                response.ErrorMessage = $"Array index {request.ArrayIndex} is out of bounds (count: {list.Count})";
+                return response;
+            }
+            
+            var elementType = propertyInfo.PropertyType.GetGenericArguments()[0];
+            var convertedValue = ConvertAnyToTargetType(request.NewValue, elementType);
+            
+            if (!convertedValue.Success)
+            {
+                response.Success = false;
+                response.ErrorMessage = convertedValue.ErrorMessage;
+                return response;
+            }
+            
+            // Store old value
+            response.OldValue = PackToAny(list[request.ArrayIndex]);
+            
+            list[request.ArrayIndex] = convertedValue.Value;
+            response.Success = true;
+            Debug.WriteLine($"[GrpcService:SampleViewModel] Updated array index {request.ArrayIndex} to '{convertedValue.Value}'");
+        }
+        else
+        {
+            response.Success = false;
+            response.ErrorMessage = "Unsupported collection operation or missing index/key";
+        }
+        
+        return response;
+    }
+
+    // Helper methods for other operations
+    private SampleApp.ViewModels.Protos.UpdatePropertyValueResponse HandleAddOperation(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, string propertyPath)
+    {
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        response.Success = false;
+        response.ErrorMessage = "Add operation not yet implemented";
+        return response;
+    }
+
+    private SampleApp.ViewModels.Protos.UpdatePropertyValueResponse HandleRemoveOperation(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, string propertyPath)
+    {
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        response.Success = false;
+        response.ErrorMessage = "Remove operation not yet implemented";
+        return response;
+    }
+
+    private SampleApp.ViewModels.Protos.UpdatePropertyValueResponse HandleClearOperation(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, string propertyPath)
+    {
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        response.Success = false;
+        response.ErrorMessage = "Clear operation not yet implemented";
+        return response;
+    }
+
+    private SampleApp.ViewModels.Protos.UpdatePropertyValueResponse HandleInsertOperation(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, string propertyPath)
+    {
+        var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
+        response.Success = false;
+        response.ErrorMessage = "Insert operation not yet implemented";
+        return response;
+    }
+
+    private (bool Success, object? Value, string ErrorMessage) ConvertAnyToTargetType(Google.Protobuf.WellKnownTypes.Any anyValue, System.Type targetType)
+    {
+        try
+        {
+            if (anyValue.Is(StringValue.Descriptor) && targetType == typeof(string))
+                return (true, anyValue.Unpack<StringValue>().Value, "");
+            if (anyValue.Is(Int32Value.Descriptor) && targetType == typeof(int))
+                return (true, anyValue.Unpack<Int32Value>().Value, "");
+            if (anyValue.Is(Int64Value.Descriptor) && targetType == typeof(long))
+                return (true, anyValue.Unpack<Int64Value>().Value, "");
+            if (anyValue.Is(UInt32Value.Descriptor) && targetType == typeof(uint))
+                return (true, anyValue.Unpack<UInt32Value>().Value, "");
+            if (anyValue.Is(FloatValue.Descriptor) && targetType == typeof(float))
+                return (true, anyValue.Unpack<FloatValue>().Value, "");
+            if (anyValue.Is(DoubleValue.Descriptor) && targetType == typeof(double))
+                return (true, anyValue.Unpack<DoubleValue>().Value, "");
+            if (anyValue.Is(BoolValue.Descriptor) && targetType == typeof(bool))
+                return (true, anyValue.Unpack<BoolValue>().Value, "");
+            
+            // Handle enum types
+            if (targetType.IsEnum && anyValue.Is(Int32Value.Descriptor))
+            {
+                var enumValue = anyValue.Unpack<Int32Value>().Value;
+                if (System.Enum.IsDefined(targetType, enumValue))
+                    return (true, System.Enum.ToObject(targetType, enumValue), "");
+                else
+                    return (false, null, $"Invalid enum value {enumValue} for type {targetType.Name}");
+            }
+            
+            return (false, null, $"Cannot convert {anyValue.TypeUrl} to {targetType.Name}");
+        }
+        catch (Exception ex)
+        {
+            return (false, null, $"Conversion error: {ex.Message}");
+        }
+    }
+
+    private (bool Success, object? Value, string ErrorMessage) ConvertStringToTargetType(string stringValue, System.Type targetType)
+    {
+        try
+        {
+            if (targetType == typeof(string))
+                return (true, stringValue, "");
+            if (targetType == typeof(int) && int.TryParse(stringValue, out var intVal))
+                return (true, intVal, "");
+            if (targetType == typeof(long) && long.TryParse(stringValue, out var longVal))
+                return (true, longVal, "");
+            if (targetType == typeof(bool) && bool.TryParse(stringValue, out var boolVal))
+                return (true, boolVal, "");
+            if (targetType == typeof(double) && double.TryParse(stringValue, out var doubleVal))
+                return (true, doubleVal, "");
+            if (targetType == typeof(float) && float.TryParse(stringValue, out var floatVal))
+                return (true, floatVal, "");
+            
+            // Handle enum types
+            if (targetType.IsEnum)
+            {
+                if (System.Enum.TryParse(targetType, stringValue, true, out var enumVal))
+                    return (true, enumVal, "");
+                else
+                    return (false, null, $"'{stringValue}' is not a valid value for enum {targetType.Name}");
+            }
+            
+            return (false, null, $"Cannot convert '{stringValue}' to {targetType.Name}");
+        }
+        catch (Exception ex)
+        {
+            return (false, null, $"Conversion error: {ex.Message}");
+        }
     }
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
+        Debug.WriteLine("[GrpcService:SampleViewModel] PropertyChanged event fired for property: " + (e.PropertyName ?? "<null>"));
+        Debug.WriteLine("[GrpcService:SampleViewModel] Current subscriber count: " + _subscriberChannels.Count);
         if (string.IsNullOrEmpty(e.PropertyName)) return;
         object? newValue = null;
         try { newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
+        Debug.WriteLine("[GrpcService:SampleViewModel] Property " + e.PropertyName + " changed to: " + (newValue?.ToString() ?? "<null>"));
 
-        var notification = new SampleApp.ViewModels.Protos.PropertyChangeNotification { PropertyName = e.PropertyName };
+        var notification = new SampleApp.ViewModels.Protos.PropertyChangeNotification 
+        { 
+            PropertyName = e.PropertyName,
+            PropertyPath = e.PropertyName, // For simple properties, path equals name
+            ChangeType = "property" // Can be enhanced to detect collection changes
+        };
         notification.NewValue = PackToAny(newValue);
+        Debug.WriteLine("[GrpcService:SampleViewModel] Created notification with TypeUrl: " + (notification.NewValue?.TypeUrl ?? "<null>"));
 
+        int successfulWrites = 0;
         foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
         {
-            try { await channelWriter.WriteAsync(notification); }
+            try { 
+                await channelWriter.WriteAsync(notification); 
+                successfulWrites++;
+                Debug.WriteLine("[GrpcService:SampleViewModel] Successfully wrote notification to subscriber channel");
+            }
             catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:SampleViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
             catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
         }
+        Debug.WriteLine("[GrpcService:SampleViewModel] Property change notification sent to " + successfulWrites + " subscribers");
     }
 
     private static Any PackToAny(object? value)
