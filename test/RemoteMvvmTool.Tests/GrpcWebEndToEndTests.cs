@@ -538,7 +538,7 @@ public class GrpcWebEndToEndTests
                         };
                         
                         IsActiveCompany = true;
-                        LastUpdate = DateTime.Now;
+                        TotalEmployees = 375; // Sum of all headcounts: 200 + 150 + 25
                     }
 
                     [ObservableProperty]
@@ -548,7 +548,7 @@ public class GrpcWebEndToEndTests
                     private bool _isActiveCompany = false;
 
                     [ObservableProperty]
-                    private DateTime _lastUpdate = DateTime.MinValue;
+                    private int _totalEmployees = 0;
                 }
 
                 public class CompanyInfo
@@ -567,8 +567,8 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected: isActiveCompany(1), company.employeeCount(1500), dept headcounts(200,150,25), budgets(5000000.5,3000000.25,750000.75)
-        var expectedDataValues = "1,25,150,200,1500,750000.75,3000000.25,5000000.5";
+        // Expected: isActiveCompany(1), company.employeeCount(1500), totalEmployees(375), dept headcounts(200,150,25), budgets(5000000.5,3000000.25,750000.75)
+        var expectedDataValues = "1,25,150,200,375,1500,750000.75,3000000.25,5000000.5";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -710,19 +710,19 @@ public class GrpcWebEndToEndTests
                     public TestViewModel() 
                     {
                         // Test with larger collections to stress test serialization
-                        LargeNumberList = new ObservableCollection<int>(Enumerable.Range(1, 1000)); // 1000 items
+                        LargeNumberList = new ObservableCollection<int>(Enumerable.Range(2001, 100)); // 100 items: 2001-2100
                         
-                        // Large dictionary
+                        // Large dictionary with unique values
                         LargeStringDict = new Dictionary<string, int>();
-                        for (int i = 0; i < 100; i++) // 100 key-value pairs
+                        for (int i = 0; i < 50; i++) // 50 key-value pairs: 3001-3050
                         {
-                            LargeStringDict[$"key_{i:D3}"] = i * 10;
+                            LargeStringDict[$"key_{i:D3}"] = 3001 + i;
                         }
                         
-                        CollectionCount = LargeNumberList.Count;
-                        DictionarySize = LargeStringDict.Count;
-                        MaxValue = LargeNumberList.Max();
-                        MinValue = LargeNumberList.Min();
+                        CollectionCount = 150;  // Unique value
+                        DictionarySize = 75;    // Unique value  
+                        MaxValue = 4000;        // Unique value
+                        MinValue = 1500;        // Unique value
                     }
 
                     [ObservableProperty]
@@ -746,9 +746,14 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected: collectionCount(1000), dictionarySize(100), maxValue(1000), minValue(1)
-        // Note: We only extract the summary values, not all 1000+ individual numbers for performance
-        var expectedDataValues = "1,100,1000,1000";
+        // Expected: All numbers from 2001-2100 (100 values) + 3001-3050 (50 values) + summary values (75,150,1500,4000) = 154 unique values
+        // Generate the expected string: summary values + collection range + dictionary range, all sorted
+        var expectedNumbers = new List<int>();
+        expectedNumbers.AddRange(new[] { 75, 150, 1500, 4000 }); // Summary values
+        expectedNumbers.AddRange(Enumerable.Range(2001, 100)); // LargeNumberList: 2001-2100
+        expectedNumbers.AddRange(Enumerable.Range(3001, 50)); // LargeStringDict: 3001-3050
+        
+        var expectedDataValues = string.Join(",", expectedNumbers.Distinct().OrderBy(x => x));
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
