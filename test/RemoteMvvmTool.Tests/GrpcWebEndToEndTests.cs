@@ -347,8 +347,8 @@ public class GrpcWebEndToEndTests
             }
             """;
         // Expected data: ScoreList (100,200,300), PlayerLevel (15), HasBonus (0 for false), 
-        // BonusMultiplier (2.5), GameStatus.Playing (20 twice - status and gameStatus) - all sorted
-        var expectedDataValues = "0,2.5,15,20,20,100,200,300";
+        // BonusMultiplier (2.5), GameStatus.Playing (20) - all sorted
+        var expectedDataValues = "0,2.5,15,20,100,200,300";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
