@@ -17,6 +17,7 @@ public static class ServerGenerator
         sb.AppendLine("using Grpc.Core;");
         sb.AppendLine($"using {protoNs};");
         sb.AppendLine($"using {viewModelNamespace};");
+        sb.AppendLine("using Google.Protobuf;");
         sb.AppendLine("using Google.Protobuf.WellKnownTypes;");
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Linq;");
@@ -117,6 +118,7 @@ public static class ServerGenerator
                 "System.Half" => $"(float){expr}",
                 "System.Char" => $"{expr}.ToString()",
                 "System.Guid" => $"{expr}.ToString()",
+                "System.Decimal" => $"{expr}.ToString()",
                 _ => expr
             };
         }
@@ -171,20 +173,51 @@ public static class ServerGenerator
                         sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({dictExpr});");
                     }
                 }
-                else if (GeneratorHelpers.TryGetMemoryElementType(named, out _))
+                else if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
                 {
-                    sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name}.AddRange(propValue.ToArray());");
+                    if (memElem?.SpecialType == SpecialType.System_Byte)
+                        sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name} = Google.Protobuf.ByteString.CopyFrom(propValue.ToArray());");
+                    else
+                        sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name}.AddRange(propValue.ToArray());");
                 }
                 else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
-                    string expr = "propValue";
-                    if (!elem!.IsValueType)
-                        expr += ".Where(e => e != null)";
-                    if (elem.TypeKind == TypeKind.Enum)
-                        expr += ".Select(e => (int)e)";
-                    else if (!GeneratorHelpers.IsWellKnownType(elem))
-                        expr += $".Select({viewModelNamespace}.ProtoStateConverters.ToProto).Where(s => s != null)";
-                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({expr});");
+                    // Special handling for collections of dictionaries
+                    if (elem is INamedTypeSymbol elemNamed && elemNamed.IsGenericType &&
+                        GeneratorHelpers.TryGetDictionaryTypeArgs(elemNamed, out var elemKeyType, out var elemValueType) &&
+                        GeneratorHelpers.CanUseProtoMap(elemKeyType!, elemValueType!))
+                    {
+                        // This is a collection of dictionaries - use map-containing message approach
+                        string dictMapName = GeneratorHelpers.GetDictionaryEntryName(elemKeyType!, elemValueType!) + "Map";
+                        string keySel = KeyToProto("kv.Key", elemKeyType!);
+                        string valSel = ValueToProto("kv.Value", elemValueType!, "kv1");
+                        
+                        sb.AppendLine($"            if (propValue != null)");
+                        sb.AppendLine($"            {{");
+                        sb.AppendLine($"                foreach (var dict in propValue)");
+                        sb.AppendLine($"                {{");
+                        sb.AppendLine($"                    var mapMsg = new {dictMapName}();");
+                        sb.AppendLine($"                    if (dict != null)");
+                        sb.AppendLine($"                    {{");
+                        sb.AppendLine($"                        foreach (var kv in dict)");
+                        sb.AppendLine($"                            mapMsg.Entries.Add({keySel}, {valSel});");
+                        sb.AppendLine($"                    }}");
+                        sb.AppendLine($"                    state.{p.Name}.Add(mapMsg);");
+                        sb.AppendLine($"                }}");
+                        sb.AppendLine($"            }}");
+                    }
+                    else
+                    {
+                        // Regular collection handling
+                        string expr = "propValue";
+                        if (!elem!.IsValueType)
+                            expr += ".Where(e => e != null)";
+                        if (elem.TypeKind == TypeKind.Enum)
+                            expr += ".Select(e => (int)e)";
+                        else if (!GeneratorHelpers.IsWellKnownType(elem))
+                            expr += $".Select({viewModelNamespace}.ProtoStateConverters.ToProto).Where(s => s != null)";
+                        sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({expr});");
+                    }
                 }
                 else
                 {
@@ -199,14 +232,21 @@ public static class ServerGenerator
             else if (p.FullTypeSymbol is IArrayTypeSymbol arr)
             {
                 var elem = arr.ElementType;
-                string expr = "propValue";
-                if (!elem.IsValueType)
-                    expr += ".Where(e => e != null)";
-                if (elem.TypeKind == TypeKind.Enum)
-                    expr += ".Select(e => (int)e)";
-                else if (!GeneratorHelpers.IsWellKnownType(elem))
-                    expr += $".Select({viewModelNamespace}.ProtoStateConverters.ToProto).Where(s => s != null)";
-                sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({expr});");
+                if (elem.SpecialType == SpecialType.System_Byte)
+                {
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name} = Google.Protobuf.ByteString.CopyFrom(propValue);");
+                }
+                else
+                {
+                    string expr = "propValue";
+                    if (!elem.IsValueType)
+                        expr += ".Where(e => e != null)";
+                    if (elem.TypeKind == TypeKind.Enum)
+                        expr += ".Select(e => (int)e)";
+                    else if (!GeneratorHelpers.IsWellKnownType(elem))
+                        expr += $".Select({viewModelNamespace}.ProtoStateConverters.ToProto).Where(s => s != null)";
+                    sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({expr});");
+                }
             }
             else
             {
@@ -227,6 +267,9 @@ public static class ServerGenerator
                             sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
                             break;
                         case "System.Guid":
+                            sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
+                            break;
+                        case "System.Decimal":
                             sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
                             break;
                         default:

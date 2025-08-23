@@ -64,6 +64,32 @@ public static class ProtoGenerator
                 if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType))
                 {
                     string elemProto = MapProtoType(elemType!, allowMessage: true);
+                    
+                    // Check if the element type is a dictionary that would be mapped to a protobuf map
+                    if (elemType is INamedTypeSymbol elemNamed && elemNamed.IsGenericType &&
+                        GeneratorHelpers.TryGetDictionaryTypeArgs(elemNamed, out var elemKeyType, out var elemValueType))
+                    {
+                        if (GeneratorHelpers.CanUseProtoMap(elemKeyType!, elemValueType!))
+                        {
+                            // For collections of dictionaries, create a map-containing message
+                            string dictMapName = GeneratorHelpers.GetDictionaryEntryName(elemKeyType!, elemValueType!) + "Map";
+                            if (!mapEntryMessages.ContainsKey(dictMapName))
+                            {
+                                // Store a special marker to create a map-containing message
+                                mapEntryMessages[dictMapName] = (elemKeyType!, elemValueType!);
+                            }
+                            return $"repeated {dictMapName}";
+                        }
+                        else
+                        {
+                            // For dictionaries that can't use proto maps, we already handle them with custom entries
+                            string entryName = GeneratorHelpers.GetDictionaryEntryName(elemKeyType!, elemValueType!);
+                            if (!mapEntryMessages.ContainsKey(entryName))
+                                mapEntryMessages[entryName] = (elemKeyType!, elemValueType!);
+                            return $"repeated {entryName}";
+                        }
+                    }
+                    
                     return $"repeated {elemProto}";
                 }
             }
@@ -256,12 +282,27 @@ public static class ProtoGenerator
                 if (processedEntries.Contains(kvp.Key))
                     continue;
                 processedEntries.Add(kvp.Key);
-                string keyProto = MapProtoType(kvp.Value.Key, allowMessage: true);
-                string valueProto = MapProtoType(kvp.Value.Value, allowMessage: true);
-                body.AppendLine($"message {kvp.Key} {{");
-                body.AppendLine($"  {keyProto} key = 1;");
-                body.AppendLine($"  {valueProto} value = 2;");
-                body.AppendLine("}");
+                
+                // Check if this is a map-containing message (for collections of dictionaries)
+                if (kvp.Key.EndsWith("Map"))
+                {
+                    // Create a message that contains a map field
+                    string keyProto = MapProtoType(kvp.Value.Key, allowMessage: false);
+                    string valueProto = MapProtoType(kvp.Value.Value, allowMessage: true);
+                    body.AppendLine($"message {kvp.Key} {{");
+                    body.AppendLine($"  map<{keyProto}, {valueProto}> entries = 1;");
+                    body.AppendLine("}");
+                }
+                else
+                {
+                    // Regular entry message for non-map scenarios
+                    string keyProto = MapProtoType(kvp.Value.Key, allowMessage: true);
+                    string valueProto = MapProtoType(kvp.Value.Value, allowMessage: true);
+                    body.AppendLine($"message {kvp.Key} {{");
+                    body.AppendLine($"  {keyProto} key = 1;");
+                    body.AppendLine($"  {valueProto} value = 2;");
+                    body.AppendLine("}");
+                }
                 body.AppendLine();
             }
         }

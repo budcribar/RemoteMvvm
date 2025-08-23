@@ -77,23 +77,88 @@ public class GeneratedCodeCompilationTests
         string stubCode;
         if (!string.IsNullOrEmpty(customModelCode))
         {
-            // For custom model code, create a minimal stub that implements the interface
-            stubCode = """
-                using System;
-                using System.Collections.Generic;
-                using System.Collections.ObjectModel;
-                using CommunityToolkit.Mvvm.ComponentModel;
-                using CommunityToolkit.Mvvm.Input;
-
-                namespace GeneratedTests;
-
-                // Stub implementation to satisfy compilation - the actual implementation comes from customModelCode
-                public partial class TestViewModel : ObservableObject
+            // For custom model code, create a more complete stub that implements the properties properly
+            // Parse the custom model to extract property names and create proper property implementations
+            var propertyLines = new List<string>();
+            var commandLines = new List<string>();
+            var parsedProperties = new HashSet<string>();
+            
+            var lines = customModelCode.Split('\n');
+            bool nextIsObservableProperty = false;
+            bool nextIsRelayCommand = false;
+            
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var trimmed = lines[i].Trim();
+                
+                if (trimmed.StartsWith("[ObservableProperty]"))
                 {
-                    // Add any missing command implementations
-                    public IRelayCommand? StartGameCommand { get; }
+                    nextIsObservableProperty = true;
+                    continue;
                 }
-                """;
+                else if (trimmed.StartsWith("[RelayCommand]"))
+                {
+                    nextIsRelayCommand = true;
+                    continue;
+                }
+                
+                if (nextIsObservableProperty && trimmed.StartsWith("private "))
+                {
+                    // Extract field name and type from something like "private string _message = "";"
+                    var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"private\s+(.+?)\s+_(\w+)");
+                    if (match.Success)
+                    {
+                        var type = match.Groups[1].Value.Trim();
+                        var fieldName = match.Groups[2].Value;
+                        var propertyName = char.ToUpper(fieldName[0]) + fieldName.Substring(1);
+                        
+                        if (!parsedProperties.Contains(propertyName))
+                        {
+                            // Create the property implementation
+                            propertyLines.Add($"        public {type} {propertyName} {{ get; set; }} = default!;");
+                            parsedProperties.Add(propertyName);
+                        }
+                    }
+                    nextIsObservableProperty = false;
+                }
+                else if (nextIsRelayCommand && (trimmed.StartsWith("private void ") || trimmed.StartsWith("private async Task ")))
+                {
+                    // Extract method name from something like "private void StartGame()" or "private async Task MethodAsync()"
+                    var match = System.Text.RegularExpressions.Regex.Match(trimmed, @"private\s+(?:async\s+)?(?:void|Task(?:<.+?>)?)\s+(\w+)");
+                    if (match.Success)
+                    {
+                        var methodName = match.Groups[1].Value;
+                        // Remove "Async" suffix if present for command name
+                        var baseMethodName = methodName.EndsWith("Async") ? methodName.Substring(0, methodName.Length - 5) : methodName;
+                        var commandName = baseMethodName + "Command";
+                        commandLines.Add($"        public IRelayCommand {commandName} {{ get; }} = new RelayCommand(() => {{}});");
+                    }
+                    nextIsRelayCommand = false;
+                }
+                else
+                {
+                    // Reset flags if we encounter other content
+                    nextIsObservableProperty = false;
+                    nextIsRelayCommand = false;
+                }
+            }
+            
+            stubCode = $$"""
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
+namespace GeneratedTests;
+
+// Stub implementation to satisfy compilation
+public partial class TestViewModel : ObservableObject
+{
+{{string.Join("\n", propertyLines)}}
+{{string.Join("\n", commandLines)}}
+}
+""";
         }
         else
         {

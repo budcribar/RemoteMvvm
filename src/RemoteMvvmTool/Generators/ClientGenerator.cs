@@ -110,7 +110,15 @@ public static class ClientGenerator
                 "UInt32Value" => type.SpecialType == SpecialType.System_UInt32 ? expr : $"({type.ToDisplayString()}){expr}",
                 "Int64Value" => expr,
                 "UInt64Value" => expr,
-                "StringValue" => type.ToDisplayString() == "System.Guid" ? $"Guid.Parse({expr})" : expr,
+                "StringValue" => type.ToDisplayString() switch
+                {
+                    "System.Guid" => $"Guid.Parse({expr})",
+                    "System.Char" => $"{expr}[0]", // Take first character
+                    "System.Decimal" => $"decimal.Parse({expr})",
+                    "System.Half" => $"(Half)float.Parse({expr})",
+                    _ => expr
+                },
+                "FloatValue" => type.ToDisplayString() == "System.Half" ? $"(Half){expr}" : expr,
                 _ => expr
             };
         }
@@ -161,17 +169,40 @@ public static class ClientGenerator
                     }
                     else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                     {
-                        string sel = string.Empty;
-                        if (elem!.TypeKind == TypeKind.Enum)
-                            sel = $".Select(e => ({elem.ToDisplayString()})e)";
-                        else if (!GeneratorHelpers.IsWellKnownType(elem))
-                            sel = ".Select(ProtoStateConverters.FromProto)";
-                        if (named.TypeKind == TypeKind.Interface)
-                            psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
-                        else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
-                            psb.AppendLine($"{ind}this.{prop.Name} = new System.Collections.ObjectModel.ObservableCollection<{elem.ToDisplayString()}>(state.{protoStateFieldName}{sel});");
+                        // Special handling for collections of dictionaries
+                        if (elem is INamedTypeSymbol elemNamed && elemNamed.IsGenericType &&
+                            GeneratorHelpers.TryGetDictionaryTypeArgs(elemNamed, out var elemKeyType, out var elemValueType) &&
+                            GeneratorHelpers.CanUseProtoMap(elemKeyType!, elemValueType!))
+                        {
+                            // This is a collection of dictionaries - convert from map-containing messages
+                            string keySel = KeyFromProto("kv.Key", elemKeyType!);
+                            string valSel = ValueFromProto("kv.Value", elemValueType!, "kv1");
+                            string dictType = $"Dictionary<{elemKeyType!.ToDisplayString()}, {elemValueType!.ToDisplayString()}>";
+                            string conversionExpr = $"state.{protoStateFieldName}.Select(mapMsg => mapMsg.Entries.ToDictionary(kv => {keySel}, kv => {valSel}))";
+                            
+                            if (named.TypeKind == TypeKind.Interface)
+                                psb.AppendLine($"{ind}this.{prop.Name} = {conversionExpr}.ToList();");
+                            else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
+                                psb.AppendLine($"{ind}this.{prop.Name} = new System.Collections.ObjectModel.ObservableCollection<{dictType}>({conversionExpr});");
+                            else
+                                psb.AppendLine($"{ind}this.{prop.Name} = new {prop.TypeString}({conversionExpr});");
+                        }
                         else
-                            psb.AppendLine($"{ind}this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}{sel});");
+                        {
+                            // Regular collection handling
+                            string sel = string.Empty;
+                            if (elem!.TypeKind == TypeKind.Enum)
+                                sel = $".Select(e => ({elem.ToDisplayString()})e)";
+                            else if (!GeneratorHelpers.IsWellKnownType(elem))
+                                sel = ".Select(ProtoStateConverters.FromProto)";
+                            
+                            if (named.TypeKind == TypeKind.Interface)
+                                psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
+                            else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
+                                psb.AppendLine($"{ind}this.{prop.Name} = new System.Collections.ObjectModel.ObservableCollection<{elem.ToDisplayString()}>(state.{protoStateFieldName}{sel});");
+                            else
+                                psb.AppendLine($"{ind}this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}{sel});");
+                        }
                     }
                     else
                     {
@@ -200,7 +231,28 @@ public static class ClientGenerator
                     else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
                         psb.AppendLine($"{ind}this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
                     else
-                        psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName};");
+                    {
+                        // Handle special type conversions for well-known types that need parsing
+                        var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
+                        switch (typeDisplayString)
+                        {
+                            case "System.Decimal":
+                                psb.AppendLine($"{ind}this.{prop.Name} = decimal.Parse(state.{protoStateFieldName});");
+                                break;
+                            case "System.Char":
+                                psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}[0];");
+                                break;
+                            case "System.Guid":
+                                psb.AppendLine($"{ind}this.{prop.Name} = Guid.Parse(state.{protoStateFieldName});");
+                                break;
+                            case "System.Half":
+                                psb.AppendLine($"{ind}this.{prop.Name} = (Half)state.{protoStateFieldName};");
+                                break;
+                            default:
+                                psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName};");
+                                break;
+                        }
+                    }
                 }
             }
             return psb.ToString();
@@ -260,7 +312,24 @@ public static class ClientGenerator
             string csharpPropName = prop.Name;
             propertyUpdateCases.AppendLine($"                                   case nameof({csharpPropName}):");
             if (wkt == "StringValue")
-                propertyUpdateCases.AppendLine($"                 if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
+            {
+                var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
+                switch (typeDisplayString)
+                {
+                    case "System.Decimal":
+                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = decimal.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
+                    case "System.Char":
+                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value[0]; break;");
+                        break;
+                    case "System.Guid":
+                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = Guid.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
+                    default:
+                        propertyUpdateCases.AppendLine($"                 if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
+                        break;
+                }
+            }
             else if (wkt == "Int32Value")
                 propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int32Value>().Value; break;");
             else if (wkt == "Int64Value")
@@ -270,7 +339,13 @@ public static class ClientGenerator
             else if (wkt == "DoubleValue")
                 propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(DoubleValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<DoubleValue>().Value; break;");
             else if (wkt == "FloatValue")
-                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(FloatValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<FloatValue>().Value; break;");
+            {
+                var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
+                if (typeDisplayString == "System.Half")
+                    propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(FloatValue.Descriptor)) this.{csharpPropName} = (Half)update.NewValue.Unpack<FloatValue>().Value; break;");
+                else
+                    propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(FloatValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<FloatValue>().Value; break;");
+            }
             else if (wkt == "BoolValue")
                 propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<BoolValue>().Value; break;");
             else
