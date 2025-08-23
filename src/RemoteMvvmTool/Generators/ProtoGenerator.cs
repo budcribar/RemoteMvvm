@@ -219,11 +219,27 @@ public static class ProtoGenerator
         body.AppendLine("message UpdatePropertyValueRequest {");
         body.AppendLine("  string property_name = 1;");
         body.AppendLine("  google.protobuf.Any new_value = 2;");
+        body.AppendLine("  // Optional fields for complex property updates");
+        body.AppendLine("  string property_path = 3;          // For nested properties like \"User.Address.Street\"");
+        body.AppendLine("  string collection_key = 4;         // For dictionary keys or array indices");
+        body.AppendLine("  int32 array_index = 5;             // For updating specific array elements");
+        body.AppendLine("  string operation_type = 6;         // \"set\", \"add\", \"remove\", \"clear\", \"insert\"");
+        body.AppendLine("}");
+        body.AppendLine();
+        body.AppendLine("message UpdatePropertyValueResponse {");
+        body.AppendLine("  bool success = 1;");
+        body.AppendLine("  string error_message = 2;          // Error details if success=false");
+        body.AppendLine("  string validation_errors = 3;      // Validation error details");
+        body.AppendLine("  google.protobuf.Any old_value = 4; // Previous value for undo operations");
         body.AppendLine("}");
         body.AppendLine();
         body.AppendLine("message PropertyChangeNotification {");
         body.AppendLine("  string property_name = 1;");
         body.AppendLine("  google.protobuf.Any new_value = 2;");
+        body.AppendLine("  // Enhanced notification details");
+        body.AppendLine("  string property_path = 3;          // Full path for nested changes");
+        body.AppendLine("  string change_type = 4;            // \"property\", \"collection\", \"nested\"");
+        body.AppendLine("  google.protobuf.Any old_value = 5; // Previous value");
         body.AppendLine("}");
         foreach (var c in cmds)
         {
@@ -326,7 +342,7 @@ public static class ProtoGenerator
         body.AppendLine();
         body.AppendLine("service " + serviceName + " {");
         body.AppendLine($"  rpc GetState (google.protobuf.Empty) returns ({vmName}State);");
-        body.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);");
+        body.AppendLine($"  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (UpdatePropertyValueResponse);");
         body.AppendLine($"  rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);");
         foreach (var c in cmds)
         {

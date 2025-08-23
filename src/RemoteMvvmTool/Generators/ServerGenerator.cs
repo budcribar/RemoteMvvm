@@ -75,6 +75,8 @@ public static class ServerGenerator
         }
         sb.AppendLine("        _logger = logger;");
         sb.AppendLine("        if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }");
+        sb.AppendLine("        else { Debug.WriteLine(\"[GrpcService:" + vmName + "] WARNING: ViewModel does not implement INotifyPropertyChanged!\"); }");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] Constructor completed. ViewModel type: \" + _viewModel.GetType().FullName);");
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine($"    public override Task<{vmName}State> GetState(Empty request, ServerCallContext context)");
@@ -204,13 +206,13 @@ public static class ServerGenerator
                         sb.AppendLine($"                {{");
                         sb.AppendLine($"                    var mapMsg = new {protoNs}.{dictMapName}();");
                         sb.AppendLine($"                    if (dict != null)");
-                        sb.AppendLine($"                    {{");
-                        sb.AppendLine($"                        foreach (var kv in dict)");
-                        sb.AppendLine($"                            mapMsg.Entries.Add({keySel}, {valSel});");
-                        sb.AppendLine($"                    }}");
-                        sb.AppendLine($"                    state.{p.Name}.Add(mapMsg);");
-                        sb.AppendLine($"                }}");
-                        sb.AppendLine($"            }}");
+    sb.AppendLine($"                    {{");
+    sb.AppendLine($"                        foreach (var kv in dict)");
+    sb.AppendLine($"                            mapMsg.Entries.Add({keySel}, {valSel});");
+    sb.AppendLine($"                    }}");
+    sb.AppendLine($"                    state.{p.Name}.Add(mapMsg);");
+    sb.AppendLine($"                }}");
+    sb.AppendLine($"            }}");
                     }
                     else
                     {
@@ -295,52 +297,52 @@ public static class ServerGenerator
         sb.AppendLine();
         sb.AppendLine($"    public override async Task SubscribeToPropertyChanges({protoNs}.SubscribeRequest request, IServerStreamWriter<{protoNs}.PropertyChangeNotification> responseStream, ServerCallContext context)");
         sb.AppendLine("    {");
+        sb.AppendLine("        var clientId = request.ClientId ?? \"unknown\";");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] New subscription request from client: \" + clientId);");
         sb.AppendLine($"        var channel = Channel.CreateUnbounded<{protoNs}.PropertyChangeNotification>(new UnboundedChannelOptions {{ SingleReader = true, SingleWriter = false }});");
         sb.AppendLine("        _subscriberChannels.TryAdd(responseStream, channel);");
         sb.AppendLine("        ClientCount = _subscriberChannels.Count;");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] Subscriber count is now: \" + ClientCount);");
         sb.AppendLine("        try");
         sb.AppendLine("        {");
+        sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Starting to read from channel for client: \" + clientId);");
         sb.AppendLine("            await foreach (var notification in channel.Reader.ReadAllAsync(context.CancellationToken))");
         sb.AppendLine("            {");
+        sb.AppendLine("                Debug.WriteLine(\"[GrpcService:" + vmName + "] Sending property change notification: \" + notification.PropertyName + \" to client: \" + clientId);");
         sb.AppendLine("                await responseStream.WriteAsync(notification);");
         sb.AppendLine("            }");
         sb.AppendLine("        }");
+        sb.AppendLine("        catch (OperationCanceledException)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Subscription cancelled for client: \" + clientId);");
+        sb.AppendLine("        }");
         sb.AppendLine("        finally");
         sb.AppendLine("        {");
+        sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Cleaning up subscription for client: \" + clientId);");
         sb.AppendLine("            _subscriberChannels.TryRemove(responseStream, out _);");
         sb.AppendLine("            channel.Writer.TryComplete();");
         sb.AppendLine("            ClientCount = _subscriberChannels.Count;");
+        sb.AppendLine("            Debug.WriteLine(\"[GrpcService:" + vmName + "] Subscriber count is now: \" + ClientCount);");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine($"    public override async Task<Empty> UpdatePropertyValue({protoNs}.UpdatePropertyValueRequest request, ServerCallContext context)");
+        sb.AppendLine($"    public override async Task<{protoNs}.UpdatePropertyValueResponse> UpdatePropertyValue({protoNs}.UpdatePropertyValueRequest request, ServerCallContext context)");
         sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        ");
         if (runType == "wpf")
         {
             sb.AppendLine("        if (_dispatcher != null)");
             sb.AppendLine("        {");
             sb.AppendLine("            await _dispatcher.InvokeAsync(() =>");
             sb.AppendLine("            {");
-            sb.AppendLine("                try");
-            sb.AppendLine("                {");
-            sb.AppendLine("                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
-            sb.AppendLine("                    if (propertyInfo != null && propertyInfo.CanWrite)");
-            sb.AppendLine("                    {");
-            sb.AppendLine("                        try {");
-            sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
-            sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
-            sb.AppendLine("                        } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
-            sb.AppendLine("                    }");
-            sb.AppendLine("                    else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
-            sb.AppendLine("                }");
-            sb.AppendLine("                catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Exception during UpdatePropertyValue: \" + ex.ToString()); }");
+            sb.AppendLine("                response = UpdatePropertyValueInternal(request);");
             sb.AppendLine("            });");
+            sb.AppendLine("        }");
+            sb.AppendLine("        else");
+            sb.AppendLine("        {");
+            sb.AppendLine("            response.Success = false;");
+            sb.AppendLine("            response.ErrorMessage = \"Dispatcher not available\";");
             sb.AppendLine("        }");
         }
         else if (runType == "winforms")
@@ -349,162 +351,379 @@ public static class ServerGenerator
             sb.AppendLine("        {");
             sb.AppendLine("            await Task.Run(() => _dispatcher.Invoke(new Action(() =>");
             sb.AppendLine("            {");
-            sb.AppendLine("                try");
-            sb.AppendLine("                {");
-            sb.AppendLine("                    var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
-            sb.AppendLine("                    if (propertyInfo != null && propertyInfo.CanWrite)");
-            sb.AppendLine("                    {");
-            sb.AppendLine("                        try {");
-            sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
-            sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
-            sb.AppendLine("                        } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
-            sb.AppendLine("                    }");
-            sb.AppendLine("                    else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
-            sb.AppendLine("                }");
-            sb.AppendLine("                catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Exception during UpdatePropertyValue: \" + ex.ToString()); }");
+            sb.AppendLine("                response = UpdatePropertyValueInternal(request);");
             sb.AppendLine("            })));");
             sb.AppendLine("        }");
-        }
-        else
-        {
-            sb.AppendLine("        try");
+            sb.AppendLine("        else");
             sb.AppendLine("        {");
-            sb.AppendLine("            var propertyInfo = _viewModel.GetType().GetProperty(request.PropertyName);");
-            sb.AppendLine("            if (propertyInfo != null && propertyInfo.CanWrite)");
-            sb.AppendLine("            {");
-            sb.AppendLine("                try {");
-            sb.AppendLine("                if (request.NewValue.Is(StringValue.Descriptor) && propertyInfo.PropertyType == typeof(string)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<StringValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(Int32Value.Descriptor) && propertyInfo.PropertyType == typeof(int)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int32Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(Int64Value.Descriptor) && propertyInfo.PropertyType == typeof(long)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<Int64Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(UInt32Value.Descriptor) && propertyInfo.PropertyType == typeof(uint)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<UInt32Value>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(FloatValue.Descriptor) && propertyInfo.PropertyType == typeof(float)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<FloatValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(DoubleValue.Descriptor) && propertyInfo.PropertyType == typeof(double)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<DoubleValue>().Value);");
-            sb.AppendLine("                else if (request.NewValue.Is(BoolValue.Descriptor) && propertyInfo.PropertyType == typeof(bool)) propertyInfo.SetValue(_viewModel, request.NewValue.Unpack<BoolValue>().Value);");
-            sb.AppendLine("                else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Unpacking not implemented for property \" + request.PropertyName + \" and type \" + request.NewValue.TypeUrl + \".\"); }");
-            sb.AppendLine("                } catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error setting property \" + request.PropertyName + \": \" + ex.Message); }");
-            sb.AppendLine("            }");
-            sb.AppendLine("            else { Debug.WriteLine(\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property \" + request.PropertyName + \" not found or not writable.\"); }");
+            sb.AppendLine("            response.Success = false;");
+            sb.AppendLine("            response.ErrorMessage = \"Dispatcher not available\";");
             sb.AppendLine("        }");
-        sb.AppendLine("        catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Exception during UpdatePropertyValue: \" + ex.ToString()); }");
         }
-        sb.AppendLine("        return new Empty();");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-        sb.AppendLine("    public override Task<ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)");
-        sb.AppendLine("    {");
-        sb.AppendLine("        var status = ClientCount > 0 ? ConnectionStatus.Connected : ConnectionStatus.Disconnected;");
-        sb.AppendLine("        return Task.FromResult(new ConnectionStatusResponse { Status = status });");
-        sb.AppendLine("    }");
-        sb.AppendLine();
-        foreach (var cmd in cmds)
+        else
         {
-            var baseName = cmd.MethodName.EndsWith("Async", StringComparison.Ordinal)
-                ? cmd.MethodName[..^5]
-                : cmd.MethodName;
-            sb.AppendLine($"    public override async Task<{protoNs}.{baseName}Response> {baseName}({protoNs}.{baseName}Request request, ServerCallContext context)");
-            sb.AppendLine("    {");
-        if (runType == "wpf")
-            sb.AppendLine("        try { await _dispatcher.InvokeAsync(async () => {");
-        else if (runType == "winforms")
-            sb.AppendLine("        try { _dispatcher.Invoke(new Action(() => {");
-        else
-            sb.AppendLine("        try {");
-            var relayType = cmd.IsAsync ? "CommunityToolkit.Mvvm.Input.IAsyncRelayCommand" : "CommunityToolkit.Mvvm.Input.IRelayCommand";
-            var relayTypeShort = cmd.IsAsync ? "IAsyncRelayCommand" : "IRelayCommand";
-            sb.AppendLine($"            var command = _viewModel.{cmd.CommandPropertyName} as {relayType};");
-            sb.AppendLine("            if (command != null)");
-            sb.AppendLine("            {");
-            if (cmd.Parameters.Count == 0)
-            {
-                if (cmd.IsAsync)
-                {
-                    if (runType == "wpf" || runType == "console")
-                        sb.AppendLine("                await command.ExecuteAsync(null);");
-                    else
-                        sb.AppendLine("                command.ExecuteAsync(null).GetAwaiter().GetResult();");
-                }
-                else
-                {
-                    sb.AppendLine("                command.Execute(null);");
-                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
-                }
-            }
-                else if (cmd.Parameters.Count == 1)
-            {
-                var param = cmd.Parameters[0];
-                var paramProp = GeneratorHelpers.ToPascalCase(param.Name);
-                var typedRelay = cmd.IsAsync ? $"CommunityToolkit.Mvvm.Input.IAsyncRelayCommand<{param.TypeString}>" : $"CommunityToolkit.Mvvm.Input.IRelayCommand<{param.TypeString}>";
-                sb.AppendLine($"                var typedCommand = _viewModel.{cmd.CommandPropertyName} as {typedRelay};");
-                string paramConv = param.FullTypeSymbol.TypeKind == TypeKind.Enum
-                    ? $"({param.TypeString})request.{paramProp}"
-                    : (!GeneratorHelpers.IsWellKnownType(param.FullTypeSymbol)
-                        ? $"{viewModelNamespace}.ProtoStateConverters.FromProto(request.{paramProp})"
-                        : $"request.{paramProp}");
-                if (cmd.IsAsync)
-                {
-                    if (runType == "wpf" || runType == "console")
-                        sb.AppendLine($"                if (typedCommand != null) await typedCommand.ExecuteAsync({paramConv}); else await command.ExecuteAsync(request);");
-                    else
-                        sb.AppendLine($"                if (typedCommand != null) typedCommand.ExecuteAsync({paramConv}).GetAwaiter().GetResult(); else command.ExecuteAsync(request).GetAwaiter().GetResult();");
-                }
-                else
-                {
-                    sb.AppendLine($"                if (typedCommand != null) typedCommand.Execute({paramConv}); else command.Execute(request);");
-                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
-                }
-            }
-            else
-            {
-                if (cmd.IsAsync)
-                {
-                    if (runType == "wpf" || runType == "console")
-                        sb.AppendLine("                await command.ExecuteAsync(request);");
-                    else
-                        sb.AppendLine("                command.ExecuteAsync(request).GetAwaiter().GetResult();");
-                }
-                else
-                {
-                    sb.AppendLine("                command.Execute(request);");
-                    if (runType == "wpf") sb.AppendLine("                await Task.CompletedTask;");
-                }
-            }
-            sb.AppendLine("            }");
-            sb.AppendLine($"            else {{ Debug.WriteLine(\"[GrpcService:{vmName}] Command {cmd.CommandPropertyName} not found or not {relayTypeShort}.\"); }}");
-        if (runType == "wpf")
-            sb.AppendLine("        }); } catch (Exception ex) {");
-        else if (runType == "winforms")
-            sb.AppendLine("        })); } catch (Exception ex) {");
-        else
-            sb.AppendLine("        } catch (Exception ex) {");
-            sb.AppendLine($"        Debug.WriteLine(\"[GrpcService:{vmName}] Exception during command execution for {cmd.MethodName}: \" + ex.ToString());");
-            sb.AppendLine("        throw new RpcException(new Status(StatusCode.Internal, \"Error executing command on server: \" + ex.Message));");
-            sb.AppendLine("        }");
-            sb.AppendLine($"        return new {protoNs}.{baseName}Response();");
-            sb.AppendLine("    }");
-            sb.AppendLine();
+            sb.AppendLine("        response = UpdatePropertyValueInternal(request);");
         }
+        sb.AppendLine("        ");
+        sb.AppendLine("        Debug.WriteLine($\"[GrpcService:" + vmName + "] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}\");");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    private {protoNs}.UpdatePropertyValueResponse UpdatePropertyValueInternal({protoNs}.UpdatePropertyValueRequest request)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        ");
+        sb.AppendLine("        try");
+        sb.AppendLine("        {");
+        sb.AppendLine("            Debug.WriteLine($\"[GrpcService:" + vmName + "] UpdatePropertyValue: Property={request.PropertyName}, Path={request.PropertyPath}, Operation={request.OperationType}\");");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Handle different operation types");
+        sb.AppendLine("            var operationType = request.OperationType ?? \"set\";");
+        sb.AppendLine("            var propertyPath = !string.IsNullOrEmpty(request.PropertyPath) ? request.PropertyPath : request.PropertyName;");
+        sb.AppendLine("            ");
+        sb.AppendLine("            switch (operationType.ToLowerInvariant())");
+        sb.AppendLine("            {");
+        sb.AppendLine("                case \"set\":");
+        sb.AppendLine("                case \"\":");
+        sb.AppendLine("                    response = HandleSetOperation(request, propertyPath);");
+        sb.AppendLine("                    break;");
+        sb.AppendLine("                case \"add\":");
+        sb.AppendLine("                    response = HandleAddOperation(request, propertyPath);");
+        sb.AppendLine("                    break;");
+        sb.AppendLine("                case \"remove\":");
+        sb.AppendLine("                    response = HandleRemoveOperation(request, propertyPath);");
+        sb.AppendLine("                    break;");
+        sb.AppendLine("                case \"clear\":");
+        sb.AppendLine("                    response = HandleClearOperation(request, propertyPath);");
+        sb.AppendLine("                    break;");
+        sb.AppendLine("                case \"insert\":");
+        sb.AppendLine("                    response = HandleInsertOperation(request, propertyPath);");
+        sb.AppendLine("                    break;");
+        sb.AppendLine("                default:");
+        sb.AppendLine("                    response.Success = false;");
+        sb.AppendLine("                    response.ErrorMessage = $\"Unsupported operation type: {request.OperationType}\";");
+        sb.AppendLine("                    break;");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            Debug.WriteLine($\"[GrpcService:" + vmName + "] Exception in UpdatePropertyValue: {ex}\");");
+        sb.AppendLine("            response.Success = false;");
+        sb.AppendLine("            response.ErrorMessage = ex.Message;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        ");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    private {protoNs}.UpdatePropertyValueResponse HandleSetOperation({protoNs}.UpdatePropertyValueRequest request, string propertyPath)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        ");
+        sb.AppendLine("        try");
+        sb.AppendLine("        {");
+        sb.AppendLine("            object target = _viewModel;");
+        sb.AppendLine("            var pathParts = propertyPath.Split('.');");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Navigate to nested property if needed");
+        sb.AppendLine("            for (int i = 0; i < pathParts.Length - 1; i++)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                var prop = target.GetType().GetProperty(pathParts[i]);");
+        sb.AppendLine("                if (prop == null)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    response.Success = false;");
+        sb.AppendLine("                    response.ErrorMessage = $\"Property '{pathParts[i]}' not found in path '{propertyPath}'\";");
+        sb.AppendLine("                    return response;");
+        sb.AppendLine("                }");
+        sb.AppendLine("                var nextTarget = prop.GetValue(target);");
+        sb.AppendLine("                if (nextTarget == null)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    response.Success = false;");
+        sb.AppendLine("                    response.ErrorMessage = $\"Null value encountered at '{pathParts[i]}' in path '{propertyPath}'\";");
+        sb.AppendLine("                    return response;");
+        sb.AppendLine("                }");
+        sb.AppendLine("                target = nextTarget;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            var finalPropertyName = pathParts[pathParts.Length - 1];");
+        sb.AppendLine("            var propertyInfo = target.GetType().GetProperty(finalPropertyName);");
+        sb.AppendLine("            ");
+        sb.AppendLine("            if (propertyInfo == null)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                response.Success = false;");
+        sb.AppendLine("                response.ErrorMessage = $\"Property '{finalPropertyName}' not found\";");
+        sb.AppendLine("                return response;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            if (!propertyInfo.CanWrite)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                response.Success = false;");
+        sb.AppendLine("                response.ErrorMessage = $\"Property '{finalPropertyName}' is read-only\";");
+        sb.AppendLine("                return response;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Store old value for undo/history");
+        sb.AppendLine("            var oldValue = propertyInfo.GetValue(target);");
+        sb.AppendLine("            if (oldValue != null) response.OldValue = PackToAny(oldValue);");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // **DEADLOCK FIX**: Temporarily remove PropertyChanged event handler to prevent streaming notifications during property updates");
+        sb.AppendLine("            bool eventHandlerRemoved = false;");
+        sb.AppendLine("            if (_viewModel is INotifyPropertyChanged inpc)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                inpc.PropertyChanged -= ViewModel_PropertyChanged;");
+        sb.AppendLine("                eventHandlerRemoved = true;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            try");
+        sb.AppendLine("            {");
+        sb.AppendLine("                // Handle collection indexing");
+        sb.AppendLine("                if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex >= 0)");
+        sb.AppendLine("                    response = HandleCollectionUpdate(target, propertyInfo, request);");
+        sb.AppendLine("                else");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    // Direct property assignment");
+        sb.AppendLine("                    var convertedValue = ConvertAnyToTargetType(request.NewValue, propertyInfo.PropertyType);");
+        sb.AppendLine("                    if (convertedValue.Success)");
+        sb.AppendLine("                    {");
+        sb.AppendLine("                        propertyInfo.SetValue(target, convertedValue.Value);");
+        sb.AppendLine("                        response.Success = true;");
+        sb.AppendLine("                    }");
+        sb.AppendLine("                    else");
+        sb.AppendLine("                    {");
+        sb.AppendLine("                        response.Success = false;");
+        sb.AppendLine("                        response.ErrorMessage = convertedValue.ErrorMessage;");
+        sb.AppendLine("                    }");
+        sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("            finally");
+        sb.AppendLine("            {");
+        sb.AppendLine("                // **ALWAYS re-add the event handler** - even if an exception occurs during property setting");
+        sb.AppendLine("                if (eventHandlerRemoved && _viewModel is INotifyPropertyChanged inpc2)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    inpc2.PropertyChanged += ViewModel_PropertyChanged;");
+        sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            response.Success = false;");
+        sb.AppendLine("            response.ErrorMessage = ex.Message;");
+        sb.AppendLine("            Debug.WriteLine($\"[GrpcService:" + vmName + "] Error in HandleSetOperation: {ex}\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("        ");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    private {protoNs}.UpdatePropertyValueResponse HandleCollectionUpdate(object target, System.Reflection.PropertyInfo propertyInfo, {protoNs}.UpdatePropertyValueRequest request)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        ");
+        sb.AppendLine("        var collection = propertyInfo.GetValue(target);");
+        sb.AppendLine("        if (collection == null)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            response.Success = false;");
+        sb.AppendLine("            response.ErrorMessage = $\"Collection property '{propertyInfo.Name}' is null\";");
+        sb.AppendLine("            return response;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        ");
+        sb.AppendLine("        // Handle dictionary updates");
+        sb.AppendLine("        if (collection is System.Collections.IDictionary dict && !string.IsNullOrEmpty(request.CollectionKey))");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var keyType = propertyInfo.PropertyType.GetGenericArguments()[0];");
+        sb.AppendLine("            var valueType = propertyInfo.PropertyType.GetGenericArguments()[1];");
+        sb.AppendLine("            ");
+        sb.AppendLine("            var convertedKey = ConvertStringToTargetType(request.CollectionKey, keyType);");
+        sb.AppendLine("            if (!convertedKey.Success)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                response.Success = false;");
+        sb.AppendLine("                response.ErrorMessage = $\"Failed to convert key '{request.CollectionKey}': {convertedKey.ErrorMessage}\";");
+        sb.AppendLine("                return response;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            var convertedValue = ConvertAnyToTargetType(request.NewValue, valueType);");
+        sb.AppendLine("            if (!convertedValue.Success)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                response.Success = false;");
+        sb.AppendLine("                response.ErrorMessage = $\"Failed to convert value: {convertedValue.ErrorMessage}\";");
+        sb.AppendLine("                return response;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Store old value if key exists");
+        sb.AppendLine("            if (convertedKey.Value != null && dict.Contains(convertedKey.Value)) response.OldValue = PackToAny(dict[convertedKey.Value]);");
+        sb.AppendLine("            ");
+        sb.AppendLine("            dict[convertedKey.Value!] = convertedValue.Value;");
+        sb.AppendLine("            response.Success = true;");
+        sb.AppendLine("            Debug.WriteLine($\"[GrpcService:" + vmName + "] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("        // Handle list/array updates");
+        sb.AppendLine("        else if (collection is System.Collections.IList list && request.ArrayIndex >= 0)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (request.ArrayIndex >= list.Count)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                response.Success = false;");
+        sb.AppendLine("                response.ErrorMessage = $\"Array index {request.ArrayIndex} is out of bounds (count: {list.Count})\";");
+        sb.AppendLine("                return response;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            var elementType = propertyInfo.PropertyType.GetGenericArguments()[0];");
+        sb.AppendLine("            var convertedValue = ConvertAnyToTargetType(request.NewValue, elementType);");
+        sb.AppendLine("            ");
+        sb.AppendLine("            if (!convertedValue.Success)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                response.Success = false;");
+        sb.AppendLine("                response.ErrorMessage = convertedValue.ErrorMessage;");
+        sb.AppendLine("                return response;");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Store old value");
+        sb.AppendLine("            response.OldValue = PackToAny(list[request.ArrayIndex]);");
+        sb.AppendLine("            ");
+        sb.AppendLine("            list[request.ArrayIndex] = convertedValue.Value;");
+        sb.AppendLine("            response.Success = true;");
+        sb.AppendLine("            Debug.WriteLine($\"[GrpcService:" + vmName + "] Updated array index {request.ArrayIndex} to '{convertedValue.Value}'\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("        else");
+        sb.AppendLine("        {");
+        sb.AppendLine("            response.Success = false;");
+        sb.AppendLine("            response.ErrorMessage = \"Unsupported collection operation or missing index/key\";");
+        sb.AppendLine("        }");
+        sb.AppendLine("        ");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    // Helper methods for other operations");
+        sb.AppendLine($"    private {protoNs}.UpdatePropertyValueResponse HandleAddOperation({protoNs}.UpdatePropertyValueRequest request, string propertyPath)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        response.Success = false;");
+        sb.AppendLine("        response.ErrorMessage = \"Add operation not yet implemented\";");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    private {protoNs}.UpdatePropertyValueResponse HandleRemoveOperation({protoNs}.UpdatePropertyValueRequest request, string propertyPath)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        response.Success = false;");
+        sb.AppendLine("        response.ErrorMessage = \"Remove operation not yet implemented\";");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    private {protoNs}.UpdatePropertyValueResponse HandleClearOperation({protoNs}.UpdatePropertyValueRequest request, string propertyPath)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        response.Success = false;");
+        sb.AppendLine("        response.ErrorMessage = \"Clear operation not yet implemented\";");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine($"    private {protoNs}.UpdatePropertyValueResponse HandleInsertOperation({protoNs}.UpdatePropertyValueRequest request, string propertyPath)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.UpdatePropertyValueResponse();");
+        sb.AppendLine("        response.Success = false;");
+        sb.AppendLine("        response.ErrorMessage = \"Insert operation not yet implemented\";");
+        sb.AppendLine("        return response;");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private (bool Success, object? Value, string ErrorMessage) ConvertAnyToTargetType(Google.Protobuf.WellKnownTypes.Any anyValue, System.Type targetType)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        try");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (anyValue.Is(StringValue.Descriptor) && targetType == typeof(string))");
+        sb.AppendLine("                return (true, anyValue.Unpack<StringValue>().Value, \"\");");
+        sb.AppendLine("            if (anyValue.Is(Int32Value.Descriptor) && targetType == typeof(int))");
+        sb.AppendLine("                return (true, anyValue.Unpack<Int32Value>().Value, \"\");");
+        sb.AppendLine("            if (anyValue.Is(Int64Value.Descriptor) && targetType == typeof(long))");
+        sb.AppendLine("                return (true, anyValue.Unpack<Int64Value>().Value, \"\");");
+        sb.AppendLine("            if (anyValue.Is(UInt32Value.Descriptor) && targetType == typeof(uint))");
+        sb.AppendLine("                return (true, anyValue.Unpack<UInt32Value>().Value, \"\");");
+        sb.AppendLine("            if (anyValue.Is(FloatValue.Descriptor) && targetType == typeof(float))");
+        sb.AppendLine("                return (true, anyValue.Unpack<FloatValue>().Value, \"\");");
+        sb.AppendLine("            if (anyValue.Is(DoubleValue.Descriptor) && targetType == typeof(double))");
+        sb.AppendLine("                return (true, anyValue.Unpack<DoubleValue>().Value, \"\");");
+        sb.AppendLine("            if (anyValue.Is(BoolValue.Descriptor) && targetType == typeof(bool))");
+        sb.AppendLine("                return (true, anyValue.Unpack<BoolValue>().Value, \"\");");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Handle enum types");
+        sb.AppendLine("            if (targetType.IsEnum && anyValue.Is(Int32Value.Descriptor))");
+        sb.AppendLine("            {");
+        sb.AppendLine("                var enumValue = anyValue.Unpack<Int32Value>().Value;");
+        sb.AppendLine("                if (System.Enum.IsDefined(targetType, enumValue))");
+        sb.AppendLine("                    return (true, System.Enum.ToObject(targetType, enumValue), \"\");");
+        sb.AppendLine("                else");
+        sb.AppendLine("                    return (false, null, $\"Invalid enum value {enumValue} for type {targetType.Name}\");");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            return (false, null, $\"Cannot convert {anyValue.TypeUrl} to {targetType.Name}\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return (false, null, $\"Conversion error: {ex.Message}\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private (bool Success, object? Value, string ErrorMessage) ConvertStringToTargetType(string stringValue, System.Type targetType)");
+        sb.AppendLine("    {");
+        sb.AppendLine("        try");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (targetType == typeof(string))");
+        sb.AppendLine("                return (true, stringValue, \"\");");
+        sb.AppendLine("            if (targetType == typeof(int) && int.TryParse(stringValue, out var intVal))");
+        sb.AppendLine("                return (true, intVal, \"\");");
+        sb.AppendLine("            if (targetType == typeof(long) && long.TryParse(stringValue, out var longVal))");
+        sb.AppendLine("                return (true, longVal, \"\");");
+        sb.AppendLine("            if (targetType == typeof(bool) && bool.TryParse(stringValue, out var boolVal))");
+        sb.AppendLine("                return (true, boolVal, \"\");");
+        sb.AppendLine("            if (targetType == typeof(double) && double.TryParse(stringValue, out var doubleVal))");
+        sb.AppendLine("                return (true, doubleVal, \"\");");
+        sb.AppendLine("            if (targetType == typeof(float) && float.TryParse(stringValue, out var floatVal))");
+        sb.AppendLine("                return (true, floatVal, \"\");");
+        sb.AppendLine("            ");
+        sb.AppendLine("            // Handle enum types");
+        sb.AppendLine("            if (targetType.IsEnum)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                if (System.Enum.TryParse(targetType, stringValue, true, out var enumVal))");
+        sb.AppendLine("                    return (true, enumVal, \"\");");
+        sb.AppendLine("                else");
+        sb.AppendLine("                    return (false, null, $\"'{stringValue}' is not a valid value for enum {targetType.Name}\");");
+        sb.AppendLine("            }");
+        sb.AppendLine("            ");
+        sb.AppendLine("            return (false, null, $\"Cannot convert '{stringValue}' to {targetType.Name}\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("        catch (Exception ex)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            return (false, null, $\"Conversion error: {ex.Message}\");");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
         sb.AppendLine("    private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)");
         sb.AppendLine("    {");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] PropertyChanged event fired for property: \" + (e.PropertyName ?? \"<null>\"));");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] Current subscriber count: \" + _subscriberChannels.Count);");
         sb.AppendLine("        if (string.IsNullOrEmpty(e.PropertyName)) return;");
         sb.AppendLine("        object? newValue = null;");
         sb.AppendLine("        try { newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }");
         sb.AppendLine("        catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error getting property value for \" + e.PropertyName + \": \" + ex.Message); return; }");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] Property \" + e.PropertyName + \" changed to: \" + (newValue?.ToString() ?? \"<null>\"));");
         sb.AppendLine();
-        sb.AppendLine($"        var notification = new {protoNs}.PropertyChangeNotification {{ PropertyName = e.PropertyName }};");
+        sb.AppendLine($"        var notification = new {protoNs}.PropertyChangeNotification ");
+        sb.AppendLine("        { ");
+        sb.AppendLine("            PropertyName = e.PropertyName,");
+        sb.AppendLine("            PropertyPath = e.PropertyName, // For simple properties, path equals name");
+        sb.AppendLine("            ChangeType = \"property\" // Can be enhanced to detect collection changes");
+        sb.AppendLine("        };");
         sb.AppendLine("        notification.NewValue = PackToAny(newValue);");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] Created notification with TypeUrl: \" + (notification.NewValue?.TypeUrl ?? \"<null>\"));");
         sb.AppendLine();
+        sb.AppendLine("        int successfulWrites = 0;");
         sb.AppendLine("        foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))");
         sb.AppendLine("        {");
-        sb.AppendLine("            try { await channelWriter.WriteAsync(notification); }");
+        sb.AppendLine("            try { ");
+        sb.AppendLine("                await channelWriter.WriteAsync(notification); ");
+        sb.AppendLine("                successfulWrites++;");
+        sb.AppendLine("                Debug.WriteLine(\"[GrpcService:" + vmName + "] Successfully wrote notification to subscriber channel\");");
+        sb.AppendLine("            }");
         sb.AppendLine("            catch (ChannelClosedException) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Channel closed for a subscriber, cannot write notification for '\" + e.PropertyName + \"'. Subscriber likely disconnected.\"); }");
         sb.AppendLine("            catch (Exception ex) { Debug.WriteLine(\"[GrpcService:" + vmName + "] Error writing to subscriber channel for '\" + e.PropertyName + \"': \" + ex.Message); }");
         sb.AppendLine("        }");
+        sb.AppendLine("        Debug.WriteLine(\"[GrpcService:" + vmName + "] Property change notification sent to \" + successfulWrites + \" subscribers\");");
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine("    private static Any PackToAny(object? value)");

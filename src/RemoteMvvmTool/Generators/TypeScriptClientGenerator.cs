@@ -194,11 +194,11 @@ public static class TypeScriptClientGenerator
         }).Distinct());
         if (!string.IsNullOrWhiteSpace(requestTypes))
         {
-            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, {requestTypes} }} from './generated/{serviceName}_pb.js';");
+            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, UpdatePropertyValueResponse, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, {requestTypes} }} from './generated/{serviceName}_pb.js';");
         }
         else
         {
-            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus }} from './generated/{serviceName}_pb.js';");
+            sb.AppendLine($"import {{ {vmName}State, UpdatePropertyValueRequest, UpdatePropertyValueResponse, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus }} from './generated/{serviceName}_pb.js';");
         }
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
@@ -328,46 +328,34 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        this.notifyChange();");
         sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine("    async updatePropertyValue(propertyName: string, value: any): Promise<void> {");
+        sb.AppendLine("    async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {");
         sb.AppendLine("        const req = new UpdatePropertyValueRequest();");
         sb.AppendLine("        req.setPropertyName(propertyName);");
         sb.AppendLine("        req.setNewValue(this.createAnyValue(value));");
-        sb.AppendLine("        await this.grpcClient.updatePropertyValue(req);");
+        sb.AppendLine("        return await this.grpcClient.updatePropertyValue(req);");
         sb.AppendLine("    }");
         sb.AppendLine();
-        sb.AppendLine("    private createAnyValue(value: any): Any {");
-        sb.AppendLine("        const anyVal = new Any();");
-        sb.AppendLine("        if (typeof value === 'string') {");
-        sb.AppendLine("            const wrapper = new StringValue();");
-        sb.AppendLine("            wrapper.setValue(value);");
-        sb.AppendLine("            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.StringValue');");
-        sb.AppendLine("        } else if (typeof value === 'number') {");
-        sb.AppendLine("            if (Number.isInteger(value)) {");
-        sb.AppendLine("                if (value > 2147483647 || value < -2147483648) {");
-        sb.AppendLine("                    const wrapper = new Int64Value();");
-        sb.AppendLine("                    wrapper.setValue(value);");
-        sb.AppendLine("                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int64Value');");
-        sb.AppendLine("                } else {");
-        sb.AppendLine("                    const wrapper = new Int32Value();");
-        sb.AppendLine("                    wrapper.setValue(value);");
-        sb.AppendLine("                    anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');");
-        sb.AppendLine("                }");
-        sb.AppendLine("            } else {");
-        sb.AppendLine("                const wrapper = new DoubleValue();");
-        sb.AppendLine("                wrapper.setValue(value);");
-        sb.AppendLine("                anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.DoubleValue');");
-        sb.AppendLine("            }");
-        sb.AppendLine("        } else if (typeof value === 'boolean') {");
-        sb.AppendLine("            const wrapper = new BoolValue();");
-        sb.AppendLine("            wrapper.setValue(value);");
-        sb.AppendLine("            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.BoolValue');");
-        sb.AppendLine("        } else if (value instanceof Date) {");
-        sb.AppendLine("            const wrapper = Timestamp.fromDate(value);");
-        sb.AppendLine("            anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Timestamp');");
-        sb.AppendLine("        } else {");
-        sb.AppendLine("            throw new Error('Unsupported value type');");
+        sb.AppendLine("    // Enhanced updatePropertyValue with support for complex scenarios");
+        sb.AppendLine("    async updatePropertyValueAdvanced(");
+        sb.AppendLine("        propertyName: string, ");
+        sb.AppendLine("        value: any, ");
+        sb.AppendLine("        options?: {");
+        sb.AppendLine("            propertyPath?: string;");
+        sb.AppendLine("            collectionKey?: string;");
+        sb.AppendLine("            arrayIndex?: number;");
+        sb.AppendLine("            operationType?: 'set' | 'add' | 'remove' | 'clear' | 'insert';");
         sb.AppendLine("        }");
-        sb.AppendLine("        return anyVal;");
+        sb.AppendLine("    ): Promise<UpdatePropertyValueResponse> {");
+        sb.AppendLine("        const req = new UpdatePropertyValueRequest();");
+        sb.AppendLine("        req.setPropertyName(propertyName);");
+        sb.AppendLine("        req.setNewValue(this.createAnyValue(value));");
+        sb.AppendLine("        ");
+        sb.AppendLine("        if (options?.propertyPath) req.setPropertyPath(options.propertyPath);");
+        sb.AppendLine("        if (options?.collectionKey) req.setCollectionKey(options.collectionKey);");
+        sb.AppendLine("        if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);");
+        sb.AppendLine("        if (options?.operationType) req.setOperationType(options.operationType);");
+        sb.AppendLine("        ");
+        sb.AppendLine("        return await this.grpcClient.updatePropertyValue(req);");
         sb.AppendLine("    }");
         sb.AppendLine();
         foreach (var cmd in cmds)

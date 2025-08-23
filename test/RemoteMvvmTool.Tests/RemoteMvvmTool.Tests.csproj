@@ -54,7 +54,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="TestData\" />
+    <None Include="TestData\GrpcWebEndToEnd\test-add-operation.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-basic-connectivity.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-deadlock-fix.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-property-change-no-streaming.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-manual.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-pure.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-simple.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-update-property.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-update-simple.js" />
   </ItemGroup>
 
 </Project>
