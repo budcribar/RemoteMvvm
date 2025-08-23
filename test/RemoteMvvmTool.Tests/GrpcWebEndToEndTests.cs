@@ -419,7 +419,7 @@ public class GrpcWebEndToEndTests
                         {
                             { "speed", new List<double> { 10.5, 15.2, 8.7 } },
                             { "accuracy", new List<double> { 95.5, 87.3 } },
-                            { "efficiency", new List<double> { 100.0 } } // Single value list
+                            { "efficiency", new List<double> { 99.9 } } // Single value list - changed from 100.0 to avoid duplicate
                         };
                         
                         CategoryCount = ScoresByCategory.Count;
@@ -438,8 +438,8 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected: categoryCount(3), maxScore(100), all list values (10.5,15.2,8.7,95.5,87.3,100.0) sorted
-        var expectedDataValues = "3,8.7,10.5,15.2,87.3,95.5,100,100";
+        // Expected: categoryCount(3), maxScore(100), all list values (10.5,15.2,8.7,95.5,87.3,99.9) sorted
+        var expectedDataValues = "3,8.7,10.5,15.2,87.3,95.5,99.9,100";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }

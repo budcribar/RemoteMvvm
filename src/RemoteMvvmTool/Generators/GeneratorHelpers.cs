@@ -302,6 +302,14 @@ public static class GeneratorHelpers
             return false;
         if (TryGetDictionaryTypeArgs(valueType, out _, out _))
             return false;
+        // Protobuf maps cannot have repeated/collection values like map<string, repeated double>
+        // Check if valueType is a collection/enumerable type
+        if (TryGetEnumerableElementType(valueType, out _))
+            return false;
+        if (TryGetMemoryElementType(valueType, out _))
+            return false;
+        if (valueType is IArrayTypeSymbol)
+            return false;
         return true;
     }
 

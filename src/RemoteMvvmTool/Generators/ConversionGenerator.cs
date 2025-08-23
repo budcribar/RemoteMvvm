@@ -82,6 +82,38 @@ public static class ConversionGenerator
         if (processed.Contains(fullName)) return;
         if (GeneratorHelpers.IsWellKnownType(named)) return;
         processed.Add(fullName);
+        
+        // Collect all nested types that need to be generated BEFORE generating this type's methods
+        var nestedTypes = new List<ITypeSymbol>();
+        foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
+        {
+            if (prop.IsStatic) continue;
+            if (prop.DeclaredAccessibility != Accessibility.Public || prop.GetMethod == null) continue;
+            var propType = prop.Type;
+            
+            if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
+            {
+                if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
+                    nestedTypes.Add(valT);
+            }
+            else if (GeneratorHelpers.TryGetEnumerableElementType(propType, out var elem))
+            {
+                if (elem != null && !GeneratorHelpers.IsWellKnownType(elem))
+                    nestedTypes.Add(elem);
+            }
+            else if (!GeneratorHelpers.IsWellKnownType(propType))
+            {
+                nestedTypes.Add(propType);
+            }
+        }
+        
+        // Generate nested types first
+        foreach (var nestedType in nestedTypes)
+        {
+            GenerateForType(nestedType, sb, processed, protoNs, compilation, ref needsTimestamp);
+        }
+        
+        // Now generate methods for this type
         string stateName = named.Name + "State";
         sb.AppendLine($"    public static {protoNs}.{stateName} ToProto({fullName} model)");
         sb.AppendLine("    {");
@@ -104,8 +136,6 @@ public static class ConversionGenerator
             }
             else if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
             {
-                if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
-                    GenerateForType(valT, sb, processed, protoNs, compilation, ref needsTimestamp);
                 string keySel = IsEnumType(keyT!, compilation) ? "kv.Key" : "kv.Key";
                 if (IsEnumType(keyT!, compilation)) keySel = $"(int){keySel}";
                 string valSel;
@@ -128,18 +158,14 @@ public static class ConversionGenerator
                         sel = elemNullable ? ".Select(e => Timestamp.FromDateTime(e.Value.ToUniversalTime()))" : ".Select(e => Timestamp.FromDateTime(e.ToUniversalTime()))";
                     }
                     else if (!GeneratorHelpers.IsWellKnownType(elem))
-                    {
-                        GenerateForType(elem, sb, processed, protoNs, compilation, ref needsTimestamp);
                         sel = ".Select(ToProto)";
-                    }
                 }
-                sb.AppendLine($"        if (model.{propName} != null) state.{propName}.Add(model.{propName}{sel});");
+                sb.AppendLine($"        if (model.{propName} != null) state.{propName}.AddRange(model.{propName}{sel});");
             }
             else if (GeneratorHelpers.IsWellKnownType(propType))
                 sb.AppendLine($"        state.{propName} = model.{propName};");
             else
             {
-                GenerateForType(propType, sb, processed, protoNs, compilation, ref needsTimestamp);
                 sb.AppendLine($"        state.{propName} = ToProto(model.{propName});");
             }
         }
@@ -168,8 +194,6 @@ public static class ConversionGenerator
             }
             else if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
             {
-                if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
-                    GenerateForType(valT, sb, processed, protoNs, compilation, ref needsTimestamp);
                 string keySel = IsEnumType(keyT!, compilation) ? $"({keyT!.ToDisplayString()})kv.Key" : "kv.Key";
                 string valSel;
                 if (IsEnumType(valT!, compilation)) valSel = $"({valT!.ToDisplayString()})kv.Value";
@@ -184,7 +208,7 @@ public static class ConversionGenerator
                 var arrElem = arrType.ElementType;
                 if (IsEnumType(arrElem, compilation)) sel = ".Select(e => (" + arrElem.ToDisplayString() + ")e)";
                 else if (IsDateTime(arrElem, out var elemNullable)) { needsTimestamp = true; sel = elemNullable ? ".Select(e => e?.ToDateTime())" : ".Select(e => e.ToDateTime())"; }
-                else if (!GeneratorHelpers.IsWellKnownType(arrElem)) { GenerateForType(arrElem, sb, processed, protoNs, compilation, ref needsTimestamp); sel = ".Select(FromProto)"; }
+                else if (!GeneratorHelpers.IsWellKnownType(arrElem)) sel = ".Select(FromProto)";
                 sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToArray();");
             }
             else if (GeneratorHelpers.TryGetEnumerableElementType(propType, out var elem))
@@ -199,11 +223,7 @@ public static class ConversionGenerator
                         needsTimestamp = true;
                         sel = elemNullable ? ".Select(e => e?.ToDateTime())" : ".Select(e => e.ToDateTime())";
                     }
-                    else if (!GeneratorHelpers.IsWellKnownType(elem))
-                    {
-                        GenerateForType(elem, sb, processed, protoNs, compilation, ref needsTimestamp);
-                        sel = ".Select(FromProto)";
-                    }
+                    else if (!GeneratorHelpers.IsWellKnownType(elem)) sel = ".Select(FromProto)";
                 }
                 sb.AppendLine($"        model.{propName} = state.{propName}{sel}.ToList();");
             }
@@ -211,7 +231,6 @@ public static class ConversionGenerator
                 sb.AppendLine($"        model.{propName} = state.{propName};");
             else
             {
-                GenerateForType(propType, sb, processed, protoNs, compilation, ref needsTimestamp);
                 sb.AppendLine($"        model.{propName} = FromProto(state.{propName});");
             }
         }

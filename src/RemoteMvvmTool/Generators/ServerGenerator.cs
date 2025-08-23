@@ -136,8 +136,14 @@ public static class ServerGenerator
                 string entryName = GeneratorHelpers.GetDictionaryEntryName(kType, vType);
                 string keySel = KeyToProto($"{kvVar}.Key", kType);
                 string valSel = ValueToProto($"{kvVar}.Value", vType, $"{kvVar}1");
+                
                 if (GeneratorHelpers.TryGetDictionaryTypeArgs(vType, out _, out _))
                     return $"{dictExpr}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {{ {valSel} }} }})";
+                else if (GeneratorHelpers.TryGetEnumerableElementType(vType, out _) || vType is IArrayTypeSymbol || GeneratorHelpers.TryGetMemoryElementType(vType, out _))
+                {
+                    // Value type is a collection - need to populate the repeated field
+                    return $"{dictExpr}.Select({kvVar} => {{ var entry = new {entryName} {{ Key = {keySel} }}; if ({kvVar}.Value != null) entry.Value.AddRange({valSel}); return entry; }})";
+                }
                 else
                     return $"{dictExpr}.Select({kvVar} => new {entryName} {{ Key = {keySel}, Value = {valSel} }})";
             }
@@ -260,6 +266,9 @@ public static class ServerGenerator
                     var typeDisplayString = p.FullTypeSymbol.ToDisplayString();
                     switch (typeDisplayString)
                     {
+                        case "System.DateTime":
+                            sb.AppendLine($"            state.{p.Name} = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(propValue.ToUniversalTime());");
+                            break;
                         case "System.Half":
                             sb.AppendLine($"            state.{p.Name} = (float)propValue;");
                             break;
