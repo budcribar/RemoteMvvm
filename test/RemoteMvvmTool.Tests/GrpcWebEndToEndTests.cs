@@ -116,6 +116,37 @@ public class GrpcWebEndToEndTests
     }
 
     [Fact]
+    public async Task SubscribeToPropertyChanges_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System.Threading.Tasks;
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject
+                {
+                    public TestViewModel()
+                    {
+                        _ = UpdateAsync();
+                    }
+
+                    private async Task UpdateAsync()
+                    {
+                        await Task.Delay(200);
+                        Status = "Updated";
+                    }
+
+                    [ObservableProperty]
+                    private string _status = "Initial";
+                }
+            }
+            """;
+
+        await TestEndToEndScenario(modelCode, "", "test-subscribe.js", "Status=Updated");
+    }
+
+    [Fact]
     public async Task TwoWayPrimitiveTypes_EndToEnd_Test()
     {
         var modelCode = """
@@ -329,7 +360,7 @@ public class GrpcWebEndToEndTests
     /// </summary>
     /// <param name="modelCode">Complete C# code for the ViewModel and supporting types using raw string literals</param>
     /// <param name="expectedDataValues">Comma-separated string of expected numeric values from the transferred data, sorted</param>
-    public static async Task TestEndToEndScenario(string modelCode, string expectedDataValues)
+    public static async Task TestEndToEndScenario(string modelCode, string expectedDataValues, string nodeTestFile = "test-protoc.js", string? expectedPropertyChange = null)
     {
         // Kill any existing TestProject processes from previous test runs
         KillExistingTestProcesses();
@@ -353,7 +384,7 @@ public class GrpcWebEndToEndTests
             BuildProject(paths.TestProjectDir);
             
             // Run the end-to-end test with data validation
-            await RunEndToEndTest(paths.TestProjectDir, expectedDataValues);
+            await RunEndToEndTest(paths.TestProjectDir, expectedDataValues, nodeTestFile, expectedPropertyChange);
             
             testPassed = true;
             Console.WriteLine("🎉 End-to-end test passed!");
@@ -730,10 +761,10 @@ public class GrpcWebEndToEndTests
         }
     }
 
-    private static async Task RunEndToEndTest(string testProjectDir, string expectedDataValues)
+    private static async Task RunEndToEndTest(string testProjectDir, string expectedDataValues, string jsTestFileName, string? expectedPropertyChange)
     {
         // Check if we have Node.js test files
-        var jsTestFile = Path.Combine(testProjectDir, "test-protoc.js");
+        var jsTestFile = Path.Combine(testProjectDir, jsTestFileName);
         var packageJsonFile = Path.Combine(testProjectDir, "package.json");
         
         if (!File.Exists(jsTestFile))
@@ -766,7 +797,7 @@ public class GrpcWebEndToEndTests
 
             // Run tests - both are required to pass
             await TestServerEndpoint(port);
-            await TestNodeJsClient(testProjectDir, port, expectedDataValues);
+            await TestNodeJsClient(testProjectDir, port, expectedDataValues, jsTestFileName, expectedPropertyChange);
         }
         finally
         {
@@ -775,21 +806,21 @@ public class GrpcWebEndToEndTests
         }
     }
 
-    private static async Task TestNodeJsClient(string testProjectDir, int port, string expectedDataValues)
+    private static async Task TestNodeJsClient(string testProjectDir, int port, string expectedDataValues, string jsTestFileName, string? expectedPropertyChange)
     {
         Console.WriteLine("Testing Node.js client with data validation...");
-        
+
         // Check if required JavaScript protobuf files exist
         var requiredFiles = new[]
         {
             "testviewmodelservice_pb.js",
             "testviewmodelservice_grpc_web_pb.js",
-            "TestViewModelService_pb.js", 
+            "TestViewModelService_pb.js",
             "TestViewModelService_grpc_web_pb.js"
         };
-        
+
         var existingFiles = requiredFiles.Where(f => File.Exists(Path.Combine(testProjectDir, f))).ToArray();
-        
+
         if (existingFiles.Length < 2)
         {
             var foundFilesList = Directory.GetFiles(testProjectDir, "*.js").Select(Path.GetFileName).ToArray();
@@ -798,47 +829,64 @@ public class GrpcWebEndToEndTests
                                $"Found .js files: {string.Join(", ", foundFilesList)}. " +
                                $"Ensure JavaScriptprotobuf generation completed successfully.");
         }
-        
+
         Console.WriteLine($"✅ Found required files: {string.Join(", ", existingFiles)}");
-        
+
         // Try different node executable locations
         var nodePaths = new[]
         {
             @"C:\Program Files\nodejs\node.exe",
-            "node.exe", 
+            "node.exe",
             "node"
         };
-        
+
         bool testSuccess = false;
         string? actualOutput = null;
         string? lastError = null;
-        
+
         foreach (var nodePath in nodePaths)
         {
             try
             {
                 Console.WriteLine($"Running Node.js test with: {nodePath}");
-                RunCmd(nodePath, $"test-protoc.js {port}", testProjectDir, out var stdout, out var stderr);
-                
+                RunCmd(nodePath, $"{jsTestFileName} {port}", testProjectDir, out var stdout, out var stderr);
+
                 actualOutput = stdout;
-                
-                // Check if the output contains the "Test passed" indicator
+
                 if (stdout.Contains("Test passed") || stdout.Contains("✅ Test passed"))
                 {
-                    // Extract and validate the transferred data
-                    var actualDataValues = ExtractNumericDataFromOutput(stdout);
-                    
-                    if (ValidateDataValues(actualDataValues, expectedDataValues))
+                    bool dataValid = true;
+                    if (!string.IsNullOrWhiteSpace(expectedDataValues))
+                    {
+                        var actualDataValues = ExtractNumericDataFromOutput(stdout);
+                        dataValid = ValidateDataValues(actualDataValues, expectedDataValues);
+                        if (!dataValid)
+                        {
+                            lastError = $"Node.js test passed but data validation failed. Expected: [{expectedDataValues}], Actual:[{actualDataValues}]";
+                            Console.WriteLine($"⚠️ {lastError}");
+                        }
+                        else
+                        {
+                            Console.WriteLine("✅ Node.js client test passed - data validation successful");
+                            Console.WriteLine($"Expected data: [{expectedDataValues}], Actual data: [{actualDataValues}]");
+                        }
+                    }
+
+                    bool propertyValid = true;
+                    if (!string.IsNullOrEmpty(expectedPropertyChange))
+                    {
+                        propertyValid = ValidatePropertyChange(stdout, expectedPropertyChange);
+                        if (!propertyValid)
+                        {
+                            lastError = $"Property change validation failed. Expected: [{expectedPropertyChange}]";
+                            Console.WriteLine($"⚠️ {lastError}");
+                        }
+                    }
+
+                    if (dataValid && propertyValid)
                     {
                         testSuccess = true;
-                        Console.WriteLine("✅ Node.js client test passed - data validation successful");
-                        Console.WriteLine($"Expected data: [{expectedDataValues}], Actual data: [{actualDataValues}]");
                         break;
-                    }
-                    else
-                    {
-                        lastError = $"Node.js test passed but data validation failed. Expected: [{expectedDataValues}], Actual: [{actualDataValues}]";
-                        Console.WriteLine($"⚠️ {lastError}");
                     }
                 }
                 else
@@ -853,7 +901,7 @@ public class GrpcWebEndToEndTests
                 Console.WriteLine(lastError);
             }
         }
-        
+
         if (!testSuccess)
         {
             var outputLength = actualOutput?.Length ?? 0;
@@ -863,6 +911,7 @@ public class GrpcWebEndToEndTests
                                $"Actual output: [{truncatedOutput}...]");
         }
     }
+
 
     /// <summary>
     /// Extracts numeric values from the Node.js output by looking for the FLAT_DATA JSON line.
@@ -1018,6 +1067,16 @@ public class GrpcWebEndToEndTests
             .Select(s => double.Parse(s.Trim())).OrderBy(x => x).ToArray();
         
         return actualNumbers.SequenceEqual(expectedNumbers);
+    }
+
+    private static bool ValidatePropertyChange(string output, string expected)
+    {
+        var line = output.Split('\n').Select(l => l.Trim()).FirstOrDefault(l => l.StartsWith("PROPERTY_CHANGE:"));
+        if (line == null)
+            return false;
+
+        var actual = line.Substring("PROPERTY_CHANGE:".Length);
+        return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
     }
 
     static async Task InstallNpmPackages(string projectDir)
