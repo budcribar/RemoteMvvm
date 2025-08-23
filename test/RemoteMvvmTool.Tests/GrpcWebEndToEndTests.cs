@@ -322,6 +322,509 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
+    [Fact]
+    public async Task ListOfDictionaries_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using System.Collections.Generic;
+            using System.Collections.ObjectModel;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        // Create a list of dictionaries - this should stress test the serialization
+                        MetricsByRegion = new ObservableCollection<Dictionary<string, int>>
+                        {
+                            new Dictionary<string, int> { { "cpu", 75 }, { "memory", 60 }, { "disk", 85 } },
+                            new Dictionary<string, int> { { "cpu", 42 }, { "memory", 78 }, { "disk", 92 } },
+                            new Dictionary<string, int> { { "cpu", 88 }, { "memory", 55 } } // Intentionally missing disk
+                        };
+                        
+                        TotalRegions = MetricsByRegion.Count;
+                        IsAnalysisComplete = true;
+                    }
+
+                    [ObservableProperty]
+                    private ObservableCollection<Dictionary<string, int>> _metricsByRegion = new();
+                    
+                    [ObservableProperty]
+                    private int _totalRegions = 0;
+
+                    [ObservableProperty]
+                    private bool _isAnalysisComplete = false;
+                }
+            }
+            """;
+
+        // Expected: totalRegions(3), isAnalysisComplete(1), all dict values (75,60,85,42,78,92,88,55) sorted
+        var expectedDataValues = "1,3,42,55,60,75,78,85,88,92";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task DictionaryOfLists_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using System.Collections.Generic;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        // Dictionary where values are lists - another complex nesting scenario
+                        ScoresByCategory = new Dictionary<string, List<double>>
+                        {
+                            { "speed", new List<double> { 10.5, 15.2, 8.7 } },
+                            { "accuracy", new List<double> { 95.5, 87.3 } },
+                            { "efficiency", new List<double> { 100.0 } } // Single value list
+                        };
+                        
+                        CategoryCount = ScoresByCategory.Count;
+                        MaxScore = 100.0;
+                    }
+
+                    [ObservableProperty]
+                    private Dictionary<string, List<double>> _scoresByCategory = new();
+                    
+                    [ObservableProperty]
+                    private int _categoryCount = 0;
+
+                    [ObservableProperty]
+                    private double _maxScore = 0.0;
+                }
+            }
+            """;
+
+        // Expected: categoryCount(3), maxScore(100), all list values (10.5,15.2,8.7,95.5,87.3,100.0) sorted
+        var expectedDataValues = "3,8.7,10.5,15.2,87.3,95.5,100,100";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task EdgeCasePrimitives_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject
+                {
+                    public TestViewModel()
+                    {
+                        // Test edge case primitives and extreme values
+                        PreciseValue = 99999.99999m; // decimal
+                        TinyValue = (nuint)42; // nuint
+                        BigValue = ulong.MaxValue; // Massive number
+                        
+                        BirthDate = new DateOnly(1990, 5, 15);
+                        StartTime = new TimeOnly(14, 30, 45);
+                        
+                        NegativeShort = short.MinValue;
+                        PositiveByte = byte.MaxValue;
+                        
+                        UnicodeChar = '🚀'; // Unicode emoji character
+                        EmptyGuid = Guid.Empty;
+                    }
+
+                    [ObservableProperty]
+                    private decimal _preciseValue;
+
+                    [ObservableProperty]
+                    private nuint _tinyValue;
+
+                    [ObservableProperty]
+                    private ulong _bigValue;
+
+                    [ObservableProperty]
+                    private DateOnly _birthDate;
+
+                    [ObservableProperty]
+                    private TimeOnly _startTime;
+
+                    [ObservableProperty]
+                    private short _negativeShort;
+
+                    [ObservableProperty]
+                    private byte _positiveByte;
+
+                    [ObservableProperty]
+                    private char _unicodeChar;
+
+                    [ObservableProperty]
+                    private Guid _emptyGuid = Guid.Empty;
+                }
+            }
+            """;
+
+        // Expected: tinyValue(42), bigValue(18446744073709551615), negativeShort(-32768), positiveByte(255)
+        // Note: DateOnly/TimeOnly/decimal/Guid are server-only and transferred as strings, so we don't expect numeric extraction
+        var expectedDataValues = "-32768,42,255,18446744073709551615";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task NestedCustomObjects_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using System.Collections.Generic;
+            using System.Collections.ObjectModel;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        Company = new CompanyInfo
+                        {
+                            Name = "Test Corp",
+                            EmployeeCount = 1500,
+                            Departments = new List<Department>
+                            {
+                                new Department { Name = "Engineering", HeadCount = 200, Budget = 5000000.50 },
+                                new Department { Name = "Sales", HeadCount = 150, Budget = 3000000.25 },
+                                new Department { Name = "HR", HeadCount = 25, Budget = 750000.75 }
+                            }
+                        };
+                        
+                        IsActiveCompany = true;
+                        LastUpdate = DateTime.Now;
+                    }
+
+                    [ObservableProperty]
+                    private CompanyInfo _company = new();
+                    
+                    [ObservableProperty]
+                    private bool _isActiveCompany = false;
+
+                    [ObservableProperty]
+                    private DateTime _lastUpdate = DateTime.MinValue;
+                }
+
+                public class CompanyInfo
+                {
+                    public string Name { get; set; } = "";
+                    public int EmployeeCount { get; set; }
+                    public List<Department> Departments { get; set; } = new();
+                }
+
+                public class Department
+                {
+                    public string Name { get; set; } = "";
+                    public int HeadCount { get; set; }
+                    public double Budget { get; set; }
+                }
+            }
+            """;
+
+        // Expected: isActiveCompany(1), company.employeeCount(1500), dept headcounts(200,150,25), budgets(5000000.5,3000000.25,750000.75)
+        var expectedDataValues = "1,25,150,200,1500,750000.75,3000000.25,5000000.5";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task EmptyCollectionsAndNullEdgeCases_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using System.Collections.Generic;
+            using System.Collections.ObjectModel;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        // Test empty collections and edge cases
+                        EmptyList = new ObservableCollection<string>(); // Empty collection
+                        EmptyDict = new Dictionary<int, string>(); // Empty dictionary
+                        
+                        // Nullable with actual values
+                        NullableInt = 42;
+                        NullableDouble = null; // This should be interesting
+                        
+                        // Single item collections
+                        SingleItemList = new List<int> { 999 };
+                        SingleItemDict = new Dictionary<string, bool> { { "solo", true } };
+                        
+                        ZeroValues = new List<int> { 0, 0, 0 }; // Multiple zeros
+                        HasData = false; // Should be 0
+                    }
+
+                    [ObservableProperty]
+                    private ObservableCollection<string> _emptyList = new();
+
+                    [ObservableProperty]
+                    private Dictionary<int, string> _emptyDict = new();
+
+                    [ObservableProperty]
+                    private int? _nullableInt;
+
+                    [ObservableProperty]
+                    private double? _nullableDouble;
+
+                    [ObservableProperty]
+                    private List<int> _singleItemList = new();
+
+                    [ObservableProperty]
+                    private Dictionary<string, bool> _singleItemDict = new();
+
+                    [ObservableProperty]
+                    private List<int> _zeroValues = new();
+
+                    [ObservableProperty]
+                    private bool _hasData = true;
+                }
+            }
+            """;
+
+        // Expected: nullableInt(42), singleItemList(999), singleItemDict value(1 for true), zeroValues(0,0,0), hasData(0 for false)
+        var expectedDataValues = "0,0,0,0,1,42,999";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task MemoryAndByteArrayTypes_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using System.Collections.Generic;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        // Test memory-based types and byte arrays
+                        ImageData = new byte[] { 255, 128, 64, 32, 16, 8, 4, 2, 1, 0 };
+                        
+                        // Memory<byte> - should be supported as BytesValue
+                        var bytes = new byte[] { 100, 200, 50, 150 };
+                        BufferData = new Memory<byte>(bytes);
+                        
+                        // Regular collections with bytes for comparison
+                        BytesList = new List<byte> { 10, 20, 30 };
+                        
+                        DataLength = ImageData.Length;
+                        IsCompressed = false;
+                    }
+
+                    [ObservableProperty]
+                    private byte[] _imageData = Array.Empty<byte>();
+
+                    [ObservableProperty]
+                    private Memory<byte> _bufferData;
+
+                    [ObservableProperty]
+                    private List<byte> _bytesList = new();
+
+                    [ObservableProperty]
+                    private int _dataLength = 0;
+
+                    [ObservableProperty]
+                    private bool _isCompressed = true;
+                }
+            }
+            """;
+
+        // Expected: dataLength(10), isCompressed(0 for false), bytesList values(10,20,30)
+        // Note: byte[] and Memory<byte> are handled as BytesValue in proto, so individual bytes might not be extracted as numbers
+        var expectedDataValues = "0,10,10,20,30";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task ExtremelyLargeCollections_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using System.Collections.Generic;
+            using System.Collections.ObjectModel;
+            using System.Linq;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        // Test with larger collections to stress test serialization
+                        LargeNumberList = new ObservableCollection<int>(Enumerable.Range(1, 1000)); // 1000 items
+                        
+                        // Large dictionary
+                        LargeStringDict = new Dictionary<string, int>();
+                        for (int i = 0; i < 100; i++) // 100 key-value pairs
+                        {
+                            LargeStringDict[$"key_{i:D3}"] = i * 10;
+                        }
+                        
+                        CollectionCount = LargeNumberList.Count;
+                        DictionarySize = LargeStringDict.Count;
+                        MaxValue = LargeNumberList.Max();
+                        MinValue = LargeNumberList.Min();
+                    }
+
+                    [ObservableProperty]
+                    private ObservableCollection<int> _largeNumberList = new();
+
+                    [ObservableProperty]
+                    private Dictionary<string, int> _largeStringDict = new();
+
+                    [ObservableProperty]
+                    private int _collectionCount = 0;
+
+                    [ObservableProperty]
+                    private int _dictionarySize = 0;
+
+                    [ObservableProperty]
+                    private int _maxValue = 0;
+
+                    [ObservableProperty]
+                    private int _minValue = 0;
+                }
+            }
+            """;
+
+        // Expected: collectionCount(1000), dictionarySize(100), maxValue(1000), minValue(1)
+        // Note: We only extract the summary values, not all 1000+ individual numbers for performance
+        var expectedDataValues = "1,100,1000,1000";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task MixedComplexTypesWithCommands_EndToEnd_Test()
+    {
+        var modelCode = """
+            using System;
+            using System.Collections.Generic;
+            using System.Collections.ObjectModel;
+            using System.Threading.Tasks;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace Generated.ViewModels
+            {
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
+                    {
+                        // Mix of different complex types that might interact poorly
+                        GameState = GameMode.Active;
+                        Players = new ObservableCollection<Player>
+                        {
+                            new Player { Name = "Alice", Score = 1500.5f, Level = 15, IsActive = true },
+                            new Player { Name = "Bob", Score = 2300.75f, Level = 23, IsActive = false }
+                        };
+                        
+                        Statistics = new Dictionary<StatType, List<double>>
+                        {
+                            { StatType.DamageDealt, new List<double> { 450.5, 623.2, 789.1 } },
+                            { StatType.HealingDone, new List<double> { 123.4, 234.5 } }
+                        };
+                        
+                        SessionId = Guid.NewGuid(); // Random GUID each time
+                        StartTime = DateTime.UtcNow;
+                        TotalSessions = 42;
+                    }
+
+                    [ObservableProperty]
+                    private GameMode _gameState = GameMode.Inactive;
+
+                    [ObservableProperty]
+                    private ObservableCollection<Player> _players = new();
+
+                    [ObservableProperty]
+                    private Dictionary<StatType, List<double>> _statistics = new();
+
+                    [ObservableProperty]
+                    private Guid _sessionId;
+
+                    [ObservableProperty]
+                    private DateTime _startTime;
+
+                    [ObservableProperty]
+                    private int _totalSessions = 0;
+
+                    [RelayCommand]
+                    private void StartGame() => GameState = GameMode.Active;
+
+                    [RelayCommand]
+                    private async Task EndGameAsync()
+                    {
+                        await Task.Delay(100); // Simulate async work
+                        GameState = GameMode.Inactive;
+                    }
+
+                    [RelayCommand]
+                    private void AddPlayer(string? playerName)
+                    {
+                        if (!string.IsNullOrEmpty(playerName))
+                        {
+                            Players.Add(new Player { Name = playerName, Score = 0, Level = 1, IsActive = true });
+                        }
+                    }
+                }
+
+                public enum GameMode 
+                { 
+                    Inactive = 0, 
+                    Active = 1, 
+                    Paused = 2 
+                }
+
+                public enum StatType 
+                { 
+                    DamageDealt = 10, 
+                    HealingDone = 20 
+                }
+
+                public class Player
+                {
+                    public string Name { get; set; } = "";
+                    public float Score { get; set; }
+                    public int Level { get; set; }
+                    public bool IsActive { get; set; }
+                }
+            }
+            """;
+
+        // Expected: gameState(1), totalSessions(42), player levels(15,23), scores(1500.5,2300.75), isActive(1,0), stat values, enum values(10,20)
+        var expectedDataValues = "0,1,1,10,15,20,23,42,123.4,234.5,450.5,623.2,789.1,1500.5,2300.75";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
     /// <summary>
     /// Helper method that runs a complete end-to-end test scenario with a TypeScript/JavaScript client.
     /// This tests the entire pipeline: C# model → protobuf generation → gRPC server → JavaScript client → data validation
@@ -686,13 +1189,14 @@ public class GrpcWebEndToEndTests
         {
             try
             {
+                Console.WriteLine($"Trying npm at: {npmPath}");
                 RunCmd(npmPath, "run protoc", testProjectDir);
                 Console.WriteLine("✅ JavaScript protobuf files generated successfully");
                 return;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to run protoc with {npmPath}: {ex.Message}");
+                Console.WriteLine($"Failed with {npmPath}: {ex.Message}");
             }
         }
         
@@ -941,6 +1445,24 @@ public class GrpcWebEndToEndTests
             .Replace("true", "1")
             .Replace("false", "0");
         
+        // For JSON data, try to parse it properly first
+        if (line.TrimStart().StartsWith("{") && line.TrimEnd().EndsWith("}"))
+        {
+            try
+            {
+                using var document = JsonDocument.Parse(line);
+                foreach (var property in document.RootElement.EnumerateObject())
+                {
+                    ExtractNumberFromJsonValue(property.Value, numbers);
+                }
+                return; // Successfully parsed as JSON, don't do string splitting
+            }
+            catch (JsonException)
+            {
+                // Fall through to string parsing if JSON parsing fails
+            }
+        }
+        
         // Look for numeric values in the line using various delimiters
         var delimiters = new char[] { ' ', ',', ':', '[', ']', '{', '}', '"', '=', '(', ')', ';', '\t' };
         var words = processedLine.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
@@ -948,6 +1470,10 @@ public class GrpcWebEndToEndTests
         foreach (var word in words)
         {
             var cleanWord = word.Trim();
+            
+            // Skip common non-numeric words that might contain digits
+            if (IsNonNumericWord(cleanWord))
+                continue;
             
             // Try parsing as double (handles both integers and decimals)
             if (double.TryParse(cleanWord, out var number))
@@ -957,43 +1483,154 @@ public class GrpcWebEndToEndTests
             else
             {
                 // Try to extract numbers from within strings (like "44" or "2.5" from a longer string)
-                var numericChars = new System.Text.StringBuilder();
-                bool hasDecimalPoint = false;
-                
-                foreach (char c in cleanWord)
+                ExtractNumbersFromString(cleanWord, numbers);
+            }
+        }
+    }
+
+    static bool IsLikelyNumericString(string value)
+    {
+        // Special case: if it's a GUID pattern ending with meaningful numbers, extract the trailing number
+        if (value.Length == 36 && value.Contains('-'))
+        {
+            // Extract the last segment after the final dash
+            var lastDash = value.LastIndexOf('-');
+            if (lastDash >= 0)
+            {
+                var lastSegment = value.Substring(lastDash + 1);
+                // Check if the last segment has meaningful trailing digits (not all zeros)
+                if (lastSegment.Length >= 2 && !lastSegment.All(c => c == '0'))
                 {
-                    if (char.IsDigit(c))
+                    // Try to extract the trailing meaningful number
+                    var trailingDigits = lastSegment.TrimStart('0');
+                    if (!string.IsNullOrEmpty(trailingDigits) && trailingDigits.All(char.IsDigit))
+                        return true; // This should be extracted as a number
+                }
+            }
+            return false; // Regular GUID, don't extract
+        }
+        
+        // Don't extract numbers from other long strings with dashes
+        if (value.Contains('-') && value.Length > 10)
+            return false;
+        
+        if (value.All(c => c == '0')) return false; // All zeros, likely padding
+        if (value.Length > 10) return false; // Too long to be a simple number
+        
+        // Only extract if it's a reasonable numeric string
+        return value.All(c => char.IsDigit(c) || c == '.' || c == '-');
+    }
+
+    private static void ExtractNumberFromJsonValue(JsonElement element, List<double> numbers)
+    {
+        switch (element.ValueKind)
+        {
+            case JsonValueKind.Number:
+                if (element.TryGetDouble(out var numValue))
+                    numbers.Add(numValue);
+                break;
+            case JsonValueKind.String:
+                var strValue = element.GetString();
+                if (!string.IsNullOrEmpty(strValue))
+                {
+                    if (IsLikelyNumericString(strValue))
                     {
-                        numericChars.Append(c);
+                        if (double.TryParse(strValue, out var parsedNum))
+                            numbers.Add(parsedNum);
                     }
-                    else if (c == '.' && !hasDecimalPoint && numericChars.Length > 0)
+                    else if (strValue.Length == 36 && strValue.Contains('-'))
                     {
-                        // Include decimal point for potential double parsing
-                        numericChars.Append(c);
-                        hasDecimalPoint = true;
-                    }
-                    else if (numericChars.Length > 0)
-                    {
-                        // We hit a non-digit/non-decimal after collecting digits, parse what we have
-                        var numberStr = numericChars.ToString();
-                        if (double.TryParse(numberStr, out var extractedNumber))
+                        // Special GUID handling - extract meaningful trailing number
+                        var lastDash = strValue.LastIndexOf('-');
+                        if (lastDash >= 0)
                         {
-                            numbers.Add(extractedNumber);
+                            var lastSegment = strValue.Substring(lastDash + 1);
+                            var trailingDigits = lastSegment.TrimStart('0');
+                            if (!string.IsNullOrEmpty(trailingDigits) && trailingDigits.All(char.IsDigit) && double.TryParse(trailingDigits, out var guidNum))
+                                numbers.Add(guidNum);
                         }
-                        numericChars.Clear();
-                        hasDecimalPoint = false;
                     }
                 }
-                
-                // Don't forget to parse any remaining digits at the end
-                if (numericChars.Length > 0)
+                break;
+            case JsonValueKind.True:
+                numbers.Add(1);
+                break;
+            case JsonValueKind.False:
+                numbers.Add(0);
+                break;
+            case JsonValueKind.Array:
+                foreach (var item in element.EnumerateArray())
+                    ExtractNumberFromJsonValue(item, numbers);
+                break;
+            case JsonValueKind.Object:
+                foreach (var prop in element.EnumerateObject())
+                    ExtractNumberFromJsonValue(prop.Value, numbers);
+                break;
+        }
+    }
+
+    private static bool IsNonNumericWord(string word)
+    {
+        // Skip words that are obviously non-numeric contexts
+        var nonNumericWords = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "starting", "grpc-web", "test", "using", "generated", "client",
+            "npm", "node", "data", "start", "end", "response", "flat",
+            "status", "message", "counter", "enabled", "level", "bonus",
+            "multiplier", "current", "game", "testviewmodel"
+        };
+        
+        return nonNumericWords.Contains(word) || 
+               word.Length > 15 || // Very long strings are unlikely to be numbers
+               (word.Contains('-') && word.Length > 10); // Long strings with dashes (like GUIDs)
+    }
+
+    private static void ExtractNumbersFromString(string cleanWord, List<double> numbers)
+    {
+        // Only extract from strings that don't look like GUIDs or other structured data
+        if (cleanWord.Length > 15 || cleanWord.Count(c => c == '-') > 2)
+            return;
+            
+        var numericChars = new System.Text.StringBuilder();
+        bool hasDecimalPoint = false;
+        
+        foreach (char c in cleanWord)
+        {
+            if (char.IsDigit(c))
+            {
+                numericChars.Append(c);
+            }
+            else if (c == '.' && !hasDecimalPoint && numericChars.Length > 0)
+            {
+                // Include decimal point for potential double parsing
+                numericChars.Append(c);
+                hasDecimalPoint = true;
+            }
+            else if (c == '-' && numericChars.Length == 0)
+            {
+                // Include negative sign at the start
+                numericChars.Append(c);
+            }
+            else if (numericChars.Length > 0)
+            {
+                // We hit a non-digit/non-decimal after collecting digits, parse what we have
+                var numberStr = numericChars.ToString();
+                if (numberStr.Length > 0 && numberStr != "-" && double.TryParse(numberStr, out var extractedNumber))
                 {
-                    var numberStr = numericChars.ToString();
-                    if (double.TryParse(numberStr, out var finalNumber))
-                    {
-                        numbers.Add(finalNumber);
-                    }
+                    numbers.Add(extractedNumber);
                 }
+                numericChars.Clear();
+                hasDecimalPoint = false;
+            }
+        }
+        
+        // Don't forget to parse any remaining digits at the end
+        if (numericChars.Length > 0)
+        {
+            var numberStr = numericChars.ToString();
+            if (numberStr.Length > 0 && numberStr != "-" && double.TryParse(numberStr, out var finalNumber))
+            {
+                numbers.Add(finalNumber);
             }
         }
     }
