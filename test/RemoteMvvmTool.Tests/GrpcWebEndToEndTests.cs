@@ -267,9 +267,9 @@ public class GrpcWebEndToEndTests
                     {
                         StatusMap = new Dictionary<Status, string>
                         {
-                            { Status.Active, "System Running" },
-                            { Status.Idle, "System Idle" },
-                            { Status.Error, "System Error" }
+                            { Status.Active, "4" },
+                            { Status.Idle, "5" },
+                            { Status.Error, "6" }
                         };
                         CurrentStatus = Status.Active;
                     }
@@ -290,8 +290,8 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected data: Enum values (1,2,3) and CurrentStatus (1) - sorted would be 1,1,2,3
-        var expectedDataValues = "1,1,2,3";
+        // Expected data: Enum keys (1,2,3), CurrentStatus (1), and string values (4,5,6) - sorted would be 1,1,2,3,4,5,6
+        var expectedDataValues = "1,1,2,3,4,5,6";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -1613,7 +1613,14 @@ public class GrpcWebEndToEndTests
                 break;
             case JsonValueKind.Object:
                 foreach (var prop in element.EnumerateObject())
+                {
+                    // Extract numeric keys from object property names (for dictionary keys)
+                    if (double.TryParse(prop.Name, out var keyNum))
+                        numbers.Add(keyNum);
+                    
+                    // Also extract from the property value
                     ExtractNumberFromJsonValue(prop.Value, numbers);
+                }
                 break;
         }
     }

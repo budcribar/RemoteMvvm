@@ -6,6 +6,7 @@
 using Grpc.Core;
 using Generated.Protos;
 using SimpleViewModelTest.ViewModels;
+using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Linq;

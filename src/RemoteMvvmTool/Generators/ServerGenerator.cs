@@ -196,7 +196,7 @@ public static class ServerGenerator
                         sb.AppendLine($"            {{");
                         sb.AppendLine($"                foreach (var dict in propValue)");
                         sb.AppendLine($"                {{");
-                        sb.AppendLine($"                    var mapMsg = new {dictMapName}();");
+                        sb.AppendLine($"                    var mapMsg = new {protoNs}.{dictMapName}();");
                         sb.AppendLine($"                    if (dict != null)");
                         sb.AppendLine($"                    {{");
                         sb.AppendLine($"                        foreach (var kv in dict)");

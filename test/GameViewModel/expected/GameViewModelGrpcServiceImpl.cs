@@ -6,6 +6,7 @@
 using Grpc.Core;
 using MonsterClicker.ViewModels.Protos;
 using MonsterClicker.ViewModels;
+using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Linq;

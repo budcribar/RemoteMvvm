@@ -6,6 +6,7 @@
 using Grpc.Core;
 using Pointer.ViewModels.Protos;
 using HPSystemsTools;
+using Google.Protobuf;
 using Google.Protobuf.WellKnownTypes;
 using System;
 using System.Linq;
