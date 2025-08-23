@@ -37,3 +37,19 @@ var tsconfig = """
   "include": ["**/*.ts", "**/*.js"]
 }
 """;
+
+another twist on raw string literals, using mocked interpolation.
+string tsconfig = """
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "<<module>>",
+    "strict": false,
+    "esModuleInterop": true,
+    "lib": ["es2018", "dom"],
+    "outDir": "dist",
+    "allowJs": true
+  },
+  "include": ["/*.ts", "/*.js"]
+}
+""".Replace("<<module>>", "commonJs");

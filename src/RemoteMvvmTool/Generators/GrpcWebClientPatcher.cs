@@ -148,6 +148,18 @@ public static class GrpcWebClientPatcher
 
     private static void ProcessStreamingMethod(List<string> lines, int streamIndex, string className)
     {
+        // First, find the method name by looking backwards for the method declaration
+        string methodName = "unknown";
+        for (int i = streamIndex - 1; i >= Math.Max(0, streamIndex - 10); i--)
+        {
+            var methodMatch = System.Text.RegularExpressions.Regex.Match(lines[i], @"^\s*(\w+)\($");
+            if (methodMatch.Success)
+            {
+                methodName = methodMatch.Groups[1].Value;
+                break;
+            }
+        }
+        
         var indent = Regex.Match(lines[streamIndex], @"^\s*").Value;
         lines[streamIndex] = indent + "const stream = this.client_.serverStreaming(";
         
@@ -160,7 +172,7 @@ public static class GrpcWebClientPatcher
                 lines[j] = indent2 + descriptor + ");";
                 lines.Insert(j + 1, indent + "if (stream && typeof (stream as any).on === 'function') {");
                 lines.Insert(j + 2, indent + "  (stream as any).on('error', (err: any) => {");
-                lines.Insert(j + 3, indent + $"    console.error('Stream error:', err);");
+                lines.Insert(j + 3, indent + $"    console.error('{className}.{methodName} stream error:', err);");
                 lines.Insert(j + 4, indent + "  });");
                 lines.Insert(j + 5, indent + "}");
                 lines.Insert(j + 6, indent + "return stream;");
