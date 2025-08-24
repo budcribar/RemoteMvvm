@@ -2399,6 +2399,7 @@ class HP3LSThermalTestViewModelRemoteClient {
     }
     constructor(grpcClient) {
         this.changeCallbacks = [];
+        this.isUpdatingFromServer = false; // Add flag to prevent loops
         this.connectionStatus = 'Unknown';
         this.grpcClient = grpcClient;
     }
@@ -2428,6 +2429,11 @@ class HP3LSThermalTestViewModelRemoteClient {
         this.notifyChange();
     }
     async updatePropertyValue(propertyName, value) {
+        // Don't send updates to server if we're currently processing server updates
+        if (this.isUpdatingFromServer) {
+            console.log(`Skipping server update for ${propertyName} - currently processing server changes`);
+            return Promise.resolve({});
+        }
         const req = new _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
@@ -2494,6 +2500,8 @@ class HP3LSThermalTestViewModelRemoteClient {
         req.setClientId(Math.random().toString());
         this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);
         this.propertyStream.on('data', (update) => {
+            // Set flag to indicate we're processing server updates
+            this.isUpdatingFromServer = true;
             const anyVal = update.getNewValue();
             switch (update.getPropertyName()) {
                 case 'CpuTemperatureThreshold':
@@ -2513,12 +2521,18 @@ class HP3LSThermalTestViewModelRemoteClient {
                     break;
             }
             this.notifyChange();
+            // Clear flag after a short delay to allow UI to update
+            setTimeout(() => {
+                this.isUpdatingFromServer = false;
+            }, 100);
         });
         this.propertyStream.on('error', () => {
+            this.isUpdatingFromServer = false; // Clear flag on error
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
         this.propertyStream.on('end', () => {
+            this.isUpdatingFromServer = false; // Clear flag on end
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
@@ -6637,14 +6651,29 @@ function handleError(err, context) {
     }
     catch { /* no-op */ }
 }
-// Catch any unhandled promise rejections and global errors
-window.addEventListener('unhandledrejection', (ev) => {
-    handleError(ev.reason, 'Unhandled promise');
-    ev.preventDefault?.();
-});
-window.addEventListener('error', (ev) => {
-    handleError(ev.error ?? ev.message, 'Global error');
-});
+// Add debouncing to prevent rapid-fire updates
+const updateDebounceMap = new Map();
+function debounceUpdate(propertyName, value, delayMs = 200) {
+    // Clear existing timeout for this property
+    const existingTimeout = updateDebounceMap.get(propertyName);
+    if (existingTimeout) {
+        clearTimeout(existingTimeout);
+    }
+    // Set new timeout
+    const timeout = setTimeout(async () => {
+        try {
+            console.log(`Sending debounced update: ${propertyName} = ${value}`);
+            await vm.updatePropertyValue(propertyName, value);
+        }
+        catch (err) {
+            handleError(err, `Update ${propertyName}`);
+        }
+        finally {
+            updateDebounceMap.delete(propertyName);
+        }
+    }, delayMs);
+    updateDebounceMap.set(propertyName, timeout);
+}
 function computeMaxTempC(deviceName) {
     const pct = vm?.testSettings?.cpuTemperatureThreshold ?? 100;
     // If a DTS map is available, prefer that:
@@ -6732,27 +6761,26 @@ function ensureReadmeModal(open, main) {
             readme.setAttribute('show-previous', 'true');
         else
             readme.removeAttribute('show-previous');
-        const onClose = async () => {
-            try {
-                await vm.updatePropertyValue('ShowReadme', false);
-            }
-            catch (err) {
-                handleError(err, 'Close README -> server update');
-            }
-        };
-        // Reset close handler then show
-        note.removeEventListener?.('close', onClose);
-        note.addEventListener?.('close', onClose);
+        // Dedupe close handler; only update server on user-driven closes
+        if (!note.__onCloseHandler) {
+            note.__onCloseHandler = async () => {
+                try {
+                    await vm.updatePropertyValue('ShowReadme', false);
+                }
+                catch (err) {
+                    handleError(err, 'Close README -> server update');
+                }
+            };
+            note.addEventListener('close', note.__onCloseHandler);
+        }
         if (typeof note.show === 'function')
             note.show();
         else
             note.setAttribute('open', '');
     }
     else if (note) {
-        if (typeof note.hide === 'function')
-            note.hide();
-        else
-            note.removeAttribute('open');
+        // Close without dispatching 'close' event to avoid feedback loop to server
+        note.removeAttribute('open');
     }
 }
 async function init() {
@@ -6770,45 +6798,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const main = document.querySelector('x-thermal-main');
     if (main) {
         main.addEventListener('change-temp-threshold', async (e) => {
-            try {
-                await vm.updatePropertyValue('CpuTemperatureThreshold', Number(e?.detail?.value ?? 0));
-            }
-            catch (err) {
-                handleError(err, 'Update CpuTemperatureThreshold');
+            const newValue = Number(e?.detail?.value ?? 0);
+            const currentValue = vm?.testSettings?.cpuTemperatureThreshold;
+            // Only update if value actually changed
+            if (newValue !== currentValue) {
+                debounceUpdate('CpuTemperatureThreshold', newValue);
             }
         });
         main.addEventListener('change-cpu-load-threshold', async (e) => {
-            try {
-                await vm.updatePropertyValue('CpuLoadThreshold', Number(e?.detail?.value ?? 0));
-            }
-            catch (err) {
-                handleError(err, 'Update CpuLoadThreshold');
+            const newValue = Number(e?.detail?.value ?? 0);
+            const currentValue = vm?.testSettings?.cpuLoadThreshold;
+            if (newValue !== currentValue) {
+                debounceUpdate('CpuLoadThreshold', newValue);
             }
         });
         main.addEventListener('change-cpu-load-time', async (e) => {
-            try {
-                await vm.updatePropertyValue('CpuLoadTimeSpan', Number(e?.detail?.value ?? 0));
-            }
-            catch (err) {
-                handleError(err, 'Update CpuLoadTimeSpan');
+            const newValue = Number(e?.detail?.value ?? 0);
+            const currentValue = vm?.testSettings?.cpuLoadTimeSpan;
+            if (newValue !== currentValue) {
+                debounceUpdate('CpuLoadTimeSpan', newValue);
             }
         });
         main.addEventListener('toggle-readme', async (e) => {
-            try {
-                const show = Boolean(e?.detail?.value);
-                // Ask server to change ShowReadme; UI will react in render() via vm.showReadme
-                await vm.updatePropertyValue('ShowReadme', show);
-            }
-            catch (err) {
-                handleError(err, 'Toggle README');
+            const newValue = Boolean(e?.detail?.value);
+            const currentValue = vm.showReadme;
+            if (newValue !== currentValue) {
+                debounceUpdate('ShowReadme', newValue);
             }
         });
         main.addEventListener('toggle-description', async (e) => {
-            try {
-                await vm.updatePropertyValue('ShowDescription', Boolean(e?.detail?.value));
-            }
-            catch (err) {
-                handleError(err, 'Toggle description');
+            const newValue = Boolean(e?.detail?.value);
+            const currentValue = vm.showDescription;
+            if (newValue !== currentValue) {
+                debounceUpdate('ShowDescription', newValue);
             }
         });
         main.addEventListener('cancel', async () => {

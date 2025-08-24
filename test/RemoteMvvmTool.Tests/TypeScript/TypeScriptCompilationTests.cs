@@ -92,14 +92,21 @@ public class TypeScriptCompilationTests
         File.WriteAllText(Path.Combine(nodeModules, "grpc-web", "index.js"),
             "exports.ClientReadableStream = class { on(){} cancel(){} };");
 
+        // Add NodeJS type definitions
+        Directory.CreateDirectory(Path.Combine(nodeModules, "@types", "node"));
+        File.WriteAllText(Path.Combine(nodeModules, "@types", "node", "index.d.ts"),
+            "declare namespace NodeJS { interface Timeout {} }");
+        File.WriteAllText(Path.Combine(nodeModules, "@types", "node", "package.json"),
+            """{"name": "@types/node", "version": "1.0.0"}""");
+
         var gp = Path.Combine(nodeModules, "google-protobuf", "google", "protobuf");
         Directory.CreateDirectory(gp);
-        File.WriteAllText(Path.Combine(gp, "empty_pb.d.ts"), "export class Empty {}");
-        File.WriteAllText(Path.Combine(gp, "empty_pb.js"), "exports.Empty = class {};");
+        File.WriteAllText(Path.Combine(gp, "empty_pb.d.ts"), "export class Empty { serializeBinary(): Uint8Array; }");
+        File.WriteAllText(Path.Combine(gp, "empty_pb.js"), "exports.Empty = class { serializeBinary() { return new Uint8Array(); } };");
         File.WriteAllText(Path.Combine(gp, "any_pb.d.ts"),
-            "export class Any { pack(a:Uint8Array,b:string):void; unpack(fn:any,name:string):any; static pack(data:any):Any; }");
+            "export class Any { pack(a:Uint8Array,b:string):void; unpack(fn:any,name:string):any; static pack(data:any):Any; serializeBinary(): Uint8Array; }");
         File.WriteAllText(Path.Combine(gp, "any_pb.js"),
-            "class AnyImpl { pack(){} unpack(){ return null; } static pack(data) { return new AnyImpl(); } } exports.Any = AnyImpl;");
+            "class AnyImpl { pack(){} unpack(){ return null; } static pack(data) { return new AnyImpl(); } serializeBinary() { return new Uint8Array(); } } exports.Any = AnyImpl;");
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.d.ts"),
             "export class StringValue { setValue(v:string):void; getValue():string; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):StringValue; }\n" +
             "export class Int32Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int32Value; }\n" +
@@ -116,7 +123,13 @@ public class TypeScriptCompilationTests
 
         var gen = Path.Combine(dir, "generated");
         Directory.CreateDirectory(gen);
-        File.WriteAllText(Path.Combine(gen, serviceName + "ServiceClientPb.ts"), $@"
+        
+        // Use the corrected filename (without duplicate "Service")
+        var clientFileName = serviceName.EndsWith("Service") 
+            ? serviceName.Substring(0, serviceName.Length - "Service".Length) + "ServiceClientPb.ts"
+            : serviceName + "ServiceClientPb.ts";
+            
+        File.WriteAllText(Path.Combine(gen, clientFileName), $@"
 import * as grpcWeb from 'grpc-web';
 import {{ {vmName}State, UpdatePropertyValueRequest, UpdatePropertyValueResponse, SubscribeRequest, PropertyChangeNotification, ConnectionStatusResponse, ConnectionStatus, StateChangedRequest, CancelTestRequest }} from './{serviceName}_pb.js';
 export class {serviceName}Client {{
@@ -182,7 +195,7 @@ public class ObservableObject {{}}
 
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
 {extraImports ?? string.Empty}
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
@@ -213,7 +226,8 @@ class FakeClient extends {name}ServiceClient {{
     ""esModuleInterop"": true,
     ""lib"": [""es2018"", ""dom""],
     ""outDir"": ""dist"",
-    ""allowJs"": true
+    ""allowJs"": true,
+    ""types"": [""node""]
   },
   ""include"": [""**/*.ts"", ""**/*.js""]
 }";
@@ -283,7 +297,7 @@ public async Task Generated_TypeScript_Compiles_And_Transfers_Dictionary()
     var testTs = $@"
 declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
@@ -315,7 +329,8 @@ class FakeClient extends {name}ServiceClient {{
     ""esModuleInterop"": true,
     ""lib"": [""es2018"", ""dom""],
     ""outDir"": ""dist"",
-    ""allowJs"": true
+    ""allowJs"": true,
+    ""types"": [""node""]
   },
   ""include"": [""**/*.ts"", ""**/*.js""]
 }";
@@ -349,7 +364,7 @@ public async Task Generated_TypeScript_Compiles_And_Transfers_ThermalZoneCollect
 
     var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
@@ -378,7 +393,8 @@ class FakeClient extends {name}ServiceClient {{
     ""esModuleInterop"": true,
     ""lib"": [""es2018"", ""dom""],
     ""outDir"": ""dist"",
-    ""allowJs"": true
+    ""allowJs"": true,
+    ""types"": [""node""]
   },
   ""include"": [""**/*.ts"", ""**/*.js""]
 }";
@@ -412,7 +428,7 @@ class FakeClient extends {name}ServiceClient {{
 
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   lastReq: any;
   async getState(_req:any) {{
@@ -449,7 +465,8 @@ class FakeClient extends {name}ServiceClient {{
     ""esModuleInterop"": true,
     ""lib"": [""es2018"", ""dom""],
     ""outDir"": ""dist"",
-    ""allowJs"": true
+    ""allowJs"": true,
+    ""types"": [""node""]
   }},
   ""include"": [""**/*.ts"", ""**/*.js""]
 }}";
