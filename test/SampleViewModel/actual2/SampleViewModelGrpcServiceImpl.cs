@@ -745,4 +745,15 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         return Task.FromResult(response);
     }
 
+    public override Task<SampleApp.ViewModels.Protos.ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
+    {
+        var response = new SampleApp.ViewModels.Protos.ConnectionStatusResponse
+        {{
+            Status = SampleApp.ViewModels.Protos.ConnectionStatus.Connected
+        };
+        
+        Debug.WriteLine("[GrpcService:SampleViewModel] Ping received, responding with Connected status");
+        return Task.FromResult(response);
+    }
+
 }

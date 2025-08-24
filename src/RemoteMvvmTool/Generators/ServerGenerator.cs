@@ -88,7 +88,7 @@ public static class ServerGenerator
             ["<<CONSOLE_MODE_SETUP>>"] = consoleModeSetup,
             ["<<PROPERTY_MAPPINGS>>"] = propertyMappings,
             ["<<UPDATE_PROPERTY_DISPATCHER_LOGIC>>"] = updatePropertyDispatcherLogic,
-            ["<<COMMAND_METHODS>>"] = commandMethods,
+            ["<<COMMAND_METHODS>>"] = commandMethods + GeneratePingMethod(vmName, protoNs),
         });
     }
 
@@ -496,6 +496,25 @@ public static class ServerGenerator
             sb.AppendLine("        return Task.FromResult(response);");
             sb.AppendLine("    }");
         }
+        
+        return sb.ToString();
+    }
+
+    private static string GeneratePingMethod(string vmName, string protoNs)
+    {
+        var sb = new StringBuilder();
+        
+        sb.AppendLine();
+        sb.AppendLine($"    public override Task<{protoNs}.ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        var response = new {protoNs}.ConnectionStatusResponse");
+        sb.AppendLine("        {{");
+        sb.AppendLine($"            Status = {protoNs}.ConnectionStatus.Connected");
+        sb.AppendLine("        };");
+        sb.AppendLine("        ");
+        sb.AppendLine($"        Debug.WriteLine(\"[GrpcService:{vmName}] Ping received, responding with Connected status\");");
+        sb.AppendLine("        return Task.FromResult(response);");
+        sb.AppendLine("    }");
         
         return sb.ToString();
     }

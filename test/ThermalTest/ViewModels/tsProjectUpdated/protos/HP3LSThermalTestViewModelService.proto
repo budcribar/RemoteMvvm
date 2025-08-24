@@ -47,11 +47,27 @@ message TestSettingsModelState {
 message UpdatePropertyValueRequest {
   string property_name = 1;
   google.protobuf.Any new_value = 2;
+  // Optional fields for complex property updates
+  string property_path = 3;          // For nested properties like "User.Address.Street"
+  string collection_key = 4;         // For dictionary keys or array indices
+  int32 array_index = 5;             // For updating specific array elements
+  string operation_type = 6;         // "set", "add", "remove", "clear", "insert"
+}
+
+message UpdatePropertyValueResponse {
+  bool success = 1;
+  string error_message = 2;          // Error details if success=false
+  string validation_errors = 3;      // Validation error details
+  google.protobuf.Any old_value = 4; // Previous value for undo operations
 }
 
 message PropertyChangeNotification {
   string property_name = 1;
   google.protobuf.Any new_value = 2;
+  // Enhanced notification details
+  string property_path = 3;          // Full path for nested changes
+  string change_type = 4;            // "property", "collection", "nested"
+  google.protobuf.Any old_value = 5; // Previous value
 }
 
 message StateChangedRequest {
@@ -78,7 +94,7 @@ message ConnectionStatusResponse {
 
 service HP3LSThermalTestViewModelService {
   rpc GetState (google.protobuf.Empty) returns (HP3LSThermalTestViewModelState);
-  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (google.protobuf.Empty);
+  rpc UpdatePropertyValue (UpdatePropertyValueRequest) returns (UpdatePropertyValueResponse);
   rpc SubscribeToPropertyChanges (SubscribeRequest) returns (stream PropertyChangeNotification);
   rpc StateChanged (StateChangedRequest) returns (StateChangedResponse);
   rpc CancelTest (CancelTestRequest) returns (CancelTestResponse);

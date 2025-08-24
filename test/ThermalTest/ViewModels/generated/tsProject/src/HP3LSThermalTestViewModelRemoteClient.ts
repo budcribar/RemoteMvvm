@@ -180,6 +180,35 @@ export class HP3LSThermalTestViewModelRemoteClient {
         });
     }
 
+    private createAnyValue(value: any): Any {
+        if (value == null) return Any.pack(new Empty());
+        switch (typeof value) {
+            case 'string': {
+                const str = new StringValue();
+                str.setValue(value);
+                return Any.pack(str.serializeBinary());
+            }
+            case 'number': {
+                if (Number.isInteger(value)) {
+                    const int32 = new Int32Value();
+                    int32.setValue(value);
+                    return Any.pack(int32.serializeBinary());
+                } else {
+                    const double = new DoubleValue();
+                    double.setValue(value);
+                    return Any.pack(double.serializeBinary());
+                }
+            }
+            case 'boolean': {
+                const bool = new BoolValue();
+                bool.setValue(value);
+                return Any.pack(bool.serializeBinary());
+            }
+            default:
+                return Any.pack(new Empty());
+        }
+    }
+
     dispose(): void {
         if (this.propertyStream) {
             this.propertyStream.cancel();

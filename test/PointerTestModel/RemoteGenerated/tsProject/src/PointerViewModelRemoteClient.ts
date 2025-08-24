@@ -89,7 +89,14 @@ export class PointerViewModelRemoteClient {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
-        return await this.grpcClient.updatePropertyValue(req);
+        const response = await this.grpcClient.updatePropertyValue(req);
+        
+        // If the response indicates success, update the local property value
+        if (typeof response.getSuccess === 'function' && response.getSuccess()) {
+            this.updateLocalProperty(propertyName, value);
+        }
+        
+        return response;
     }
 
     // Enhanced updatePropertyValue with support for complex scenarios
@@ -112,7 +119,14 @@ export class PointerViewModelRemoteClient {
         if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);
         if (options?.operationType) req.setOperationType(options.operationType);
         
-        return await this.grpcClient.updatePropertyValue(req);
+        const response = await this.grpcClient.updatePropertyValue(req);
+        
+        // If the response indicates success, update the local property value
+        if (typeof response.getSuccess === 'function' && response.getSuccess()) {
+            this.updateLocalProperty(propertyName, value);
+        }
+        
+        return response;
     }
 
     async initialize(): Promise<void> {
@@ -277,4 +291,19 @@ export class PointerViewModelRemoteClient {
             this.pingIntervalId = undefined;
         }
     }
-}
+
+    private updateLocalProperty(propertyName: string, value: any): void {
+        const camelCasePropertyName = this.toCamelCase(propertyName);
+        
+        // Update the local property if it exists
+        if (camelCasePropertyName in this) {
+            (this as any)[camelCasePropertyName] = value;
+            this.notifyChange();
+        }
+    }
+
+    private toCamelCase(str: string): string {
+        return str.charAt(0).toLowerCase() + str.slice(1);
+    }
+
+    dispose(): void {

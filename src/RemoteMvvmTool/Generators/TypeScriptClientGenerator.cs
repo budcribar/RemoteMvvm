@@ -332,7 +332,14 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        const req = new UpdatePropertyValueRequest();");
         sb.AppendLine("        req.setPropertyName(propertyName);");
         sb.AppendLine("        req.setNewValue(this.createAnyValue(value));");
-        sb.AppendLine("        return await this.grpcClient.updatePropertyValue(req);");
+        sb.AppendLine("        const response = await this.grpcClient.updatePropertyValue(req);");
+        sb.AppendLine("        ");
+        sb.AppendLine("        // If the response indicates success, update the local property value");
+        sb.AppendLine("        if (typeof response.getSuccess === 'function' && response.getSuccess()) {");
+        sb.AppendLine("            this.updateLocalProperty(propertyName, value);");
+        sb.AppendLine("        }");
+        sb.AppendLine("        ");
+        sb.AppendLine("        return response;");
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine("    // Enhanced updatePropertyValue with support for complex scenarios");
@@ -355,7 +362,14 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);");
         sb.AppendLine("        if (options?.operationType) req.setOperationType(options.operationType);");
         sb.AppendLine("        ");
-        sb.AppendLine("        return await this.grpcClient.updatePropertyValue(req);");
+        sb.AppendLine("        const response = await this.grpcClient.updatePropertyValue(req);");
+        sb.AppendLine("        ");
+        sb.AppendLine("        // If the response indicates success, update the local property value");
+        sb.AppendLine("        if (typeof response.getSuccess === 'function' && response.getSuccess()) {");
+        sb.AppendLine("            this.updateLocalProperty(propertyName, value);");
+        sb.AppendLine("        }");
+        sb.AppendLine("        ");
+        sb.AppendLine("        return response;");
         sb.AppendLine("    }");
         sb.AppendLine();
         foreach (var cmd in cmds)
@@ -484,7 +498,22 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("            this.pingIntervalId = undefined;");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
-        sb.AppendLine("}");
+        sb.AppendLine();
+        sb.AppendLine("    private updateLocalProperty(propertyName: string, value: any): void {");
+        sb.AppendLine("        const camelCasePropertyName = this.toCamelCase(propertyName);");
+        sb.AppendLine("        ");
+        sb.AppendLine("        // Update the local property if it exists");
+        sb.AppendLine("        if (camelCasePropertyName in this) {");
+        sb.AppendLine("            (this as any)[camelCasePropertyName] = value;");
+        sb.AppendLine("            this.notifyChange();");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private toCamelCase(str: string): string {");
+        sb.AppendLine("        return str.charAt(0).toLowerCase() + str.slice(1);");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    dispose(): void {");
         return sb.ToString();
     }
 }

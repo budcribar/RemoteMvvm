@@ -590,4 +590,123 @@ public partial class TestViewModel : ObservableObject
 
         await GenerateAndCompileAsync("simple", "test", modelCode);
     }
+
+    [Fact]
+    public async Task Generated_Server_Contains_Ping_Method()
+    {
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var vmDir = tempDir;
+        var vmFile = Path.Combine(vmDir, "TestViewModel.cs");
+        
+        var viewModelCode = """
+            using System;
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using CommunityToolkit.Mvvm.Input;
+
+            namespace GeneratedTests;
+
+            public partial class TestViewModel : ObservableObject
+            {
+                [ObservableProperty]
+                private string _message = "";
+
+                [RelayCommand]
+                void DoSomething() { }
+            }
+            """;
+        
+        File.WriteAllText(vmFile, viewModelCode);
+
+        var generatedDir = Path.Combine(vmDir, "generated");
+        var protoDir = Path.Combine(vmDir, "protos");
+        var args = new[]
+        {
+            "--output", generatedDir,
+            "--protoOutput", protoDir,
+            vmFile
+        };
+
+        try
+        {
+            // Generate the code
+            var exitCode = await Program.Main(args);
+            Assert.Equal(0, exitCode);
+
+            // Find the generated server implementation file
+            var serverFiles = Directory.GetFiles(generatedDir, "*GrpcServiceImpl.cs");
+            Assert.True(serverFiles.Length > 0, "No gRPC service implementation file was generated");
+
+            var serverFile = serverFiles[0];
+            var serverContent = File.ReadAllText(serverFile);
+
+            // Debug: Output the content to understand what's generated
+            System.Console.WriteLine($"Generated server file: {serverFile}");
+            System.Console.WriteLine($"Content preview: {serverContent.Substring(0, Math.Min(1000, serverContent.Length))}");
+
+            // Verify that the Ping method is generated with correct signature
+            Assert.Contains("public override Task<", serverContent);
+            Assert.Contains("ConnectionStatusResponse> Ping(", serverContent);
+            Assert.Contains("Google.Protobuf.WellKnownTypes.Empty request", serverContent);
+            Assert.Contains("ServerCallContext context", serverContent);
+            Assert.Contains("ConnectionStatus.Connected", serverContent);
+            Assert.Contains("Ping received, responding with Connected status", serverContent);
+
+            // Verify the method structure is correct by checking key components
+            var lines = serverContent.Split('\n');
+            bool foundPingMethod = false;
+            bool foundResponseCreation = false;
+            bool foundStatusAssignment = false;
+            bool foundReturnStatement = false;
+
+            for (int i = 0; i < lines.Length; i++)
+            {
+                var line = lines[i].Trim();
+                
+                if (line.Contains("public override Task<") && line.Contains("ConnectionStatusResponse> Ping("))
+                {
+                    foundPingMethod = true;
+                }
+                else if (foundPingMethod && line.Contains("var response = new") && line.Contains("ConnectionStatusResponse"))
+                {
+                    foundResponseCreation = true;
+                }
+                else if (foundResponseCreation && line.Contains("Status =") && line.Contains("ConnectionStatus.Connected"))
+                {
+                    foundStatusAssignment = true;
+                }
+                else if (foundStatusAssignment && line.Contains("return Task.FromResult(response)"))
+                {
+                    foundReturnStatement = true;
+                    break;
+                }
+            }
+
+            Assert.True(foundPingMethod, "Ping method declaration not found in generated server code");
+            Assert.True(foundResponseCreation, "Response creation not found in Ping method");
+            Assert.True(foundStatusAssignment, "Status assignment to Connected not found in Ping method");
+            Assert.True(foundReturnStatement, "Return statement not found in Ping method");
+
+            // Verify that it's a proper gRPC service method override
+            Assert.Contains("public override", serverContent);
+            
+            // Ensure debug logging is present
+            Assert.Contains("[GrpcService:TestViewModel] Ping received", serverContent);
+        }
+        finally
+        {
+            // Clean up the temp directory
+            try
+            {
+                if (Directory.Exists(tempDir))
+                {
+                    Directory.Delete(tempDir, true);
+                }
+            }
+            catch
+            {
+                // Ignore cleanup errors
+            }
+        }
+    }
 }
