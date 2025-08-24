@@ -11,7 +11,7 @@ export class NotificationElement extends HTMLElement {
     this.root = this.attachShadow({ mode: 'open' });
     this.root.innerHTML = `
       <style>
-        :host { display: contents; }
+        :host { display: block; }
         .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; z-index: 9999; }
         .panel { position: fixed; left: 50%; top: 10%; transform: translateX(-50%);
                  background: #fff; color: #111; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -27,7 +27,7 @@ export class NotificationElement extends HTMLElement {
           <div id="title"></div>
           <button id="btnClose" class="close" aria-label="Close">×</button>
         </header>
-        <div class="content"><slot></slot></div>
+        <div class="content"><slot id="slot"></slot></div>
       </div>
     `;
   }

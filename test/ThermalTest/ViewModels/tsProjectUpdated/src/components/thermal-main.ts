@@ -252,12 +252,12 @@ export class ThermalMainElement extends HTMLElement {
     ( $('valCpuLoad') as HTMLLabelElement ).textContent = `${cpuLoad}%`;
     ( $('valTime') as HTMLLabelElement ).textContent = `${time}s`;
 
-    // Readme
-    const showReadme = this.bool('show-readme');
-    const readmeWrap = $('readmeWrap');
-    readmeWrap.toggleAttribute('hidden', !showReadme);
-    const readme = $('readme') as HTMLElement;
-    if (this.bool('readme-show-previous')) readme.setAttribute('show-previous', 'true'); else readme.removeAttribute('show-previous');
+  // Readme: keep inline hidden; modal is handled by app.ts via <x-notification>
+  const showReadme = this.bool('show-readme');
+  const readmeWrap = $('readmeWrap');
+  readmeWrap.toggleAttribute('hidden', true);
+  const readme = $('readme') as HTMLElement;
+  if (this.bool('readme-show-previous')) readme.setAttribute('show-previous', 'true'); else readme.removeAttribute('show-previous');
 
     // Buttons
     const lblShowReadme = this.str('label-show-readme', 'Show README');

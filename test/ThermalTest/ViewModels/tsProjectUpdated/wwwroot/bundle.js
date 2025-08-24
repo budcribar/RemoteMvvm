@@ -2815,7 +2815,7 @@ class NotificationElement extends HTMLElement {
         this.root = this.attachShadow({ mode: 'open' });
         this.root.innerHTML = `
       <style>
-        :host { display: contents; }
+        :host { display: block; }
         .backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.35); display: none; z-index: 9999; }
         .panel { position: fixed; left: 50%; top: 10%; transform: translateX(-50%);
                  background: #fff; color: #111; border-radius: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -2831,7 +2831,7 @@ class NotificationElement extends HTMLElement {
           <div id="title"></div>
           <button id="btnClose" class="close" aria-label="Close">×</button>
         </header>
-        <div class="content"><slot></slot></div>
+        <div class="content"><slot id="slot"></slot></div>
       </div>
     `;
     }
@@ -3208,10 +3208,10 @@ class ThermalMainElement extends HTMLElement {
         $('valTemp').textContent = `${temp}%`;
         $('valCpuLoad').textContent = `${cpuLoad}%`;
         $('valTime').textContent = `${time}s`;
-        // Readme
+        // Readme: keep inline hidden; modal is handled by app.ts via <x-notification>
         const showReadme = this.bool('show-readme');
         const readmeWrap = $('readmeWrap');
-        readmeWrap.toggleAttribute('hidden', !showReadme);
+        readmeWrap.toggleAttribute('hidden', true);
         const readme = $('readme');
         if (this.bool('readme-show-previous'))
             readme.setAttribute('show-previous', 'true');
@@ -6682,6 +6682,7 @@ function render() {
     if (main) {
         // Toggle sections
         main.setAttribute('show-description', String(!!vm.showDescription));
+        // Reflect server ShowReadme for button label state (inline readme stays hidden by component)
         main.setAttribute('show-readme', String(!!vm.showReadme));
         // Sliders from TestSettings
         const ts = vm.testSettings ?? {};
@@ -6699,10 +6700,60 @@ function render() {
         catch (err) {
             handleError(err, 'Render zones');
         }
+        // Ensure README modal visibility matches server state
+        try {
+            ensureReadmeModal(!!vm.showReadme, main);
+        }
+        catch (err) {
+            handleError(err, 'Render README modal');
+        }
     }
     const statusEl = document.getElementById('connection-status');
     if (statusEl)
         statusEl.textContent = vm.connectionStatus;
+}
+function ensureReadmeModal(open, main) {
+    let note = document.querySelector('x-notification');
+    if (open) {
+        if (!note) {
+            note = document.createElement('x-notification');
+            document.body.appendChild(note);
+        }
+        note.setAttribute('title', 'README');
+        // Ensure one slotted x-readme exists
+        let readme = note.querySelector('x-readme');
+        if (!readme) {
+            readme = document.createElement('x-readme');
+            note.appendChild(readme);
+        }
+        // Mirror show-previous flag
+        const showPrev = main.getAttribute('readme-show-previous') === 'true';
+        if (showPrev)
+            readme.setAttribute('show-previous', 'true');
+        else
+            readme.removeAttribute('show-previous');
+        const onClose = async () => {
+            try {
+                await vm.updatePropertyValue('ShowReadme', false);
+            }
+            catch (err) {
+                handleError(err, 'Close README -> server update');
+            }
+        };
+        // Reset close handler then show
+        note.removeEventListener?.('close', onClose);
+        note.addEventListener?.('close', onClose);
+        if (typeof note.show === 'function')
+            note.show();
+        else
+            note.setAttribute('open', '');
+    }
+    else if (note) {
+        if (typeof note.hide === 'function')
+            note.hide();
+        else
+            note.removeAttribute('open');
+    }
 }
 async function init() {
     try {
@@ -6745,50 +6796,8 @@ document.addEventListener('DOMContentLoaded', () => {
         main.addEventListener('toggle-readme', async (e) => {
             try {
                 const show = Boolean(e?.detail?.value);
+                // Ask server to change ShowReadme; UI will react in render() via vm.showReadme
                 await vm.updatePropertyValue('ShowReadme', show);
-                if (show) {
-                    // Create or reuse a notification element to show the README
-                    let note = document.querySelector('x-notification');
-                    if (!note) {
-                        note = document.createElement('x-notification');
-                        note.setAttribute('title', 'README');
-                        const readme = document.createElement('x-readme');
-                        // Mirror show-previous from main, if present
-                        if (main.getAttribute('readme-show-previous') === 'true') {
-                            readme.setAttribute('show-previous', 'true');
-                        }
-                        note.appendChild(readme);
-                        document.body.appendChild(note);
-                    }
-                    // Always ensure we have a close handler bound
-                    const onClose = async () => {
-                        try {
-                            // When the notification closes, turn off ShowReadme in VM and reflect to main
-                            await vm.updatePropertyValue('ShowReadme', false);
-                            main.setAttribute('show-readme', 'false');
-                        }
-                        catch (err) {
-                            handleError(err, 'Close README');
-                        }
-                    };
-                    // Avoid duplicate listeners by removing and re-adding
-                    note.removeEventListener?.('close', onClose);
-                    note.addEventListener?.('close', onClose);
-                    if (typeof note.show === 'function')
-                        note.show();
-                    else
-                        note.setAttribute('open', '');
-                }
-                else {
-                    // If toggled off, close any open notification
-                    const note = document.querySelector('x-notification');
-                    if (note) {
-                        if (typeof note.hide === 'function')
-                            note.hide();
-                        else
-                            note.removeAttribute('open');
-                    }
-                }
             }
             catch (err) {
                 handleError(err, 'Toggle README');
