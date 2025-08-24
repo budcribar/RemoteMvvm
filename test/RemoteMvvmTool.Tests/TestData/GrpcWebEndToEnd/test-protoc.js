@@ -145,6 +145,19 @@ client.getState(new Empty(), {}, (err, response) => {
         const value = obj[key];
         
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          // For dictionary/map objects, extract both keys AND values
+          // Check both prefix and current key for dictionary indicators
+          if ((prefix && (prefix.includes('map') || prefix.includes('dict') || prefix.includes('status'))) ||
+              (key && (key.includes('map') || key.includes('dict') || key.includes('status')))) {
+            // For each key in the dictionary, extract the key as a number
+            Object.keys(value).forEach(dictKey => {
+              const keyAsNumber = parseFloat(dictKey);
+              if (!isNaN(keyAsNumber)) {
+                flatData[`${fullKey}_key_${dictKey}`] = keyAsNumber;
+              }
+            });
+          }
+          
           flattenData(value, fullKey);
         } else if (Array.isArray(value)) {
           // For arrays, add each element with an index
@@ -153,10 +166,20 @@ client.getState(new Empty(), {}, (err, response) => {
               flattenData(item, `${fullKey}[${index}]`);
             } else {
               flatData[`${fullKey}[${index}]`] = item;
+              
+              // Also try to extract as number if it's a string that looks like a number
+              if (typeof item === 'string' && !isNaN(parseFloat(item)) && isFinite(item)) {
+                flatData[`${fullKey}[${index}]`] = parseFloat(item);
+              }
             }
           });
         } else {
           flatData[fullKey] = value;
+          
+          // For string values that look like numbers, also store as numbers for validation
+          if (typeof value === 'string' && !isNaN(parseFloat(value)) && isFinite(value)) {
+            flatData[fullKey] = parseFloat(value);
+          }
         }
       });
     }

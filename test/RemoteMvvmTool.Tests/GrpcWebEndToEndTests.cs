@@ -1331,14 +1331,14 @@ public class GrpcWebEndToEndTests
         var proto = ProtoGenerator.Generate("Test.Protos", name + "Service", name, props, cmds, compilation);
         File.WriteAllText(protoFile, proto);
         
-        var serverCode = ServerGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, "Generated.ViewModels", "console");
+        var serverCode = ServerGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, "Generated.ViewModels", "wpf");
         File.WriteAllText(Path.Combine(testProjectDir, name + "GrpcServiceImpl.cs"), serverCode);
 
         var rootTypes = props.Select(p => p.FullTypeSymbol!);
         var conv = ConversionGenerator.Generate("Test.Protos", "Generated.ViewModels", rootTypes, compilation);
         File.WriteAllText(Path.Combine(testProjectDir, "ProtoStateConverters.cs"), conv);
 
-        var partial = ViewModelPartialGenerator.Generate(name, "Test.Protos", name + "Service", "Generated.ViewModels", "Generated.Clients", "CommunityToolkit.Mvvm.ComponentModel.ObservableObject", "console", true);
+        var partial = ViewModelPartialGenerator.Generate(name, "Test.Protos", name + "Service", "Generated.ViewModels", "Generated.Clients", "CommunityToolkit.Mvvm.ComponentModel.ObservableObject", "wpf", true);
         File.WriteAllText(Path.Combine(testProjectDir, name + ".Remote.g.cs"), partial);
 
         Console.WriteLine("✅ Generated server code files");
@@ -1726,7 +1726,18 @@ public class GrpcWebEndToEndTests
                 {
                     // Extract numeric keys from object property names (for dictionary keys)
                     if (double.TryParse(prop.Name, out var keyNum))
+                    {
                         numbers.Add(keyNum);
+                    }
+                    else if (prop.Name.Contains('.'))
+                    {
+                        // Handle flattened property names like "statusmap.1", "statusmap.2"
+                        var lastPart = prop.Name.Substring(prop.Name.LastIndexOf('.') + 1);
+                        if (double.TryParse(lastPart, out var flattenedKeyNum))
+                        {
+                            numbers.Add(flattenedKeyNum);
+                        }
+                    }
                     
                     // Also extract from the property value
                     ExtractAllNumbersFromJsonValue(prop.Value, numbers);
