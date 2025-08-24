@@ -191,7 +191,7 @@ namespace SampleApp.ViewModels.RemoteClients
                                    case nameof(Name):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.Name = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(Count):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.Count = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.Count = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    default: Debug.WriteLine("[ClientProxy:SampleViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
                            }

@@ -391,11 +391,11 @@ namespace Pointer.ViewModels.RemoteClients
                                    case nameof(ShowSpinner):
                     if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowSpinner = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ClicksToPass):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.ClicksToPass = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.ClicksToPass = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(Is3Btn):
                     if (update.NewValue!.Is(BoolValue.Descriptor)) this.Is3Btn = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(TestTimeoutSec):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.TestTimeoutSec = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.TestTimeoutSec = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(Instructions):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.Instructions = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(ShowCursorTest):
@@ -413,7 +413,7 @@ namespace Pointer.ViewModels.RemoteClients
                                    case nameof(SelectedDevice):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.SelectedDevice = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(LastClickCount):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.LastClickCount = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.LastClickCount = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    default: Debug.WriteLine("[ClientProxy:PointerViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
                            }

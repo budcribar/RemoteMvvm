@@ -245,11 +245,11 @@ namespace MonsterClicker.ViewModels.RemoteClients
                                    case nameof(MonsterName):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.MonsterName = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(MonsterMaxHealth):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.MonsterMaxHealth = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.MonsterMaxHealth = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(MonsterCurrentHealth):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.MonsterCurrentHealth = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.MonsterCurrentHealth = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(PlayerDamage):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.PlayerDamage = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.PlayerDamage = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(GameMessage):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.GameMessage = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(IsMonsterDefeated):
