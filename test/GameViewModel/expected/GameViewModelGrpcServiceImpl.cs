@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.Threading.Channels;
 using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
+using CommunityToolkit.Mvvm.ComponentModel;
 using System.Windows.Threading;
 
 public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameViewModelServiceBase
@@ -268,147 +269,25 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             var oldValue = propertyInfo.GetValue(target);
             if (oldValue != null) response.OldValue = PackToAny(oldValue);
             
-            // **DEADLOCK FIX**: Temporarily remove PropertyChanged event handler to prevent streaming notifications during property updates
-            bool eventHandlerRemoved = false;
-            if (_viewModel is INotifyPropertyChanged inpc)
+            // Handle collection indexing
+            if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex >= 0)
+                response = HandleCollectionUpdate(target, propertyInfo, request);
+            else
             {
-                inpc.PropertyChanged -= ViewModel_PropertyChanged;
-                eventHandlerRemoved = true;
-            }
-            try
-            {
-                // Handle collection indexing
-                if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex >= 0)
-                    response = HandleCollectionUpdate(target, propertyInfo, request);
+                // Direct property assignment - thread-safe approach
+                var convertedValue = ConvertAnyToTargetType(request.NewValue, propertyInfo.PropertyType);
+                if (convertedValue.Success)
+                {
+                    Debug.WriteLine($"[GrpcService:GameViewModel] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
+                    
+                    // Set the property value - PropertyChanged events will be handled naturally by the property setter
+                    propertyInfo.SetValue(target, convertedValue.Value);
+                    response.Success = true;
+                }
                 else
                 {
-                    // Direct property assignment with inline type checking for better testability  
-                    var targetType = propertyInfo.PropertyType;
-                    object? convertedValue = null;
-                    bool conversionSuccess = false;
-                    string conversionError = "";
-                    
-                    if (request.NewValue.Is(StringValue.Descriptor) && targetType == typeof(string))
-                    {
-                        convertedValue = request.NewValue.Unpack<StringValue>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(Int32Value.Descriptor) && targetType == typeof(int))
-                    {
-                        convertedValue = request.NewValue.Unpack<Int32Value>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(Int64Value.Descriptor) && targetType == typeof(long))
-                    {
-                        convertedValue = request.NewValue.Unpack<Int64Value>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(UInt32Value.Descriptor) && targetType == typeof(uint))
-                    {
-                        convertedValue = request.NewValue.Unpack<UInt32Value>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(UInt64Value.Descriptor) && targetType == typeof(ulong))
-                    {
-                        convertedValue = request.NewValue.Unpack<UInt64Value>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(FloatValue.Descriptor) && targetType == typeof(float))
-                    {
-                        convertedValue = request.NewValue.Unpack<FloatValue>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(DoubleValue.Descriptor) && targetType == typeof(double))
-                    {
-                        convertedValue = request.NewValue.Unpack<DoubleValue>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(BoolValue.Descriptor) && targetType == typeof(bool))
-                    {
-                        convertedValue = request.NewValue.Unpack<BoolValue>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(Int32Value.Descriptor) && targetType == typeof(short))
-                    {
-                        convertedValue = (short)request.NewValue.Unpack<Int32Value>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(Int32Value.Descriptor) && targetType == typeof(byte))
-                    {
-                        convertedValue = (byte)request.NewValue.Unpack<Int32Value>().Value;
-                        conversionSuccess = true;
-                    }
-                    else if (request.NewValue.Is(StringValue.Descriptor) && targetType == typeof(char))
-                    {
-                        var str = request.NewValue.Unpack<StringValue>().Value;
-                        if (!string.IsNullOrEmpty(str))
-                        {
-                            convertedValue = str[0];
-                            conversionSuccess = true;
-                        }
-                        else
-                        {
-                            conversionError = "Cannot convert empty string to char";
-                        }
-                    }
-                    else if (request.NewValue.Is(StringValue.Descriptor) && targetType == typeof(decimal))
-                    {
-                        var str = request.NewValue.Unpack<StringValue>().Value;
-                        if (decimal.TryParse(str, out var decimalVal))
-                        {
-                            convertedValue = decimalVal;
-                            conversionSuccess = true;
-                        }
-                        else
-                        {
-                            conversionError = $"Cannot parse '{str}' as decimal";
-                        }
-                    }
-                    else if (request.NewValue.Is(StringValue.Descriptor) && targetType == typeof(Guid))
-                    {
-                        var str = request.NewValue.Unpack<StringValue>().Value;
-                        if (Guid.TryParse(str, out var guidVal))
-                        {
-                            convertedValue = guidVal;
-                            conversionSuccess = true;
-                        }
-                        else
-                        {
-                            conversionError = $"Cannot parse '{str}' as Guid";
-                        }
-                    }
-                    else if (request.NewValue.Is(FloatValue.Descriptor) && targetType == typeof(Half))
-                    {
-                        convertedValue = (Half)request.NewValue.Unpack<FloatValue>().Value;
-                        conversionSuccess = true;
-                    }
-                    else
-                    {
-                        // Fallback to the existing method for other types
-                        var result = ConvertAnyToTargetType(request.NewValue, propertyInfo.PropertyType);
-                        convertedValue = result.Value;
-                        conversionSuccess = result.Success;
-                        conversionError = result.ErrorMessage;
-                    }
-                    
-                    if (conversionSuccess)
-                    {
-                        propertyInfo.SetValue(target, convertedValue);
-                        response.Success = true;
-                    }
-                    else
-                    {
-                        response.Success = false;
-                        response.ErrorMessage = conversionError;
-                    }
-                }
-            }
-            finally
-            {
-                // **ALWAYS re-add the event handler** - even if an exception occurs during property setting
-                if (eventHandlerRemoved && _viewModel is INotifyPropertyChanged inpc2)
-                {
-                    inpc2.PropertyChanged += ViewModel_PropertyChanged;
+                    response.Success = false;
+                    response.ErrorMessage = convertedValue.ErrorMessage;
                 }
             }
         }
@@ -662,6 +541,8 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         notification.NewValue = PackToAny(newValue);
         Debug.WriteLine("[GrpcService:GameViewModel] Created notification with TypeUrl: " + (notification.NewValue?.TypeUrl ?? "<null>"));
 
+        // Send notifications directly to unbounded channels (non-blocking queues)
+        // No need for Task.Run since channels are designed to be non-blocking
         int successfulWrites = 0;
         foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
         {
@@ -831,6 +712,17 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             _logger?.LogError(ex, "Error executing command ResetGame");
         }
         
+        return Task.FromResult(response);
+    }
+
+    public override Task<MonsterClicker.ViewModels.Protos.ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
+    {
+        var response = new MonsterClicker.ViewModels.Protos.ConnectionStatusResponse
+        {
+            Status = MonsterClicker.ViewModels.Protos.ConnectionStatus.Connected
+        };
+        
+        Debug.WriteLine("[GrpcService:GameViewModel] Ping received, responding with Connected status");
         return Task.FromResult(response);
     }
 

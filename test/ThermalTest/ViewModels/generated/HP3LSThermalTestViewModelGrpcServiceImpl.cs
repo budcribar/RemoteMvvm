@@ -754,4 +754,15 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         return Task.FromResult(response);
     }
 
+    public override Task<Generated.Protos.ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
+    {
+        var response = new Generated.Protos.ConnectionStatusResponse
+        {
+            Status = Generated.Protos.ConnectionStatus.Connected
+        };
+        
+        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Ping received, responding with Connected status");
+        return Task.FromResult(response);
+    }
+
 }
