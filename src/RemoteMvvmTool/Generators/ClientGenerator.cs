@@ -202,10 +202,23 @@ public static class ClientGenerator
                     }
                     else if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
                     {
+                        var typeDisplayString = named.ToDisplayString();
                         if (memElem?.SpecialType == SpecialType.System_Byte)
-                            psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}.Memory;");
+                        {
+                            // Handle byte memory types
+                            if (typeDisplayString.StartsWith("System.ReadOnlyMemory<"))
+                                psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}.Memory;");
+                            else // Memory<byte>
+                                psb.AppendLine($"{ind}this.{prop.Name} = new Memory<byte>(state.{protoStateFieldName}.ToByteArray());");
+                        }
                         else
-                            psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}.ToArray();");
+                        {
+                            // Handle non-byte memory types 
+                            if (typeDisplayString.StartsWith("System.ReadOnlyMemory<"))
+                                psb.AppendLine($"{ind}this.{prop.Name} = new ReadOnlyMemory<{memElem?.ToDisplayString()}>(state.{protoStateFieldName}.ToArray());");
+                            else // Memory<T>
+                                psb.AppendLine($"{ind}this.{prop.Name} = new Memory<{memElem?.ToDisplayString()}>(state.{protoStateFieldName}.ToArray());");
+                        }
                     }
                     else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                     {

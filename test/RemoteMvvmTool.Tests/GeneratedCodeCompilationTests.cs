@@ -272,8 +272,8 @@ public partial class TestViewModel : ObservableObject
     [InlineData("DictionaryOfLists")] // ? PASSING  
     [InlineData("EdgeCasePrimitives")] // ? FIXED! - DateOnly, TimeOnly, and numeric casting issues resolved
     //[InlineData("NestedCustomObjects")] // ? BROKEN - needs investigation (compilation errors)
-    //[InlineData("EmptyCollections")] // ? BROKEN - protobuf issues
-    //[InlineData("MemoryTypes")] // ? BROKEN - Memory<byte> conversion issues
+    //[InlineData("EmptyCollections")] // ? PROTOBUF ISSUE - missing wrapper imports
+    //[InlineData("MemoryTypes")] // ? SERVER GENERATION ISSUE - List<byte> vs IEnumerable<uint> conversion
     [InlineData("LargeCollections")] // ? PASSING
     //[InlineData("MixedComplexTypes")] // ? BROKEN - needs investigation (compilation errors)
     public async Task Generated_Code_Compiles_For_EdgeCase_Types(string testCaseType)
