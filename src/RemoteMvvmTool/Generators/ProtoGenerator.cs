@@ -20,6 +20,7 @@ public static class ProtoGenerator
         var mapEntryMessages = new Dictionary<string, (ITypeSymbol Key, ITypeSymbol Value)>();
         bool usesTimestamp = false;
         bool usesDuration = false;
+        bool usesWrappers = false;
 
         string MapProtoType(ITypeSymbol type, bool allowMessage)
         {
@@ -102,14 +103,30 @@ public static class ProtoGenerator
                 string innerWkt = GeneratorHelpers.GetProtoWellKnownTypeFor(inner);
                 switch (innerWkt)
                 {
-                    case "StringValue": return "google.protobuf.StringValue";
-                    case "BoolValue": return "google.protobuf.BoolValue";
-                    case "Int32Value": return "google.protobuf.Int32Value";
-                    case "Int64Value": return "google.protobuf.Int64Value";
-                    case "UInt32Value": return "google.protobuf.UInt32Value";
-                    case "UInt64Value": return "google.protobuf.UInt64Value";
-                    case "FloatValue": return "google.protobuf.FloatValue";
-                    case "DoubleValue": return "google.protobuf.DoubleValue";
+                    case "StringValue": 
+                        usesWrappers = true;
+                        return "google.protobuf.StringValue";
+                    case "BoolValue": 
+                        usesWrappers = true;
+                        return "google.protobuf.BoolValue";
+                    case "Int32Value": 
+                        usesWrappers = true;
+                        return "google.protobuf.Int32Value";
+                    case "Int64Value": 
+                        usesWrappers = true;
+                        return "google.protobuf.Int64Value";
+                    case "UInt32Value": 
+                        usesWrappers = true;
+                        return "google.protobuf.UInt32Value";
+                    case "UInt64Value": 
+                        usesWrappers = true;
+                        return "google.protobuf.UInt64Value";
+                    case "FloatValue": 
+                        usesWrappers = true;
+                        return "google.protobuf.FloatValue";
+                    case "DoubleValue": 
+                        usesWrappers = true;
+                        return "google.protobuf.DoubleValue";
                 }
                 type = inner;
                 wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
@@ -367,6 +384,8 @@ public static class ProtoGenerator
             optionalImports.AppendLine("import \"google/protobuf/timestamp.proto\";");
         if (usesDuration)
             optionalImports.AppendLine("import \"google/protobuf/duration.proto\";");
+        if (usesWrappers)
+            optionalImports.AppendLine("import \"google/protobuf/wrappers.proto\";");
         optionalImports.AppendLine();
 
         var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ProtoTemplate.tmpl");
