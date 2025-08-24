@@ -55,23 +55,6 @@ public static class ServerGenerator
         // Generate command methods
         var commandMethods = GenerateCommandMethods(cmds, vmName, protoNs, runType);
 
-        // Generate console mode setup
-        var consoleModeSetup = @"        // **GRPC THREADING FIX**: gRPC services run on background threads, so PropertyChanged events
-        // must fire on the current thread to reach streaming subscribers, not be marshaled to UI thread
-        try
-        {
-            var fireOnUIThreadProperty = _viewModel.GetType().GetProperty(""FirePropertyChangedOnUIThread"");
-            if (fireOnUIThreadProperty != null && fireOnUIThreadProperty.CanWrite)
-            {
-                fireOnUIThreadProperty.SetValue(_viewModel, false);
-                Debug.WriteLine(""[GrpcService:" + vmName + @"] Set FirePropertyChangedOnUIThread = false for gRPC compatibility"");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine(""[GrpcService:" + vmName + @"] Warning: Could not set FirePropertyChangedOnUIThread: "" + ex.Message);
-        }";
-
         var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ServerTemplate.tmpl");
         
         return GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
@@ -85,7 +68,7 @@ public static class ServerGenerator
             ["<<DISPATCHER_FIELDS>>"] = dispatcherFields,
             ["<<DISPATCHER_PARAMS>>"] = dispatcherParams,
             ["<<DISPATCHER_ASSIGNMENTS>>"] = dispatcherAssignments,
-            ["<<CONSOLE_MODE_SETUP>>"] = consoleModeSetup,
+            ["<<CONSOLE_MODE_SETUP>>"] = "",
             ["<<PROPERTY_MAPPINGS>>"] = propertyMappings,
             ["<<UPDATE_PROPERTY_DISPATCHER_LOGIC>>"] = updatePropertyDispatcherLogic,
             ["<<COMMAND_METHODS>>"] = commandMethods + GeneratePingMethod(vmName, protoNs),

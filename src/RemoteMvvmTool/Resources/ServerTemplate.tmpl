@@ -51,9 +51,6 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
 <<DISPATCHER_ASSIGNMENTS>>
         _logger = logger;
-        
-<<CONSOLE_MODE_SETUP>>
-        
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
         else { Debug.WriteLine("[GrpcService:<<VIEWMODEL_NAME>>] WARNING: ViewModel does not implement INotifyPropertyChanged!"); }
         Debug.WriteLine("[GrpcService:<<VIEWMODEL_NAME>>] Constructor completed. ViewModel type: " + _viewModel.GetType().FullName);
