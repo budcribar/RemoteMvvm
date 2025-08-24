@@ -270,7 +270,7 @@ public partial class TestViewModel : ObservableObject
     [Theory]
     [InlineData("ListOfDictionaries")] // ? PASSING
     [InlineData("DictionaryOfLists")] // ? PASSING  
-    //[InlineData("EdgeCasePrimitives")] // ? BROKEN - protobuf issues
+    [InlineData("EdgeCasePrimitives")] // ? FIXED! - DateOnly, TimeOnly, and numeric casting issues resolved
     //[InlineData("NestedCustomObjects")] // ? BROKEN - needs investigation (compilation errors)
     //[InlineData("EmptyCollections")] // ? BROKEN - protobuf issues
     //[InlineData("MemoryTypes")] // ? BROKEN - Memory<byte> conversion issues

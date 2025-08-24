@@ -219,11 +219,11 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                switch (update.PropertyName)
                                {
                                    case nameof(CpuTemperatureThreshold):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuTemperatureThreshold = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuTemperatureThreshold = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(CpuLoadThreshold):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadThreshold = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadThreshold = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(CpuLoadTimeSpan):
-                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadTimeSpan = update.NewValue.Unpack<Int32Value>().Value; break;
+                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadTimeSpan = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(ZoneList):
                                        Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for ZoneList with WKT Any not fully implemented or is Any."); break;
                                    case nameof(TestSettings):

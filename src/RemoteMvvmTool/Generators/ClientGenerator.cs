@@ -108,13 +108,15 @@ public static class ClientGenerator
             {
                 "Int32Value" => type.SpecialType == SpecialType.System_Int32 ? expr : $"({type.ToDisplayString()}){expr}",
                 "UInt32Value" => type.SpecialType == SpecialType.System_UInt32 ? expr : $"({type.ToDisplayString()}){expr}",
-                "Int64Value" => expr,
-                "UInt64Value" => expr,
+                "Int64Value" => type.SpecialType == SpecialType.System_Int64 ? expr : $"({type.ToDisplayString()}){expr}",
+                "UInt64Value" => type.SpecialType == SpecialType.System_UInt64 ? expr : $"({type.ToDisplayString()}){expr}",
                 "StringValue" => type.ToDisplayString() switch
                 {
                     "System.Guid" => $"Guid.Parse({expr})",
                     "System.Char" or "char" => $"{expr}[0]",
                     "System.Decimal" or "decimal" => $"decimal.Parse({expr})",
+                    "System.DateOnly" => $"DateOnly.Parse({expr})",
+                    "System.TimeOnly" => $"TimeOnly.Parse({expr})",
                     "System.Half" => $"(Half)float.Parse({expr})",
                     _ => expr
                 },
@@ -277,7 +279,12 @@ public static class ClientGenerator
                             "System.Decimal" or "decimal" => $"decimal.Parse(state.{protoStateFieldName})",
                             "System.Char" or "char" => $"state.{protoStateFieldName}[0]",
                             "System.Guid" => $"Guid.Parse(state.{protoStateFieldName})",
+                            "System.DateOnly" => $"DateOnly.Parse(state.{protoStateFieldName})",
+                            "System.TimeOnly" => $"TimeOnly.Parse(state.{protoStateFieldName})",
                             "System.Half" => $"(Half)state.{protoStateFieldName}",
+                            "nuint" or "System.UIntPtr" => $"(nuint)state.{protoStateFieldName}",
+                            "short" or "System.Int16" => $"(short)state.{protoStateFieldName}",
+                            "byte" or "System.Byte" => $"(byte)state.{protoStateFieldName}",
                             _ => $"state.{protoStateFieldName}"
                         };
 
@@ -360,17 +367,25 @@ public static class ClientGenerator
                     case "System.Guid":
                         propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = Guid.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
                         break;
+                    case "System.DateOnly":
+                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = DateOnly.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
+                    case "System.TimeOnly":
+                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = TimeOnly.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
                     default:
                         propertyUpdateCases.AppendLine($"                 if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
                         break;
                 }
             }
             else if (wkt == "Int32Value")
-                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int32Value>().Value; break;");
+                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int32Value>().Value; break;");
             else if (wkt == "Int64Value")
-                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int64Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Int64Value>().Value; break;");
+                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int64Value>().Value; break;");
             else if (wkt == "UInt32Value")
-                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt32Value.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<UInt32Value>().Value; break;");
+                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt32Value>().Value; break;");
+            else if (wkt == "UInt64Value")
+                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt64Value>().Value; break;");
             else if (wkt == "DoubleValue")
                 propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(DoubleValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<DoubleValue>().Value; break;");
             else if (wkt == "FloatValue")

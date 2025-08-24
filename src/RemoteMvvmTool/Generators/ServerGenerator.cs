@@ -86,13 +86,15 @@ public static class ServerGenerator
             {
                 "Int32Value" => $"(int){expr}",
                 "UInt32Value" => $"(uint){expr}",
-                "Int64Value" => expr,
-                "UInt64Value" => expr,
+                "Int64Value" => type.SpecialType == SpecialType.System_Int64 ? expr : $"(long){expr}",
+                "UInt64Value" => type.SpecialType == SpecialType.System_UInt64 ? expr : $"(ulong){expr}",
                 "StringValue" => type.ToDisplayString() switch
                 {
                     "System.Guid" => $"{expr}.ToString()",
                     "System.Char" or "char" => $"{expr}.ToString()",
                     "System.Decimal" or "decimal" => $"{expr}.ToString()",
+                    "System.DateOnly" => $"{expr}.ToString()",
+                    "System.TimeOnly" => $"{expr}.ToString()",
                     _ => expr
                 },
                 "FloatValue" => type.ToDisplayString() == "System.Half" ? $"(float){expr}" : expr,
@@ -264,6 +266,8 @@ public static class ServerGenerator
                     "System.Char" or "char" => $"propValue.ToString()",
                     "System.Guid" => $"propValue.ToString()",
                     "System.Decimal" or "decimal" => $"propValue.ToString()",
+                    "System.DateOnly" => $"propValue.ToString()",
+                    "System.TimeOnly" => $"propValue.ToString()",
                     _ => "propValue"
                 };
                 
