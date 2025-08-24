@@ -4,16 +4,8 @@
 
 global.XMLHttpRequest = require('xhr2');
 
-function loadGenerated(modulePathLower, modulePathUpper) {
-  try {
-    return require(modulePathLower);
-  } catch {
-    return require(modulePathUpper);
-  }
-}
-
-const svc = loadGenerated('./testviewmodelservice_grpc_web_pb.js', './TestViewModelService_grpc_web_pb.js');
-const pb = loadGenerated('./testviewmodelservice_pb.js', './TestViewModelService_pb.js');
+const svc = require('./testviewmodelservice_grpc_web_pb.js');
+const pb = require('./testviewmodelservice_pb.js');
 const { TestViewModelServiceClient } = svc;
 const { Empty } = require('google-protobuf/google/protobuf/empty_pb.js');
 const process = require('process');
@@ -71,21 +63,21 @@ client.getState(new Empty(), {}, (err, response) => {
         try {
             const value = response[getter]();
             if (value !== undefined && value !== null && value !== '') {
-                console.log(`${getter}():`, value);
+                console.log(`${getter}(): ${value}`);
                 hasData = true;
             }
         } catch (getterError) {
-            // Ignore getter errors
+            // Some getters might fail, that's okay
         }
     });
     
     if (hasData) {
-        console.log('? Server returned data successfully');
+        console.log('? Successfully extracted data from response');
     } else {
-        console.log('?? Server responded but no data was extracted');
+        console.log('?? Response had no extractable data (may be expected)');
     }
     
-    console.log('?? Basic connectivity test passed!');
+    console.log('? Basic connectivity test passed!');
     process.exit(0);
 });
 

@@ -247,5 +247,4 @@ export class HP3LSThermalTestViewModelRemoteClient {
     private toCamelCase(str: string): string {
         return str.charAt(0).toLowerCase() + str.slice(1);
     }
-
-    dispose(): void {
+}

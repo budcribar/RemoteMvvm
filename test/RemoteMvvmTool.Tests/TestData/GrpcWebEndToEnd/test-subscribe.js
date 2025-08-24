@@ -3,16 +3,8 @@
 
 global.XMLHttpRequest = require('xhr2');
 
-function loadGenerated(modulePathLower, modulePathUpper) {
-  try {
-    return require(modulePathLower);
-  } catch {
-    return require(modulePathUpper);
-  }
-}
-
-const svc = loadGenerated('./testviewmodelservice_grpc_web_pb.js', './TestViewModelService_grpc_web_pb.js');
-const pb = loadGenerated('./testviewmodelservice_pb.js', './TestViewModelService_pb.js');
+const svc = require('./testviewmodelservice_grpc_web_pb.js');
+const pb = require('./testviewmodelservice_pb.js');
 const { TestViewModelServiceClient } = svc;
 const process = require('process');
 
@@ -21,45 +13,15 @@ const client = new TestViewModelServiceClient(`http://localhost:${port}`, null, 
 
 console.log('Starting SubscribeToPropertyChanges test using generated client...');
 
-// Enhanced SubscribeRequest detection with better error handling
-let SubscribeRequest;
-let foundSubscribeRequest = false;
-
-// Try different locations for SubscribeRequest
-const possibleLocations = [
-  () => pb.SubscribeRequest,
-  () => svc.SubscribeRequest,
-  () => pb.Test?.Protos?.SubscribeRequest,
-  () => global.proto?.test_protos?.SubscribeRequest,
-];
-
-for (const getRequest of possibleLocations) {
-  try {
-    const req = getRequest();
-    if (req && typeof req === 'function') {
-      SubscribeRequest = req;
-      foundSubscribeRequest = true;
-      console.log('Found SubscribeRequest constructor');
-      break;
-    }
-  } catch (e) {
-    // Continue to next possibility
-  }
+// Get SubscribeRequest from the protobuf messages
+const { SubscribeRequest } = pb;
+if (!SubscribeRequest) {
+  console.error('SubscribeRequest not found in protobuf messages');
+  console.log('Available in pb:', Object.keys(pb));
+  process.exit(1);
 }
 
-if (!foundSubscribeRequest) {
-  console.error('SubscribeRequest not found in any expected location');
-  console.log('Available in pb:', Object.keys(pb || {}));
-  console.log('Available in svc:', Object.keys(svc || {}));
-  
-  // Fallback: create a minimal mock
-  SubscribeRequest = function() {
-    this.client_id = '';
-    this.setClientId = function(id) { this.client_id = id; };
-    this.getClientId = function() { return this.client_id; };
-  };
-  console.log('Using fallback SubscribeRequest implementation');
-}
+console.log('Found SubscribeRequest constructor');
 
 const req = new SubscribeRequest();
 req.setClientId('test-client-' + Date.now());

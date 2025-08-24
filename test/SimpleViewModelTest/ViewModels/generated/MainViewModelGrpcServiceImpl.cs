@@ -53,23 +53,6 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
-        
-        // **GRPC THREADING FIX**: gRPC services run on background threads, so PropertyChanged events
-        // must fire on the current thread to reach streaming subscribers, not be marshaled to UI thread
-        try
-        {
-            var fireOnUIThreadProperty = _viewModel.GetType().GetProperty("FirePropertyChangedOnUIThread");
-            if (fireOnUIThreadProperty != null && fireOnUIThreadProperty.CanWrite)
-            {
-                fireOnUIThreadProperty.SetValue(_viewModel, false);
-                Debug.WriteLine("[GrpcService:MainViewModel] Set FirePropertyChangedOnUIThread = false for gRPC compatibility");
-            }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine("[GrpcService:MainViewModel] Warning: Could not set FirePropertyChangedOnUIThread: " + ex.Message);
-        }
-        
         if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
         else { Debug.WriteLine("[GrpcService:MainViewModel] WARNING: ViewModel does not implement INotifyPropertyChanged!"); }
         Debug.WriteLine("[GrpcService:MainViewModel] Constructor completed. ViewModel type: " + _viewModel.GetType().FullName);
@@ -248,62 +231,9 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
                 {
                     Debug.WriteLine($"[GrpcService:MainViewModel] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
                     
-                    // **THREAD-SAFE PROPERTY UPDATE**: No event handler manipulation needed
-                    // Let the property setter handle PropertyChanged events naturally
+                    // Set the property value - PropertyChanged events will be handled naturally by the property setter
                     propertyInfo.SetValue(target, convertedValue.Value);
                     response.Success = true;
-                    
-                    // **MANUAL PropertyChanged TRIGGER**: Since reflection bypasses property setters,
-                    // we must manually trigger PropertyChanged to notify streaming subscribers
-                    if (target is INotifyPropertyChanged)
-                    {
-                        Debug.WriteLine($"[GrpcService:MainViewModel] Manually triggering PropertyChanged for '{finalPropertyName}'");
-                        
-                        try
-                        {
-                            var targetType = target.GetType();
-                            var onPropertyChanged = targetType.GetMethod("OnPropertyChanged",
-                                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-                            
-                            if (onPropertyChanged != null)
-                            {
-                                Debug.WriteLine($"[GrpcService:MainViewModel] Found OnPropertyChanged method, invoking for '{finalPropertyName}'");
-                                onPropertyChanged.Invoke(target, new object[] { finalPropertyName });
-                                Debug.WriteLine($"[GrpcService:MainViewModel] Successfully triggered OnPropertyChanged for '{finalPropertyName}'");
-                            }
-                            else
-                            {
-                                // Fallback: Try to invoke PropertyChanged event directly
-                                var propertyChangedField = targetType.GetField("PropertyChanged",
-                                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) ??
-                                    targetType.GetField("_propertyChanged",
-                                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                                
-                                if (propertyChangedField != null)
-                                {
-                                    var handler = propertyChangedField.GetValue(target) as PropertyChangedEventHandler;
-                                    if (handler != null)
-                                    {
-                                        Debug.WriteLine($"[GrpcService:MainViewModel] Invoking PropertyChanged event directly for '{finalPropertyName}'");
-                                        handler.Invoke(target, new PropertyChangedEventArgs(finalPropertyName));
-                                        Debug.WriteLine($"[GrpcService:MainViewModel] Successfully invoked PropertyChanged event for '{finalPropertyName}'");
-                                    }
-                                    else
-                                    {
-                                        Debug.WriteLine($"[GrpcService:MainViewModel] PropertyChanged event has no subscribers for '{finalPropertyName}'");
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.WriteLine($"[GrpcService:MainViewModel] OnPropertyChanged method and PropertyChanged field not found on {targetType.Name}");
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[GrpcService:MainViewModel] Error triggering PropertyChanged: {ex}");
-                        }
-                    }
                 }
                 else
                 {

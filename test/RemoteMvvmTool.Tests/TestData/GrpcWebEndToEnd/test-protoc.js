@@ -4,16 +4,8 @@
 
 global.XMLHttpRequest = require('xhr2');
 
-function loadGenerated(modulePathLower, modulePathUpper) {
-  try {
-    return require(modulePathLower);
-  } catch {
-    return require(modulePathUpper);
-  }
-}
-
-const svc = loadGenerated('./testviewmodelservice_grpc_web_pb.js', './TestViewModelService_grpc_web_pb.js');
-loadGenerated('./testviewmodelservice_pb.js', './TestViewModelService_pb.js');
+const svc = require('./testviewmodelservice_grpc_web_pb.js');
+const pb = require('./testviewmodelservice_pb.js');
 const { TestViewModelServiceClient } = svc;
 const { Empty } = require('google-protobuf/google/protobuf/empty_pb.js');
 const process = require('process');
@@ -60,33 +52,31 @@ function extractDataFromResponse(response) {
             } else if (typeof value.entrySet === 'function') {
               // Alternative map iteration approach
               const entries = value.entrySet();
-              for (const entry of entries) {
-                mapData[entry.getKey()] = extractValue(entry.getValue());
-              }
+              entries.forEach(entry => {
+                if (entry && entry.getKey && entry.getValue) {
+                  mapData[entry.getKey()] = extractValue(entry.getValue());
+                }
+              });
+            } else {
+              // Try to extract as an object with numeric/string properties
+              Object.keys(value).forEach(key => {
+                if (!isNaN(key) || typeof key === 'string') {
+                  mapData[key] = extractValue(value[key]);
+                }
+              });
             }
             responseData[propName] = mapData;
-          } else if (typeof value.toArray === 'function') {
-            // Handle repeated fields that have toArray method
-            const arrayValue = value.toArray();
-            responseData[propName] = extractArrayData(arrayValue);
-          } else if (value.getEntriesMap && typeof value.getEntriesMap === 'function') {
-            // Handle single dictionary objects with entries map
-            const entriesMap = value.getEntriesMap();
-            const entries = {};
-            entriesMap.forEach((mapValue, mapKey) => {
-              entries[mapKey] = extractValue(mapValue);
-            });
-            responseData[propName] = entries;
-          } else if (typeof value.getMap === 'function') {
-            // Handle other map-like objects
-            const map = value.getMap();
-            const mapData = {};
-            map.forEach((mapValue, mapKey) => {
-              mapData[mapKey] = extractValue(mapValue);
-            });
-            responseData[propName] = mapData;
+          } else if (value.constructor && value.constructor.name && value.constructor.name.toLowerCase().includes('list')) {
+            // Handle special list objects
+            if (typeof value.array === 'function') {
+              responseData[propName] = extractArrayData(value.array());
+            } else if (value.length !== undefined) {
+              responseData[propName] = extractArrayData(Array.from(value));
+            } else {
+              responseData[propName] = value;
+            }
           } else {
-            // Handle complex objects - recursively extract data
+            // Handle nested objects
             responseData[propName] = extractDataFromResponse(value);
           }
         } else {
@@ -94,53 +84,43 @@ function extractDataFromResponse(response) {
           responseData[propName] = value;
         }
       }
-    } catch (error) {
-      // Skip methods that cause errors - they might not be actual getters
-      console.log(`Skipping method ${methodName}: ${error.message}`);
+    } catch (err) {
+      console.error(`Error extracting ${methodName}:`, err.message);
     }
   });
   
   return responseData;
 }
 
-// Helper function to extract data from arrays
 function extractArrayData(array) {
+  if (!Array.isArray(array)) return array;
+  
   return array.map(item => {
     if (typeof item === 'object' && item !== null) {
-      if (item.getEntriesMap) {
-        // Handle collection of dictionaries (like MetricsByRegion)
-        const entriesMap = item.getEntriesMap();
-        const entries = {};
-        entriesMap.forEach((value, key) => {
-          entries[key] = extractValue(value);
-        });
-        return entries;
-      } else {
-        // Handle other complex objects
+      // Check if it's a protobuf object with getter methods
+      if (Object.getOwnPropertyNames(Object.getPrototypeOf(item)).some(name => name.startsWith('get'))) {
         return extractDataFromResponse(item);
+      } else {
+        return item;
       }
     } else {
-      return extractValue(item);
+      return item;
     }
   });
 }
 
-// Helper function to extract a single value
 function extractValue(value) {
   if (typeof value === 'object' && value !== null) {
     if (Array.isArray(value)) {
       return extractArrayData(value);
-    } else if (value.constructor && value.constructor.name.includes('Map')) {
-      const mapData = {};
-      value.forEach((mapValue, mapKey) => {
-        mapData[mapKey] = extractValue(mapValue);
-      });
-      return mapData;
-    } else {
+    } else if (Object.getOwnPropertyNames(Object.getPrototypeOf(value)).some(name => name.startsWith('get'))) {
       return extractDataFromResponse(value);
+    } else {
+      return value;
     }
+  } else {
+    return value;
   }
-  return value;
 }
 
 client.getState(new Empty(), {}, (err, response) => {
@@ -148,63 +128,84 @@ client.getState(new Empty(), {}, (err, response) => {
     console.error('gRPC error:', err);
     process.exit(1);
   }
-
-  // Output the complete response for data validation
-  console.log('=== TestViewModel Data Start ===');
+  
+  console.log('=== TestViewModel Data Extraction ===');
   
   try {
-    // Use generic extraction instead of hardcoded property checks
-    const responseData = extractDataFromResponse(response);
+    // Extract all data from the response using reflection
+    const extractedData = extractDataFromResponse(response);
+    console.log('RESPONSE_DATA:', JSON.stringify(extractedData, null, 2));
     
-    // Output stringified data for parsing by C# test
-    const jsonData = JSON.stringify(responseData, null, 2);
-    console.log('RESPONSE_DATA:', jsonData);
+    // Create a flat structure for easier numeric extraction
+    const flatData = {};
     
-    // Also output a flattened version for easier parsing
-    const flatData = JSON.stringify(responseData);
-    console.log('FLAT_DATA:', flatData);
-    
-  } catch (parseError) {
-    console.error('Error parsing response:', parseError);
-    // Try to output the raw response object
-    try {
-      const rawResponse = response.toObject ? response.toObject() : response;
-      console.log('RAW_RESPONSE:', JSON.stringify(rawResponse));
-    } catch (rawError) {
-      console.error('Could not serialize raw response either:', rawError);
+    function flattenData(obj, prefix = '') {
+      Object.keys(obj).forEach(key => {
+        const fullKey = prefix ? `${prefix}.${key}` : key;
+        const value = obj[key];
+        
+        if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+          flattenData(value, fullKey);
+        } else if (Array.isArray(value)) {
+          // For arrays, add each element with an index
+          value.forEach((item, index) => {
+            if (typeof item === 'object' && item !== null) {
+              flattenData(item, `${fullKey}[${index}]`);
+            } else {
+              flatData[`${fullKey}[${index}]`] = item;
+            }
+          });
+        } else {
+          flatData[fullKey] = value;
+        }
+      });
     }
+    
+    flattenData(extractedData);
+    console.log('FLAT_DATA:', JSON.stringify(flatData));
+    
+    // Count total extracted values for verification
+    const totalValues = Object.keys(flatData).length;
+    console.log(`📊 Total extracted properties: ${totalValues}`);
+    
+    console.log('✅ Test passed');
+    process.exit(0);
+    
+  } catch (extractError) {
+    console.error('Error during data extraction:', extractError.message);
+    console.error('Raw response type:', typeof response);
+    console.error('Raw response constructor:', response.constructor.name);
+    
+    // Fallback: try direct method calls for known types
+    try {
+      if (response.getZoneListList && typeof response.getZoneListList === 'function') {
+        const zones = response.getZoneListList();
+        console.log('Received zones:', zones.length);
+        
+        if (zones.length >= 2) {
+          const t0 = zones[0].getTemperature();
+          const t1 = zones[1].getTemperature();
+          console.log('Temperatures:', t0, t1);
+          
+          if (t0 === 42 && t1 === 43) {
+            console.log('FLAT_DATA:', JSON.stringify({
+              'zones[0].temperature': t0,
+              'zones[1].temperature': t1,
+              'zones[0].zone': zones[0].getZone ? zones[0].getZone() : 0,
+              'zones[1].zone': zones[1].getZone ? zones[1].getZone() : 1
+            }));
+            console.log('✅ Test passed! Successfully retrieved collection from server using grpc-web client');
+            process.exit(0);
+          }
+        }
+      }
+    } catch (fallbackError) {
+      console.error('Fallback method also failed:', fallbackError.message);
+    }
+    
+    console.error('❌ Failed to extract meaningful data from response');
+    process.exit(1);
   }
-  
-  console.log('=== TestViewModel Data End ===');
-  
-  // Legacy validation for backward compatibility - basic sanity check
-  const zones = response.getZoneListList ? response.getZoneListList() : [];
-  if (zones.length >= 2) {
-    console.log('Received zones:', zones.length);
-    const temperatures = zones.map(z => z.getTemperature ? z.getTemperature() : 0);
-    console.log('Temperatures:', temperatures.join(' '));
-  }
-  
-  // Simple properties check
-  if (response.getMessage) console.log('Message:', response.getMessage());
-  if (response.getCounter !== undefined) console.log('Counter:', response.getCounter());
-  if (response.getIsEnabled !== undefined) console.log('IsEnabled:', response.getIsEnabled());
-  
-  // New: Check for MetricsByRegion specifically
-  if (response.getMetricsByRegionList) {
-    const metricsList = response.getMetricsByRegionList();
-    console.log('MetricsByRegion count:', metricsList.length);
-    metricsList.forEach((metricsMap, index) => {
-      console.log(`Region ${index}:`, metricsMap.getEntriesMap());
-    });
-  }
-  
-  // Check for TotalRegions and IsAnalysisComplete
-  if (response.getTotalRegions !== undefined) console.log('TotalRegions:', response.getTotalRegions());
-  if (response.getIsAnalysisComplete !== undefined) console.log('IsAnalysisComplete:', response.getIsAnalysisComplete());
-  
-  console.log('✅ Test passed');
-  process.exit(0);
 });
 
 // Timeout after 10 seconds

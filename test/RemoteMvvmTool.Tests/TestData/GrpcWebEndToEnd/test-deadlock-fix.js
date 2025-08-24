@@ -1,18 +1,10 @@
 // Setup XMLHttpRequest polyfill for Node.js environment
 global.XMLHttpRequest = require('xhr2');
 
-function loadGenerated(modulePathLower, modulePathUpper) {
-  try {
-    return require(modulePathLower);
-  } catch {
-    return require(modulePathUpper);
-  }
-}
-
-const svc = loadGenerated('./testviewmodelservice_grpc_web_pb.js', './TestViewModelService_grpc_web_pb.js');
-const pb = loadGenerated('./testviewmodelservice_pb.js', './TestViewModelService_pb.js');
+const svc = require('./testviewmodelservice_grpc_web_pb.js');
+const pb = require('./testviewmodelservice_pb.js');
 const { TestViewModelServiceClient } = svc;
-const { UpdatePropertyValueRequest } = require('./testviewmodelservice_pb.js');
+const { UpdatePropertyValueRequest } = pb;
 const { StringValue } = require('google-protobuf/google/protobuf/wrappers_pb.js');
 const { Any } = require('google-protobuf/google/protobuf/any_pb.js');
 const { Empty } = require('google-protobuf/google/protobuf/empty_pb.js');
@@ -38,42 +30,15 @@ try {
 
 console.log('?? Testing DEADLOCK FIX: Streaming + UpdatePropertyValue combination...');
 
-let SubscribeRequest;
-let foundSubscribeRequest = false;
-
-// Enhanced SubscribeRequest detection
-const possibleLocations = [
-  () => pb.SubscribeRequest,
-  () => svc.SubscribeRequest,
-  () => pb.Test?.Protos?.SubscribeRequest,
-  () => global.proto?.test_protos?.SubscribeRequest,
-];
-
-for (const getRequest of possibleLocations) {
-  try {
-    const req = getRequest();
-    if (req && typeof req === 'function') {
-      SubscribeRequest = req;
-      foundSubscribeRequest = true;
-      console.log('? Found SubscribeRequest constructor');
-      break;
-    }
-  } catch (e) {
-    // Continue to next possibility
-  }
+// Get SubscribeRequest from protobuf messages
+const { SubscribeRequest } = pb;
+if (!SubscribeRequest) {
+    console.error('? SubscribeRequest not found in protobuf messages');
+    console.log('Available in pb:', Object.keys(pb));
+    process.exit(1);
 }
 
-if (!foundSubscribeRequest) {
-  console.error('? SubscribeRequest not found - using fallback');
-  SubscribeRequest = function() {
-    this.client_id = '';
-    this.setClientId = function(id) { this.client_id = id; };
-    this.getClientId = function() { return this.client_id; };
-    this.serializeBinary = function() { return new Uint8Array(0); };
-    this.toObject = function() { return { clientId: this.client_id }; };
-  };
-  console.log('Using enhanced fallback SubscribeRequest implementation');
-}
+console.log('? Found SubscribeRequest constructor');
 
 async function testDeadlockFix() {
     let receivedPropertyChange = false;
