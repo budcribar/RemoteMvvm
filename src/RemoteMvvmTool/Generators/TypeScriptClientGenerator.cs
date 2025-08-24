@@ -512,8 +512,8 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("    private toCamelCase(str: string): string {");
         sb.AppendLine("        return str.charAt(0).toLowerCase() + str.slice(1);");
         sb.AppendLine("    }");
-        sb.AppendLine();
-        sb.AppendLine("    dispose(): void {");
+        sb.AppendLine("}");
+
         return sb.ToString();
     }
 }
