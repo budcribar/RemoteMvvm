@@ -535,7 +535,7 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-    [Fact(Skip = "Broken - needs investigation")]
+    [Fact]
     public async Task NestedCustomObjects_EndToEnd_Test()
     {
         var modelCode = """
@@ -564,7 +564,7 @@ public class GrpcWebEndToEndTests
                         };
                         
                         IsActiveCompany = true;
-                        LastUpdate = DateTime.Now;
+                        LastUpdate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
                     }
 
                     [ObservableProperty]
@@ -593,8 +593,9 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected: isActiveCompany(1), company.employeeCount(1500), dept headcounts(200,150,25), budgets(5000000.5,3000000.25,750000.75)
-        var expectedDataValues = "1,25,150,200,1500,750000.75,3000000.25,5000000.5";
+        // Expected: isActiveCompany(1), lastUpdate.nanos(0), lastUpdate.seconds(1704067200),
+        //           company.employeeCount(1500), dept headcounts(200,150,25), budgets(5000000.5,3000000.25,750000.75)
+        var expectedDataValues = "0,1,25,150,200,1500,750000.75,3000000.25,5000000.5,1704067200";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
