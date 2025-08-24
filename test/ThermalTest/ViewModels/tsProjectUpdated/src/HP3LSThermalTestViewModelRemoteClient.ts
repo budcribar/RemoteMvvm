@@ -63,7 +63,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zoneList = (state as any).getZoneListList();
+        this.zoneList = (state as any).getZoneListList().map((v:any) => v.toObject());
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -78,7 +78,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zoneList = (state as any).getZoneListList();
+        this.zoneList = (state as any).getZoneListList().map((v:any) => v.toObject());
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -89,7 +89,14 @@ export class HP3LSThermalTestViewModelRemoteClient {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
-        return await this.grpcClient.updatePropertyValue(req);
+        const response = await this.grpcClient.updatePropertyValue(req);
+        
+        // If the response indicates success, update the local property value
+        if (typeof response.getSuccess === 'function' && response.getSuccess()) {
+            this.updateLocalProperty(propertyName, value);
+        }
+        
+        return response;
     }
 
     // Enhanced updatePropertyValue with support for complex scenarios
@@ -112,7 +119,14 @@ export class HP3LSThermalTestViewModelRemoteClient {
         if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);
         if (options?.operationType) req.setOperationType(options.operationType);
         
-        return await this.grpcClient.updatePropertyValue(req);
+        const response = await this.grpcClient.updatePropertyValue(req);
+        
+        // If the response indicates success, update the local property value
+        if (typeof response.getSuccess === 'function' && response.getSuccess()) {
+            this.updateLocalProperty(propertyName, value);
+        }
+        
+        return response;
     }
 
     async stateChanged(state: any): Promise<void> {
@@ -181,31 +195,46 @@ export class HP3LSThermalTestViewModelRemoteClient {
     }
 
     private createAnyValue(value: any): Any {
-        if (value == null) return Any.pack(new Empty());
+        if (value == null) {
+            const empty = new Empty();
+            const anyValue = new Any();
+            anyValue.pack(empty.serializeBinary(), 'google.protobuf.Empty');
+            return anyValue;
+        }
+        
+        const anyValue = new Any();
+        
         switch (typeof value) {
             case 'string': {
                 const str = new StringValue();
                 str.setValue(value);
-                return Any.pack(str.serializeBinary());
+                anyValue.pack(str.serializeBinary(), 'google.protobuf.StringValue');
+                return anyValue;
             }
             case 'number': {
                 if (Number.isInteger(value)) {
                     const int32 = new Int32Value();
                     int32.setValue(value);
-                    return Any.pack(int32.serializeBinary());
+                    anyValue.pack(int32.serializeBinary(), 'google.protobuf.Int32Value');
+                    return anyValue;
                 } else {
                     const double = new DoubleValue();
                     double.setValue(value);
-                    return Any.pack(double.serializeBinary());
+                    anyValue.pack(double.serializeBinary(), 'google.protobuf.DoubleValue');
+                    return anyValue;
                 }
             }
             case 'boolean': {
                 const bool = new BoolValue();
                 bool.setValue(value);
-                return Any.pack(bool.serializeBinary());
+                anyValue.pack(bool.serializeBinary(), 'google.protobuf.BoolValue');
+                return anyValue;
             }
-            default:
-                return Any.pack(new Empty());
+            default: {
+                const empty = new Empty();
+                anyValue.pack(empty.serializeBinary(), 'google.protobuf.Empty');
+                return anyValue;
+            }
         }
     }
 
@@ -218,5 +247,19 @@ export class HP3LSThermalTestViewModelRemoteClient {
             clearInterval(this.pingIntervalId);
             this.pingIntervalId = undefined;
         }
+    }
+
+    private updateLocalProperty(propertyName: string, value: any): void {
+        const camelCasePropertyName = this.toCamelCase(propertyName);
+        
+        // Update the local property if it exists
+        if (camelCasePropertyName in this) {
+            (this as any)[camelCasePropertyName] = value;
+            this.notifyChange();
+        }
+    }
+
+    private toCamelCase(str: string): string {
+        return str.charAt(0).toLowerCase() + str.slice(1);
     }
 }

@@ -37,35 +37,36 @@ window.addEventListener('error', (ev: ErrorEvent) => {
 
 function computeMaxTempC(deviceName: string | undefined): number {
     const pct = vm?.testSettings?.cpuTemperatureThreshold ?? 100;
-    //const dts = vm?.testSettings?.dTS as Record<string, number> | undefined;
-    //const max = deviceName && dts ? dts[deviceName] : undefined;
+    // If a DTS map is available, prefer that:
+    // const dts = vm?.testSettings?.dTS as Record<string, number> | undefined;
+    // const max = deviceName && dts ? dts[deviceName] : undefined;
     // if (typeof max === 'number' && Number.isFinite(max)) {
-    //     return Math.round(max * (pct / 100));
+    //   return Math.round(max * (pct / 100));
     // }
-    // Fallback if DTS unknown
-    return 100;
+    // Fallback assumption: device max ~100C, threshold is a percent of that
+    return Math.round(100 * (pct / 100));
 }
 
 function buildZonesPayload(): any[] {
-    //const zonesObj = vm.zones ?? {} as Record<string, any>;
-    /* const arr = Object.values(zonesObj) as Array<any>;
-    return arr.map(z => ({
-        active: !!z.isActive,
-        background: z.background ?? '#fafafa',
-        status: String(z.status),
-        state: String(z.state),
-        progress: Number(z.progress ?? 0),
-        zone: z.deviceName ? `${z.deviceName}` : String(z.zone ?? ''),
-        fanSpeed: Number(z.fanSpeed ?? 0),
-        deviceName: z.deviceName ?? 'Device',
-        temperature: Number(z.temperature ?? 0),
-        maxTemp: computeMaxTempC(z.deviceName),
-        processorLoadName: 'Processor Load',
-        processorLoad: Number(z.processorLoad ?? 0),
-        cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
-        // stateDescriptions can be provided if available; omitted by default
-    })); */
-    return [];
+    const zonesArr = Array.isArray(vm.zoneList) ? vm.zoneList : [];
+    return zonesArr
+        .filter((z: any) => z && (z.isActive === undefined || !!z.isActive))
+        .map((z: any) => ({
+            active: z.isActive ?? true,
+            background: z.background ?? '#fafafa',
+            status: String(z.status ?? ''),
+            state: String(z.state ?? ''),
+            progress: Number(z.progress ?? 0),
+            zone: z.deviceName ? String(z.deviceName) : String(z.zone ?? ''),
+            fanSpeed: Number(z.fanSpeed ?? 0),
+            deviceName: z.deviceName ?? 'Device',
+            temperature: Number(z.temperature ?? 0),
+            maxTemp: computeMaxTempC(z.deviceName),
+            processorLoadName: 'Processor Load',
+            processorLoad: Number(z.processorLoad ?? 0),
+            cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
+            // stateDescriptions: can be added if available
+        }));
 }
 
 function render() {
@@ -84,7 +85,7 @@ function render() {
         // Zones
         try {
             const zones = buildZonesPayload();
-            //main.setAttribute('zones', JSON.stringify(zones));
+            main.setAttribute('zones', JSON.stringify(zones));
         } catch (err) {
             handleError(err, 'Render zones');
         }

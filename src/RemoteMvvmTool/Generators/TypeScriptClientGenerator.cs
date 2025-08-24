@@ -252,6 +252,11 @@ public static class TypeScriptClientGenerator
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
+                else if (elem is INamedTypeSymbol elemNt &&
+                         (elemNt.TypeKind == TypeKind.Class || elemNt.TypeKind == TypeKind.Struct) &&
+                         !GeneratorHelpers.IsWellKnownType(elem!) &&
+                         elem!.TypeKind != TypeKind.Enum)
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -259,6 +264,11 @@ public static class TypeScriptClientGenerator
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(arr.ElementType) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
+                else if (arr.ElementType is INamedTypeSymbol arrElemNt &&
+                         (arrElemNt.TypeKind == TypeKind.Class || arrElemNt.TypeKind == TypeKind.Struct) &&
+                         !GeneratorHelpers.IsWellKnownType(arr.ElementType) &&
+                         arr.ElementType.TypeKind != TypeKind.Enum)
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -266,6 +276,11 @@ public static class TypeScriptClientGenerator
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(memElem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
+                else if (memElem is INamedTypeSymbol memElemNt &&
+                         (memElemNt.TypeKind == TypeKind.Class || memElemNt.TypeKind == TypeKind.Struct) &&
+                         !GeneratorHelpers.IsWellKnownType(memElem!) &&
+                         memElem!.TypeKind != TypeKind.Enum)
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -297,6 +312,11 @@ public static class TypeScriptClientGenerator
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
+                else if (elem is INamedTypeSymbol elemNt &&
+                         (elemNt.TypeKind == TypeKind.Class || elemNt.TypeKind == TypeKind.Struct) &&
+                         !GeneratorHelpers.IsWellKnownType(elem!) &&
+                         elem!.TypeKind != TypeKind.Enum)
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -304,6 +324,11 @@ public static class TypeScriptClientGenerator
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(arr.ElementType) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
+                else if (arr.ElementType is INamedTypeSymbol arrElemNt &&
+                         (arrElemNt.TypeKind == TypeKind.Class || arrElemNt.TypeKind == TypeKind.Struct) &&
+                         !GeneratorHelpers.IsWellKnownType(arr.ElementType) &&
+                         arr.ElementType.TypeKind != TypeKind.Enum)
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -311,6 +336,11 @@ public static class TypeScriptClientGenerator
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(memElem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
+                else if (memElem is INamedTypeSymbol memElemNt &&
+                         (memElemNt.TypeKind == TypeKind.Class || memElemNt.TypeKind == TypeKind.Struct) &&
+                         !GeneratorHelpers.IsWellKnownType(memElem!) &&
+                         memElem!.TypeKind != TypeKind.Enum)
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -460,31 +490,46 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine("    private createAnyValue(value: any): Any {");
-        sb.AppendLine("        if (value == null) return Any.pack(new Empty());");
+        sb.AppendLine("        if (value == null) {");
+        sb.AppendLine("            const empty = new Empty();");
+        sb.AppendLine("            const anyValue = new Any();");
+        sb.AppendLine("            anyValue.pack(empty.serializeBinary(), 'google.protobuf.Empty');");
+        sb.AppendLine("            return anyValue;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        ");
+        sb.AppendLine("        const anyValue = new Any();");
+        sb.AppendLine("        ");
         sb.AppendLine("        switch (typeof value) {");
         sb.AppendLine("            case 'string': {");
         sb.AppendLine("                const str = new StringValue();");
         sb.AppendLine("                str.setValue(value);");
-        sb.AppendLine("                return Any.pack(str.serializeBinary());");
+        sb.AppendLine("                anyValue.pack(str.serializeBinary(), 'google.protobuf.StringValue');");
+        sb.AppendLine("                return anyValue;");
         sb.AppendLine("            }");
         sb.AppendLine("            case 'number': {");
         sb.AppendLine("                if (Number.isInteger(value)) {");
         sb.AppendLine("                    const int32 = new Int32Value();");
         sb.AppendLine("                    int32.setValue(value);");
-        sb.AppendLine("                    return Any.pack(int32.serializeBinary());");
+        sb.AppendLine("                    anyValue.pack(int32.serializeBinary(), 'google.protobuf.Int32Value');");
+        sb.AppendLine("                    return anyValue;");
         sb.AppendLine("                } else {");
         sb.AppendLine("                    const double = new DoubleValue();");
         sb.AppendLine("                    double.setValue(value);");
-        sb.AppendLine("                    return Any.pack(double.serializeBinary());");
+        sb.AppendLine("                    anyValue.pack(double.serializeBinary(), 'google.protobuf.DoubleValue');");
+        sb.AppendLine("                    return anyValue;");
         sb.AppendLine("                }");
         sb.AppendLine("            }");
         sb.AppendLine("            case 'boolean': {");
         sb.AppendLine("                const bool = new BoolValue();");
         sb.AppendLine("                bool.setValue(value);");
-        sb.AppendLine("                return Any.pack(bool.serializeBinary());");
+        sb.AppendLine("                anyValue.pack(bool.serializeBinary(), 'google.protobuf.BoolValue');");
+        sb.AppendLine("                return anyValue;");
         sb.AppendLine("            }");
-        sb.AppendLine("            default:");
-        sb.AppendLine("                return Any.pack(new Empty());");
+        sb.AppendLine("            default: {");
+        sb.AppendLine("                const empty = new Empty();");
+        sb.AppendLine("                anyValue.pack(empty.serializeBinary(), 'google.protobuf.Empty');");
+        sb.AppendLine("                return anyValue;");
+        sb.AppendLine("            }");
         sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();

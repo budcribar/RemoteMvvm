@@ -2407,7 +2407,7 @@ class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = state.getCpuTemperatureThreshold();
         this.cpuLoadThreshold = state.getCpuLoadThreshold();
         this.cpuLoadTimeSpan = state.getCpuLoadTimeSpan();
-        this.zoneList = state.getZoneListList();
+        this.zoneList = state.getZoneListList().map((v) => v.toObject());
         this.testSettings = state.getTestSettings()?.toObject();
         this.showDescription = state.getShowDescription();
         this.showReadme = state.getShowReadme();
@@ -2421,7 +2421,7 @@ class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = state.getCpuTemperatureThreshold();
         this.cpuLoadThreshold = state.getCpuLoadThreshold();
         this.cpuLoadTimeSpan = state.getCpuLoadTimeSpan();
-        this.zoneList = state.getZoneListList();
+        this.zoneList = state.getZoneListList().map((v) => v.toObject());
         this.testSettings = state.getTestSettings()?.toObject();
         this.showDescription = state.getShowDescription();
         this.showReadme = state.getShowReadme();
@@ -2431,7 +2431,12 @@ class HP3LSThermalTestViewModelRemoteClient {
         const req = new _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
-        return await this.grpcClient.updatePropertyValue(req);
+        const response = await this.grpcClient.updatePropertyValue(req);
+        // If the response indicates success, update the local property value
+        if (typeof response.getSuccess === 'function' && response.getSuccess()) {
+            this.updateLocalProperty(propertyName, value);
+        }
+        return response;
     }
     // Enhanced updatePropertyValue with support for complex scenarios
     async updatePropertyValueAdvanced(propertyName, value, options) {
@@ -2446,7 +2451,12 @@ class HP3LSThermalTestViewModelRemoteClient {
             req.setArrayIndex(options.arrayIndex);
         if (options?.operationType)
             req.setOperationType(options.operationType);
-        return await this.grpcClient.updatePropertyValue(req);
+        const response = await this.grpcClient.updatePropertyValue(req);
+        // If the response indicates success, update the local property value
+        if (typeof response.getSuccess === 'function' && response.getSuccess()) {
+            this.updateLocalProperty(propertyName, value);
+        }
+        return response;
     }
     async stateChanged(state) {
         const req = new _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.StateChangedRequest();
@@ -2514,33 +2524,45 @@ class HP3LSThermalTestViewModelRemoteClient {
         });
     }
     createAnyValue(value) {
-        if (value == null)
-            return google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any.pack(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
+        if (value == null) {
+            const empty = new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty();
+            const anyValue = new google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any();
+            anyValue.pack(empty.serializeBinary(), 'google.protobuf.Empty');
+            return anyValue;
+        }
+        const anyValue = new google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any();
         switch (typeof value) {
             case 'string': {
                 const str = new google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.StringValue();
                 str.setValue(value);
-                return google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any.pack(str.serializeBinary());
+                anyValue.pack(str.serializeBinary(), 'google.protobuf.StringValue');
+                return anyValue;
             }
             case 'number': {
                 if (Number.isInteger(value)) {
                     const int32 = new google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.Int32Value();
                     int32.setValue(value);
-                    return google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any.pack(int32.serializeBinary());
+                    anyValue.pack(int32.serializeBinary(), 'google.protobuf.Int32Value');
+                    return anyValue;
                 }
                 else {
                     const double = new google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.DoubleValue();
                     double.setValue(value);
-                    return google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any.pack(double.serializeBinary());
+                    anyValue.pack(double.serializeBinary(), 'google.protobuf.DoubleValue');
+                    return anyValue;
                 }
             }
             case 'boolean': {
                 const bool = new google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.BoolValue();
                 bool.setValue(value);
-                return google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any.pack(bool.serializeBinary());
+                anyValue.pack(bool.serializeBinary(), 'google.protobuf.BoolValue');
+                return anyValue;
             }
-            default:
-                return google_protobuf_google_protobuf_any_pb__WEBPACK_IMPORTED_MODULE_2__.Any.pack(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
+            default: {
+                const empty = new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty();
+                anyValue.pack(empty.serializeBinary(), 'google.protobuf.Empty');
+                return anyValue;
+            }
         }
     }
     dispose() {
@@ -2552,6 +2574,17 @@ class HP3LSThermalTestViewModelRemoteClient {
             clearInterval(this.pingIntervalId);
             this.pingIntervalId = undefined;
         }
+    }
+    updateLocalProperty(propertyName, value) {
+        const camelCasePropertyName = this.toCamelCase(propertyName);
+        // Update the local property if it exists
+        if (camelCasePropertyName in this) {
+            this[camelCasePropertyName] = value;
+            this.notifyChange();
+        }
+    }
+    toCamelCase(str) {
+        return str.charAt(0).toLowerCase() + str.slice(1);
     }
 }
 
@@ -6547,24 +6580,26 @@ window.addEventListener('error', (ev) => {
 });
 function computeMaxTempC(deviceName) {
     const pct = vm?.testSettings?.cpuTemperatureThreshold ?? 100;
-    //const dts = vm?.testSettings?.dTS as Record<string, number> | undefined;
-    //const max = deviceName && dts ? dts[deviceName] : undefined;
+    // If a DTS map is available, prefer that:
+    // const dts = vm?.testSettings?.dTS as Record<string, number> | undefined;
+    // const max = deviceName && dts ? dts[deviceName] : undefined;
     // if (typeof max === 'number' && Number.isFinite(max)) {
-    //     return Math.round(max * (pct / 100));
+    //   return Math.round(max * (pct / 100));
     // }
-    // Fallback if DTS unknown
-    return 100;
+    // Fallback assumption: device max ~100C, threshold is a percent of that
+    return Math.round(100 * (pct / 100));
 }
 function buildZonesPayload() {
-    //const zonesObj = vm.zones ?? {} as Record<string, any>;
-    /* const arr = Object.values(zonesObj) as Array<any>;
-    return arr.map(z => ({
-        active: !!z.isActive,
+    const zonesArr = Array.isArray(vm.zoneList) ? vm.zoneList : [];
+    return zonesArr
+        .filter((z) => z && (z.isActive === undefined || !!z.isActive))
+        .map((z) => ({
+        active: z.isActive ?? true,
         background: z.background ?? '#fafafa',
-        status: String(z.status),
-        state: String(z.state),
+        status: String(z.status ?? ''),
+        state: String(z.state ?? ''),
         progress: Number(z.progress ?? 0),
-        zone: z.deviceName ? `${z.deviceName}` : String(z.zone ?? ''),
+        zone: z.deviceName ? String(z.deviceName) : String(z.zone ?? ''),
         fanSpeed: Number(z.fanSpeed ?? 0),
         deviceName: z.deviceName ?? 'Device',
         temperature: Number(z.temperature ?? 0),
@@ -6572,9 +6607,8 @@ function buildZonesPayload() {
         processorLoadName: 'Processor Load',
         processorLoad: Number(z.processorLoad ?? 0),
         cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
-        // stateDescriptions can be provided if available; omitted by default
-    })); */
-    return [];
+        // stateDescriptions: can be added if available
+    }));
 }
 function render() {
     const main = document.querySelector('x-thermal-main');
@@ -6593,7 +6627,7 @@ function render() {
         // Zones
         try {
             const zones = buildZonesPayload();
-            //main.setAttribute('zones', JSON.stringify(zones));
+            main.setAttribute('zones', JSON.stringify(zones));
         }
         catch (err) {
             handleError(err, 'Render zones');
