@@ -508,7 +508,7 @@ public static class ServerGenerator
         sb.AppendLine($"    public override Task<{protoNs}.ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)");
         sb.AppendLine("    {");
         sb.AppendLine($"        var response = new {protoNs}.ConnectionStatusResponse");
-        sb.AppendLine("        {{");
+        sb.AppendLine("        {");
         sb.AppendLine($"            Status = {protoNs}.ConnectionStatus.Connected");
         sb.AppendLine("        };");
         sb.AppendLine("        ");

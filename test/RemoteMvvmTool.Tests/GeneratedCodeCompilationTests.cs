@@ -640,11 +640,7 @@ public partial class TestViewModel : ObservableObject
             var serverFile = serverFiles[0];
             var serverContent = File.ReadAllText(serverFile);
 
-            // Debug: Output the content to understand what's generated
-            System.Console.WriteLine($"Generated server file: {serverFile}");
-            System.Console.WriteLine($"Content preview: {serverContent.Substring(0, Math.Min(1000, serverContent.Length))}");
-
-            // Verify that the Ping method is generated with correct signature
+            // Verify that the Ping method is generated with correct signature and implementation
             Assert.Contains("public override Task<", serverContent);
             Assert.Contains("ConnectionStatusResponse> Ping(", serverContent);
             Assert.Contains("Google.Protobuf.WellKnownTypes.Empty request", serverContent);
@@ -690,8 +686,11 @@ public partial class TestViewModel : ObservableObject
             // Verify that it's a proper gRPC service method override
             Assert.Contains("public override", serverContent);
             
-            // Ensure debug logging is present
+            // Ensure debug logging is present for monitoring/debugging purposes
             Assert.Contains("[GrpcService:TestViewModel] Ping received", serverContent);
+            
+            // Verify the complete Ping method implementation is present
+            Assert.Contains("return Task.FromResult(response);", serverContent);
         }
         finally
         {

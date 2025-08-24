@@ -770,11 +770,25 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected: The data transmission is working correctly and includes all values.
-        // Summary values: collectionCount(1000), dictionarySize(100), maxValue(1000), minValue(1)
-        // Sample verification: Just test a few key values to confirm transmission works
-        // without requiring validation of all 1100+ values
-        var expectedDataValues = "1,100,1000,1000";
+        // Expected: ALL numbers from the data transmission
+        // LargeNumberList: 1,2,3,...,1000 (1000 numbers)
+        // LargeStringDict: 0,10,20,...,990 (100 numbers)  
+        // Plus summary values: CollectionCount(1000), DictionarySize(100), MaxValue(1000), MinValue(1)
+        // Total: 1000 + 100 + 4 = 1104 numbers
+        // This verifies complete data transmission without filtering
+        var allNumbers = new List<int>();
+        
+        // Add LargeNumberList values (1 to 1000)
+        allNumbers.AddRange(Enumerable.Range(1, 1000));
+        
+        // Add LargeStringDict values (0, 10, 20, ..., 990)
+        allNumbers.AddRange(Enumerable.Range(0, 100).Select(i => i * 10));
+        
+        // Add summary property values
+        allNumbers.AddRange(new[] { 1000, 100, 1000, 1 }); // CollectionCount, DictionarySize, MaxValue, MinValue
+        
+        // Sort and create expected string
+        var expectedDataValues = string.Join(",", allNumbers.OrderBy(x => x));
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -1573,7 +1587,7 @@ public class GrpcWebEndToEndTests
     /// Extracts numeric values from the Node.js output by looking for the FLAT_DATA JSON line.
     /// Also converts booleans to 0/1 and handles both integers and doubles.
     /// Preserves duplicate values for validation.
-    /// For large collections, extracts only summary values to avoid performance issues.
+    /// Extracts ALL numbers to verify complete data transmission.
     /// </summary>
     private static string ExtractNumericDataFromOutput(string output)
     {
@@ -1605,7 +1619,8 @@ public class GrpcWebEndToEndTests
                 if (jsonStart >= 0)
                 {
                     var jsonData = trimmedLine.Substring(jsonStart);
-                    ExtractNumbersFromJsonWithLargeCollectionHandling(jsonData, numbers);
+                    // Extract ALL numbers - no smart filtering for large collections
+                    ExtractAllNumbersFromJson(jsonData, numbers);
                     foundFlatData = true;
                 }
                 break; // We found our data, no need to continue
@@ -1641,17 +1656,17 @@ public class GrpcWebEndToEndTests
     }
 
     /// <summary>
-    /// Extract numbers from JSON data with special handling for large collections.
-    /// Large arrays (>50 elements) are summarized rather than extracting all elements.
+    /// Extract ALL numbers from JSON data - no filtering for large collections.
+    /// This ensures complete data transmission verification.
     /// </summary>
-    private static void ExtractNumbersFromJsonWithLargeCollectionHandling(string jsonData, List<double> numbers)
+    private static void ExtractAllNumbersFromJson(string jsonData, List<double> numbers)
     {
         try
         {
             using var document = JsonDocument.Parse(jsonData);
             foreach (var property in document.RootElement.EnumerateObject())
             {
-                ExtractNumberFromJsonValueWithLargeCollectionHandling(property.Value, numbers, property.Name);
+                ExtractAllNumbersFromJsonValue(property.Value, numbers);
             }
         }
         catch (JsonException)
@@ -1662,10 +1677,9 @@ public class GrpcWebEndToEndTests
     }
 
     /// <summary>
-    /// Extract number from JSON value with smart handling for large collections.
-    /// Large arrays (>50 elements) are summarized rather than extracting all elements.
+    /// Extract ALL numbers from JSON value - no smart filtering.
     /// </summary>
-    private static void ExtractNumberFromJsonValueWithLargeCollectionHandling(JsonElement element, List<double> numbers, string propertyName = "")
+    private static void ExtractAllNumbersFromJsonValue(JsonElement element, List<double> numbers)
     {
         switch (element.ValueKind)
         {
@@ -1703,35 +1717,9 @@ public class GrpcWebEndToEndTests
                 numbers.Add(0);
                 break;
             case JsonValueKind.Array:
-                var arrayLength = element.GetArrayLength();
-                
-                // Smart handling for large collections - only extract summary values
-                if (arrayLength > 50 && IsLargeCollection(propertyName))
-                {
-                    // For large collections, extract only first, last, and key statistics
-                    // This handles cases like LargeNumberList with 1000 elements
-                    var arrayElements = element.EnumerateArray().ToArray();
-                    if (arrayElements.Length > 0)
-                    {
-                        // Extract first element
-                        ExtractNumberFromJsonValueWithLargeCollectionHandling(arrayElements[0], numbers);
-                        // Extract last element
-                        ExtractNumberFromJsonValueWithLargeCollectionHandling(arrayElements[arrayElements.Length - 1], numbers);
-                        
-                        // Don't extract all middle elements for very large arrays
-                        Console.WriteLine($"[DATA EXTRACTION] Skipping {arrayLength - 2} elements from large collection '{propertyName}' (length: {arrayLength})");
-                    }
-                }
-                else
-                {
-                    // For smaller collections, extract all elements
-                    if (arrayLength > 50)
-                    {
-                        Console.WriteLine($"[DATA EXTRACTION] Large array '{propertyName}' (length: {arrayLength}) but not treated as large collection");
-                    }
-                    foreach (var item in element.EnumerateArray())
-                        ExtractNumberFromJsonValueWithLargeCollectionHandling(item, numbers);
-                }
+                // Extract ALL elements from arrays - no size limits
+                foreach (var item in element.EnumerateArray())
+                    ExtractAllNumbersFromJsonValue(item, numbers);
                 break;
             case JsonValueKind.Object:
                 foreach (var prop in element.EnumerateObject())
@@ -1741,72 +1729,13 @@ public class GrpcWebEndToEndTests
                         numbers.Add(keyNum);
                     
                     // Also extract from the property value
-                    ExtractNumberFromJsonValueWithLargeCollectionHandling(prop.Value, numbers, prop.Name);
+                    ExtractAllNumbersFromJsonValue(prop.Value, numbers);
                 }
                 break;
         }
     }
 
-    /// <summary>
-    /// Determines if a property name suggests it contains a large collection that should be summarized.
-    /// </summary>
-    private static bool IsLargeCollection(string propertyName)
-    {
-        var largeCollectionNames = new[] { "largenumber", "largestring", "statistics", "metricsByRegion" };
-        return largeCollectionNames.Any(name => propertyName.ToLowerInvariant().Contains(name));
-    }
-
-    private static void ExtractNumbersFromLine(string line, List<double> numbers)
-    {
-        // Handle boolean values - convert to 0/1
-        var processedLine = line
-            .Replace("true", "1")
-            .Replace("false", "0");
-        
-        // For JSON data, try to parse it properly first
-        if (line.TrimStart().StartsWith("{") && line.TrimEnd().EndsWith("}"))
-        {
-            try
-            {
-                using var document = JsonDocument.Parse(line);
-                foreach (var property in document.RootElement.EnumerateObject())
-                {
-                    ExtractNumberFromJsonValue(property.Value, numbers);
-                }
-                return; // Successfully parsed as JSON, don't do string splitting
-            }
-            catch (JsonException)
-            {
-                // Fall through to string parsing if JSON parsing fails
-            }
-        }
-        
-        // Look for numeric values in the line using various delimiters
-        var delimiters = new char[] { ' ', ',', ':', '[', ']', '{', '}', '"', '=', '(', ')', ';', '\t' };
-        var words = processedLine.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
-        
-        foreach (var word in words)
-        {
-            var cleanWord = word.Trim();
-            
-            // Skip common non-numeric words that might contain digits
-            if (IsNonNumericWord(cleanWord))
-                continue;
-            
-            // Try parsing as double (handles both integers and decimals)
-            if (double.TryParse(cleanWord, out var number))
-            {
-                numbers.Add(number); // List preserves duplicates
-            }
-            else
-            {
-                // Try to extract numbers from within strings (like "44" or "2.5" from a longer string)
-                ExtractNumbersFromString(cleanWord, numbers);
-            }
-        }
-    }
-
-    static bool IsLikelyNumericString(string value)
+    private static bool IsLikelyNumericString(string value)
     {
         // Special case: if it's a GUID pattern ending with meaningful numbers, extract the trailing number
         if (value.Length == 36 && value.Contains('-'))
@@ -1839,58 +1768,53 @@ public class GrpcWebEndToEndTests
         return value.All(c => char.IsDigit(c) || c == '.' || c == '-');
     }
 
-    private static void ExtractNumberFromJsonValue(JsonElement element, List<double> numbers)
+    private static void ExtractNumbersFromLine(string line, List<double> numbers)
     {
-        switch (element.ValueKind)
+        // Handle boolean values - convert to 0/1
+        var processedLine = line
+            .Replace("true", "1")
+            .Replace("false", "0");
+        
+        // For JSON data, try to parse it properly first
+        if (line.TrimStart().StartsWith("{") && line.TrimEnd().EndsWith("}"))
         {
-            case JsonValueKind.Number:
-                if (element.TryGetDouble(out var numValue))
-                    numbers.Add(numValue);
-                break;
-            case JsonValueKind.String:
-                var strValue = element.GetString();
-                if (!string.IsNullOrEmpty(strValue))
+            try
+            {
+                using var document = JsonDocument.Parse(line);
+                foreach (var property in document.RootElement.EnumerateObject())
                 {
-                    if (IsLikelyNumericString(strValue))
-                    {
-                        if (double.TryParse(strValue, out var parsedNum))
-                            numbers.Add(parsedNum);
-                    }
-                    else if (strValue.Length == 36 && strValue.Contains('-'))
-                    {
-                        // Special GUID handling - extract meaningful trailing number
-                        var lastDash = strValue.LastIndexOf('-');
-                        if (lastDash >= 0)
-                        {
-                            var lastSegment = strValue.Substring(lastDash + 1);
-                            var trailingDigits = lastSegment.TrimStart('0');
-                            if (!string.IsNullOrEmpty(trailingDigits) && trailingDigits.All(char.IsDigit) && double.TryParse(trailingDigits, out var guidNum))
-                                numbers.Add(guidNum);
-                        }
-                    }
+                    ExtractAllNumbersFromJsonValue(property.Value, numbers);
                 }
-                break;
-            case JsonValueKind.True:
-                numbers.Add(1);
-                break;
-            case JsonValueKind.False:
-                numbers.Add(0);
-                break;
-            case JsonValueKind.Array:
-                foreach (var item in element.EnumerateArray())
-                    ExtractNumberFromJsonValue(item, numbers);
-                break;
-            case JsonValueKind.Object:
-                foreach (var prop in element.EnumerateObject())
-                {
-                    // Extract numeric keys from object property names (for dictionary keys)
-                    if (double.TryParse(prop.Name, out var keyNum))
-                        numbers.Add(keyNum);
-                    
-                    // Also extract from the property value
-                    ExtractNumberFromJsonValue(prop.Value, numbers);
-                }
-                break;
+                return; // Successfully parsed as JSON, don't do string splitting
+            }
+            catch (JsonException)
+            {
+                // Fall through to string parsing if JSON parsing fails
+            }
+        }
+        
+        // Look for numeric values in the line using various delimiters
+        var delimiters = new char[] { ' ', ',', ':', '[', ']', '{', '}', '"' , '=', '(', ')', ';', '\t' };
+        var words = processedLine.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
+        
+        foreach (var word in words)
+        {
+            var cleanWord = word.Trim();
+            
+            // Skip common non-numeric words that might contain digits
+            if (IsNonNumericWord(cleanWord))
+                continue;
+            
+            // Try parsing as double (handles both integers and decimals)
+            if (double.TryParse(cleanWord, out var number))
+            {
+                numbers.Add(number); // List preserves duplicates
+            }
+            else
+            {
+                // Try to extract numbers from within strings (like "44" or "2.5" from a longer string)
+                ExtractNumbersFromString(cleanWord, numbers);
+            }
         }
     }
 
