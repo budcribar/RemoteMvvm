@@ -19,24 +19,24 @@ public class ServerGeneratorBugTests
     }
 
     [Fact]
-    public void UpdatePropertyValue_ShouldHandle_Double()
+    public void ConvertAnyToTargetType_ShouldHandle_Double()
     {
         var server = GenerateServer();
-        Assert.Contains("request.NewValue.Is(DoubleValue.Descriptor)", server);
+        Assert.Contains("anyValue.Is(DoubleValue.Descriptor)", server);
     }
 
     [Fact]
-    public void UpdatePropertyValue_ShouldHandle_Float()
+    public void ConvertAnyToTargetType_ShouldHandle_Float()
     {
         var server = GenerateServer();
-        Assert.Contains("request.NewValue.Is(FloatValue.Descriptor)", server);
+        Assert.Contains("anyValue.Is(FloatValue.Descriptor)", server);
     }
 
     [Fact]
-    public void UpdatePropertyValue_ShouldHandle_Long()
+    public void ConvertAnyToTargetType_ShouldHandle_Long()
     {
         var server = GenerateServer();
-        Assert.Contains("request.NewValue.Is(Int64Value.Descriptor)", server);
+        Assert.Contains("anyValue.Is(Int64Value.Descriptor)", server);
     }
 
     [Fact]

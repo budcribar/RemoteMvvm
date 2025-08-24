@@ -1794,7 +1794,7 @@ public class GrpcWebEndToEndTests
         }
         
         // Look for numeric values in the line using various delimiters
-        var delimiters = new char[] { ' ', ',', ':', '[', ']', '{', '}', '"' , '=', '(', ')', ';', '\t' };
+        var delimiters = new char[] { ' ', ',', ':', '[', ']', '{', '}', '"', '=', '(', ')', ';', '\t' };
         var words = processedLine.Split(delimiters, StringSplitOptions.RemoveEmptyEntries);
         
         foreach (var word in words)

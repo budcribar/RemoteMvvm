@@ -211,62 +211,9 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
                 {
                     Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
                     
-                    // **THREAD-SAFE PROPERTY UPDATE**: No event handler manipulation needed
-                    // Let the property setter handle PropertyChanged events naturally
+                    // Set the property value - PropertyChanged events will be handled naturally by the property setter
                     propertyInfo.SetValue(target, convertedValue.Value);
                     response.Success = true;
-                    
-                    // **MANUAL PropertyChanged TRIGGER**: Since reflection bypasses property setters,
-                    // we must manually trigger PropertyChanged to notify streaming subscribers
-                    if (target is INotifyPropertyChanged)
-                    {
-                        Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Manually triggering PropertyChanged for '{finalPropertyName}'");
-                        
-                        try
-                        {
-                            var targetType = target.GetType();
-                            var onPropertyChanged = targetType.GetMethod("OnPropertyChanged",
-                                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public);
-                            
-                            if (onPropertyChanged != null)
-                            {
-                                Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Found OnPropertyChanged method, invoking for '{finalPropertyName}'");
-                                onPropertyChanged.Invoke(target, new object[] { finalPropertyName });
-                                Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Successfully triggered OnPropertyChanged for '{finalPropertyName}'");
-                            }
-                            else
-                            {
-                                // Fallback: Try to invoke PropertyChanged event directly
-                                var propertyChangedField = targetType.GetField("PropertyChanged",
-                                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) ??
-                                    targetType.GetField("_propertyChanged",
-                                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-                                
-                                if (propertyChangedField != null)
-                                {
-                                    var handler = propertyChangedField.GetValue(target) as PropertyChangedEventHandler;
-                                    if (handler != null)
-                                    {
-                                        Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Invoking PropertyChanged event directly for '{finalPropertyName}'");
-                                        handler.Invoke(target, new PropertyChangedEventArgs(finalPropertyName));
-                                        Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Successfully invoked PropertyChanged event for '{finalPropertyName}'");
-                                    }
-                                    else
-                                    {
-                                        Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] PropertyChanged event has no subscribers for '{finalPropertyName}'");
-                                    }
-                                }
-                                else
-                                {
-                                    Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] OnPropertyChanged method and PropertyChanged field not found on {targetType.Name}");
-                                }
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Error triggering PropertyChanged: {ex}");
-                        }
-                    }
                 }
                 else
                 {
