@@ -1360,7 +1360,7 @@ public class GrpcWebEndToEndTests
     private static async Task RunNpmProtocScript(string testProjectDir)
     {
         Console.WriteLine("Running npm protoc script to generate JavaScript protobuf files...");
-        var npmPaths = new[]
+        var npmPaths = new []
         {
             @"C:\Program Files\nodejs\npm.cmd",
             "npm.cmd",
@@ -2017,7 +2017,7 @@ public class GrpcWebEndToEndTests
         using var httpClient = new HttpClient();
         var response = await httpClient.PostAsync(
             $"http://localhost:{port}/test_protos.TestViewModelService/GetState",
-            new ByteArrayContent([0, 0, 0, 0, 0])
+            new ByteArrayContent([0,0,0,0,0])
         );
         
         if (response.IsSuccessStatusCode)
@@ -2032,11 +2032,11 @@ public class GrpcWebEndToEndTests
     }
 
     [Fact]
-    public async Task SubscribeToPropertyChanges_Simple_Test()
+    public async Task SubscribeToPropertyChanges_With_UpdatePropertyValue_Deadlock_Fix_Test()
     {
         var modelCode = """
+            using System.Threading.Tasks;
             using CommunityToolkit.Mvvm.ComponentModel;
-            using System.ComponentModel;
             using System.Diagnostics;
 
             namespace Generated.ViewModels
@@ -2055,10 +2055,16 @@ public class GrpcWebEndToEndTests
                 }
             }
             """;
-       
 
-        // **FIXED**: This test should verify UpdatePropertyValue response, not PropertyChanged streaming
-        // PropertyChanged streaming should be tested separately with server-initiated changes
-        await TestEndToEndScenario(modelCode, "", "test-update-simple.js", null);
+        await TestEndToEndScenario(modelCode, "", "test-deadlock-fix.js", "Status=Updated");
     }
-}
+
+    [Fact]
+    public async Task SubscribeToPropertyChanges_Simple_Test()
+    {
+        var modelCode = """
+            using CommunityToolkit.Mvvm.ComponentModel;
+            using System.ComponentModel;
+            using System.Diagnostics;
+
+            namespace Generated.ViewModels

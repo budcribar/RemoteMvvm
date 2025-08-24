@@ -55,6 +55,23 @@ public static class ServerGenerator
         // Generate command methods
         var commandMethods = GenerateCommandMethods(cmds, vmName, protoNs, runType);
 
+        // Generate console mode setup
+        var consoleModeSetup = @"        // **GRPC THREADING FIX**: gRPC services run on background threads, so PropertyChanged events
+        // must fire on the current thread to reach streaming subscribers, not be marshaled to UI thread
+        try
+        {
+            var fireOnUIThreadProperty = _viewModel.GetType().GetProperty(""FirePropertyChangedOnUIThread"");
+            if (fireOnUIThreadProperty != null && fireOnUIThreadProperty.CanWrite)
+            {
+                fireOnUIThreadProperty.SetValue(_viewModel, false);
+                Debug.WriteLine(""[GrpcService:" + vmName + @"] Set FirePropertyChangedOnUIThread = false for gRPC compatibility"");
+            }
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine(""[GrpcService:" + vmName + @"] Warning: Could not set FirePropertyChangedOnUIThread: "" + ex.Message);
+        }";
+
         var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ServerTemplate.tmpl");
         
         return GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
@@ -68,6 +85,7 @@ public static class ServerGenerator
             ["<<DISPATCHER_FIELDS>>"] = dispatcherFields,
             ["<<DISPATCHER_PARAMS>>"] = dispatcherParams,
             ["<<DISPATCHER_ASSIGNMENTS>>"] = dispatcherAssignments,
+            ["<<CONSOLE_MODE_SETUP>>"] = consoleModeSetup,
             ["<<PROPERTY_MAPPINGS>>"] = propertyMappings,
             ["<<UPDATE_PROPERTY_DISPATCHER_LOGIC>>"] = updatePropertyDispatcherLogic,
             ["<<COMMAND_METHODS>>"] = commandMethods,
@@ -90,7 +108,8 @@ public static class ServerGenerator
                 "StringValue" => type.ToDisplayString() switch
                 {
                     "System.Guid" => $"{expr}.ToString()",
-                    "System.Char" => $"{expr}.ToString()",
+                    "System.Char" or "char" => $"{expr}.ToString()",
+                    "System.Decimal" or "decimal" => $"{expr}.ToString()",
                     _ => expr
                 },
                 "FloatValue" => type.ToDisplayString() == "System.Half" ? $"(float){expr}" : expr,
@@ -113,9 +132,9 @@ public static class ServerGenerator
             return typeDisplayString switch
             {
                 "System.Half" => $"(float){expr}",
-                "System.Char" => $"{expr}.ToString()",
+                "System.Char" or "char" => $"{expr}.ToString()",
                 "System.Guid" => $"{expr}.ToString()",
-                "System.Decimal" => $"{expr}.ToString()",
+                "System.Decimal" or "decimal" => $"{expr}.ToString()",
                 _ => expr
             };
         }
@@ -253,36 +272,24 @@ public static class ServerGenerator
             }
             else
             {
+                // Handle special type conversions for well-known types
+                var typeDisplayString = p.FullTypeSymbol.ToDisplayString();
+                var assignment = typeDisplayString switch
+                {
+                    "System.DateTime" => $"Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(propValue.ToUniversalTime())",
+                    "System.Half" => $"(float)propValue",
+                    "System.Char" or "char" => $"propValue.ToString()",
+                    "System.Guid" => $"propValue.ToString()",
+                    "System.Decimal" or "decimal" => $"propValue.ToString()",
+                    _ => "propValue"
+                };
+                
                 if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
                     sb.AppendLine($"            state.{p.Name} = (int)propValue;");
                 else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
                     sb.AppendLine($"            state.{p.Name} = {viewModelNamespace}.ProtoStateConverters.ToProto(propValue);");
                 else
-                {
-                    // Handle special type conversions
-                    var typeDisplayString = p.FullTypeSymbol.ToDisplayString();
-                    switch (typeDisplayString)
-                    {
-                        case "System.DateTime":
-                            sb.AppendLine($"            state.{p.Name} = Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(propValue.ToUniversalTime());");
-                            break;
-                        case "System.Half":
-                            sb.AppendLine($"            state.{p.Name} = (float)propValue;");
-                            break;
-                        case "System.Char":
-                            sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
-                            break;
-                        case "System.Guid":
-                            sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
-                            break;
-                        case "System.Decimal":
-                            sb.AppendLine($"            state.{p.Name} = propValue.ToString();");
-                            break;
-                        default:
-                            sb.AppendLine($"            state.{p.Name} = propValue;");
-                            break;
-                    }
-                }
+                    sb.AppendLine($"            state.{p.Name} = {assignment};");
             }
             sb.AppendLine("        }");
             sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.ToString()); }}");
