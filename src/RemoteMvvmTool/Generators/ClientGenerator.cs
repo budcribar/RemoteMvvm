@@ -379,13 +379,29 @@ public static class ClientGenerator
                 }
             }
             else if (wkt == "Int32Value")
-                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int32Value>().Value; break;");
+            {
+                bool needsCast = prop.FullTypeSymbol.SpecialType != SpecialType.System_Int32;
+                string cast = needsCast ? $"({prop.TypeString})" : string.Empty;
+                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.{csharpPropName} = {cast}update.NewValue.Unpack<Int32Value>().Value; break;");
+            }
             else if (wkt == "Int64Value")
-                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int64Value>().Value; break;");
+            {
+                bool needsCast = prop.FullTypeSymbol.SpecialType != SpecialType.System_Int64;
+                string cast = needsCast ? $"({prop.TypeString})" : string.Empty;
+                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int64Value.Descriptor)) this.{csharpPropName} = {cast}update.NewValue.Unpack<Int64Value>().Value; break;");
+            }
             else if (wkt == "UInt32Value")
-                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt32Value>().Value; break;");
+            {
+                bool needsCast = prop.FullTypeSymbol.SpecialType != SpecialType.System_UInt32;
+                string cast = needsCast ? $"({prop.TypeString})" : string.Empty;
+                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt32Value.Descriptor)) this.{csharpPropName} = {cast}update.NewValue.Unpack<UInt32Value>().Value; break;");
+            }
             else if (wkt == "UInt64Value")
-                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt64Value>().Value; break;");
+            {
+                bool needsCast = prop.FullTypeSymbol.SpecialType != SpecialType.System_UInt64;
+                string cast = needsCast ? $"({prop.TypeString})" : string.Empty;
+                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt64Value.Descriptor)) this.{csharpPropName} = {cast}update.NewValue.Unpack<UInt64Value>().Value; break;");
+            }
             else if (wkt == "DoubleValue")
                 propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(DoubleValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<DoubleValue>().Value; break;");
             else if (wkt == "FloatValue")
