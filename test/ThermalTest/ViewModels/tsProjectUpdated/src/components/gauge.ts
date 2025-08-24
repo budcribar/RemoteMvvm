@@ -7,11 +7,14 @@ type AttrMap = {
     text?: string;
     background?: string;
     transform?: string;
+    current?: string; // numeric string
+    max?: string;     // numeric string
+    unit?: string;
 };
 
 export class GaugeElement extends HTMLElement {
     static get observedAttributes() {
-        return ['title', 'text', 'background', 'transform'];
+        return ['title', 'text', 'background', 'transform', 'current', 'max', 'unit'];
     }
 
     private root: ShadowRoot;
@@ -53,7 +56,6 @@ export class GaugeElement extends HTMLElement {
                     height: 100%;
                     transform-origin: center top;
                     transition: transform 0.2s ease-out;
-                    background: #4caf50;
                 }
                 .gauge-cover {
                     width: 75%;
@@ -117,16 +119,77 @@ export class GaugeElement extends HTMLElement {
     set transformStyle(v: string) { this.setAttribute('transform', v ?? ''); }
 
     private syncAllFromAttributes() {
-        (['title', 'text', 'background', 'transform'] as const).forEach(k =>
+        (['title', 'text', 'background', 'transform', 'current', 'max', 'unit'] as const).forEach(k =>
             this.applyAttribute(k, this.getAttribute(k) ?? undefined)
         );
     }
 
     private applyAttribute(name: keyof AttrMap, value?: string) {
+        // Always update title immediately
+        if (name === 'title') {
+            this.els.title.textContent = value ?? '';
+        }
+
+        // If both current and max are present (and numeric), compute derived values.
+        const curAttr = this.getAttribute('current');
+        const maxAttr = this.getAttribute('max');
+        const hasNumeric = (s: string | null) => s != null && s.trim() !== '' && !Number.isNaN(Number(s));
+        const canCompute = hasNumeric(curAttr) && hasNumeric(maxAttr);
+
+        if (canCompute) {
+            // Compute from current/max/unit like the Blazor GaugeComponent
+            const current = Math.max(0, Number(curAttr));
+            const max = Math.max(0, Number(maxAttr));
+            const unit = this.getAttribute('unit') ?? '';
+
+            // Text
+            let text: string;
+            if (max === 0) text = '-';
+            else if (current >= max) text = '+';
+            else text = `${current}${unit}`;
+            this.els.text.textContent = text;
+
+            // Transform using rotate(turn) like the Blazor component
+            let turn = 0;
+            if (max === 0) {
+                turn = 0;
+            } else if (current >= max) {
+                turn = 0.5; // half turn (180deg)
+            } else if (current === 0) {
+                turn = 0.01; // minimal sliver
+            } else {
+                const perc = Math.floor((current * 50) / max); // 0..50
+                // Compose 0.xx in turns; ensure two digits
+                const percStr = String(perc).padStart(2, '0');
+                // rotate(0.xxturn)
+                this.els.filler.style.transform = `rotate(0.${percStr}turn)`;
+                // Background will be applied below; return early to avoid overwrite
+                // Note: For current<max and >0 we already set transform
+                // so skip the generic setter at the end of this block
+            }
+            if (current >= max || max === 0 || current === 0) {
+                this.els.filler.style.transform = `rotate(${turn}turn)`;
+            }
+
+            // Background gradient from green->red
+            let bg = '#FFFFFF';
+            if (max === 0) {
+                bg = '#FFFFFF';
+            } else if (current >= max) {
+                bg = '#FF0000';
+            } else {
+                const perc = Math.max(0, Math.min(100, Math.floor((100 * current) / max)));
+                const red = Math.round((perc * 255) / 100);
+                const green = 255 - red;
+                const toHex2 = (n: number) => n.toString(16).toUpperCase().padStart(2, '0');
+                bg = `#${toHex2(red)}${toHex2(green)}00`;
+            }
+            this.els.filler.style.background = bg;
+            return; // computed values take precedence
+        }
+
+        // Fallback: accept direct text/background/transform inputs
         switch (name) {
-            case 'title':
-                this.els.title.textContent = value ?? '';
-                break;
             case 'text':
                 this.els.text.textContent = value ?? '';
                 break;
@@ -135,6 +198,11 @@ export class GaugeElement extends HTMLElement {
                 break;
             case 'transform':
                 if (value) this.els.filler.style.transform = value; else this.els.filler.style.removeProperty('transform');
+                break;
+            case 'unit':
+            case 'current':
+            case 'max':
+                // If only one of the pair changed and we can't compute yet, do nothing here.
                 break;
         }
     }

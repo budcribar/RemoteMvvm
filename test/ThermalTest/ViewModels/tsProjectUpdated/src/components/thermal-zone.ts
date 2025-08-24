@@ -234,24 +234,24 @@ export class ThermalZoneElement extends HTMLElement {
     }
 
     // Gauges
-    const gaugeCpu = this.root.getElementById('gaugeCpu') as HTMLElement;
-    const gaugeTemp = this.root.getElementById('gaugeTemp') as HTMLElement;
+  const gaugeCpu = this.root.getElementById('gaugeCpu') as HTMLElement;
+  const gaugeTemp = this.root.getElementById('gaugeTemp') as HTMLElement;
 
-    const cpuTitle = this.str('processor-load-name');
-    const cpuVal = this.num('processor-load');
-    const cpuMax = this.num('cpu-load-threshold');
-    const cpuRatio = cpuMax > 0 ? Math.max(0, Math.min(1, cpuVal / cpuMax)) : 0;
-    gaugeCpu.setAttribute('title', cpuTitle);
-    gaugeCpu.setAttribute('text', `${cpuVal}%`);
-    gaugeCpu.setAttribute('transform', `scaleX(${cpuRatio.toFixed(3)})`);
+  const cpuTitle = this.str('processor-load-name');
+  const cpuVal = this.num('processor-load');
+  const cpuMax = this.num('cpu-load-threshold');
+  gaugeCpu.setAttribute('title', cpuTitle);
+  gaugeCpu.setAttribute('unit', '%');
+  gaugeCpu.setAttribute('current', String(cpuVal));
+  gaugeCpu.setAttribute('max', String(Math.max(0, cpuMax)));
 
-    const deviceName = this.str('device-name');
-    const tempVal = this.num('temperature');
-    const tempMax = maxTemp;
-    const tempRatio = tempMax > 0 ? Math.max(0, Math.min(1, tempVal / tempMax)) : 0;
-    gaugeTemp.setAttribute('title', deviceName);
-    gaugeTemp.setAttribute('text', `${tempVal}\u00B0 C`);
-    gaugeTemp.setAttribute('transform', `scaleX(${tempRatio.toFixed(3)})`);
+  const deviceName = this.str('device-name');
+  const tempVal = this.num('temperature');
+  const tempMax = maxTemp;
+  gaugeTemp.setAttribute('title', deviceName);
+  gaugeTemp.setAttribute('unit', '\u00B0 C');
+  gaugeTemp.setAttribute('current', String(tempVal));
+  gaugeTemp.setAttribute('max', String(Math.max(0, tempMax)));
 
     // Details
     const details = this.root.getElementById('details') as HTMLDivElement;

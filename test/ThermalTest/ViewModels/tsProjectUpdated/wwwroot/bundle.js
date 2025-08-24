@@ -2607,7 +2607,7 @@ __webpack_require__.r(__webpack_exports__);
 // <x-gauge title="My Gauge" text="65%" background="#4caf50" transform="scaleX(0.65)"></x-gauge>
 class GaugeElement extends HTMLElement {
     static get observedAttributes() {
-        return ['title', 'text', 'background', 'transform'];
+        return ['title', 'text', 'background', 'transform', 'current', 'max', 'unit'];
     }
     constructor() {
         super();
@@ -2641,7 +2641,6 @@ class GaugeElement extends HTMLElement {
                     height: 100%;
                     transform-origin: center top;
                     transition: transform 0.2s ease-out;
-                    background: #4caf50;
                 }
                 .gauge-cover {
                     width: 75%;
@@ -2697,13 +2696,76 @@ class GaugeElement extends HTMLElement {
     get transformStyle() { return this.getAttribute('transform') ?? ''; }
     set transformStyle(v) { this.setAttribute('transform', v ?? ''); }
     syncAllFromAttributes() {
-        ['title', 'text', 'background', 'transform'].forEach(k => this.applyAttribute(k, this.getAttribute(k) ?? undefined));
+        ['title', 'text', 'background', 'transform', 'current', 'max', 'unit'].forEach(k => this.applyAttribute(k, this.getAttribute(k) ?? undefined));
     }
     applyAttribute(name, value) {
+        // Always update title immediately
+        if (name === 'title') {
+            this.els.title.textContent = value ?? '';
+        }
+        // If both current and max are present (and numeric), compute derived values.
+        const curAttr = this.getAttribute('current');
+        const maxAttr = this.getAttribute('max');
+        const hasNumeric = (s) => s != null && s.trim() !== '' && !Number.isNaN(Number(s));
+        const canCompute = hasNumeric(curAttr) && hasNumeric(maxAttr);
+        if (canCompute) {
+            // Compute from current/max/unit like the Blazor GaugeComponent
+            const current = Math.max(0, Number(curAttr));
+            const max = Math.max(0, Number(maxAttr));
+            const unit = this.getAttribute('unit') ?? '';
+            // Text
+            let text;
+            if (max === 0)
+                text = '-';
+            else if (current >= max)
+                text = '+';
+            else
+                text = `${current}${unit}`;
+            this.els.text.textContent = text;
+            // Transform using rotate(turn) like the Blazor component
+            let turn = 0;
+            if (max === 0) {
+                turn = 0;
+            }
+            else if (current >= max) {
+                turn = 0.5; // half turn (180deg)
+            }
+            else if (current === 0) {
+                turn = 0.01; // minimal sliver
+            }
+            else {
+                const perc = Math.floor((current * 50) / max); // 0..50
+                // Compose 0.xx in turns; ensure two digits
+                const percStr = String(perc).padStart(2, '0');
+                // rotate(0.xxturn)
+                this.els.filler.style.transform = `rotate(0.${percStr}turn)`;
+                // Background will be applied below; return early to avoid overwrite
+                // Note: For current<max and >0 we already set transform
+                // so skip the generic setter at the end of this block
+            }
+            if (current >= max || max === 0 || current === 0) {
+                this.els.filler.style.transform = `rotate(${turn}turn)`;
+            }
+            // Background gradient from green->red
+            let bg = '#FFFFFF';
+            if (max === 0) {
+                bg = '#FFFFFF';
+            }
+            else if (current >= max) {
+                bg = '#FF0000';
+            }
+            else {
+                const perc = Math.max(0, Math.min(100, Math.floor((100 * current) / max)));
+                const red = Math.round((perc * 255) / 100);
+                const green = 255 - red;
+                const toHex2 = (n) => n.toString(16).toUpperCase().padStart(2, '0');
+                bg = `#${toHex2(red)}${toHex2(green)}00`;
+            }
+            this.els.filler.style.background = bg;
+            return; // computed values take precedence
+        }
+        // Fallback: accept direct text/background/transform inputs
         switch (name) {
-            case 'title':
-                this.els.title.textContent = value ?? '';
-                break;
             case 'text':
                 this.els.text.textContent = value ?? '';
                 break;
@@ -2718,6 +2780,11 @@ class GaugeElement extends HTMLElement {
                     this.els.filler.style.transform = value;
                 else
                     this.els.filler.style.removeProperty('transform');
+                break;
+            case 'unit':
+            case 'current':
+            case 'max':
+                // If only one of the pair changed and we can't compute yet, do nothing here.
                 break;
         }
     }
@@ -3448,17 +3515,17 @@ class ThermalZoneElement extends HTMLElement {
         const cpuTitle = this.str('processor-load-name');
         const cpuVal = this.num('processor-load');
         const cpuMax = this.num('cpu-load-threshold');
-        const cpuRatio = cpuMax > 0 ? Math.max(0, Math.min(1, cpuVal / cpuMax)) : 0;
         gaugeCpu.setAttribute('title', cpuTitle);
-        gaugeCpu.setAttribute('text', `${cpuVal}%`);
-        gaugeCpu.setAttribute('transform', `scaleX(${cpuRatio.toFixed(3)})`);
+        gaugeCpu.setAttribute('unit', '%');
+        gaugeCpu.setAttribute('current', String(cpuVal));
+        gaugeCpu.setAttribute('max', String(Math.max(0, cpuMax)));
         const deviceName = this.str('device-name');
         const tempVal = this.num('temperature');
         const tempMax = maxTemp;
-        const tempRatio = tempMax > 0 ? Math.max(0, Math.min(1, tempVal / tempMax)) : 0;
         gaugeTemp.setAttribute('title', deviceName);
-        gaugeTemp.setAttribute('text', `${tempVal}\u00B0 C`);
-        gaugeTemp.setAttribute('transform', `scaleX(${tempRatio.toFixed(3)})`);
+        gaugeTemp.setAttribute('unit', '\u00B0 C');
+        gaugeTemp.setAttribute('current', String(tempVal));
+        gaugeTemp.setAttribute('max', String(Math.max(0, tempMax)));
         // Details
         const details = this.root.getElementById('details');
         const sdStatus = this.desc[status] ?? status;
