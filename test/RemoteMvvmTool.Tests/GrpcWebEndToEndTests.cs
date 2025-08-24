@@ -219,7 +219,8 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-    [Fact(Skip = "Broken - needs investigation")]
+    [Fact]
+
     public async Task ServerOnlyPrimitiveTypes_EndToEnd_Test()
     {
         var modelCode = """
@@ -1698,16 +1699,21 @@ public class GrpcWebEndToEndTests
                         if (double.TryParse(strValue, out var parsedNum))
                             numbers.Add(parsedNum);
                     }
-                    else if (strValue.Length == 36 && strValue.Contains('-'))
+                    else if (strValue.Length == 36 && strValue.Count(c => c == '-') == 4)
                     {
-                        // Special GUID handling - extract meaningful trailing number
+                        // GUID handling - extract meaningful trailing number
                         var lastDash = strValue.LastIndexOf('-');
                         if (lastDash >= 0)
                         {
                             var lastSegment = strValue.Substring(lastDash + 1);
-                            var trailingDigits = lastSegment.TrimStart('0');
-                            if (!string.IsNullOrEmpty(trailingDigits) && trailingDigits.All(char.IsDigit) && double.TryParse(trailingDigits, out var guidNum))
-                                numbers.Add(guidNum);
+                            // Convert hex to decimal if it's not all zeros
+                            if (lastSegment != "000000000000" && !lastSegment.All(c => c == '0'))
+                            {
+                                // Remove leading zeros and try to parse as decimal
+                                var trailingDigits = lastSegment.TrimStart('0');
+                                if (!string.IsNullOrEmpty(trailingDigits) && double.TryParse(trailingDigits, out var guidNum))
+                                    numbers.Add(guidNum);
+                            }
                         }
                     }
                 }
@@ -1750,24 +1756,10 @@ public class GrpcWebEndToEndTests
 
     private static bool IsLikelyNumericString(string value)
     {
-        // Special case: if it's a GUID pattern ending with meaningful numbers, extract the trailing number
-        if (value.Length == 36 && value.Contains('-'))
+        // Special case: if it's a GUID pattern ending with meaningful numbers, handle it in the GUID section
+        if (value.Length == 36 && value.Count(c => c == '-') == 4)
         {
-            // Extract the last segment after the final dash
-            var lastDash = value.LastIndexOf('-');
-            if (lastDash >= 0)
-            {
-                var lastSegment = value.Substring(lastDash + 1);
-                // Check if the last segment has meaningful trailing digits (not all zeros)
-                if (lastSegment.Length >= 2 && !lastSegment.All(c => c == '0'))
-                {
-                    // Try to extract the trailing meaningful number
-                    var trailingDigits = lastSegment.TrimStart('0');
-                    if (!string.IsNullOrEmpty(trailingDigits) && trailingDigits.All(char.IsDigit))
-                        return true; // This should be extracted as a number
-                }
-            }
-            return false; // Regular GUID, don't extract
+            return false; // Let the GUID handling section deal with this
         }
         
         // Don't extract numbers from other long strings with dashes
