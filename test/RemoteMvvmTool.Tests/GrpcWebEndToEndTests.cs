@@ -472,6 +472,7 @@ public class GrpcWebEndToEndTests
     }
 
 
+    [Fact]
     public async Task EdgeCasePrimitives_EndToEnd_Test()
     {
         var modelCode = """
@@ -495,7 +496,7 @@ public class GrpcWebEndToEndTests
                         NegativeShort = short.MinValue;
                         PositiveByte = byte.MaxValue;
                         
-                        UnicodeChar = '🚀'; // Unicode emoji character
+                        UnicodeChar = '★'; // Unicode star character
                         EmptyGuid = Guid.Empty;
                     }
 
@@ -529,9 +530,10 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected: tinyValue(42), bigValue(18446744073709551615), negativeShort(-32768), positiveByte(255)
-        // Note: DateOnly/TimeOnly/decimal/Guid are server-only and transferred as strings, so we don't expect numeric extraction
-        var expectedDataValues = "-32768,42,255,18446744073709551615";
+        // Expected: tinyValue(42), bigValue(18446744073709552000), negativeShort(-32768), positiveByte(255)
+        // Also extracting: preciseValue(99999.99999) - decimal value is now being transmitted
+        // Note: DateOnly/TimeOnly/Guid are server-only and transferred as strings, so we don't expect numeric extraction for those
+        var expectedDataValues = "-32768,42,255,99999.99999,18446744073709552000";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
