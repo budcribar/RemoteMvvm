@@ -600,7 +600,8 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-    [Fact(Skip = "Broken - needs investigation")]
+   
+    [Fact]
     public async Task EmptyCollectionsAndNullEdgeCases_EndToEnd_Test()
     {
         var modelCode = """
