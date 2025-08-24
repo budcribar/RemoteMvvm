@@ -669,7 +669,6 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-    [Fact(Skip = "Broken - needs investigation")]
     public async Task MemoryAndByteArrayTypes_EndToEnd_Test()
     {
         var modelCode = """
