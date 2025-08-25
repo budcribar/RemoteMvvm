@@ -248,7 +248,7 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
         sb.AppendLine("import { Any } from 'google-protobuf/google/protobuf/any_pb';");
-        var wrapperImports = new HashSet<string> { "StringValue", "Int32Value", "Int64Value", "BoolValue", "DoubleValue" };
+        var wrapperImports = new HashSet<string> { "StringValue", "Int32Value", "Int64Value", "UInt32Value", "UInt64Value", "BoolValue", "FloatValue", "DoubleValue" };
         foreach (var p in props)
         {
             var w = GeneratorHelpers.GetWrapperType(p.TypeString);
@@ -538,6 +538,11 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);");
         sb.AppendLine("        this.propertyStream.on('data', (update: PropertyChangeNotification) => {");
         sb.AppendLine("            const anyVal = update.getNewValue();");
+        sb.AppendLine("            const path = update.getPropertyPath();");
+        sb.AppendLine("            if (path) {");
+        sb.AppendLine("                const value = this.unpackAny(anyVal);");
+        sb.AppendLine("                this.setByPath(this, path, value);");
+        sb.AppendLine("            } else {");
         sb.AppendLine("            switch (update.getPropertyName()) {");
         foreach (var p in props)
         {
@@ -566,7 +571,7 @@ public static class TypeScriptClientGenerator
             }
         }
         sb.AppendLine("            }");
-        sb.AppendLine("            ");
+        sb.AppendLine("            }");
         sb.AppendLine("            // Notify with server flag - UI can update but won't send back to server");
         sb.AppendLine("            this.notifyChange(true);");
         sb.AppendLine("        });");
@@ -578,6 +583,53 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("            this.propertyStream = undefined;");
         sb.AppendLine("            setTimeout(() => this.startListeningToPropertyChanges(), 1000);");
         sb.AppendLine("        });");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private setByPath(target: any, path: string, value: any): void {");
+        sb.AppendLine("        const parts = path.split('.');");
+        sb.AppendLine("        let obj: any = target;");
+        sb.AppendLine("        for (let i = 0; i < parts.length; i++) {");
+        sb.AppendLine("            const m = /(\\w+)(?:\\[(\\d+)\\])?/.exec(parts[i]);");
+        sb.AppendLine("            if (!m) return;");
+        sb.AppendLine("            const key = m[1].charAt(0).toLowerCase() + m[1].slice(1);");
+        sb.AppendLine("            const idx = m[2] !== undefined ? parseInt(m[2], 10) : undefined;");
+        sb.AppendLine("            if (i === parts.length - 1) {");
+        sb.AppendLine("                if (idx !== undefined) {");
+        sb.AppendLine("                    if (Array.isArray(obj[key])) obj[key][idx] = value;");
+        sb.AppendLine("                } else {");
+        sb.AppendLine("                    obj[key] = value;");
+        sb.AppendLine("                }");
+        sb.AppendLine("            } else {");
+        sb.AppendLine("                obj = idx !== undefined ? obj[key][idx] : obj[key];");
+        sb.AppendLine("                if (obj === undefined) return;");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine();
+        sb.AppendLine("    private unpackAny(anyVal: Any | undefined): any {");
+        sb.AppendLine("        if (!anyVal) return undefined;");
+        sb.AppendLine("        switch (anyVal.getTypeUrl()) {");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.StringValue':");
+        sb.AppendLine("                return anyVal.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Int32Value':");
+        sb.AppendLine("                return anyVal.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Int64Value':");
+        sb.AppendLine("                return Number(anyVal.unpack(Int64Value.deserializeBinary, 'google.protobuf.Int64Value')?.getValue());");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.UInt32Value':");
+        sb.AppendLine("                return anyVal.unpack(UInt32Value.deserializeBinary, 'google.protobuf.UInt32Value')?.getValue();");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.UInt64Value':");
+        sb.AppendLine("                return Number(anyVal.unpack(UInt64Value.deserializeBinary, 'google.protobuf.UInt64Value')?.getValue());");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.BoolValue':");
+        sb.AppendLine("                return anyVal.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.FloatValue':");
+        sb.AppendLine("                return anyVal.unpack(FloatValue.deserializeBinary, 'google.protobuf.FloatValue')?.getValue();");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.DoubleValue':");
+        sb.AppendLine("                return anyVal.unpack(DoubleValue.deserializeBinary, 'google.protobuf.DoubleValue')?.getValue();");
+        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Timestamp':");
+        sb.AppendLine("                return anyVal.unpack(Timestamp.deserializeBinary, 'google.protobuf.Timestamp')?.toDate();");
+        sb.AppendLine("            default:");
+        sb.AppendLine("                return undefined;");
+        sb.AppendLine("        }");
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine("    private createAnyValue(value: any): Any {");

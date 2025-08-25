@@ -7,7 +7,7 @@ import { GameViewModelState, UpdatePropertyValueRequest, UpdatePropertyValueResp
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { BoolValue, DoubleValue, Int32Value, Int64Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, DoubleValue, FloatValue, Int32Value, Int64Value, StringValue, UInt32Value, UInt64Value } from 'google-protobuf/google/protobuf/wrappers_pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 export class GameViewModelRemoteClient {
@@ -186,6 +186,11 @@ export class GameViewModelRemoteClient {
         this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);
         this.propertyStream.on('data', (update: PropertyChangeNotification) => {
             const anyVal = update.getNewValue();
+            const path = update.getPropertyPath();
+            if (path) {
+                const value = this.unpackAny(anyVal);
+                this.setByPath(this, path, value);
+            } else {
             switch (update.getPropertyName()) {
                 case 'MonsterName':
                     this.monsterName = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
@@ -212,7 +217,7 @@ export class GameViewModelRemoteClient {
                     this.isSpecialAttackOnCooldown = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
                     break;
             }
-            
+            }
             // Notify with server flag - UI can update but won't send back to server
             this.notifyChange(true);
         });
@@ -224,6 +229,53 @@ export class GameViewModelRemoteClient {
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
+    }
+
+    private setByPath(target: any, path: string, value: any): void {
+        const parts = path.split('.');
+        let obj: any = target;
+        for (let i = 0; i < parts.length; i++) {
+            const m = /(\w+)(?:\[(\d+)\])?/.exec(parts[i]);
+            if (!m) return;
+            const key = m[1].charAt(0).toLowerCase() + m[1].slice(1);
+            const idx = m[2] !== undefined ? parseInt(m[2], 10) : undefined;
+            if (i === parts.length - 1) {
+                if (idx !== undefined) {
+                    if (Array.isArray(obj[key])) obj[key][idx] = value;
+                } else {
+                    obj[key] = value;
+                }
+            } else {
+                obj = idx !== undefined ? obj[key][idx] : obj[key];
+                if (obj === undefined) return;
+            }
+        }
+    }
+
+    private unpackAny(anyVal: Any | undefined): any {
+        if (!anyVal) return undefined;
+        switch (anyVal.getTypeUrl()) {
+            case 'type.googleapis.com/google.protobuf.StringValue':
+                return anyVal.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+            case 'type.googleapis.com/google.protobuf.Int32Value':
+                return anyVal.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+            case 'type.googleapis.com/google.protobuf.Int64Value':
+                return Number(anyVal.unpack(Int64Value.deserializeBinary, 'google.protobuf.Int64Value')?.getValue());
+            case 'type.googleapis.com/google.protobuf.UInt32Value':
+                return anyVal.unpack(UInt32Value.deserializeBinary, 'google.protobuf.UInt32Value')?.getValue();
+            case 'type.googleapis.com/google.protobuf.UInt64Value':
+                return Number(anyVal.unpack(UInt64Value.deserializeBinary, 'google.protobuf.UInt64Value')?.getValue());
+            case 'type.googleapis.com/google.protobuf.BoolValue':
+                return anyVal.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+            case 'type.googleapis.com/google.protobuf.FloatValue':
+                return anyVal.unpack(FloatValue.deserializeBinary, 'google.protobuf.FloatValue')?.getValue();
+            case 'type.googleapis.com/google.protobuf.DoubleValue':
+                return anyVal.unpack(DoubleValue.deserializeBinary, 'google.protobuf.DoubleValue')?.getValue();
+            case 'type.googleapis.com/google.protobuf.Timestamp':
+                return anyVal.unpack(Timestamp.deserializeBinary, 'google.protobuf.Timestamp')?.toDate();
+            default:
+                return undefined;
+        }
     }
 
     private createAnyValue(value: any): Any {

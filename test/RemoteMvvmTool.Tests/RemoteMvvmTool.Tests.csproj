@@ -63,6 +63,7 @@
     <None Include="TestData\GrpcWebEndToEnd\test-subscribe-simple.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-update-property.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-update-simple.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-nested-update.js" />
   </ItemGroup>
 
 </Project>
