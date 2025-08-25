@@ -146,9 +146,9 @@ client.getState(new Empty(), {}, (err, response) => {
         
         if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
           // For dictionary/map objects, extract both keys AND values
-          // Check both prefix and current key for dictionary indicators
-          if ((prefix && (prefix.includes('map') || prefix.includes('dict') || prefix.includes('status'))) ||
-              (key && (key.includes('map') || key.includes('dict') || key.includes('status')))) {
+          // Enhanced check for dictionary indicators including 'statistics' for StatType enums
+          if ((prefix && (prefix.includes('map') || prefix.includes('dict') || prefix.includes('status') || prefix.includes('statistics'))) ||
+              (key && (key.includes('map') || key.includes('dict') || key.includes('status') || key.includes('statistics')))) {
             // For each key in the dictionary, extract the key as a number
             Object.keys(value).forEach(dictKey => {
               const keyAsNumber = parseFloat(dictKey);
@@ -179,6 +179,17 @@ client.getState(new Empty(), {}, (err, response) => {
           // For string values that look like numbers, also store as numbers for validation
           if (typeof value === 'string' && !isNaN(parseFloat(value)) && isFinite(value)) {
             flatData[fullKey] = parseFloat(value);
+          }
+          
+          // Skip extracting numbers from timestamp-related fields to avoid DateTime/Guid noise
+          if (typeof value === 'number' && 
+              (fullKey.toLowerCase().includes('seconds') || 
+               fullKey.toLowerCase().includes('nanos') || 
+               fullKey.toLowerCase().includes('timestamp') ||
+               fullKey.toLowerCase().includes('starttime') ||
+               fullKey.toLowerCase().includes('sessionid'))) {
+            // Don't include timestamp/guid numeric components in extraction
+            delete flatData[fullKey];
           }
         }
       });

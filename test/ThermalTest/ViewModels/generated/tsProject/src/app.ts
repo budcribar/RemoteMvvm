@@ -22,7 +22,7 @@ function handleError(err: any, context?: string) {
 }
 
 
-async function render(isFromServer?: boolean) {
+async function render() {
     (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).value = JSON.stringify(vm.cpuTemperatureThreshold);
     (document.getElementById('cpuLoadThreshold') as HTMLInputElement).value = JSON.stringify(vm.cpuLoadThreshold);
     (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).value = JSON.stringify(vm.cpuLoadTimeSpan);
@@ -49,56 +49,56 @@ document.addEventListener('DOMContentLoaded', () => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.cpuTemperatureThreshold;
         // Only update if value actually changed
-        if (newValue !== currentValue) {
-            vm.updatePropertyValueDebounced('CpuTemperatureThreshold', newValue);
+        if (Number(newValue) !== currentValue) {
+            vm.updatePropertyValueDebounced('CpuTemperatureThreshold', Number(newValue));
         }
     });
     (document.getElementById('cpuLoadThreshold') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.cpuLoadThreshold;
         // Only update if value actually changed
-        if (newValue !== currentValue) {
-            vm.updatePropertyValueDebounced('CpuLoadThreshold', newValue);
+        if (Number(newValue) !== currentValue) {
+            vm.updatePropertyValueDebounced('CpuLoadThreshold', Number(newValue));
         }
     });
     (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.cpuLoadTimeSpan;
         // Only update if value actually changed
-        if (newValue !== currentValue) {
-            vm.updatePropertyValueDebounced('CpuLoadTimeSpan', newValue);
+        if (Number(newValue) !== currentValue) {
+            vm.updatePropertyValueDebounced('CpuLoadTimeSpan', Number(newValue));
         }
     });
     (document.getElementById('zoneList') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.zoneList;
         // Only update if value actually changed
-        if (newValue !== currentValue) {
-            vm.updatePropertyValueDebounced('ZoneList', newValue);
-        }
+       
+            vm.updatePropertyValueDebounced('ZoneList', JSON.parse(newValue));
+      
     });
     (document.getElementById('testSettings') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.testSettings;
         // Only update if value actually changed
-        if (newValue !== currentValue) {
-            vm.updatePropertyValueDebounced('TestSettings', newValue);
-        }
+     
+            vm.updatePropertyValueDebounced('TestSettings', JSON.parse(newValue));
+        
     });
     (document.getElementById('showDescription') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.showDescription;
         // Only update if value actually changed
-        if (newValue !== currentValue) {
-            vm.updatePropertyValueDebounced('ShowDescription', newValue);
+        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+            vm.updatePropertyValueDebounced('ShowDescription', newValue.toLowerCase() === 'true');
         }
     });
     (document.getElementById('showReadme') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.showReadme;
         // Only update if value actually changed
-        if (newValue !== currentValue) {
-            vm.updatePropertyValueDebounced('ShowReadme', newValue);
+        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+            vm.updatePropertyValueDebounced('ShowReadme', newValue.toLowerCase() === 'true');
         }
     });
     (document.getElementById('stateChanged-btn') as HTMLButtonElement).addEventListener('click', async () => {

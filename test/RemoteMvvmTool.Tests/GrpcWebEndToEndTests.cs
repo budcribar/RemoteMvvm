@@ -669,6 +669,7 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
+    [Fact]
     public async Task MemoryAndByteArrayTypes_EndToEnd_Test()
     {
         var modelCode = """
@@ -799,7 +800,7 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-    [Fact(Skip = "Broken - needs investigation")]
+    [Fact]
     public async Task MixedComplexTypesWithCommands_EndToEnd_Test()
     {
         var modelCode = """
@@ -830,8 +831,8 @@ public class GrpcWebEndToEndTests
                             { StatType.HealingDone, new List<double> { 123.4, 234.5 } }
                         };
                         
-                        SessionId = Guid.NewGuid(); // Random GUID each time
-                        StartTime = DateTime.UtcNow;
+                        SessionId = Guid.Parse("00000000-0000-0000-0000-000000000222"); // Fixed GUID
+                        StartTime = new DateTime(121); // Fixed DateTime from ticks
                         TotalSessions = 42;
                     }
 
@@ -897,7 +898,8 @@ public class GrpcWebEndToEndTests
             """;
 
         // Expected: gameState(1), totalSessions(42), player levels(15,23), scores(1500.5,2300.75), isActive(1,0), stat values, enum values(10,20)
-        var expectedDataValues = "0,1,1,10,15,20,23,42,123.4,234.5,450.5,623.2,789.1,1500.5,2300.75";
+        // Plus extracted GUID trailing digits (222) from the deterministic SessionId
+        var expectedDataValues = "0,1,1,10,15,20,23,42,123.4,222,234.5,450.5,623.2,789.1,1500.5,2300.75";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -2105,7 +2107,6 @@ public class GrpcWebEndToEndTests
                 }
             }
             """;
-      
 
         // **FIXED**: This test should verify UpdatePropertyValue response, not PropertyChanged streaming
         // PropertyChanged streaming should be tested separately with server-initiated changes

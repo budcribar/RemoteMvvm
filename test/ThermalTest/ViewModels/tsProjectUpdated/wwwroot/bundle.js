@@ -2394,12 +2394,25 @@ class HP3LSThermalTestViewModelRemoteClient {
     addChangeListener(cb) {
         this.changeCallbacks.push(cb);
     }
-    notifyChange() {
-        this.changeCallbacks.forEach(cb => cb());
+    notifyChange(isFromServer = false) {
+        this.changeCallbacks.forEach(cb => {
+            try {
+                // Pass the server flag to callbacks that support it
+                if (cb.length > 0) {
+                    cb(isFromServer);
+                }
+                else {
+                    cb();
+                }
+            }
+            catch (err) {
+                console.warn('Error in change callback:', err);
+            }
+        });
     }
     constructor(grpcClient) {
         this.changeCallbacks = [];
-        this.isUpdatingFromServer = false; // Add flag to prevent loops
+        this.updateDebounceMap = new Map(); // Internal debouncing (any for cross-platform compatibility)
         this.connectionStatus = 'Unknown';
         this.grpcClient = grpcClient;
     }
@@ -2429,13 +2442,9 @@ class HP3LSThermalTestViewModelRemoteClient {
         this.notifyChange();
     }
     async updatePropertyValue(propertyName, value) {
-        // Don't send updates to server if we're currently processing server updates
-        if (this.isUpdatingFromServer) {
-            console.log(`Skipping server update for ${propertyName} - currently processing server changes`);
-            return Promise.resolve({});
-        }
         const req = new _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
+        req.setArrayIndex(-1);
         req.setNewValue(this.createAnyValue(value));
         const response = await this.grpcClient.updatePropertyValue(req);
         // If the response indicates success, update the local property value
@@ -2443,6 +2452,28 @@ class HP3LSThermalTestViewModelRemoteClient {
             this.updateLocalProperty(propertyName, value);
         }
         return response;
+    }
+    // Debounced property update to prevent rapid-fire server calls
+    updatePropertyValueDebounced(propertyName, value, delayMs = 200) {
+        // Clear existing timeout for this property
+        const existingTimeout = this.updateDebounceMap.get(propertyName);
+        if (existingTimeout) {
+            clearTimeout(existingTimeout);
+        }
+        // Set new timeout
+        const timeout = setTimeout(async () => {
+            try {
+                console.log(`Sending debounced update: ${propertyName} = ${value}`);
+                await this.updatePropertyValue(propertyName, value);
+            }
+            catch (err) {
+                console.error(`Error updating ${propertyName}:`, err);
+            }
+            finally {
+                this.updateDebounceMap.delete(propertyName);
+            }
+        }, delayMs);
+        this.updateDebounceMap.set(propertyName, timeout);
     }
     // Enhanced updatePropertyValue with support for complex scenarios
     async updatePropertyValueAdvanced(propertyName, value, options) {
@@ -2500,8 +2531,6 @@ class HP3LSThermalTestViewModelRemoteClient {
         req.setClientId(Math.random().toString());
         this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);
         this.propertyStream.on('data', (update) => {
-            // Set flag to indicate we're processing server updates
-            this.isUpdatingFromServer = true;
             const anyVal = update.getNewValue();
             switch (update.getPropertyName()) {
                 case 'CpuTemperatureThreshold':
@@ -2520,19 +2549,14 @@ class HP3LSThermalTestViewModelRemoteClient {
                     this.showReadme = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
                     break;
             }
-            this.notifyChange();
-            // Clear flag after a short delay to allow UI to update
-            setTimeout(() => {
-                this.isUpdatingFromServer = false;
-            }, 100);
+            // Notify with server flag - UI can update but won't send back to server
+            this.notifyChange(true);
         });
         this.propertyStream.on('error', () => {
-            this.isUpdatingFromServer = false; // Clear flag on error
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
         this.propertyStream.on('end', () => {
-            this.isUpdatingFromServer = false; // Clear flag on end
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
@@ -2588,6 +2612,9 @@ class HP3LSThermalTestViewModelRemoteClient {
             clearInterval(this.pingIntervalId);
             this.pingIntervalId = undefined;
         }
+        // Clear any pending debounced updates
+        this.updateDebounceMap.forEach((timeout) => clearTimeout(timeout));
+        this.updateDebounceMap.clear();
     }
     updateLocalProperty(propertyName, value) {
         const camelCasePropertyName = this.toCamelCase(propertyName);
@@ -6651,29 +6678,6 @@ function handleError(err, context) {
     }
     catch { /* no-op */ }
 }
-// Add debouncing to prevent rapid-fire updates
-const updateDebounceMap = new Map();
-function debounceUpdate(propertyName, value, delayMs = 200) {
-    // Clear existing timeout for this property
-    const existingTimeout = updateDebounceMap.get(propertyName);
-    if (existingTimeout) {
-        clearTimeout(existingTimeout);
-    }
-    // Set new timeout
-    const timeout = setTimeout(async () => {
-        try {
-            console.log(`Sending debounced update: ${propertyName} = ${value}`);
-            await vm.updatePropertyValue(propertyName, value);
-        }
-        catch (err) {
-            handleError(err, `Update ${propertyName}`);
-        }
-        finally {
-            updateDebounceMap.delete(propertyName);
-        }
-    }, delayMs);
-    updateDebounceMap.set(propertyName, timeout);
-}
 function computeMaxTempC(deviceName) {
     const pct = vm?.testSettings?.cpuTemperatureThreshold ?? 100;
     // If a DTS map is available, prefer that:
@@ -6706,7 +6710,7 @@ function buildZonesPayload() {
         // stateDescriptions: can be added if available
     }));
 }
-function render() {
+async function render() {
     const main = document.querySelector('x-thermal-main');
     if (main) {
         // Toggle sections
@@ -6761,7 +6765,7 @@ function ensureReadmeModal(open, main) {
             readme.setAttribute('show-previous', 'true');
         else
             readme.removeAttribute('show-previous');
-        // Dedupe close handler; only update server on user-driven closes
+        // Setup close handler for user-initiated actions
         if (!note.__onCloseHandler) {
             note.__onCloseHandler = async () => {
                 try {
@@ -6802,35 +6806,35 @@ document.addEventListener('DOMContentLoaded', () => {
             const currentValue = vm?.testSettings?.cpuTemperatureThreshold;
             // Only update if value actually changed
             if (newValue !== currentValue) {
-                debounceUpdate('CpuTemperatureThreshold', newValue);
+                vm.updatePropertyValueDebounced('CpuTemperatureThreshold', newValue);
             }
         });
         main.addEventListener('change-cpu-load-threshold', async (e) => {
             const newValue = Number(e?.detail?.value ?? 0);
             const currentValue = vm?.testSettings?.cpuLoadThreshold;
             if (newValue !== currentValue) {
-                debounceUpdate('CpuLoadThreshold', newValue);
+                vm.updatePropertyValueDebounced('CpuLoadThreshold', newValue);
             }
         });
         main.addEventListener('change-cpu-load-time', async (e) => {
             const newValue = Number(e?.detail?.value ?? 0);
             const currentValue = vm?.testSettings?.cpuLoadTimeSpan;
             if (newValue !== currentValue) {
-                debounceUpdate('CpuLoadTimeSpan', newValue);
+                vm.updatePropertyValueDebounced('CpuLoadTimeSpan', newValue);
             }
         });
         main.addEventListener('toggle-readme', async (e) => {
             const newValue = Boolean(e?.detail?.value);
             const currentValue = vm.showReadme;
             if (newValue !== currentValue) {
-                debounceUpdate('ShowReadme', newValue);
+                vm.updatePropertyValueDebounced('ShowReadme', newValue);
             }
         });
         main.addEventListener('toggle-description', async (e) => {
             const newValue = Boolean(e?.detail?.value);
             const currentValue = vm.showDescription;
             if (newValue !== currentValue) {
-                debounceUpdate('ShowDescription', newValue);
+                vm.updatePropertyValueDebounced('ShowDescription', newValue);
             }
         });
         main.addEventListener('cancel', async () => {

@@ -150,6 +150,18 @@ export class UpdatePropertyValueRequest extends jspb.Message {
   hasNewValue(): boolean;
   clearNewValue(): UpdatePropertyValueRequest;
 
+  getPropertyPath(): string;
+  setPropertyPath(value: string): UpdatePropertyValueRequest;
+
+  getCollectionKey(): string;
+  setCollectionKey(value: string): UpdatePropertyValueRequest;
+
+  getArrayIndex(): number;
+  setArrayIndex(value: number): UpdatePropertyValueRequest;
+
+  getOperationType(): string;
+  setOperationType(value: string): UpdatePropertyValueRequest;
+
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): UpdatePropertyValueRequest.AsObject;
   static toObject(includeInstance: boolean, msg: UpdatePropertyValueRequest): UpdatePropertyValueRequest.AsObject;
@@ -162,6 +174,42 @@ export namespace UpdatePropertyValueRequest {
   export type AsObject = {
     propertyName: string,
     newValue?: google_protobuf_any_pb.Any.AsObject,
+    propertyPath: string,
+    collectionKey: string,
+    arrayIndex: number,
+    operationType: string,
+  }
+}
+
+export class UpdatePropertyValueResponse extends jspb.Message {
+  getSuccess(): boolean;
+  setSuccess(value: boolean): UpdatePropertyValueResponse;
+
+  getErrorMessage(): string;
+  setErrorMessage(value: string): UpdatePropertyValueResponse;
+
+  getValidationErrors(): string;
+  setValidationErrors(value: string): UpdatePropertyValueResponse;
+
+  getOldValue(): google_protobuf_any_pb.Any | undefined;
+  setOldValue(value?: google_protobuf_any_pb.Any): UpdatePropertyValueResponse;
+  hasOldValue(): boolean;
+  clearOldValue(): UpdatePropertyValueResponse;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): UpdatePropertyValueResponse.AsObject;
+  static toObject(includeInstance: boolean, msg: UpdatePropertyValueResponse): UpdatePropertyValueResponse.AsObject;
+  static serializeBinaryToWriter(message: UpdatePropertyValueResponse, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): UpdatePropertyValueResponse;
+  static deserializeBinaryFromReader(message: UpdatePropertyValueResponse, reader: jspb.BinaryReader): UpdatePropertyValueResponse;
+}
+
+export namespace UpdatePropertyValueResponse {
+  export type AsObject = {
+    success: boolean,
+    errorMessage: string,
+    validationErrors: string,
+    oldValue?: google_protobuf_any_pb.Any.AsObject,
   }
 }
 
@@ -173,6 +221,17 @@ export class PropertyChangeNotification extends jspb.Message {
   setNewValue(value?: google_protobuf_any_pb.Any): PropertyChangeNotification;
   hasNewValue(): boolean;
   clearNewValue(): PropertyChangeNotification;
+
+  getPropertyPath(): string;
+  setPropertyPath(value: string): PropertyChangeNotification;
+
+  getChangeType(): string;
+  setChangeType(value: string): PropertyChangeNotification;
+
+  getOldValue(): google_protobuf_any_pb.Any | undefined;
+  setOldValue(value?: google_protobuf_any_pb.Any): PropertyChangeNotification;
+  hasOldValue(): boolean;
+  clearOldValue(): PropertyChangeNotification;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): PropertyChangeNotification.AsObject;
@@ -186,6 +245,9 @@ export namespace PropertyChangeNotification {
   export type AsObject = {
     propertyName: string,
     newValue?: google_protobuf_any_pb.Any.AsObject,
+    propertyPath: string,
+    changeType: string,
+    oldValue?: google_protobuf_any_pb.Any.AsObject,
   }
 }
 

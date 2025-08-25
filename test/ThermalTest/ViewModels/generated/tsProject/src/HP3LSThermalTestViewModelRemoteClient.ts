@@ -36,7 +36,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
     private propertyStream?: grpcWeb.ClientReadableStream<PropertyChangeNotification>;
     private pingIntervalId?: any;
     private changeCallbacks: Array<() => void> = [];
-    private updateDebounceMap = new Map<string, NodeJS.Timeout>(); // Internal debouncing
+    private updateDebounceMap = new Map<string, any>(); // Internal debouncing (any for cross-platform compatibility)
 
     cpuTemperatureThreshold: number;
     cpuLoadThreshold: number;
@@ -101,6 +101,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setNewValue(this.createAnyValue(value));
+        req.setArrayIndex(-1); // Default to -1 for non-array properties
         const response = await this.grpcClient.updatePropertyValue(req);
         
         // If the response indicates success, update the local property value
@@ -132,6 +133,36 @@ export class HP3LSThermalTestViewModelRemoteClient {
         }, delayMs);
         
         this.updateDebounceMap.set(propertyName, timeout);
+    }
+
+    // Enhanced updatePropertyValue with support for complex scenarios
+    async updatePropertyValueAdvanced(
+        propertyName: string, 
+        value: any, 
+        options?: {
+            propertyPath?: string;
+            collectionKey?: string;
+            arrayIndex?: number;
+            operationType?: 'set' | 'add' | 'remove' | 'clear' | 'insert';
+        }
+    ): Promise<UpdatePropertyValueResponse> {
+        const req = new UpdatePropertyValueRequest();
+        req.setPropertyName(propertyName);
+        req.setNewValue(this.createAnyValue(value));
+        
+        if (options?.propertyPath) req.setPropertyPath(options.propertyPath);
+        if (options?.collectionKey) req.setCollectionKey(options.collectionKey);
+        if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);
+        if (options?.operationType) req.setOperationType(options.operationType);
+        
+        const response = await this.grpcClient.updatePropertyValue(req);
+        
+        // If the response indicates success, update the local property value
+        if (typeof response.getSuccess === 'function' && response.getSuccess()) {
+            this.updateLocalProperty(propertyName, value);
+        }
+        
+        return response;
     }
 
     async stateChanged(state: any): Promise<void> {
