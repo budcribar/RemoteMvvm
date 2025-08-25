@@ -25,6 +25,7 @@ import './thermal-zone';
 import './readme';
 
 export class ThermalMainElement extends HTMLElement {
+  private sliderDragging: { [key: string]: boolean } = {};
   static get observedAttributes() {
     return [
       'title', 'show-description', 'instructions', 'show-readme',
@@ -113,7 +114,8 @@ export class ThermalMainElement extends HTMLElement {
         /* Buttons and misc */
         button { appearance: none; border: 1px solid rgba(0,0,0,0.1); background: #f4f6f8; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
         button:hover { background: #eef1f5; }
-        .bottom { display: flex; justify-content: flex-end; }
+            .bottom { display: flex; justify-content: flex-end; }
+            .center-cancel { justify-content: center !important; }
         .hidden { display: none; }
       </style>
       <div class="main-page-container">
@@ -153,9 +155,9 @@ export class ThermalMainElement extends HTMLElement {
           <button id="btnDesc"></button>
         </div>
 
-        <div class="bottom full-width hidden" id="wirelessBtnContainer">
-          <button id="btnCancel" class="hp-btn secondary btn-margin"></button>
-        </div>
+            <div class="bottom full-width center-cancel" id="cancelBtnContainer">
+              <button id="btnCancel" class="hp-btn secondary btn-margin">Cancel</button>
+            </div>
 
         <div id="readmeWrap" hidden>
           <x-readme id="readme"></x-readme>
@@ -166,22 +168,25 @@ export class ThermalMainElement extends HTMLElement {
 
   connectedCallback() {
     const $ = (id: string) => this.root.getElementById(id)!;
-    // Wire slider events
-    ($('sliderTemp') as HTMLInputElement).addEventListener('input', () => {
-      const v = Number(($('sliderTemp') as HTMLInputElement).value);
-      ($('valTemp') as HTMLLabelElement).textContent = `${v}%`;
-      this.dispatchEvent(new CustomEvent('change-temp-threshold', { detail: { value: v } }));
-    });
-    ($('sliderCpuLoad') as HTMLInputElement).addEventListener('input', () => {
-      const v = Number(($('sliderCpuLoad') as HTMLInputElement).value);
-      ($('valCpuLoad') as HTMLLabelElement).textContent = `${v}%`;
-      this.dispatchEvent(new CustomEvent('change-cpu-load-threshold', { detail: { value: v } }));
-    });
-    ($('sliderTime') as HTMLInputElement).addEventListener('input', () => {
-      const v = Number(($('sliderTime') as HTMLInputElement).value);
-      ($('valTime') as HTMLLabelElement).textContent = `${v}s`;
-      this.dispatchEvent(new CustomEvent('change-cpu-load-time', { detail: { value: v } }));
-    });
+    // Wire slider events with drag tracking
+    const sliders = [
+      { id: 'sliderTemp', label: 'valTemp', event: 'change-temp-threshold', format: (v: number) => `${v}%` },
+      { id: 'sliderCpuLoad', label: 'valCpuLoad', event: 'change-cpu-load-threshold', format: (v: number) => `${v}%` },
+      { id: 'sliderTime', label: 'valTime', event: 'change-cpu-load-time', format: (v: number) => `${v}s` },
+    ];
+    for (const s of sliders) {
+      const slider = $(s.id) as HTMLInputElement;
+      const label = $(s.label) as HTMLLabelElement;
+      this.sliderDragging[s.id] = false;
+      slider.addEventListener('pointerdown', () => { this.sliderDragging[s.id] = true; });
+      slider.addEventListener('pointerup', () => { this.sliderDragging[s.id] = false; });
+      slider.addEventListener('pointercancel', () => { this.sliderDragging[s.id] = false; });
+      slider.addEventListener('input', () => {
+        const v = Number(slider.value);
+        label.textContent = s.format(v);
+        this.dispatchEvent(new CustomEvent(s.event, { detail: { value: v } }));
+      });
+    }
 
     // Toggle buttons
     $('btnReadme').addEventListener('click', () => {
@@ -244,12 +249,20 @@ export class ThermalMainElement extends HTMLElement {
     const temp = this.num('temp-threshold', 90);
     const cpuLoad = this.num('cpu-load-threshold', 15);
     const time = this.num('cpu-load-time', 60);
-    ( $('sliderTemp') as HTMLInputElement ).value = String(temp);
-    ( $('sliderCpuLoad') as HTMLInputElement ).value = String(cpuLoad);
-    ( $('sliderTime') as HTMLInputElement ).value = String(time);
-    ( $('valTemp') as HTMLLabelElement ).textContent = `${temp}%`;
-    ( $('valCpuLoad') as HTMLLabelElement ).textContent = `${cpuLoad}%`;
-    ( $('valTime') as HTMLLabelElement ).textContent = `${time}s`;
+    // Only update slider values if not being dragged
+    const sliders = [
+      { id: 'sliderTemp', value: temp, label: 'valTemp', format: (v: number) => `${v}%` },
+      { id: 'sliderCpuLoad', value: cpuLoad, label: 'valCpuLoad', format: (v: number) => `${v}%` },
+      { id: 'sliderTime', value: time, label: 'valTime', format: (v: number) => `${v}s` },
+    ];
+    for (const s of sliders) {
+      const slider = $(s.id) as HTMLInputElement;
+      const label = $(s.label) as HTMLLabelElement;
+      if (!this.sliderDragging[s.id] && slider.value !== String(s.value)) {
+        slider.value = String(s.value);
+        label.textContent = s.format(s.value);
+      }
+    }
 
   // Readme: keep inline hidden; modal is handled by app.ts via <x-notification>
   const showReadme = this.bool('show-readme');
@@ -267,7 +280,7 @@ export class ThermalMainElement extends HTMLElement {
     const lblHideDesc = this.str('label-hide-description', 'Hide description');
   ( $('btnDesc') as HTMLButtonElement ).textContent = this.bool('show-description') ? lblHideDesc : lblShowDesc;
 
-    ( $('btnCancel') as HTMLButtonElement ).textContent = this.str('label-cancel', 'Cancel');
+  ( $('btnCancel') as HTMLButtonElement ).textContent = this.str('label-cancel', 'Cancel');
 
     // Zones
     const zonesHost = $('zones');

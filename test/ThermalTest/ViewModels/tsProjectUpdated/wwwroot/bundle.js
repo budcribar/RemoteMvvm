@@ -2418,6 +2418,7 @@ class HP3LSThermalTestViewModelRemoteClient {
     }
     async initializeRemote() {
         const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
+        this.instructions = state.getInstructions();
         this.cpuTemperatureThreshold = state.getCpuTemperatureThreshold();
         this.cpuLoadThreshold = state.getCpuLoadThreshold();
         this.cpuLoadTimeSpan = state.getCpuLoadTimeSpan();
@@ -2432,6 +2433,7 @@ class HP3LSThermalTestViewModelRemoteClient {
     }
     async refreshState() {
         const state = await this.grpcClient.getState(new google_protobuf_google_protobuf_empty_pb__WEBPACK_IMPORTED_MODULE_1__.Empty());
+        this.instructions = state.getInstructions();
         this.cpuTemperatureThreshold = state.getCpuTemperatureThreshold();
         this.cpuLoadThreshold = state.getCpuLoadThreshold();
         this.cpuLoadTimeSpan = state.getCpuLoadTimeSpan();
@@ -2444,7 +2446,7 @@ class HP3LSThermalTestViewModelRemoteClient {
     async updatePropertyValue(propertyName, value) {
         const req = new _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__.UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
-        req.setArrayIndex(-1);
+        req.setArrayIndex(-1); // Default to -1 for non-array properties
         req.setNewValue(this.createAnyValue(value));
         const response = await this.grpcClient.updatePropertyValue(req);
         // If the response indicates success, update the local property value
@@ -2533,6 +2535,9 @@ class HP3LSThermalTestViewModelRemoteClient {
         this.propertyStream.on('data', (update) => {
             const anyVal = update.getNewValue();
             switch (update.getPropertyName()) {
+                case 'Instructions':
+                    this.instructions = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
                 case 'CpuTemperatureThreshold':
                     this.cpuTemperatureThreshold = anyVal?.unpack(google_protobuf_google_protobuf_wrappers_pb__WEBPACK_IMPORTED_MODULE_3__.Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
                     break;
@@ -3047,6 +3052,7 @@ class ThermalMainElement extends HTMLElement {
     }
     constructor() {
         super();
+        this.sliderDragging = {};
         this.root = this.attachShadow({ mode: 'open' });
         this.root.innerHTML = `
       <style>
@@ -3120,7 +3126,8 @@ class ThermalMainElement extends HTMLElement {
         /* Buttons and misc */
         button { appearance: none; border: 1px solid rgba(0,0,0,0.1); background: #f4f6f8; padding: 6px 10px; border-radius: 6px; cursor: pointer; }
         button:hover { background: #eef1f5; }
-        .bottom { display: flex; justify-content: flex-end; }
+            .bottom { display: flex; justify-content: flex-end; }
+            .center-cancel { justify-content: center !important; }
         .hidden { display: none; }
       </style>
       <div class="main-page-container">
@@ -3160,9 +3167,9 @@ class ThermalMainElement extends HTMLElement {
           <button id="btnDesc"></button>
         </div>
 
-        <div class="bottom full-width hidden" id="wirelessBtnContainer">
-          <button id="btnCancel" class="hp-btn secondary btn-margin"></button>
-        </div>
+            <div class="bottom full-width center-cancel" id="cancelBtnContainer">
+              <button id="btnCancel" class="hp-btn secondary btn-margin">Cancel</button>
+            </div>
 
         <div id="readmeWrap" hidden>
           <x-readme id="readme"></x-readme>
@@ -3172,22 +3179,25 @@ class ThermalMainElement extends HTMLElement {
     }
     connectedCallback() {
         const $ = (id) => this.root.getElementById(id);
-        // Wire slider events
-        $('sliderTemp').addEventListener('input', () => {
-            const v = Number($('sliderTemp').value);
-            $('valTemp').textContent = `${v}%`;
-            this.dispatchEvent(new CustomEvent('change-temp-threshold', { detail: { value: v } }));
-        });
-        $('sliderCpuLoad').addEventListener('input', () => {
-            const v = Number($('sliderCpuLoad').value);
-            $('valCpuLoad').textContent = `${v}%`;
-            this.dispatchEvent(new CustomEvent('change-cpu-load-threshold', { detail: { value: v } }));
-        });
-        $('sliderTime').addEventListener('input', () => {
-            const v = Number($('sliderTime').value);
-            $('valTime').textContent = `${v}s`;
-            this.dispatchEvent(new CustomEvent('change-cpu-load-time', { detail: { value: v } }));
-        });
+        // Wire slider events with drag tracking
+        const sliders = [
+            { id: 'sliderTemp', label: 'valTemp', event: 'change-temp-threshold', format: (v) => `${v}%` },
+            { id: 'sliderCpuLoad', label: 'valCpuLoad', event: 'change-cpu-load-threshold', format: (v) => `${v}%` },
+            { id: 'sliderTime', label: 'valTime', event: 'change-cpu-load-time', format: (v) => `${v}s` },
+        ];
+        for (const s of sliders) {
+            const slider = $(s.id);
+            const label = $(s.label);
+            this.sliderDragging[s.id] = false;
+            slider.addEventListener('pointerdown', () => { this.sliderDragging[s.id] = true; });
+            slider.addEventListener('pointerup', () => { this.sliderDragging[s.id] = false; });
+            slider.addEventListener('pointercancel', () => { this.sliderDragging[s.id] = false; });
+            slider.addEventListener('input', () => {
+                const v = Number(slider.value);
+                label.textContent = s.format(v);
+                this.dispatchEvent(new CustomEvent(s.event, { detail: { value: v } }));
+            });
+        }
         // Toggle buttons
         $('btnReadme').addEventListener('click', () => {
             const curr = this.bool('show-readme');
@@ -3230,10 +3240,9 @@ class ThermalMainElement extends HTMLElement {
         const $ = (id) => this.root.getElementById(id);
         // Title
         $('title').textContent = this.str('title', 'CPU Thermal Test');
-        // Description
-        const showDesc = this.bool('show-description');
+        // Description: always hidden, now shown only in modal
         const descWrap = $('descriptionWrap');
-        descWrap.toggleAttribute('hidden', !showDesc);
+        descWrap.toggleAttribute('hidden', true);
         $('instructions').textContent = this.str('instructions');
         // Labels
         $('lblTemp').textContent = this.str('label-temp-threshold', 'Temperature threshold to DTS');
@@ -3243,12 +3252,20 @@ class ThermalMainElement extends HTMLElement {
         const temp = this.num('temp-threshold', 90);
         const cpuLoad = this.num('cpu-load-threshold', 15);
         const time = this.num('cpu-load-time', 60);
-        $('sliderTemp').value = String(temp);
-        $('sliderCpuLoad').value = String(cpuLoad);
-        $('sliderTime').value = String(time);
-        $('valTemp').textContent = `${temp}%`;
-        $('valCpuLoad').textContent = `${cpuLoad}%`;
-        $('valTime').textContent = `${time}s`;
+        // Only update slider values if not being dragged
+        const sliders = [
+            { id: 'sliderTemp', value: temp, label: 'valTemp', format: (v) => `${v}%` },
+            { id: 'sliderCpuLoad', value: cpuLoad, label: 'valCpuLoad', format: (v) => `${v}%` },
+            { id: 'sliderTime', value: time, label: 'valTime', format: (v) => `${v}s` },
+        ];
+        for (const s of sliders) {
+            const slider = $(s.id);
+            const label = $(s.label);
+            if (!this.sliderDragging[s.id] && slider.value !== String(s.value)) {
+                slider.value = String(s.value);
+                label.textContent = s.format(s.value);
+            }
+        }
         // Readme: keep inline hidden; modal is handled by app.ts via <x-notification>
         const showReadme = this.bool('show-readme');
         const readmeWrap = $('readmeWrap');
@@ -3264,7 +3281,7 @@ class ThermalMainElement extends HTMLElement {
         $('btnReadme').textContent = showReadme ? lblHideReadme : lblShowReadme;
         const lblShowDesc = this.str('label-show-description', 'Show description');
         const lblHideDesc = this.str('label-hide-description', 'Hide description');
-        $('btnDesc').textContent = showDesc ? lblHideDesc : lblShowDesc;
+        $('btnDesc').textContent = this.bool('show-description') ? lblHideDesc : lblShowDesc;
         $('btnCancel').textContent = this.str('label-cancel', 'Cancel');
         // Zones
         const zonesHost = $('zones');
@@ -3991,7 +4008,7 @@ if (goog.DEBUG && !COMPILED) {
  * @private {!Array<number>}
  * @const
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.repeatedFields_ = [4];
+proto.generated_protos.HP3LSThermalTestViewModelState.repeatedFields_ = [5];
 
 
 
@@ -4024,14 +4041,15 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.toObject = funct
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.toObject = function(includeInstance, msg) {
   var f, obj = {
-    cpuTemperatureThreshold: jspb.Message.getFieldWithDefault(msg, 1, 0),
-    cpuLoadThreshold: jspb.Message.getFieldWithDefault(msg, 2, 0),
-    cpuLoadTimeSpan: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    instructions: jspb.Message.getFieldWithDefault(msg, 1, ""),
+    cpuTemperatureThreshold: jspb.Message.getFieldWithDefault(msg, 2, 0),
+    cpuLoadThreshold: jspb.Message.getFieldWithDefault(msg, 3, 0),
+    cpuLoadTimeSpan: jspb.Message.getFieldWithDefault(msg, 4, 0),
     zoneListList: jspb.Message.toObjectList(msg.getZoneListList(),
     proto.generated_protos.ThermalZoneComponentViewModelState.toObject, includeInstance),
     testSettings: (f = msg.getTestSettings()) && proto.generated_protos.TestSettingsModelState.toObject(includeInstance, f),
-    showDescription: jspb.Message.getBooleanFieldWithDefault(msg, 6, false),
-    showReadme: jspb.Message.getBooleanFieldWithDefault(msg, 7, false)
+    showDescription: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
+    showReadme: jspb.Message.getBooleanFieldWithDefault(msg, 8, false)
   };
 
   if (includeInstance) {
@@ -4069,32 +4087,36 @@ proto.generated_protos.HP3LSThermalTestViewModelState.deserializeBinaryFromReade
     var field = reader.getFieldNumber();
     switch (field) {
     case 1:
-      var value = /** @type {number} */ (reader.readInt32());
-      msg.setCpuTemperatureThreshold(value);
+      var value = /** @type {string} */ (reader.readString());
+      msg.setInstructions(value);
       break;
     case 2:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setCpuLoadThreshold(value);
+      msg.setCpuTemperatureThreshold(value);
       break;
     case 3:
       var value = /** @type {number} */ (reader.readInt32());
-      msg.setCpuLoadTimeSpan(value);
+      msg.setCpuLoadThreshold(value);
       break;
     case 4:
+      var value = /** @type {number} */ (reader.readInt32());
+      msg.setCpuLoadTimeSpan(value);
+      break;
+    case 5:
       var value = new proto.generated_protos.ThermalZoneComponentViewModelState;
       reader.readMessage(value,proto.generated_protos.ThermalZoneComponentViewModelState.deserializeBinaryFromReader);
       msg.addZoneList(value);
       break;
-    case 5:
+    case 6:
       var value = new proto.generated_protos.TestSettingsModelState;
       reader.readMessage(value,proto.generated_protos.TestSettingsModelState.deserializeBinaryFromReader);
       msg.setTestSettings(value);
       break;
-    case 6:
+    case 7:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setShowDescription(value);
       break;
-    case 7:
+    case 8:
       var value = /** @type {boolean} */ (reader.readBool());
       msg.setShowReadme(value);
       break;
@@ -4127,31 +4149,38 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.serializeBinary 
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = function(message, writer) {
   var f = undefined;
-  f = message.getCpuTemperatureThreshold();
-  if (f !== 0) {
-    writer.writeInt32(
+  f = message.getInstructions();
+  if (f.length > 0) {
+    writer.writeString(
       1,
       f
     );
   }
-  f = message.getCpuLoadThreshold();
+  f = message.getCpuTemperatureThreshold();
   if (f !== 0) {
     writer.writeInt32(
       2,
       f
     );
   }
-  f = message.getCpuLoadTimeSpan();
+  f = message.getCpuLoadThreshold();
   if (f !== 0) {
     writer.writeInt32(
       3,
       f
     );
   }
+  f = message.getCpuLoadTimeSpan();
+  if (f !== 0) {
+    writer.writeInt32(
+      4,
+      f
+    );
+  }
   f = message.getZoneListList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
-      4,
+      5,
       f,
       proto.generated_protos.ThermalZoneComponentViewModelState.serializeBinaryToWriter
     );
@@ -4159,7 +4188,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = 
   f = message.getTestSettings();
   if (f != null) {
     writer.writeMessage(
-      5,
+      6,
       f,
       proto.generated_protos.TestSettingsModelState.serializeBinaryToWriter
     );
@@ -4167,14 +4196,14 @@ proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = 
   f = message.getShowDescription();
   if (f) {
     writer.writeBool(
-      6,
+      7,
       f
     );
   }
   f = message.getShowReadme();
   if (f) {
     writer.writeBool(
-      7,
+      8,
       f
     );
   }
@@ -4182,28 +4211,28 @@ proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = 
 
 
 /**
- * optional int32 cpu_temperature_threshold = 1;
+ * optional string instructions = 1;
+ * @return {string}
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getInstructions = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 1, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setInstructions = function(value) {
+  return jspb.Message.setProto3StringField(this, 1, value);
+};
+
+
+/**
+ * optional int32 cpu_temperature_threshold = 2;
  * @return {number}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuTemperatureThreshold = function() {
-  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 1, 0));
-};
-
-
-/**
- * @param {number} value
- * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
- */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuTemperatureThreshold = function(value) {
-  return jspb.Message.setProto3IntField(this, 1, value);
-};
-
-
-/**
- * optional int32 cpu_load_threshold = 2;
- * @return {number}
- */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadThreshold = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 2, 0));
 };
 
@@ -4212,16 +4241,16 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadThresh
  * @param {number} value
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuLoadThreshold = function(value) {
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuTemperatureThreshold = function(value) {
   return jspb.Message.setProto3IntField(this, 2, value);
 };
 
 
 /**
- * optional int32 cpu_load_time_span = 3;
+ * optional int32 cpu_load_threshold = 3;
  * @return {number}
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadTimeSpan = function() {
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadThreshold = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 3, 0));
 };
 
@@ -4230,18 +4259,36 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadTimeSp
  * @param {number} value
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuLoadTimeSpan = function(value) {
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuLoadThreshold = function(value) {
   return jspb.Message.setProto3IntField(this, 3, value);
 };
 
 
 /**
- * repeated ThermalZoneComponentViewModelState zone_list = 4;
+ * optional int32 cpu_load_time_span = 4;
+ * @return {number}
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getCpuLoadTimeSpan = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuLoadTimeSpan = function(value) {
+  return jspb.Message.setProto3IntField(this, 4, value);
+};
+
+
+/**
+ * repeated ThermalZoneComponentViewModelState zone_list = 5;
  * @return {!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getZoneListList = function() {
   return /** @type{!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>} */ (
-    jspb.Message.getRepeatedWrapperField(this, proto.generated_protos.ThermalZoneComponentViewModelState, 4));
+    jspb.Message.getRepeatedWrapperField(this, proto.generated_protos.ThermalZoneComponentViewModelState, 5));
 };
 
 
@@ -4250,7 +4297,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getZoneListList 
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
 */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setZoneListList = function(value) {
-  return jspb.Message.setRepeatedWrapperField(this, 4, value);
+  return jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
 
@@ -4260,7 +4307,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setZoneListList 
  * @return {!proto.generated_protos.ThermalZoneComponentViewModelState}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.addZoneList = function(opt_value, opt_index) {
-  return jspb.Message.addToRepeatedWrapperField(this, 4, opt_value, proto.generated_protos.ThermalZoneComponentViewModelState, opt_index);
+  return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.generated_protos.ThermalZoneComponentViewModelState, opt_index);
 };
 
 
@@ -4274,12 +4321,12 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.clearZoneListLis
 
 
 /**
- * optional TestSettingsModelState test_settings = 5;
+ * optional TestSettingsModelState test_settings = 6;
  * @return {?proto.generated_protos.TestSettingsModelState}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getTestSettings = function() {
   return /** @type{?proto.generated_protos.TestSettingsModelState} */ (
-    jspb.Message.getWrapperField(this, proto.generated_protos.TestSettingsModelState, 5));
+    jspb.Message.getWrapperField(this, proto.generated_protos.TestSettingsModelState, 6));
 };
 
 
@@ -4288,7 +4335,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getTestSettings 
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
 */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setTestSettings = function(value) {
-  return jspb.Message.setWrapperField(this, 5, value);
+  return jspb.Message.setWrapperField(this, 6, value);
 };
 
 
@@ -4306,33 +4353,15 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.clearTestSetting
  * @return {boolean}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.hasTestSettings = function() {
-  return jspb.Message.getField(this, 5) != null;
+  return jspb.Message.getField(this, 6) != null;
 };
 
 
 /**
- * optional bool show_description = 6;
+ * optional bool show_description = 7;
  * @return {boolean}
  */
 proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowDescription = function() {
-  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 6, false));
-};
-
-
-/**
- * @param {boolean} value
- * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
- */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setShowDescription = function(value) {
-  return jspb.Message.setProto3BooleanField(this, 6, value);
-};
-
-
-/**
- * optional bool show_readme = 7;
- * @return {boolean}
- */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowReadme = function() {
   return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 7, false));
 };
 
@@ -4341,8 +4370,26 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowReadme = 
  * @param {boolean} value
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setShowReadme = function(value) {
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setShowDescription = function(value) {
   return jspb.Message.setProto3BooleanField(this, 7, value);
+};
+
+
+/**
+ * optional bool show_readme = 8;
+ * @return {boolean}
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getShowReadme = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 8, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
+ */
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setShowReadme = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 8, value);
 };
 
 
@@ -6715,16 +6762,20 @@ async function render() {
     if (main) {
         // Toggle sections
         main.setAttribute('show-description', String(!!vm.showDescription));
-        // Reflect server ShowReadme for button label state (inline readme stays hidden by component)
         main.setAttribute('show-readme', String(!!vm.showReadme));
-        // Sliders from TestSettings
-        const ts = vm.testSettings ?? {};
-        if (ts.cpuTemperatureThreshold != null)
-            main.setAttribute('temp-threshold', String(ts.cpuTemperatureThreshold));
-        if (ts.cpuLoadThreshold != null)
-            main.setAttribute('cpu-load-threshold', String(ts.cpuLoadThreshold));
-        if (ts.cpuLoadTimeSpan != null)
-            main.setAttribute('cpu-load-time', String(ts.cpuLoadTimeSpan));
+        // Set instructions from VM if available
+        if (typeof vm.instructions === 'string') {
+            main.setAttribute('instructions', vm.instructions);
+        }
+        else {
+            main.removeAttribute('instructions');
+        }
+        if (vm.cpuTemperatureThreshold != null)
+            main.setAttribute('temp-threshold', String(vm.cpuTemperatureThreshold));
+        if (vm.cpuLoadThreshold != null)
+            main.setAttribute('cpu-load-threshold', String(vm.cpuLoadThreshold));
+        if (vm.cpuLoadTimeSpan != null)
+            main.setAttribute('cpu-load-time', String(vm.cpuLoadTimeSpan));
         // Zones
         try {
             const zones = buildZonesPayload();
@@ -6740,16 +6791,62 @@ async function render() {
         catch (err) {
             handleError(err, 'Render README modal');
         }
+        // Ensure Description modal visibility matches server state
+        try {
+            ensureDescriptionModal(!!vm.showDescription, main);
+        }
+        catch (err) {
+            handleError(err, 'Render Description modal');
+        }
     }
     const statusEl = document.getElementById('connection-status');
     if (statusEl)
         statusEl.textContent = vm.connectionStatus;
 }
-function ensureReadmeModal(open, main) {
-    let note = document.querySelector('x-notification');
+function ensureDescriptionModal(open, main) {
+    let note = document.querySelector('x-notification[data-desc]');
     if (open) {
         if (!note) {
             note = document.createElement('x-notification');
+            note.setAttribute('data-desc', '');
+            document.body.appendChild(note);
+        }
+        note.setAttribute('title', 'Description');
+        // Ensure one slotted div for instructions
+        let descDiv = note.querySelector('div[data-desc-content]');
+        if (!descDiv) {
+            descDiv = document.createElement('div');
+            descDiv.setAttribute('data-desc-content', '');
+            note.appendChild(descDiv);
+        }
+        descDiv.textContent = vm.instructions || '';
+        // Setup close handler for user-initiated actions
+        if (!note.__onCloseHandler) {
+            note.__onCloseHandler = async () => {
+                try {
+                    await vm.updatePropertyValue('ShowDescription', false);
+                }
+                catch (err) {
+                    handleError(err, 'Close Description -> server update');
+                }
+            };
+            note.addEventListener('close', note.__onCloseHandler);
+        }
+        if (typeof note.show === 'function')
+            note.show();
+        else
+            note.setAttribute('open', '');
+    }
+    else if (note) {
+        note.removeAttribute('open');
+    }
+}
+function ensureReadmeModal(open, main) {
+    let note = document.querySelector('x-notification[data-readme]');
+    if (open) {
+        if (!note) {
+            note = document.createElement('x-notification');
+            note.setAttribute('data-readme', '');
             document.body.appendChild(note);
         }
         note.setAttribute('title', 'README');
@@ -6790,62 +6887,74 @@ function ensureReadmeModal(open, main) {
 async function init() {
     try {
         await vm.initializeRemote();
+        // Add a 1-second polling timer for live updates (survives codegen)
+        setInterval(() => {
+            vm.refreshState().catch(() => { });
+        }, 1000);
         vm.addChangeListener(render);
         render();
+        // Add event listeners for all VM properties
+        const main = document.querySelector('x-thermal-main');
+        if (main)
+            wireMainEvents(main);
     }
     catch (err) {
         handleError(err, 'Initialize remote');
     }
-}
-document.addEventListener('DOMContentLoaded', () => {
-    init();
-    const main = document.querySelector('x-thermal-main');
-    if (main) {
-        main.addEventListener('change-temp-threshold', async (e) => {
-            const newValue = Number(e?.detail?.value ?? 0);
-            const currentValue = vm?.testSettings?.cpuTemperatureThreshold;
-            // Only update if value actually changed
-            if (newValue !== currentValue) {
-                vm.updatePropertyValueDebounced('CpuTemperatureThreshold', newValue);
+    // (removed extra closing brace)
+    function wireMainEvents(main) {
+        // Instructions (if editable)
+        main.addEventListener('change-instructions', async (e) => {
+            try {
+                await vm.updatePropertyValue('Instructions', e?.detail?.value ?? '');
+            }
+            catch (err) {
+                handleError(err, 'change-instructions');
             }
         });
-        main.addEventListener('change-cpu-load-threshold', async (e) => {
-            const newValue = Number(e?.detail?.value ?? 0);
-            const currentValue = vm?.testSettings?.cpuLoadThreshold;
-            if (newValue !== currentValue) {
-                vm.updatePropertyValueDebounced('CpuLoadThreshold', newValue);
-            }
+        // CpuTemperatureThreshold
+        main.addEventListener('change-temp-threshold', (e) => {
+            vm.updatePropertyValueDebounced('CpuTemperatureThreshold', Number(e?.detail?.value));
         });
-        main.addEventListener('change-cpu-load-time', async (e) => {
-            const newValue = Number(e?.detail?.value ?? 0);
-            const currentValue = vm?.testSettings?.cpuLoadTimeSpan;
-            if (newValue !== currentValue) {
-                vm.updatePropertyValueDebounced('CpuLoadTimeSpan', newValue);
-            }
+        // CpuLoadThreshold
+        main.addEventListener('change-cpu-load-threshold', (e) => {
+            vm.updatePropertyValueDebounced('CpuLoadThreshold', Number(e?.detail?.value));
         });
-        main.addEventListener('toggle-readme', async (e) => {
-            const newValue = Boolean(e?.detail?.value);
-            const currentValue = vm.showReadme;
-            if (newValue !== currentValue) {
-                vm.updatePropertyValueDebounced('ShowReadme', newValue);
-            }
+        // CpuLoadTimeSpan
+        main.addEventListener('change-cpu-load-time', (e) => {
+            vm.updatePropertyValueDebounced('CpuLoadTimeSpan', Number(e?.detail?.value));
         });
+        // ShowDescription
         main.addEventListener('toggle-description', async (e) => {
-            const newValue = Boolean(e?.detail?.value);
-            const currentValue = vm.showDescription;
-            if (newValue !== currentValue) {
-                vm.updatePropertyValueDebounced('ShowDescription', newValue);
+            try {
+                await vm.updatePropertyValue('ShowDescription', !!e?.detail?.value);
+            }
+            catch (err) {
+                handleError(err, 'toggle-description');
             }
         });
+        // ShowReadme
+        main.addEventListener('toggle-readme', async (e) => {
+            try {
+                await vm.updatePropertyValue('ShowReadme', !!e?.detail?.value);
+            }
+            catch (err) {
+                handleError(err, 'toggle-readme');
+            }
+        });
+        // Cancel test
         main.addEventListener('cancel', async () => {
             try {
                 await vm.cancelTest();
             }
             catch (err) {
-                handleError(err, 'Cancel test');
+                handleError(err, 'cancel');
             }
         });
     }
+}
+document.addEventListener('DOMContentLoaded', () => {
+    init();
 });
 
 })();

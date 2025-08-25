@@ -23,6 +23,7 @@ function handleError(err: any, context?: string) {
 
 
 async function render() {
+    (document.getElementById('instructions') as HTMLInputElement).value = vm.instructions;
     (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).value = JSON.stringify(vm.cpuTemperatureThreshold);
     (document.getElementById('cpuLoadThreshold') as HTMLInputElement).value = JSON.stringify(vm.cpuLoadThreshold);
     (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).value = JSON.stringify(vm.cpuLoadTimeSpan);
@@ -45,6 +46,14 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', () => {
     init();
+    (document.getElementById('instructions') as HTMLInputElement).addEventListener('change', (e) => {
+        const newValue = (e.target as HTMLInputElement).value;
+        const currentValue = vm.instructions;
+        // Only update if value actually changed
+        if (newValue !== currentValue) {
+            vm.updatePropertyValueDebounced('Instructions', newValue);
+        }
+    });
     (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.cpuTemperatureThreshold;
@@ -73,17 +82,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.zoneList;
         // Only update if value actually changed
-       
+        if (JSON.stringify(vm.zoneList) !== currentValue) {
             vm.updatePropertyValueDebounced('ZoneList', JSON.parse(newValue));
-      
+        }
     });
     (document.getElementById('testSettings') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.testSettings;
         // Only update if value actually changed
-     
+        if (JSON.stringify(vm.testSettings) !== currentValue) {
             vm.updatePropertyValueDebounced('TestSettings', JSON.parse(newValue));
-        
+        }
     });
     (document.getElementById('showDescription') as HTMLInputElement).addEventListener('change', (e) => {
         const newValue = (e.target as HTMLInputElement).value;

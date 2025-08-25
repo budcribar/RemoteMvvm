@@ -61,6 +61,13 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
     public override Task<HP3LSThermalTestViewModelState> GetState(Empty request, ServerCallContext context)
     {
         var state = new HP3LSThermalTestViewModelState();
+        // Mapping property: Instructions to state.Instructions
+        try
+        {
+            var propValue = _viewModel.Instructions;
+            state.Instructions = propValue;
+        }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property Instructions to state.Instructions: " + ex.ToString()); }
         // Mapping property: CpuTemperatureThreshold to state.CpuTemperatureThreshold
         try
         {

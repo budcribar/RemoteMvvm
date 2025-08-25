@@ -141,10 +141,11 @@ function ensureDescriptionModal(open: boolean, main: HTMLElement) {
 }
 
 function ensureReadmeModal(open: boolean, main: HTMLElement) {
-    let note = document.querySelector('x-notification') as (HTMLElement & { show?: () => void; hide?: () => void; __onCloseHandler?: (ev: Event) => void; }) | null;
+    let note = document.querySelector('x-notification[data-readme]') as (HTMLElement & { show?: () => void; hide?: () => void; __onCloseHandler?: (ev: Event) => void; }) | null;
     if (open) {
         if (!note) {
             note = document.createElement('x-notification') as any;
+            note.setAttribute('data-readme', '');
             document.body.appendChild(note);
         }
         note.setAttribute('title', 'README');
@@ -185,89 +186,70 @@ async function init() {
         }, 1000);
         vm.addChangeListener(render);
         render();
+
+        // Add event listeners for all VM properties
+    const main = document.querySelector('x-thermal-main') as HTMLElement | null;
+    if (main) wireMainEvents(main);
     } catch (err) {
         handleError(err, 'Initialize remote');
     }
+// (removed extra closing brace)
+
+function wireMainEvents(main: HTMLElement) {
+    // Instructions (if editable)
+    main.addEventListener('change-instructions', async (e: any) => {
+        try {
+            await vm.updatePropertyValue('Instructions', e?.detail?.value ?? '');
+        } catch (err) {
+            handleError(err, 'change-instructions');
+        }
+    });
+
+    // CpuTemperatureThreshold
+    main.addEventListener('change-temp-threshold', (e: any) => {
+        vm.updatePropertyValueDebounced('CpuTemperatureThreshold', Number(e?.detail?.value));
+    });
+
+    // CpuLoadThreshold
+    main.addEventListener('change-cpu-load-threshold', (e: any) => {
+        vm.updatePropertyValueDebounced('CpuLoadThreshold', Number(e?.detail?.value));
+    });
+
+    // CpuLoadTimeSpan
+    main.addEventListener('change-cpu-load-time', (e: any) => {
+        vm.updatePropertyValueDebounced('CpuLoadTimeSpan', Number(e?.detail?.value));
+    });
+
+    // ShowDescription
+    main.addEventListener('toggle-description', async (e: any) => {
+        try {
+            await vm.updatePropertyValue('ShowDescription', !!e?.detail?.value);
+        } catch (err) {
+            handleError(err, 'toggle-description');
+        }
+    });
+
+    // ShowReadme
+    main.addEventListener('toggle-readme', async (e: any) => {
+        try {
+            await vm.updatePropertyValue('ShowReadme', !!e?.detail?.value);
+        } catch (err) {
+            handleError(err, 'toggle-readme');
+        }
+    });
+
+    // Cancel test
+    main.addEventListener('cancel', async () => {
+        try {
+            await vm.cancelTest();
+        } catch (err) {
+            handleError(err, 'cancel');
+        }
+    });
+}
 }
 
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    (document.getElementById('instructions') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.instructions;
-    // Only update if value actually changed
-    if (newValue !== currentValue) {
-        vm.updatePropertyValueDebounced('Instructions', newValue);
-    }
-});
-(document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.cpuTemperatureThreshold;
-    // Only update if value actually changed
-    if (Number(newValue) !== currentValue) {
-        vm.updatePropertyValueDebounced('CpuTemperatureThreshold', Number(newValue));
-    }
-});
-(document.getElementById('cpuLoadThreshold') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.cpuLoadThreshold;
-    // Only update if value actually changed
-    if (Number(newValue) !== currentValue) {
-        vm.updatePropertyValueDebounced('CpuLoadThreshold', Number(newValue));
-    }
-});
-(document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.cpuLoadTimeSpan;
-    // Only update if value actually changed
-    if (Number(newValue) !== currentValue) {
-        vm.updatePropertyValueDebounced('CpuLoadTimeSpan', Number(newValue));
-    }
-});
-(document.getElementById('zoneList') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.zoneList;
-    // Only update if value actually changed
-    if (JSON.stringify(vm.zoneList) !== JSON.stringify(currentValue)) {
-        vm.updatePropertyValueDebounced('ZoneList', JSON.parse(newValue));
-    }
-});
-(document.getElementById('testSettings') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.testSettings;
-    // Only update if value actually changed
-    if (JSON.stringify(vm.testSettings) !== JSON.stringify(currentValue)) {
-        vm.updatePropertyValueDebounced('TestSettings', JSON.parse(newValue));
-    }
-});
-(document.getElementById('showDescription') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.showDescription;
-    // Only update if value actually changed
-    if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
-        vm.updatePropertyValueDebounced('ShowDescription', newValue.toLowerCase() === 'true');
-    }
-});
-(document.getElementById('showReadme') as HTMLInputElement).addEventListener('change', (e) => {
-    const newValue = (e.target as HTMLInputElement).value;
-    const currentValue = vm.showReadme;
-    // Only update if value actually changed
-    if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
-        vm.updatePropertyValueDebounced('ShowReadme', newValue.toLowerCase() === 'true');
-    }
-});
-(document.getElementById('stateChanged-btn') as HTMLButtonElement).addEventListener('click', async () => {
-    try {
-        await vm.stateChanged(undefined);
-    } catch (err) {
-        handleError(err, 'Execute StateChanged');
-    }
-});
-(document.getElementById('cancelTest-btn') as HTMLButtonElement).addEventListener('click', async () => {
-    try {
-        await vm.cancelTest();
-    } catch (err) {
-        handleError(err, 'Execute CancelTest');
-    }
-});
+    
 });

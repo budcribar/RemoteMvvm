@@ -17,7 +17,20 @@ namespace HPSystemsTools.ViewModels
 
         public HP3LSThermalTestViewModel()
         {
+            TestSettings = new TestSettingsModel();
+           
+            var zones = new [] { new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_0 }, new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_1 } };
+
+            Zones = zones.ToDictionary(z => z.Zone, z => z);
+            ZoneList = new ObservableCollection<ThermalZoneComponentViewModel>(zones);
+
+            CpuLoadThreshold = TestSettings.CpuLoadThreshold;
+            CpuTemperatureThreshold = TestSettings.CpuTemperatureThreshold;
+            CpuLoadTimeSpan = TestSettings.CpuLoadTimeSpan;
         }
+
+        [ObservableProperty]
+        public partial string Instructions { get; set; } = "";
 
         [ObservableProperty]
         public partial int CpuTemperatureThreshold { get; set; }
@@ -66,24 +79,10 @@ namespace HPSystemsTools.ViewModels
         [ObservableProperty]
         public partial bool ShowReadme { get; set; }
 
-        internal Task OnInitializedAsync(HP3LSThermalTest test)
+        internal void OnInitialized(HP3LSThermalTest test)
         {
             _test = test;
-
-            TestSettings = new TestSettingsModel();
-
-            var zones = new[]
-            {
-                new ThermalZoneComponentViewModel(Zone.CPUZ_0),
-                new ThermalZoneComponentViewModel(Zone.CPUZ_1)
-            };
-            Zones = zones.ToDictionary(z => z.Zone, z => z);
-            ZoneList = new ObservableCollection<ThermalZoneComponentViewModel>(zones);
-
-            CpuLoadThreshold = TestSettings.CpuLoadThreshold;
-            CpuTemperatureThreshold = TestSettings.CpuTemperatureThreshold;
-            CpuLoadTimeSpan = TestSettings.CpuLoadTimeSpan;
-            return Task.CompletedTask;
+            Instructions = _test?.Localized?.Instructions ?? "";
         }
 
         public void OnNext(ITelemetryReading telemetry)

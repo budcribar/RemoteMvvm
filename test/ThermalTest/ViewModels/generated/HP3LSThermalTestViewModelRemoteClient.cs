@@ -35,6 +35,13 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
+        private string _instructions = default!;
+        public string Instructions
+        {
+            get => _instructions;
+            private set => SetProperty(ref _instructions, value);
+        }
+
         private int _cpuTemperatureThreshold = default!;
         public int CpuTemperatureThreshold
         {
@@ -109,6 +116,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                             try
                             {
                                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);
+                                this.Instructions = state.Instructions;
                                 this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
                                 this.CpuLoadThreshold = state.CpuLoadThreshold;
                                 this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
@@ -151,6 +159,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Initial state received.");
+                this.Instructions = state.Instructions;
                 this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
                 this.CpuLoadThreshold = state.CpuLoadThreshold;
                 this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
@@ -218,6 +227,8 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
                                switch (update.PropertyName)
                                {
+                                   case nameof(Instructions):
+                 if (update.NewValue!.Is(StringValue.Descriptor)) this.Instructions = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(CpuTemperatureThreshold):
                      if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuTemperatureThreshold = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(CpuLoadThreshold):
