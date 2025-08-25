@@ -38,6 +38,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
     private changeCallbacks: Array<() => void> = [];
     private updateDebounceMap = new Map<string, any>(); // Internal debouncing (any for cross-platform compatibility)
 
+    instructions: string;
     cpuTemperatureThreshold: number;
     cpuLoadThreshold: number;
     cpuLoadTimeSpan: number;
@@ -72,6 +73,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
+        this.instructions = (state as any).getInstructions();
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
@@ -87,6 +89,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
+        this.instructions = (state as any).getInstructions();
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
@@ -100,7 +103,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
     async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
-        req.setArrayIndex(-1);
+        req.setArrayIndex(-1); // Default to -1 for non-array properties
         req.setNewValue(this.createAnyValue(value));
         const response = await this.grpcClient.updatePropertyValue(req);
         
@@ -202,6 +205,9 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.propertyStream.on('data', (update: PropertyChangeNotification) => {
             const anyVal = update.getNewValue();
             switch (update.getPropertyName()) {
+                case 'Instructions':
+                    this.instructions = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+                    break;
                 case 'CpuTemperatureThreshold':
                     this.cpuTemperatureThreshold = anyVal?.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
                     break;

@@ -6,6 +6,9 @@ import * as google_protobuf_timestamp_pb from 'google-protobuf/google/protobuf/t
 
 
 export class HP3LSThermalTestViewModelState extends jspb.Message {
+  getInstructions(): string;
+  setInstructions(value: string): HP3LSThermalTestViewModelState;
+
   getCpuTemperatureThreshold(): number;
   setCpuTemperatureThreshold(value: number): HP3LSThermalTestViewModelState;
 
@@ -41,6 +44,7 @@ export class HP3LSThermalTestViewModelState extends jspb.Message {
 
 export namespace HP3LSThermalTestViewModelState {
   export type AsObject = {
+    instructions: string,
     cpuTemperatureThreshold: number,
     cpuLoadThreshold: number,
     cpuLoadTimeSpan: number,

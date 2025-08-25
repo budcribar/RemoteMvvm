@@ -14,13 +14,14 @@ import "google/protobuf/timestamp.proto";
 
 // Message representing the full state of the HP3LSThermalTestViewModel
 message HP3LSThermalTestViewModelState {
-  int32 cpu_temperature_threshold = 1; // Original C#: int CpuTemperatureThreshold
-  int32 cpu_load_threshold = 2; // Original C#: int CpuLoadThreshold
-  int32 cpu_load_time_span = 3; // Original C#: int CpuLoadTimeSpan
-  repeated ThermalZoneComponentViewModelState zone_list = 4; // Original C#: System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> ZoneList
-  TestSettingsModelState test_settings = 5; // Original C#: HPSystemsTools.Models.TestSettingsModel TestSettings
-  bool show_description = 6; // Original C#: bool ShowDescription
-  bool show_readme = 7; // Original C#: bool ShowReadme
+  string instructions = 1; // Original C#: string Instructions
+  int32 cpu_temperature_threshold = 2; // Original C#: int CpuTemperatureThreshold
+  int32 cpu_load_threshold = 3; // Original C#: int CpuLoadThreshold
+  int32 cpu_load_time_span = 4; // Original C#: int CpuLoadTimeSpan
+  repeated ThermalZoneComponentViewModelState zone_list = 5; // Original C#: System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> ZoneList
+  TestSettingsModelState test_settings = 6; // Original C#: HPSystemsTools.Models.TestSettingsModel TestSettings
+  bool show_description = 7; // Original C#: bool ShowDescription
+  bool show_readme = 8; // Original C#: bool ShowReadme
 }
 
 message ThermalZoneComponentViewModelState {

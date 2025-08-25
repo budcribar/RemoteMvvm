@@ -230,11 +230,10 @@ export class ThermalMainElement extends HTMLElement {
     // Title
     $('title').textContent = this.str('title', 'CPU Thermal Test');
 
-    // Description
-    const showDesc = this.bool('show-description');
-    const descWrap = $('descriptionWrap');
-    descWrap.toggleAttribute('hidden', !showDesc);
-    $('instructions').textContent = this.str('instructions');
+  // Description: always hidden, now shown only in modal
+  const descWrap = $('descriptionWrap');
+  descWrap.toggleAttribute('hidden', true);
+  $('instructions').textContent = this.str('instructions');
 
     // Labels
     $('lblTemp').textContent = this.str('label-temp-threshold', 'Temperature threshold to DTS');
@@ -266,7 +265,7 @@ export class ThermalMainElement extends HTMLElement {
 
     const lblShowDesc = this.str('label-show-description', 'Show description');
     const lblHideDesc = this.str('label-hide-description', 'Hide description');
-    ( $('btnDesc') as HTMLButtonElement ).textContent = showDesc ? lblHideDesc : lblShowDesc;
+  ( $('btnDesc') as HTMLButtonElement ).textContent = this.bool('show-description') ? lblHideDesc : lblShowDesc;
 
     ( $('btnCancel') as HTMLButtonElement ).textContent = this.str('label-cancel', 'Cancel');
 
