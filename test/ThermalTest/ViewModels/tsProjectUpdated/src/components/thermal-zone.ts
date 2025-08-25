@@ -25,7 +25,7 @@ type Descriptions = Record<string, string>;
 export class ThermalZoneElement extends HTMLElement {
   static get observedAttributes() {
     return [
-      'active', 'background', 'status', 'state', 'progress', 'zone', 'fan-speed',
+      'active', 'background', 'status', 'state', 'progress', 'zone', 'zone-index', 'fan-speed',
       'device-name', 'temperature', 'max-temp', 'processor-load-name',
       'processor-load', 'cpu-load-threshold', 'state-descriptions'
     ];
@@ -204,14 +204,14 @@ export class ThermalZoneElement extends HTMLElement {
   const propFan = this.root.getElementById('propFan') as HTMLDivElement;
   const runtimeProps = this.root.getElementById('runtimeProps') as HTMLDivElement;
 
-    const maxTemp = this.num('max-temp');
-    const zone = this.str('zone');
-    const fan = this.num('fan-speed');
-    const primary = status === 'CheckInProgress' ? state : status;
-    propPrimary.textContent = primary;
-    propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
-    propZone.textContent = zone;
-    propFan.textContent = `${fan} RPM`;
+  const maxTemp = this.num('max-temp');
+  const zoneIndex = this.getAttribute('zone-index');
+  const fan = this.num('fan-speed');
+  const primary = status === 'CheckInProgress' ? state : status;
+  propPrimary.textContent = primary;
+  propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
+  propZone.textContent = zoneIndex !== null ? `Zone ${zoneIndex}` : '';
+  propFan.textContent = `${fan} RPM`;
 
     // Apply state-based class styling (supports either textual status/state values)
     const sanitize = (s: string) => (s || '').toString().replace(/\s+/g, '').replace(/[^\w-]/g, '');

@@ -130,37 +130,38 @@ public class GrpcWebEndToEndTests
             {
                 public partial class TestViewModel : ObservableObject
                 {
-                    private Task? _backgroundTask;
-                    
                     public TestViewModel()
                     {
                         Debug.WriteLine("[TestViewModel] Constructor called");
                         
-                        // Trigger property change immediately
+                        // Set initial status
                         Status = "Initial";
                         Debug.WriteLine("[TestViewModel] Set Status to 'Initial'");
                         
-                        // Start background task with longer delay to ensure subscription is established first
-                        _backgroundTask = Task.Run(async () =>
+                        // Subscribe to client connection events to trigger property changes
+                        TestViewModelGrpcServiceImpl.ClientCountChanged += OnClientCountChanged;
+                    }
+                    
+                    private async void OnClientCountChanged(object? sender, int clientCount)
+                    {
+                        Debug.WriteLine($"[TestViewModel] Client count changed to: {clientCount}");
+                        
+                        if (clientCount > 0)
                         {
-                            Debug.WriteLine("[TestViewModel] Background task started, waiting 10 seconds...");
-                            await Task.Delay(10000); // Give plenty of time for subscription
+                            // Client connected - trigger property changes after a brief delay
+                            await Task.Delay(500); // Small delay to ensure subscription is fully established
                             
                             Debug.WriteLine("[TestViewModel] About to set Status to 'Updated'");
                             Status = "Updated";
                             Debug.WriteLine("[TestViewModel] Status set to 'Updated'");
                             
-                            // Also try manual notification
-                            Debug.WriteLine("[TestViewModel] Calling OnPropertyChanged manually");
-                            OnPropertyChanged(nameof(Status));
-                            Debug.WriteLine("[TestViewModel] Manual OnPropertyChanged called");
-                            
-                            // Try one more time
+                            // Give time for the notification to be processed
                             await Task.Delay(1000);
+                            
                             Debug.WriteLine("[TestViewModel] About to set Status to 'Final'");
                             Status = "Final";
                             Debug.WriteLine("[TestViewModel] Status set to 'Final'");
-                        });
+                        }
                     }
 
                     [ObservableProperty]
@@ -2084,32 +2085,101 @@ public class GrpcWebEndToEndTests
     }
 
     [Fact]
-    public async Task SubscribeToPropertyChanges_Simple_Test()
+    public async Task EnumMappings_Generation_Test()
     {
         var modelCode = """
+            using System;
+            using System.Collections.Generic;
             using CommunityToolkit.Mvvm.ComponentModel;
-            using System.ComponentModel;
-            using System.Diagnostics;
+            using CommunityToolkit.Mvvm.Input;
 
             namespace Generated.ViewModels
             {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
+                public partial class TestViewModel : ObservableObject 
+                { 
+                    public TestViewModel() 
                     {
-                        Debug.WriteLine("[TestViewModel] Constructor called");
-                        Status = "Initial";
-                        Debug.WriteLine("[TestViewModel] Set Status to 'Initial'");
+                        CurrentStatus = Status.Active;
+                        Priority = TaskPriority.High;
                     }
 
                     [ObservableProperty]
-                    private string _status = "Default";
+                    private Status _currentStatus = Status.Active;
+                    
+                    [ObservableProperty]
+                    private TaskPriority _priority = TaskPriority.Low;
+
+                    [RelayCommand]
+                    private void ChangeStatus(Status newStatus) => CurrentStatus = newStatus;
+                }
+
+                public enum Status
+                {
+                    Active = 1,
+                    Idle = 2, 
+                    Error = 3
+                }
+
+                public enum TaskPriority
+                {
+                    Low = 10,
+                    Medium = 20,
+                    High = 30
                 }
             }
             """;
 
-        // **FIXED**: This test should verify UpdatePropertyValue response, not PropertyChanged streaming
-        // PropertyChanged streaming should be tested separately with server-initiated changes
-        await TestEndToEndScenario(modelCode, "", "test-update-simple.js", null);
+        // Create TypeScript generator and analyze the model
+        var tempFile = Path.GetTempFileName();
+        File.WriteAllText(tempFile, modelCode);
+        
+        try
+        {
+            var refs = new List<string>();
+            string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+            if (tpa != null)
+            {
+                foreach (var p in tpa.Split(Path.PathSeparator))
+                    if (!string.IsNullOrEmpty(p) && File.Exists(p)) refs.Add(p);
+            }
+
+            var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(
+                new[] { tempFile }, 
+                "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute", 
+                "CommunityToolkit.Mvvm.Input.RelayCommandAttribute", 
+                refs, 
+                "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
+
+            // Generate TypeScript client code
+            var tsCode = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
+
+            // Verify that enum mappings are generated
+            Assert.Contains("export const StatusMap: Record<number, string> = {", tsCode);
+            Assert.Contains("1: 'Active'", tsCode);
+            Assert.Contains("2: 'Idle'", tsCode);
+            Assert.Contains("3: 'Error'", tsCode);
+
+            Assert.Contains("export const TaskPriorityMap: Record<number, string> = {", tsCode);
+            Assert.Contains("10: 'Low'", tsCode);
+            Assert.Contains("20: 'Medium'", tsCode);
+            Assert.Contains("30: 'High'", tsCode);
+
+            // Verify helper functions are generated
+            Assert.Contains("export function getStatusDisplay(value: number): string {", tsCode);
+            Assert.Contains("return StatusMap[value] || value.toString();", tsCode);
+            Assert.Contains("export function getTaskPriorityDisplay(value: number): string {", tsCode);
+            Assert.Contains("return TaskPriorityMap[value] || value.toString();", tsCode);
+
+            // Verify enum mappings appear before class definition
+            var statusMapIndex = tsCode.IndexOf("export const StatusMap");
+            var classIndex = tsCode.IndexOf($"export class {name}RemoteClient");
+            Assert.True(statusMapIndex >= 0 && statusMapIndex < classIndex, "Enum mappings should appear before class definition");
+
+            Console.WriteLine("✅ All enum mapping tests passed!");
+        }
+        finally
+        {
+            File.Delete(tempFile);
+        }
     }
 }

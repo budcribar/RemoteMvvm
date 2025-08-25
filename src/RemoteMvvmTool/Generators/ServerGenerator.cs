@@ -327,117 +327,36 @@ public static class ServerGenerator
                 sb.AppendLine("            // Executes command: IRelayCommand");
             }
             
-            if (runType == "wpf")
+            // Direct command execution - MVVM Toolkit RelayCommand handles its own dispatching
+            if (cmd.Parameters.Count > 0)
             {
-                sb.AppendLine("            if (_dispatcher != null)");
-                sb.AppendLine("            {");
-                sb.AppendLine("                _dispatcher.Invoke(() =>");
-                sb.AppendLine("                {");
-                if (cmd.Parameters.Count > 0)
+                // Generate parameter extraction
+                foreach (var p in cmd.Parameters)
                 {
-                    // Generate parameter extraction
-                    foreach (var p in cmd.Parameters)
+                    var paramName = GeneratorHelpers.ToCamelCase(p.Name);
+                    if (p.FullTypeSymbol!.TypeKind == TypeKind.Enum)
                     {
-                        var paramName = GeneratorHelpers.ToCamelCase(p.Name);
-                        if (p.FullTypeSymbol!.TypeKind == TypeKind.Enum)
-                        {
-                            sb.AppendLine($"                    var {paramName} = ({p.TypeString})request.{GeneratorHelpers.ToPascalCase(p.Name)};");
-                        }
-                        else
-                        {
-                            sb.AppendLine($"                    var {paramName} = request.{GeneratorHelpers.ToPascalCase(p.Name)};");
-                        }
-                    }
-                    
-                    var paramList = string.Join(", ", cmd.Parameters.Select(p => GeneratorHelpers.ToCamelCase(p.Name)));
-                    if (cmd.Parameters.Count == 1)
-                    {
-                        sb.AppendLine($"                    _viewModel.{cmd.CommandPropertyName}?.Execute({paramList});");
+                        sb.AppendLine($"            var {paramName} = ({p.TypeString})request.{GeneratorHelpers.ToPascalCase(p.Name)};");
                     }
                     else
                     {
-                        sb.AppendLine($"                    _viewModel.{cmd.CommandPropertyName}?.Execute(({paramList}));");
+                        sb.AppendLine($"            var {paramName} = request.{GeneratorHelpers.ToPascalCase(p.Name)};");
                     }
+                }
+                
+                var paramList = string.Join(", ", cmd.Parameters.Select(p => GeneratorHelpers.ToCamelCase(p.Name)));
+                if (cmd.Parameters.Count == 1)
+                {
+                    sb.AppendLine($"            _viewModel.{cmd.CommandPropertyName}?.Execute({paramList});");
                 }
                 else
                 {
-                    sb.AppendLine($"                    _viewModel.{cmd.CommandPropertyName}?.Execute(null);");
+                    sb.AppendLine($"            _viewModel.{cmd.CommandPropertyName}?.Execute(({paramList}));");
                 }
-                sb.AppendLine("                });");
-                sb.AppendLine("            }");
-            }
-            else if (runType == "winforms")
-            {
-                sb.AppendLine("            if (_dispatcher != null)");
-                sb.AppendLine("            {");
-                sb.AppendLine("                _dispatcher.Invoke(new Action(() =>");
-                sb.AppendLine("                {");
-                if (cmd.Parameters.Count > 0)
-                {
-                    // Generate parameter extraction
-                    foreach (var p in cmd.Parameters)
-                    {
-                        var paramName = GeneratorHelpers.ToCamelCase(p.Name);
-                        if (p.FullTypeSymbol!.TypeKind == TypeKind.Enum)
-                        {
-                            sb.AppendLine($"                    var {paramName} = ({p.TypeString})request.{GeneratorHelpers.ToPascalCase(p.Name)};");
-                        }
-                        else
-                        {
-                            sb.AppendLine($"                    var {paramName} = request.{GeneratorHelpers.ToPascalCase(p.Name)};");
-                        }
-                    }
-                    
-                    var paramList = string.Join(", ", cmd.Parameters.Select(p => GeneratorHelpers.ToCamelCase(p.Name)));
-                    if (cmd.Parameters.Count == 1)
-                    {
-                        sb.AppendLine($"                    _viewModel.{cmd.CommandPropertyName}?.Execute({paramList});");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"                    _viewModel.{cmd.CommandPropertyName}?.Execute(({paramList}));");
-                    }
-                }
-                else
-                {
-                    sb.AppendLine($"                    _viewModel.{cmd.CommandPropertyName}?.Execute(null);");
-                }
-                sb.AppendLine("                }));");
-                sb.AppendLine("            }");
             }
             else
             {
-                // Console mode - direct execution
-                if (cmd.Parameters.Count > 0)
-                {
-                    // Generate parameter extraction
-                    foreach (var p in cmd.Parameters)
-                    {
-                        var paramName = GeneratorHelpers.ToCamelCase(p.Name);
-                        if (p.FullTypeSymbol!.TypeKind == TypeKind.Enum)
-                        {
-                            sb.AppendLine($"            var {paramName} = ({p.TypeString})request.{GeneratorHelpers.ToPascalCase(p.Name)};");
-                        }
-                        else
-                        {
-                            sb.AppendLine($"            var {paramName} = request.{GeneratorHelpers.ToPascalCase(p.Name)};");
-                        }
-                    }
-                    
-                    var paramList = string.Join(", ", cmd.Parameters.Select(p => GeneratorHelpers.ToCamelCase(p.Name)));
-                    if (cmd.Parameters.Count == 1)
-                    {
-                        sb.AppendLine($"            _viewModel.{cmd.CommandPropertyName}?.Execute({paramList});");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"            _viewModel.{cmd.CommandPropertyName}?.Execute(({paramList}));");
-                    }
-                }
-                else
-                {
-                    sb.AppendLine($"            _viewModel.{cmd.CommandPropertyName}?.Execute(null);");
-                }
+                sb.AppendLine($"            _viewModel.{cmd.CommandPropertyName}?.Execute(null);");
             }
             
             sb.AppendLine($"            Debug.WriteLine(\"[GrpcService:{vmName}] Executed command {baseName}\");");

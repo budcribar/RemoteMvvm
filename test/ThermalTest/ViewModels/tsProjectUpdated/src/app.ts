@@ -44,13 +44,14 @@ function buildZonesPayload(): any[] {
     const zonesArr = Array.isArray(vm.zoneList) ? vm.zoneList : [];
     return zonesArr
         .filter((z: any) => z && (z.isActive === undefined || !!z.isActive))
-        .map((z: any) => ({
+        .map((z: any, idx: number) => ({
             active: z.isActive ?? true,
             background: z.background ?? '#fafafa',
             status: String(z.status ?? ''),
             state: String(z.state ?? ''),
             progress: Number(z.progress ?? 0),
             zone: z.deviceName ? String(z.deviceName) : String(z.zone ?? ''),
+            'zone-index': idx,
             fanSpeed: Number(z.fanSpeed ?? 0),
             deviceName: z.deviceName ?? 'Device',
             temperature: Number(z.temperature ?? 0),

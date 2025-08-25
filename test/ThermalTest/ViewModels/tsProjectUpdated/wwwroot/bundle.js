@@ -3369,7 +3369,7 @@ __webpack_require__.r(__webpack_exports__);
 class ThermalZoneElement extends HTMLElement {
     static get observedAttributes() {
         return [
-            'active', 'background', 'status', 'state', 'progress', 'zone', 'fan-speed',
+            'active', 'background', 'status', 'state', 'progress', 'zone', 'zone-index', 'fan-speed',
             'device-name', 'temperature', 'max-temp', 'processor-load-name',
             'processor-load', 'cpu-load-threshold', 'state-descriptions'
         ];
@@ -3540,12 +3540,12 @@ class ThermalZoneElement extends HTMLElement {
         const propFan = this.root.getElementById('propFan');
         const runtimeProps = this.root.getElementById('runtimeProps');
         const maxTemp = this.num('max-temp');
-        const zone = this.str('zone');
+        const zoneIndex = this.getAttribute('zone-index');
         const fan = this.num('fan-speed');
         const primary = status === 'CheckInProgress' ? state : status;
         propPrimary.textContent = primary;
         propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
-        propZone.textContent = zone;
+        propZone.textContent = zoneIndex !== null ? `Zone ${zoneIndex}` : '';
         propFan.textContent = `${fan} RPM`;
         // Apply state-based class styling (supports either textual status/state values)
         const sanitize = (s) => (s || '').toString().replace(/\s+/g, '').replace(/[^\w-]/g, '');
@@ -6740,13 +6740,14 @@ function buildZonesPayload() {
     const zonesArr = Array.isArray(vm.zoneList) ? vm.zoneList : [];
     return zonesArr
         .filter((z) => z && (z.isActive === undefined || !!z.isActive))
-        .map((z) => ({
+        .map((z, idx) => ({
         active: z.isActive ?? true,
         background: z.background ?? '#fafafa',
         status: String(z.status ?? ''),
         state: String(z.state ?? ''),
         progress: Number(z.progress ?? 0),
         zone: z.deviceName ? String(z.deviceName) : String(z.zone ?? ''),
+        'zone-index': idx,
         fanSpeed: Number(z.fanSpeed ?? 0),
         deviceName: z.deviceName ?? 'Device',
         temperature: Number(z.temperature ?? 0),

@@ -29,14 +29,14 @@ req.setClientId('test-client-' + Date.now());
 let receivedUpdate = false;
 let timeoutId;
 
-// Timeout after 30 seconds to give more time for debugging
+// Timeout after 5 seconds - much faster with event-driven approach
 timeoutId = setTimeout(() => {
-  console.error('Test timed out after 30 seconds');
+  console.error('Test timed out after 5 seconds');
   if (!receivedUpdate) {
     console.log('No property change notifications received');
   }
   process.exit(1);
-}, 30000);
+}, 5000);
 
 try {
   const stream = client.subscribeToPropertyChanges(req, {});
