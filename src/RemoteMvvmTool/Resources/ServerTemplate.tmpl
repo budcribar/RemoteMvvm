@@ -98,7 +98,16 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
     {
         var response = new <<PROTO_NS>>.UpdatePropertyValueResponse();
         
+        try
+        {
 <<UPDATE_PROPERTY_DISPATCHER_LOGIC>>
+        }
+        catch (Exception ex)
+        {
+            Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] Exception in UpdatePropertyValue: {ex}");
+            response.Success = false;
+            response.ErrorMessage = ex.Message;
+        }
         
         Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
         return response;

@@ -50,7 +50,7 @@ public static class ServerGenerator
         var propertyMappings = GeneratePropertyMappings(props, vmName, protoNs, viewModelNamespace);
 
         // Generate update property dispatcher logic
-        var updatePropertyDispatcherLogic = GenerateUpdatePropertyDispatcherLogic(runType);
+        var updatePropertyDispatcherLogic = GenerateUpdatePropertyDispatcherLogic();
 
         // Generate command methods
         var commandMethods = GenerateCommandMethods(cmds, vmName, protoNs, runType);
@@ -285,41 +285,7 @@ public static class ServerGenerator
         return sb.ToString();
     }
 
-    private static string GenerateUpdatePropertyDispatcherLogic(string runType)
-    {
-        return runType switch
-        {
-            "wpf" => """
-        if (_dispatcher != null)
-        {
-            await _dispatcher.InvokeAsync(() =>
-            {
-                response = UpdatePropertyValueInternal(request);
-            });
-        }
-        else
-        {
-            response.Success = false;
-            response.ErrorMessage = "Dispatcher not available";
-        }
-""",
-            "winforms" => """
-        if (_dispatcher != null)
-        {
-            await Task.Run(() => _dispatcher.Invoke(new Action(() =>
-            {
-                response = UpdatePropertyValueInternal(request);
-            })));
-        }
-        else
-        {
-            response.Success = false;
-            response.ErrorMessage = "Dispatcher not available";
-        }
-""",
-            _ => "        response = UpdatePropertyValueInternal(request);"
-        };
-    }
+    private static string GenerateUpdatePropertyDispatcherLogic() => "            response = UpdatePropertyValueInternal(request);";
 
     private static string GenerateCommandMethods(List<CommandInfo> cmds, string vmName, string protoNs, string runType)
     {

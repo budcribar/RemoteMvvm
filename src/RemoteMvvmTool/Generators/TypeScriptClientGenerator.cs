@@ -379,6 +379,7 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("    async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {");
         sb.AppendLine("        const req = new UpdatePropertyValueRequest();");
         sb.AppendLine("        req.setPropertyName(propertyName);");
+        sb.AppendLine("        req.setArrayIndex(-1); // Default to -1 for non-array properties");
         sb.AppendLine("        req.setNewValue(this.createAnyValue(value));");
         sb.AppendLine("        const response = await this.grpcClient.updatePropertyValue(req);");
         sb.AppendLine("        ");
