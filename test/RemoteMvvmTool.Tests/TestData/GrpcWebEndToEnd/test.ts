@@ -1,4 +1,5 @@
 declare var process: any;
+declare var require: any;
 
 (async () => {
   console.log('Starting gRPC-Web test with generated protobuf parsing...');
