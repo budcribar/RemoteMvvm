@@ -10,6 +10,18 @@ import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { BoolValue, DoubleValue, Int32Value, Int64Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
+// Enum Mappings
+// Enum mapping for SimpleViewModelTest.ViewModels.DeviceStatus
+export const DeviceStatusMap: Record<number, string> = {
+  0: 'Unknown',
+  1: 'On',
+  2: 'Off'
+};
+
+export function getDeviceStatusDisplay(value: number): string {
+  return DeviceStatusMap[value] || value.toString();
+}
+
 export interface DeviceInfoState {
   name: string;
   status: number;

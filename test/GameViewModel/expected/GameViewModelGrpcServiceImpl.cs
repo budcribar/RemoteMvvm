@@ -645,13 +645,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.AttackMonsterCommand?.Execute(null);
-                });
-            }
+            _viewModel.AttackMonsterCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:GameViewModel] Executed command AttackMonster");
         }
         catch (Exception ex)
@@ -670,13 +664,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.SpecialAttackCommand?.Execute(null);
-                });
-            }
+            _viewModel.SpecialAttackCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:GameViewModel] Executed command SpecialAttack");
         }
         catch (Exception ex)
@@ -695,13 +683,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.ResetGameCommand?.Execute(null);
-                });
-            }
+            _viewModel.ResetGameCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:GameViewModel] Executed command ResetGame");
         }
         catch (Exception ex)

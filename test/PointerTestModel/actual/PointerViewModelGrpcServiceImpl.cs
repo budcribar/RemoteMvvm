@@ -687,13 +687,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.InitializeCommand?.Execute(null);
-                });
-            }
+            _viewModel.InitializeCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command Initialize");
         }
         catch (Exception ex)
@@ -712,13 +706,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.OnCursorTestCommand?.Execute(null);
-                });
-            }
+            _viewModel.OnCursorTestCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command OnCursorTest");
         }
         catch (Exception ex)
@@ -737,14 +725,8 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand<int>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var button = request.Button;
-                    _viewModel.OnClickTestCommand?.Execute(button);
-                });
-            }
+            var button = request.Button;
+            _viewModel.OnClickTestCommand?.Execute(button);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command OnClickTest");
         }
         catch (Exception ex)
@@ -763,14 +745,8 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand<string>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var device = request.Device;
-                    _viewModel.OnSelectDeviceCommand?.Execute(device);
-                });
-            }
+            var device = request.Device;
+            _viewModel.OnSelectDeviceCommand?.Execute(device);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command OnSelectDevice");
         }
         catch (Exception ex)
@@ -789,14 +765,8 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand<int>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var btnCount = request.BtnCount;
-                    _viewModel.OnSelectNumButtonsCommand?.Execute(btnCount);
-                });
-            }
+            var btnCount = request.BtnCount;
+            _viewModel.OnSelectNumButtonsCommand?.Execute(btnCount);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command OnSelectNumButtons");
         }
         catch (Exception ex)
@@ -815,14 +785,8 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand<string>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var button = request.Button;
-                    _viewModel.GetClicksWithoutNotificationCommand?.Execute(button);
-                });
-            }
+            var button = request.Button;
+            _viewModel.GetClicksWithoutNotificationCommand?.Execute(button);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command GetClicksWithoutNotification");
         }
         catch (Exception ex)
@@ -841,13 +805,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.ResetClicksCommand?.Execute(null);
-                });
-            }
+            _viewModel.ResetClicksCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command ResetClicks");
         }
         catch (Exception ex)
@@ -866,13 +824,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.CancelTestCommand?.Execute(null);
-                });
-            }
+            _viewModel.CancelTestCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command CancelTest");
         }
         catch (Exception ex)
@@ -891,13 +843,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.FinishTestCommand?.Execute(null);
-                });
-            }
+            _viewModel.FinishTestCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:PointerViewModel] Executed command FinishTest");
         }
         catch (Exception ex)

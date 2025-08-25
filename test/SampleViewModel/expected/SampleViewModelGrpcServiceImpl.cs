@@ -603,13 +603,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.IncrementCountCommand?.Execute(null);
-                });
-            }
+            _viewModel.IncrementCountCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:SampleViewModel] Executed command IncrementCount");
         }
         catch (Exception ex)
@@ -628,14 +622,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         try
         {
             // Executes command: IRelayCommand<int>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var delayMilliseconds = request.DelayMilliseconds;
-                    _viewModel.DelayedIncrementCommand?.Execute(delayMilliseconds);
-                });
-            }
+            var delayMilliseconds = request.DelayMilliseconds;
+            _viewModel.DelayedIncrementCommand?.Execute(delayMilliseconds);
             Debug.WriteLine("[GrpcService:SampleViewModel] Executed command DelayedIncrement");
         }
         catch (Exception ex)
@@ -654,14 +642,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         try
         {
             // Executes command: IRelayCommand<string?>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var value = request.Value;
-                    _viewModel.SetNameToValueCommand?.Execute(value);
-                });
-            }
+            var value = request.Value;
+            _viewModel.SetNameToValueCommand?.Execute(value);
             Debug.WriteLine("[GrpcService:SampleViewModel] Executed command SetNameToValue");
         }
         catch (Exception ex)

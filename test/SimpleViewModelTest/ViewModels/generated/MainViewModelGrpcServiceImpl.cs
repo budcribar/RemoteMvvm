@@ -596,14 +596,8 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         try
         {
             // Executes command: IRelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var status = (SimpleViewModelTest.ViewModels.DeviceStatus)request.Status;
-                    _viewModel.UpdateStatusCommand?.Execute(status);
-                });
-            }
+            var status = (SimpleViewModelTest.ViewModels.DeviceStatus)request.Status;
+            _viewModel.UpdateStatusCommand?.Execute(status);
             Debug.WriteLine("[GrpcService:MainViewModel] Executed command UpdateStatus");
         }
         catch (Exception ex)

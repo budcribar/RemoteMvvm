@@ -10,6 +10,27 @@ import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { BoolValue, DoubleValue, Int32Value, Int64Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
+// Enum Mappings
+// Enum mapping for HPSystemsTools.Models.ThermalStateEnum
+export const ThermalStateEnumMap: Record<number, string> = {
+  0: 'Unknown',
+  1: 'MaybeRunningHot',
+  2: 'MaybeOk',
+  3: 'RunningHot',
+  4: 'Ok',
+  5: 'StressLevelExceeded',
+  6: 'Pass',
+  7: 'Fail',
+  8: 'MaybePass',
+  9: 'MaybeFail',
+  10: 'CheckInProgress',
+  11: 'Reset'
+};
+
+export function getThermalStateEnumDisplay(value: number): string {
+  return ThermalStateEnumMap[value] || value.toString();
+}
+
 export interface ThermalZoneState {
   zone: number;
   isActive: boolean;

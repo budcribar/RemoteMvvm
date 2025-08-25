@@ -645,14 +645,8 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         try
         {
             // Executes command: IRelayCommand<HPSystemsTools.Models.ThermalStateEnum>
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    var state = (HPSystemsTools.Models.ThermalStateEnum)request.State;
-                    _viewModel.StateChangedCommand?.Execute(state);
-                });
-            }
+            var state = (HPSystemsTools.Models.ThermalStateEnum)request.State;
+            _viewModel.StateChangedCommand?.Execute(state);
             Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Executed command StateChanged");
         }
         catch (Exception ex)
@@ -671,13 +665,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         try
         {
             // Executes command: IRelayCommand
-            if (_dispatcher != null)
-            {
-                _dispatcher.Invoke(() =>
-                {
-                    _viewModel.CancelTestCommand?.Execute(null);
-                });
-            }
+            _viewModel.CancelTestCommand?.Execute(null);
             Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Executed command CancelTest");
         }
         catch (Exception ex)
