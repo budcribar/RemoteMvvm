@@ -182,13 +182,11 @@ client.getState(new Empty(), {}, (err, response) => {
           }
           
           // Skip extracting numbers from timestamp-related fields to avoid DateTime/Guid noise
+          // But allow legitimate timestamp values like lastupdate.seconds and lastupdate.nanos
           if (typeof value === 'number' && 
-              (fullKey.toLowerCase().includes('seconds') || 
-               fullKey.toLowerCase().includes('nanos') || 
-               fullKey.toLowerCase().includes('timestamp') ||
-               fullKey.toLowerCase().includes('starttime') ||
+              (fullKey.toLowerCase().includes('starttime') ||
                fullKey.toLowerCase().includes('sessionid'))) {
-            // Don't include timestamp/guid numeric components in extraction
+            // Only exclude known noisy timestamp fields, but allow legitimate datetime fields like lastupdate
             delete flatData[fullKey];
           }
         }

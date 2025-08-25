@@ -567,7 +567,7 @@ public class GrpcWebEndToEndTests
                         };
                         
                         IsActiveCompany = true;
-                        LastUpdate = new DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+                        LastUpdate = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc); // Y2K - memorable, non-zero timestamp
                     }
 
                     [ObservableProperty]
@@ -596,9 +596,9 @@ public class GrpcWebEndToEndTests
             }
             """;
 
-        // Expected: isActiveCompany(1), lastUpdate.nanos(0), lastUpdate.seconds(1704067200),
+        // Expected: isActiveCompany(1), lastUpdate.nanos(0), lastUpdate.seconds(946684800),
         //           company.employeeCount(1500), dept headcounts(200,150,25), budgets(5000000.5,3000000.25,750000.75)
-        var expectedDataValues = "0,1,25,150,200,1500,750000.75,3000000.25,5000000.5,1704067200";
+        var expectedDataValues = "0,1,25,150,200,1500,750000.75,3000000.25,5000000.5,946684800";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }

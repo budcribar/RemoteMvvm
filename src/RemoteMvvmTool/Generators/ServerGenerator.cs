@@ -221,6 +221,8 @@ public static class ServerGenerator
                             expr += ".Where(e => e != null)";
                         if (elem.TypeKind == TypeKind.Enum)
                             expr += ".Select(e => (int)e)";
+                        else if (elem.SpecialType == SpecialType.System_Byte)
+                            expr += ".Select(e => (uint)e)";
                         else if (!GeneratorHelpers.IsWellKnownType(elem))
                             expr += $".Select({viewModelNamespace}.ProtoStateConverters.ToProto).Where(s => s != null)";
                         sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({expr});");
