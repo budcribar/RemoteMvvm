@@ -64,6 +64,7 @@ export class SampleViewModelRemoteClient {
     async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
+        req.setArrayIndex(-1); // Default to -1 for non-array properties
         req.setNewValue(this.createAnyValue(value));
         const response = await this.grpcClient.updatePropertyValue(req);
         

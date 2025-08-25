@@ -198,17 +198,15 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
     {
         var response = new Pointer.ViewModels.Protos.UpdatePropertyValueResponse();
         
-        if (_dispatcher != null)
+        try
         {
-            await _dispatcher.InvokeAsync(() =>
-            {
-                response = UpdatePropertyValueInternal(request);
-            });
+            response = UpdatePropertyValueInternal(request);
         }
-        else
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[GrpcService:PointerViewModel] Exception in UpdatePropertyValue: {ex}");
             response.Success = false;
-            response.ErrorMessage = "Dispatcher not available";
+            response.ErrorMessage = ex.Message;
         }
         
         Debug.WriteLine($"[GrpcService:PointerViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");

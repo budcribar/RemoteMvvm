@@ -149,17 +149,15 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
     {
         var response = new Generated.Protos.UpdatePropertyValueResponse();
         
-        if (_dispatcher != null)
+        try
         {
-            await _dispatcher.InvokeAsync(() =>
-            {
-                response = UpdatePropertyValueInternal(request);
-            });
+            response = UpdatePropertyValueInternal(request);
         }
-        else
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[GrpcService:HP3LSThermalTestViewModel] Exception in UpdatePropertyValue: {ex}");
             response.Success = false;
-            response.ErrorMessage = "Dispatcher not available";
+            response.ErrorMessage = ex.Message;
         }
         
         Debug.WriteLine($"[GrpcService:HP3LSThermalTestViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");

@@ -117,7 +117,7 @@ public class GrpcWebEndToEndTests
     }
 
 
-    [Fact(Skip = "Broken - needs investigation")]
+    [Fact]
     public async Task SubscribeToPropertyChanges_EndToEnd_Test()
     {
         var modelCode = """

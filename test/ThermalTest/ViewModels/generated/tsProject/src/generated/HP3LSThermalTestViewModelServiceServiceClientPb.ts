@@ -67,20 +67,30 @@ export class HP3LSThermalTestViewModelServiceClient {
     callback?: (err: grpcWeb.RpcError,
                response: HP3LSThermalTestViewModelService_pb.HP3LSThermalTestViewModelState) => void) {
     if (callback !== undefined) {
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.HP3LSThermalTestViewModelState) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.getState RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/GetState',
         request,
         metadata || {},
         this.methodDescriptorGetState,
-        callback);
+        wrappedCallback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
       '/generated_protos.HP3LSThermalTestViewModelService/GetState',
     request,
     metadata || {},
-    this.methodDescriptorGetState);
+    this.methodDescriptorGetState).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.getState Promise error:', err);
+      throw err;
+    });
   }
 
   methodDescriptorUpdatePropertyValue = new grpcWeb.MethodDescriptor(
@@ -110,20 +120,30 @@ export class HP3LSThermalTestViewModelServiceClient {
     callback?: (err: grpcWeb.RpcError,
                response: HP3LSThermalTestViewModelService_pb.UpdatePropertyValueResponse) => void) {
     if (callback !== undefined) {
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.UpdatePropertyValueResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue',
         request,
         metadata || {},
         this.methodDescriptorUpdatePropertyValue,
-        callback);
+        wrappedCallback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
       '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue',
     request,
     metadata || {},
-    this.methodDescriptorUpdatePropertyValue);
+    this.methodDescriptorUpdatePropertyValue).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue Promise error:', err);
+      throw err;
+    });
   }
 
   methodDescriptorSubscribeToPropertyChanges = new grpcWeb.MethodDescriptor(
@@ -140,12 +160,18 @@ export class HP3LSThermalTestViewModelServiceClient {
   subscribeToPropertyChanges(
     request: HP3LSThermalTestViewModelService_pb.SubscribeRequest,
     metadata?: grpcWeb.Metadata): grpcWeb.ClientReadableStream<HP3LSThermalTestViewModelService_pb.PropertyChangeNotification> {
-    return this.client_.serverStreaming(
+    const stream = this.client_.serverStreaming(
       this.hostname_ +
         '/generated_protos.HP3LSThermalTestViewModelService/SubscribeToPropertyChanges',
       request,
       metadata || {},
       this.methodDescriptorSubscribeToPropertyChanges);
+    if (stream && typeof (stream as any).on === 'function') {
+      (stream as any).on('error', (err: any) => {
+        console.error('HP3LSThermalTestViewModelServiceClient.subscribeToPropertyChanges stream error:', err);
+      });
+    }
+    return stream;
   }
 
   methodDescriptorStateChanged = new grpcWeb.MethodDescriptor(
@@ -175,20 +201,30 @@ export class HP3LSThermalTestViewModelServiceClient {
     callback?: (err: grpcWeb.RpcError,
                response: HP3LSThermalTestViewModelService_pb.StateChangedResponse) => void) {
     if (callback !== undefined) {
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.StateChangedResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.stateChanged RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/StateChanged',
         request,
         metadata || {},
         this.methodDescriptorStateChanged,
-        callback);
+        wrappedCallback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
       '/generated_protos.HP3LSThermalTestViewModelService/StateChanged',
     request,
     metadata || {},
-    this.methodDescriptorStateChanged);
+    this.methodDescriptorStateChanged).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.stateChanged Promise error:', err);
+      throw err;
+    });
   }
 
   methodDescriptorCancelTest = new grpcWeb.MethodDescriptor(
@@ -218,20 +254,30 @@ export class HP3LSThermalTestViewModelServiceClient {
     callback?: (err: grpcWeb.RpcError,
                response: HP3LSThermalTestViewModelService_pb.CancelTestResponse) => void) {
     if (callback !== undefined) {
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.CancelTestResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.cancelTest RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/CancelTest',
         request,
         metadata || {},
         this.methodDescriptorCancelTest,
-        callback);
+        wrappedCallback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
       '/generated_protos.HP3LSThermalTestViewModelService/CancelTest',
     request,
     metadata || {},
-    this.methodDescriptorCancelTest);
+    this.methodDescriptorCancelTest).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.cancelTest Promise error:', err);
+      throw err;
+    });
   }
 
   methodDescriptorPing = new grpcWeb.MethodDescriptor(
@@ -261,20 +307,30 @@ export class HP3LSThermalTestViewModelServiceClient {
     callback?: (err: grpcWeb.RpcError,
                response: HP3LSThermalTestViewModelService_pb.ConnectionStatusResponse) => void) {
     if (callback !== undefined) {
+      const wrappedCallback = (err: grpcWeb.RpcError,
+                               response: HP3LSThermalTestViewModelService_pb.ConnectionStatusResponse) => {
+        if (err) {
+          console.error('HP3LSThermalTestViewModelServiceClient.ping RPC error:', err);
+        }
+        callback(err, response);
+      };
       return this.client_.rpcCall(
         this.hostname_ +
           '/generated_protos.HP3LSThermalTestViewModelService/Ping',
         request,
         metadata || {},
         this.methodDescriptorPing,
-        callback);
+        wrappedCallback);
     }
     return this.client_.unaryCall(
     this.hostname_ +
       '/generated_protos.HP3LSThermalTestViewModelService/Ping',
     request,
     metadata || {},
-    this.methodDescriptorPing);
+    this.methodDescriptorPing).catch((err: any) => {
+      console.error('HP3LSThermalTestViewModelServiceClient.ping Promise error:', err);
+      throw err;
+    });
   }
 
 }

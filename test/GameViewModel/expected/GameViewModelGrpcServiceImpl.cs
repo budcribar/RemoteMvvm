@@ -156,17 +156,15 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
     {
         var response = new MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse();
         
-        if (_dispatcher != null)
+        try
         {
-            await _dispatcher.InvokeAsync(() =>
-            {
-                response = UpdatePropertyValueInternal(request);
-            });
+            response = UpdatePropertyValueInternal(request);
         }
-        else
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[GrpcService:GameViewModel] Exception in UpdatePropertyValue: {ex}");
             response.Success = false;
-            response.ErrorMessage = "Dispatcher not available";
+            response.ErrorMessage = ex.Message;
         }
         
         Debug.WriteLine($"[GrpcService:GameViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");

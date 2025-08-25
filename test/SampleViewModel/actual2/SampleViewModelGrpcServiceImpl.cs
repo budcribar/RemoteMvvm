@@ -114,17 +114,15 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
     {
         var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
         
-        if (_dispatcher != null)
+        try
         {
-            await _dispatcher.InvokeAsync(() =>
-            {
-                response = UpdatePropertyValueInternal(request);
-            });
+            response = UpdatePropertyValueInternal(request);
         }
-        else
+        catch (Exception ex)
         {
+            Debug.WriteLine($"[GrpcService:SampleViewModel] Exception in UpdatePropertyValue: {ex}");
             response.Success = false;
-            response.ErrorMessage = "Dispatcher not available";
+            response.ErrorMessage = ex.Message;
         }
         
         Debug.WriteLine($"[GrpcService:SampleViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
