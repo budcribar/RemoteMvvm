@@ -165,4 +165,23 @@ public class ObservableObject {}
         var ts = await GenerateTsAsync(code);
         Assert.Contains("when: Date;", ts);
     }
+
+    [Fact]
+    public async Task Generates_Enum_Map_For_Nested_Types()
+    {
+        var code = """
+public class ObservablePropertyAttribute : System.Attribute {}
+namespace HP.Telemetry { public enum Zone { CPUZ_0, CPUZ_1 } }
+public class ThermalZoneComponentViewModel { public HP.Telemetry.Zone Zone { get; set; } }
+public partial class TestViewModel : ObservableObject
+{
+    [ObservableProperty]
+    public ThermalZoneComponentViewModel ZoneVm { get; set; } = new ThermalZoneComponentViewModel();
+}
+public class ObservableObject {}
+""";
+        var ts = await GenerateTsAsync(code);
+        Assert.Contains("// Enum mapping for HP.Telemetry.Zone", ts);
+        Assert.Contains("export const ZoneMap", ts);
+    }
 }

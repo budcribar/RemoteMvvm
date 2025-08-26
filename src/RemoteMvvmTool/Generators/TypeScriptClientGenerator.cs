@@ -785,58 +785,67 @@ public static class TypeScriptClientGenerator
 
     private static void CollectEnumTypes(List<PropertyInfo> props, List<CommandInfo> cmds, HashSet<INamedTypeSymbol> enumTypes)
     {
-        void AddEnumType(ITypeSymbol type)
+        var visited = new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default);
+
+        void AddTypes(ITypeSymbol type)
         {
+            if (!visited.Add(type))
+                return;
+
             if (type.TypeKind == TypeKind.Enum && type is INamedTypeSymbol enumType)
             {
                 enumTypes.Add(enumType);
+                return;
             }
-            else if (type is INamedTypeSymbol named)
+
+            if (type is IArrayTypeSymbol arr)
             {
-                // Handle nullable enums
+                AddTypes(arr.ElementType);
+                return;
+            }
+
+            if (type is INamedTypeSymbol named)
+            {
+                // Nullable<T>
                 if (named.IsGenericType && named.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
                 {
-                    var innerType = named.TypeArguments[0];
-                    if (innerType.TypeKind == TypeKind.Enum && innerType is INamedTypeSymbol innerEnum)
+                    AddTypes(named.TypeArguments[0]);
+                    return;
+                }
+
+                // Dictionary<,>
+                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var keyType, out var valType))
+                {
+                    if (keyType != null) AddTypes(keyType);
+                    if (valType != null) AddTypes(valType);
+                    return;
+                }
+
+                // Collections
+                if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType) && elemType != null)
+                {
+                    AddTypes(elemType);
+                    return;
+                }
+
+                // Recurse into properties of non-system classes/structs
+                if ((named.TypeKind == TypeKind.Class || named.TypeKind == TypeKind.Struct) &&
+                    !(named.ContainingNamespace?.ToDisplayString() ?? string.Empty).StartsWith("System"))
+                {
+                    foreach (var m in Helpers.GetAllMembers(named).OfType<IPropertySymbol>()
+                                               .Where(p => p.GetMethod != null && p.Parameters.Length == 0))
                     {
-                        enumTypes.Add(innerEnum);
+                        AddTypes(m.Type);
                     }
                 }
-                // Handle collections of enums
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType) && 
-                         elemType?.TypeKind == TypeKind.Enum && elemType is INamedTypeSymbol elemEnum)
-                {
-                    enumTypes.Add(elemEnum);
-                }
-                // Handle dictionary keys/values that are enums
-                else if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var keyType, out var valType))
-                {
-                    if (keyType?.TypeKind == TypeKind.Enum && keyType is INamedTypeSymbol keyEnum)
-                        enumTypes.Add(keyEnum);
-                    if (valType?.TypeKind == TypeKind.Enum && valType is INamedTypeSymbol valEnum)
-                        enumTypes.Add(valEnum);
-                }
-            }
-            else if (type is IArrayTypeSymbol arr && arr.ElementType.TypeKind == TypeKind.Enum && 
-                     arr.ElementType is INamedTypeSymbol arrEnum)
-            {
-                enumTypes.Add(arrEnum);
             }
         }
 
-        // Collect from properties
         foreach (var prop in props)
-        {
-            AddEnumType(prop.FullTypeSymbol!);
-        }
+            AddTypes(prop.FullTypeSymbol!);
 
-        // Collect from command parameters
         foreach (var cmd in cmds)
-        {
             foreach (var param in cmd.Parameters)
-            {
-                AddEnumType(param.FullTypeSymbol!);
-            }
-        }
+                AddTypes(param.FullTypeSymbol!);
     }
 }
