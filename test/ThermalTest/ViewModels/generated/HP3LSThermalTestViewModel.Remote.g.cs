@@ -8,12 +8,18 @@ using Grpc.Net.Client;
 using Generated.Protos;
 using HPSystemsTools.ViewModels.RemoteClients;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 using System.Windows.Threading;
 using PeakSWC.Mvvm.Remote;
 
@@ -27,11 +33,31 @@ namespace HPSystemsTools.ViewModels
         private GrpcChannel? _channel;
         private HPSystemsTools.ViewModels.RemoteClients.HP3LSThermalTestViewModelRemoteClient? _remoteClient;
 
+        // Auto-generated nested property change handlers for ZoneList
+        private void ZoneList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach (HPSystemsTools.ViewModels.ThermalZoneComponentViewModel item in e.NewItems)
+                    item.PropertyChanged += ZoneList_ItemPropertyChanged;
+            if (e.OldItems != null)
+                foreach (HPSystemsTools.ViewModels.ThermalZoneComponentViewModel item in e.OldItems)
+                    item.PropertyChanged -= ZoneList_ItemPropertyChanged;
+        }
+
+        private void ZoneList_ItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            var index = ZoneList.IndexOf((HPSystemsTools.ViewModels.ThermalZoneComponentViewModel)sender!);
+            OnPropertyChanged($"ZoneList[{index}].{e.PropertyName}");
+        }
+
         public HP3LSThermalTestViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
-            _grpcService = new HP3LSThermalTestViewModelGrpcServiceImpl(this, _dispatcher);
+            _grpcService = new HP3LSThermalTestViewModelGrpcServiceImpl(this);
+
+            // Auto-generated event wiring for nested property changes
+            ZoneList.CollectionChanged += ZoneList_CollectionChanged;
 
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -59,9 +85,17 @@ namespace HPSystemsTools.ViewModels
             // Configure Kestrel to listen on the specified port with HTTP/2 support
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
+                // HTTP endpoint for compatibility (HTTP/1.1 + HTTP/2)
                 kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+                });
+                
+                // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
+                kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
+                {
+                    listenOptions.UseHttps(); // Use development certificate
+                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
                 });
             });
 

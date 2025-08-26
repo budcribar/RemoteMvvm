@@ -29,6 +29,7 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
         sb.AppendLine("using Microsoft.Extensions.Logging;");
         sb.AppendLine("using Microsoft.Extensions.Hosting;");
+        sb.AppendLine("using System.Diagnostics;");
         if (runType == "wpf") sb.AppendLine("using System.Windows.Threading;");
         else if (runType == "winforms") sb.AppendLine("using System.Windows.Forms;");
         sb.AppendLine($"using PeakSWC.Mvvm.Remote;");
@@ -63,18 +64,14 @@ public static class ViewModelPartialGenerator
         if (runType == "wpf")
         {
             sb.AppendLine("            _dispatcher = Dispatcher.CurrentDispatcher;");
-            sb.AppendLine($"            _grpcService = new {vmName}GrpcServiceImpl(this, _dispatcher);");
         }
         else if (runType == "winforms")
         {
             sb.AppendLine("            _dispatcher = new Control();");
             sb.AppendLine("            _dispatcher.CreateControl();");
-            sb.AppendLine($"            _grpcService = new {vmName}GrpcServiceImpl(this, _dispatcher);");
         }
-        else
-        {
-            sb.AppendLine($"            _grpcService = new {vmName}GrpcServiceImpl(this);");
-        }
+        // Always create service without dispatcher - MVVM Toolkit handles threading automatically
+        sb.AppendLine($"            _grpcService = new {vmName}GrpcServiceImpl(this);");
         sb.AppendLine();
 
         // Generate constructor initialization for nested property change handling
@@ -110,9 +107,17 @@ public static class ViewModelPartialGenerator
         sb.AppendLine("            // Configure Kestrel to listen on the specified port with HTTP/2 support");
         sb.AppendLine("            builder.WebHost.ConfigureKestrel(kestrelOptions =>");
         sb.AppendLine("            {");
+        sb.AppendLine("                // HTTP endpoint for compatibility (HTTP/1.1 + HTTP/2)");
         sb.AppendLine("                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>");
         sb.AppendLine("                {");
         sb.AppendLine("                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;");
+        sb.AppendLine("                });");
+        sb.AppendLine("                ");
+        sb.AppendLine("                // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)");
+        sb.AppendLine("                kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    listenOptions.UseHttps(); // Use development certificate");
+        sb.AppendLine("                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;");
         sb.AppendLine("                });");
         sb.AppendLine("            });");
         sb.AppendLine();

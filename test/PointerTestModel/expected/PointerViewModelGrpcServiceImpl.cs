@@ -19,7 +19,6 @@ using System.Threading.Channels;
 using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows.Threading;
 
 public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.PointerViewModelServiceBase
 {
@@ -45,17 +44,15 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     private readonly PointerViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification>, Channel<Pointer.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
-    public PointerViewModelGrpcServiceImpl(PointerViewModel viewModel, Dispatcher dispatcher, ILogger<PointerViewModelGrpcServiceImpl>? logger = null)
+    public PointerViewModelGrpcServiceImpl(PointerViewModel viewModel, ILogger<PointerViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
-        if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
-        else { Debug.WriteLine("[GrpcService:PointerViewModel] WARNING: ViewModel does not implement INotifyPropertyChanged!"); }
-        Debug.WriteLine("[GrpcService:PointerViewModel] Constructor completed. ViewModel type: " + _viewModel.GetType().FullName);
+        if (_viewModel is INotifyPropertyChanged inpc) { 
+            inpc.PropertyChanged += ViewModel_PropertyChanged; 
+        }
     }
 
     public override Task<PointerViewModelState> GetState(Empty request, ServerCallContext context)
@@ -166,31 +163,25 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
     public override async Task SubscribeToPropertyChanges(Pointer.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<Pointer.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
         var clientId = request.ClientId ?? "unknown";
-        Debug.WriteLine("[GrpcService:PointerViewModel] New subscription request from client: " + clientId);
         var channel = Channel.CreateUnbounded<Pointer.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         _subscriberChannels.TryAdd(responseStream, channel);
         ClientCount = _subscriberChannels.Count;
-        Debug.WriteLine("[GrpcService:PointerViewModel] Subscriber count is now: " + ClientCount);
         try
         {
-            Debug.WriteLine("[GrpcService:PointerViewModel] Starting to read from channel for client: " + clientId);
             await foreach (var notification in channel.Reader.ReadAllAsync(context.CancellationToken))
             {
-                Debug.WriteLine("[GrpcService:PointerViewModel] Sending property change notification: " + notification.PropertyName + " to client: " + clientId);
                 await responseStream.WriteAsync(notification);
             }
         }
         catch (OperationCanceledException)
         {
-            Debug.WriteLine("[GrpcService:PointerViewModel] Subscription cancelled for client: " + clientId);
+            // Client disconnected, this is expected
         }
         finally
         {
-            Debug.WriteLine("[GrpcService:PointerViewModel] Cleaning up subscription for client: " + clientId);
             _subscriberChannels.TryRemove(responseStream, out _);
             channel.Writer.TryComplete();
             ClientCount = _subscriberChannels.Count;
-            Debug.WriteLine("[GrpcService:PointerViewModel] Subscriber count is now: " + ClientCount);
         }
     }
 
@@ -200,6 +191,7 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
         
         try
         {
+            // Execute property update directly - MVVM Toolkit handles threading automatically
             response = UpdatePropertyValueInternal(request);
         }
         catch (Exception ex)
@@ -604,15 +596,12 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Debug.WriteLine("[GrpcService:PointerViewModel] PropertyChanged event fired for property: " + (e.PropertyName ?? "<null>"));
-        Debug.WriteLine("[GrpcService:PointerViewModel] Current subscriber count: " + _subscriberChannels.Count);
         if (string.IsNullOrEmpty(e.PropertyName)) return;
         var fullPath = e.PropertyName;
         var topLevel = fullPath.Split(new[] {'.','['}, 2)[0];
         object? newValue = null;
         try { newValue = GetValueByPath(_viewModel, fullPath); }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error getting property value for " + fullPath + ": " + ex.Message); return; }
-        Debug.WriteLine("[GrpcService:PointerViewModel] Property " + fullPath + " changed to: " + (newValue?.ToString() ?? "<null>"));
+        catch (Exception ex) { Debug.WriteLine($"[PointerViewModelGrpcService] Error getting property value for " + fullPath + ": " + ex.Message); return; }
 
         var notification = new Pointer.ViewModels.Protos.PropertyChangeNotification
         {
@@ -621,23 +610,22 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             ChangeType = fullPath == topLevel ? "property" : "nested"
         };
         notification.NewValue = PackToAny(newValue);
-        Debug.WriteLine("[GrpcService:PointerViewModel] Created notification with TypeUrl: " + (notification.NewValue?.TypeUrl ?? "<null>"));
 
         // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
         _ = Task.Run(async () =>
         {
-            int successfulWrites = 0;
             foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
             {
                 try { 
                     await channelWriter.WriteAsync(notification); 
-                    successfulWrites++;
-                    Debug.WriteLine("[GrpcService:PointerViewModel] Successfully wrote notification to subscriber channel");
                 }
-                catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:PointerViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
-                catch (Exception ex) { Debug.WriteLine("[GrpcService:PointerViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
+                catch (ChannelClosedException) { 
+                    // Subscriber likely disconnected, this is expected
+                }
+                catch (Exception ex) { 
+                    Debug.WriteLine($"[PointerViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); 
+                }
             }
-            Debug.WriteLine("[GrpcService:PointerViewModel] Property change notification sent to " + successfulWrites + " subscribers");
         });
     }
 

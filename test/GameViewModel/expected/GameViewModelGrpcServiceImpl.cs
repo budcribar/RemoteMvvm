@@ -19,7 +19,6 @@ using System.Threading.Channels;
 using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows.Threading;
 
 public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameViewModelServiceBase
 {
@@ -45,17 +44,15 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     private readonly GameViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
-    public GameViewModelGrpcServiceImpl(GameViewModel viewModel, Dispatcher dispatcher, ILogger<GameViewModelGrpcServiceImpl>? logger = null)
+    public GameViewModelGrpcServiceImpl(GameViewModel viewModel, ILogger<GameViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
-        if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
-        else { Debug.WriteLine("[GrpcService:GameViewModel] WARNING: ViewModel does not implement INotifyPropertyChanged!"); }
-        Debug.WriteLine("[GrpcService:GameViewModel] Constructor completed. ViewModel type: " + _viewModel.GetType().FullName);
+        if (_viewModel is INotifyPropertyChanged inpc) { 
+            inpc.PropertyChanged += ViewModel_PropertyChanged; 
+        }
     }
 
     public override Task<GameViewModelState> GetState(Empty request, ServerCallContext context)
@@ -124,31 +121,25 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
     public override async Task SubscribeToPropertyChanges(MonsterClicker.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
         var clientId = request.ClientId ?? "unknown";
-        Debug.WriteLine("[GrpcService:GameViewModel] New subscription request from client: " + clientId);
         var channel = Channel.CreateUnbounded<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         _subscriberChannels.TryAdd(responseStream, channel);
         ClientCount = _subscriberChannels.Count;
-        Debug.WriteLine("[GrpcService:GameViewModel] Subscriber count is now: " + ClientCount);
         try
         {
-            Debug.WriteLine("[GrpcService:GameViewModel] Starting to read from channel for client: " + clientId);
             await foreach (var notification in channel.Reader.ReadAllAsync(context.CancellationToken))
             {
-                Debug.WriteLine("[GrpcService:GameViewModel] Sending property change notification: " + notification.PropertyName + " to client: " + clientId);
                 await responseStream.WriteAsync(notification);
             }
         }
         catch (OperationCanceledException)
         {
-            Debug.WriteLine("[GrpcService:GameViewModel] Subscription cancelled for client: " + clientId);
+            // Client disconnected, this is expected
         }
         finally
         {
-            Debug.WriteLine("[GrpcService:GameViewModel] Cleaning up subscription for client: " + clientId);
             _subscriberChannels.TryRemove(responseStream, out _);
             channel.Writer.TryComplete();
             ClientCount = _subscriberChannels.Count;
-            Debug.WriteLine("[GrpcService:GameViewModel] Subscriber count is now: " + ClientCount);
         }
     }
 
@@ -158,6 +149,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         
         try
         {
+            // Execute property update directly - MVVM Toolkit handles threading automatically
             response = UpdatePropertyValueInternal(request);
         }
         catch (Exception ex)
@@ -562,15 +554,12 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Debug.WriteLine("[GrpcService:GameViewModel] PropertyChanged event fired for property: " + (e.PropertyName ?? "<null>"));
-        Debug.WriteLine("[GrpcService:GameViewModel] Current subscriber count: " + _subscriberChannels.Count);
         if (string.IsNullOrEmpty(e.PropertyName)) return;
         var fullPath = e.PropertyName;
         var topLevel = fullPath.Split(new[] {'.','['}, 2)[0];
         object? newValue = null;
         try { newValue = GetValueByPath(_viewModel, fullPath); }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error getting property value for " + fullPath + ": " + ex.Message); return; }
-        Debug.WriteLine("[GrpcService:GameViewModel] Property " + fullPath + " changed to: " + (newValue?.ToString() ?? "<null>"));
+        catch (Exception ex) { Debug.WriteLine($"[GameViewModelGrpcService] Error getting property value for " + fullPath + ": " + ex.Message); return; }
 
         var notification = new MonsterClicker.ViewModels.Protos.PropertyChangeNotification
         {
@@ -579,23 +568,22 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             ChangeType = fullPath == topLevel ? "property" : "nested"
         };
         notification.NewValue = PackToAny(newValue);
-        Debug.WriteLine("[GrpcService:GameViewModel] Created notification with TypeUrl: " + (notification.NewValue?.TypeUrl ?? "<null>"));
 
         // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
         _ = Task.Run(async () =>
         {
-            int successfulWrites = 0;
             foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
             {
                 try { 
                     await channelWriter.WriteAsync(notification); 
-                    successfulWrites++;
-                    Debug.WriteLine("[GrpcService:GameViewModel] Successfully wrote notification to subscriber channel");
                 }
-                catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:GameViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
-                catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
+                catch (ChannelClosedException) { 
+                    // Subscriber likely disconnected, this is expected
+                }
+                catch (Exception ex) { 
+                    Debug.WriteLine($"[GameViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); 
+                }
             }
-            Debug.WriteLine("[GrpcService:GameViewModel] Property change notification sent to " + successfulWrites + " subscribers");
         });
     }
 

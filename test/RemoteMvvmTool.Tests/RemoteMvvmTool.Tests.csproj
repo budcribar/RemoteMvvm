@@ -66,7 +66,9 @@
     <None Include="TestData\GrpcWebEndToEnd\test-nested-update-no-streaming.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-property-change-no-streaming.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-simple-update.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-hybrid.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-subscribe-manual.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-polling.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-subscribe-pure.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-subscribe-simple.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-update-property.js" />

@@ -52,7 +52,7 @@ public class DefaultNamespaceGenerationTests
         // add a dispatcher stub so we don't need the WPF assemblies on non-Windows platforms
         var dispatcherStub = @"namespace System.Windows.Threading { public class Dispatcher { public void Invoke(System.Action a) => a(); public System.Threading.Tasks.Task InvokeAsync(System.Action a) { a(); return System.Threading.Tasks.Task.CompletedTask; } public static Dispatcher CurrentDispatcher { get; } = new Dispatcher(); } }";
         var vmStub = @"namespace SimpleViewModelTest.ViewModels { public partial class MainViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject { public MainViewModel() { } public System.Collections.Generic.List<DeviceInfo> Devices { get; set; } = new(); public CommunityToolkit.Mvvm.Input.IRelayCommand<DeviceStatus> UpdateStatusCommand { get; } = new CommunityToolkit.Mvvm.Input.RelayCommand<DeviceStatus>(_ => { }); } }";
-        var serviceCtorStub = @"public partial class MainViewModelGrpcServiceImpl { public MainViewModelGrpcServiceImpl(SimpleViewModelTest.ViewModels.MainViewModel vm) : this(vm, System.Windows.Threading.Dispatcher.CurrentDispatcher, null) {} }";
+        var serviceCtorStub = @"public partial class MainViewModelGrpcServiceImpl { public MainViewModelGrpcServiceImpl(SimpleViewModelTest.ViewModels.MainViewModel vm) : this(vm, null) {} }";
         var trees = sourceFiles.Select(f => CSharpSyntaxTree.ParseText(File.ReadAllText(f), path: f)).ToList();
         trees.Add(CSharpSyntaxTree.ParseText(dispatcherStub));
         trees.Add(CSharpSyntaxTree.ParseText(vmStub));

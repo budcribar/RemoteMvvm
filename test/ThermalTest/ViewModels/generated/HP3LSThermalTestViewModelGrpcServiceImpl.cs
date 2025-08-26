@@ -19,7 +19,6 @@ using System.Threading.Channels;
 using Channel = System.Threading.Channels.Channel;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using System.Windows.Threading;
 
 public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceBase
 {
@@ -45,17 +44,15 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     private readonly HP3LSThermalTestViewModel _viewModel;
     private static readonly ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<Generated.Protos.PropertyChangeNotification>, Channel<Generated.Protos.PropertyChangeNotification>>();
-    private readonly Dispatcher? _dispatcher;
     private readonly ILogger? _logger;
 
-    public HP3LSThermalTestViewModelGrpcServiceImpl(HP3LSThermalTestViewModel viewModel, Dispatcher dispatcher, ILogger<HP3LSThermalTestViewModelGrpcServiceImpl>? logger = null)
+    public HP3LSThermalTestViewModelGrpcServiceImpl(HP3LSThermalTestViewModel viewModel, ILogger<HP3LSThermalTestViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
-        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _logger = logger;
-        if (_viewModel is INotifyPropertyChanged inpc) { inpc.PropertyChanged += ViewModel_PropertyChanged; }
-        else { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] WARNING: ViewModel does not implement INotifyPropertyChanged!"); }
-        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Constructor completed. ViewModel type: " + _viewModel.GetType().FullName);
+        if (_viewModel is INotifyPropertyChanged inpc) { 
+            inpc.PropertyChanged += ViewModel_PropertyChanged; 
+        }
     }
 
     public override Task<HP3LSThermalTestViewModelState> GetState(Empty request, ServerCallContext context)
@@ -124,31 +121,25 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
     public override async Task SubscribeToPropertyChanges(Generated.Protos.SubscribeRequest request, IServerStreamWriter<Generated.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
         var clientId = request.ClientId ?? "unknown";
-        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] New subscription request from client: " + clientId);
         var channel = Channel.CreateUnbounded<Generated.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
         _subscriberChannels.TryAdd(responseStream, channel);
         ClientCount = _subscriberChannels.Count;
-        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Subscriber count is now: " + ClientCount);
         try
         {
-            Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Starting to read from channel for client: " + clientId);
             await foreach (var notification in channel.Reader.ReadAllAsync(context.CancellationToken))
             {
-                Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Sending property change notification: " + notification.PropertyName + " to client: " + clientId);
                 await responseStream.WriteAsync(notification);
             }
         }
         catch (OperationCanceledException)
         {
-            Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Subscription cancelled for client: " + clientId);
+            // Client disconnected, this is expected
         }
         finally
         {
-            Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Cleaning up subscription for client: " + clientId);
             _subscriberChannels.TryRemove(responseStream, out _);
             channel.Writer.TryComplete();
             ClientCount = _subscriberChannels.Count;
-            Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Subscriber count is now: " + ClientCount);
         }
     }
 
@@ -158,6 +149,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         
         try
         {
+            // Execute property update directly - MVVM Toolkit handles threading automatically
             response = UpdatePropertyValueInternal(request);
         }
         catch (Exception ex)
@@ -562,15 +554,12 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
-        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] PropertyChanged event fired for property: " + (e.PropertyName ?? "<null>"));
-        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Current subscriber count: " + _subscriberChannels.Count);
         if (string.IsNullOrEmpty(e.PropertyName)) return;
         var fullPath = e.PropertyName;
         var topLevel = fullPath.Split(new[] {'.','['}, 2)[0];
         object? newValue = null;
         try { newValue = GetValueByPath(_viewModel, fullPath); }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error getting property value for " + fullPath + ": " + ex.Message); return; }
-        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Property " + fullPath + " changed to: " + (newValue?.ToString() ?? "<null>"));
+        catch (Exception ex) { Debug.WriteLine($"[HP3LSThermalTestViewModelGrpcService] Error getting property value for " + fullPath + ": " + ex.Message); return; }
 
         var notification = new Generated.Protos.PropertyChangeNotification
         {
@@ -579,23 +568,22 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             ChangeType = fullPath == topLevel ? "property" : "nested"
         };
         notification.NewValue = PackToAny(newValue);
-        Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Created notification with TypeUrl: " + (notification.NewValue?.TypeUrl ?? "<null>"));
 
         // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
         _ = Task.Run(async () =>
         {
-            int successfulWrites = 0;
             foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
             {
                 try { 
                     await channelWriter.WriteAsync(notification); 
-                    successfulWrites++;
-                    Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Successfully wrote notification to subscriber channel");
                 }
-                catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
-                catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
+                catch (ChannelClosedException) { 
+                    // Subscriber likely disconnected, this is expected
+                }
+                catch (Exception ex) { 
+                    Debug.WriteLine($"[HP3LSThermalTestViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); 
+                }
             }
-            Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Property change notification sent to " + successfulWrites + " subscribers");
         });
     }
 

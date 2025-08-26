@@ -35,7 +35,7 @@ public class RunOptionTests
     }
 
     [Fact]
-    public async Task ServerGeneration_WinFormsMode_UsesDispatcher()
+    public async Task ServerGeneration_WinFormsMode_OmitsDispatcher()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
         var vmDir = Path.Combine(root, "test", "SimpleViewModelTest", "ViewModels");
@@ -53,11 +53,13 @@ public class RunOptionTests
             refs);
         var vmNamespace = sym?.ContainingNamespace.ToDisplayString() ?? string.Empty;
         var server = ServerGenerator.Generate(name, "Generated.Protos", name + "Service", props, cmds, vmNamespace, "winforms");
-        Assert.Contains("Control _dispatcher", server);
+        // Updated: ServerGenerator no longer includes dispatcher logic - MVVM Toolkit handles threading automatically
+        Assert.DoesNotContain("Control _dispatcher", server);
+        Assert.DoesNotContain("Dispatcher", server);
     }
 
     [Fact]
-    public async Task ServerGeneration_WpfMode_UsesDispatcher()
+    public async Task ServerGeneration_WpfMode_OmitsDispatcher()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));
         var vmDir = Path.Combine(root, "test", "SimpleViewModelTest", "ViewModels");
@@ -75,7 +77,9 @@ public class RunOptionTests
             refs);
         var vmNamespace = sym?.ContainingNamespace.ToDisplayString() ?? string.Empty;
         var server = ServerGenerator.Generate(name, "Generated.Protos", name + "Service", props, cmds, vmNamespace, "wpf");
-        Assert.Contains("Dispatcher? _dispatcher", server);
+        // Updated: ServerGenerator no longer includes dispatcher logic - MVVM Toolkit handles threading automatically
+        Assert.DoesNotContain("Dispatcher? _dispatcher", server);
+        Assert.DoesNotContain("Dispatcher", server);
     }
 
     [Fact]
@@ -101,7 +105,8 @@ public class RunOptionTests
         var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "wpf", hasParameterlessCtor, null);
         Assert.Contains("Dispatcher _dispatcher", partial);
         Assert.Contains("Dispatcher.CurrentDispatcher", partial);
-        Assert.Contains($"new {name}GrpcServiceImpl(this, _dispatcher)", partial);
+        // Updated: ServerGenerator no longer takes dispatcher parameter - MVVM Toolkit handles threading automatically
+        Assert.Contains($"new {name}GrpcServiceImpl(this)", partial);
     }
 
     [Fact]
@@ -127,7 +132,8 @@ public class RunOptionTests
         var partial = ViewModelPartialGenerator.Generate(name, "Generated.Protos", name + "Service", vmNamespace, "Generated.Clients", baseClass, "winforms", hasParameterlessCtor, null);
         Assert.Contains("Control _dispatcher", partial);
         Assert.Contains("new Control()", partial);
-        Assert.Contains($"new {name}GrpcServiceImpl(this, _dispatcher)", partial);
+        // Updated: ServerGenerator no longer takes dispatcher parameter - MVVM Toolkit handles threading automatically
+        Assert.Contains($"new {name}GrpcServiceImpl(this)", partial);
     }
 
     [Fact]
