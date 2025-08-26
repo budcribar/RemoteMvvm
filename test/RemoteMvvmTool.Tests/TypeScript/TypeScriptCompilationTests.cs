@@ -64,7 +64,7 @@ public class TypeScriptCompilationTests
         return "";
     }
 
-    static void RunCmd(string file, string args, string workDir)
+    static async Task RunCmdAsync(string file, string args, string workDir)
     {
         var psi = new ProcessStartInfo(file, args)
         {
@@ -74,11 +74,11 @@ public class TypeScriptCompilationTests
             UseShellExecute = false,
         };
         using var p = Process.Start(psi)!;
-        p.WaitForExit();
+        await p.WaitForExitAsync();
         if (p.ExitCode != 0)
         {
-            var stdout = p.StandardOutput.ReadToEnd();
-            var stderr = p.StandardError.ReadToEnd();
+            var stdout = await p.StandardOutput.ReadToEndAsync();
+            var stderr = await p.StandardError.ReadToEndAsync();
             throw new Exception($"{file} {args} failed with {p.ExitCode}: {stdout} {stderr}");
         }
     }
@@ -235,11 +235,11 @@ class FakeClient extends {name}ServiceClient {{
             
         var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
         if (result.StartsWith("Powershell"))
-            RunCmd("tsc", "--project tsconfig.json", tempDir);
+            await RunCmdAsync("tsc", "--project tsconfig.json", tempDir);
 
         if (result.Length > 0) Assert.Fail(result);
-       
-        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+
+        await RunCmdAsync("node", "test.js", Path.Combine(tempDir, "dist"));
     }
 
     [Fact]
@@ -338,12 +338,12 @@ class FakeClient extends {name}ServiceClient {{
 
     var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
     if (result.StartsWith("Powershell"))
-        RunCmd("tsc", "--project tsconfig.json", tempDir);
+        await RunCmdAsync("tsc", "--project tsconfig.json", tempDir);
 
     if (result.Length > 0) Assert.Fail(result);
 
     if (OperatingSystem.IsWindows())
-        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+        await RunCmdAsync("node", "test.js", Path.Combine(tempDir, "dist"));
 }
 
 [Fact]
@@ -402,12 +402,12 @@ class FakeClient extends {name}ServiceClient {{
 
     var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
     if (result.StartsWith("Powershell"))
-        RunCmd("tsc", "--project tsconfig.json", tempDir);
+        await RunCmdAsync("tsc", "--project tsconfig.json", tempDir);
 
     if (result.Length > 0) Assert.Fail(result);
 
     if (OperatingSystem.IsWindows())
-        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+        await RunCmdAsync("node", "test.js", Path.Combine(tempDir, "dist"));
 }
 
     [Fact]
@@ -474,11 +474,11 @@ class FakeClient extends {name}ServiceClient {{
 
     var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
     if (result.StartsWith("Powershell"))
-        RunCmd("tsc", "--project tsconfig.json", tempDir);
+        await RunCmdAsync("tsc", "--project tsconfig.json", tempDir);
 
     if (result.Length > 0) Assert.Fail(result);
 
     if (OperatingSystem.IsWindows())
-        RunCmd("node", "test.js", Path.Combine(tempDir, "dist"));
+        await RunCmdAsync("node", "test.js", Path.Combine(tempDir, "dist"));
 }
 }
