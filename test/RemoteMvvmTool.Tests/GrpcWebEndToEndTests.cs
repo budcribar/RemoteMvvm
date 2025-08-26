@@ -284,7 +284,7 @@ public class GrpcWebEndToEndTests
     /// </summary>
     /// <param name="modelCode">Complete C# code for the ViewModel and supporting types using raw string literals</param>
     /// <param name="expectedDataValues">Comma-separated string of expected numeric values from the transferred data, sorted</param>
-    public static async Task TestEndToEndScenario(string modelCode, string expectedDataValues, string nodeTestFile = "test-protoc.js", string? expectedPropertyChange = null)
+    internal static async Task TestEndToEndScenario(string modelCode, string expectedDataValues, string nodeTestFile = "test-protoc.js", string? expectedPropertyChange = null)
     {
         // Kill any existing TestProject processes from previous test runs
         KillExistingTestProcesses();
@@ -380,7 +380,7 @@ public class GrpcWebEndToEndTests
         }
     }
 
-    static void RunCmd(string file, string args, string workDir, out string stdout, out string stderr)
+    static async Task<(string stdout, string stderr)> RunCmdAsync(string file, string args, string workDir)
     {
         var psi = new ProcessStartInfo(file, args)
         {
@@ -407,20 +407,30 @@ public class GrpcWebEndToEndTests
 
         p.BeginOutputReadLine();
         p.BeginErrorReadLine();
-        p.WaitForExit();
+        await p.WaitForExitAsync();
 
-        stdout = stdoutBuilder.ToString();
-        stderr = stderrBuilder.ToString();
+        var stdout = stdoutBuilder.ToString();
+        var stderr = stderrBuilder.ToString();
 
         if (p.ExitCode != 0)
         {
             throw new Exception($"{file} {args} failed with exit code {p.ExitCode}.{Environment.NewLine}STDOUT:{Environment.NewLine}{stdout}{Environment.NewLine}STDERR:{Environment.NewLine}{stderr}");
         }
+
+        return (stdout, stderr);
+    }
+
+    // Keep the old synchronous methods for backward compatibility
+    static void RunCmd(string file, string args, string workDir, out string stdout, out string stderr)
+    {
+        var result = RunCmdAsync(file, args, workDir).GetAwaiter().GetResult();
+        stdout = result.stdout;
+        stderr = result.stderr;
     }
 
     static void RunCmd(string file, string args, string workDir)
     {
-        RunCmd(file, args, workDir, out _, out _);
+        RunCmdAsync(file, args, workDir).GetAwaiter().GetResult();
     }
 
     static int GetFreePort()
@@ -616,13 +626,13 @@ public class GrpcWebEndToEndTests
         }
 
         // Generate JavaScript files using npm script
-        await RunNpmProtocScript(testProjectDir);
+        RunNpmProtocScript(testProjectDir);
         
         // List generated files for verification
         ListGeneratedJavaScriptFiles(testProjectDir);
     }
 
-    private static async Task RunNpmProtocScript(string testProjectDir)
+    private static void RunNpmProtocScript(string testProjectDir)
     {
         Console.WriteLine("Running npm protoc script to generate JavaScript protobuf files...");
         var npmPaths = new[]
@@ -1210,7 +1220,7 @@ public class GrpcWebEndToEndTests
         return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
     }
 
-    static async Task InstallNpmPackages(string projectDir)
+    static Task InstallNpmPackages(string projectDir)
     {
         var npmPaths = new[]
         {
@@ -1226,7 +1236,7 @@ public class GrpcWebEndToEndTests
                 Console.WriteLine($"Trying npm at: {npmPath}");
                 RunCmd(npmPath, "install", projectDir);
                 Console.WriteLine("✅ npm install completed successfully");
-                return;
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {

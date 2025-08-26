@@ -29,7 +29,7 @@ public class DefaultNamespaceGenerationTests
             Path.Combine(vmDir, "DeviceStatus.cs"),
             Path.Combine(vmDir, "NetworkConfig.cs")
         };
-        var exitCode = await Program.Main(args);
+        var exitCode = await RemoteMvvmTool.Program.Main(args);
         Assert.Equal(0, exitCode);
         // generate gRPC sources from proto
         var protoDir = Path.Combine(vmDir, "protos");

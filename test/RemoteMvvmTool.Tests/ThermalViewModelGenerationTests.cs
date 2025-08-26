@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Xunit;
 using GrpcRemoteMvvmModelUtil;
 using RemoteMvvmTool.Generators;
+using RemoteMvvmTool;
 
 namespace ThermalTests;
 

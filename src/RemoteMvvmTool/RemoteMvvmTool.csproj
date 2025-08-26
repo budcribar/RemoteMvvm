@@ -18,7 +18,8 @@
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
 	  <PackageOutputPath>$(MSBuildThisFileDirectory)publish\</PackageOutputPath>
-
+    <!-- Suppress missing XML doc warnings for generator classes since they're internal implementation -->
+    <NoWarn>$(NoWarn);CS1591</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\ClientTemplate.tmpl" />
