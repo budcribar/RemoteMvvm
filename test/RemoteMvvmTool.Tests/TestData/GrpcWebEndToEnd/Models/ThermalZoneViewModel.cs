@@ -9,15 +9,15 @@ namespace Generated.ViewModels
     { 
         public TestViewModel() 
         {
-            ZoneList.Add(new ThermalZoneComponentViewModel 
-            { 
-                Zone = HP.Telemetry.Zone.CPUZ_0, 
-                Temperature = 42 
+            ZoneList.Add(new ThermalZoneComponentViewModel
+            {
+                Zone = HP.Telemetry.Zone.CPUZ_1,
+                Temperature = 42
             });
-            ZoneList.Add(new ThermalZoneComponentViewModel 
-            { 
-                Zone = HP.Telemetry.Zone.CPUZ_1, 
-                Temperature = 43 
+            ZoneList.Add(new ThermalZoneComponentViewModel
+            {
+                Zone = HP.Telemetry.Zone.CPUZ_2,
+                Temperature = 43
             });
         }
 
@@ -35,7 +35,7 @@ namespace Generated.ViewModels
     }
 }
 
-namespace HP.Telemetry 
+namespace HP.Telemetry
 {
-    public enum Zone { CPUZ_0, CPUZ_1 }
+    public enum Zone { CPUZ_1 = 1, CPUZ_2 = 2 }
 }

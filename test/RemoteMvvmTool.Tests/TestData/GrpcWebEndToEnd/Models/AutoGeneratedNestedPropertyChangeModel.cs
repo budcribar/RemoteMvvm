@@ -10,6 +10,7 @@ namespace Generated.ViewModels
             Temperature = 1; // Simple property for testing
             // Auto-generated event handling will wire up ZoneList events
             ZoneList.Add(new ThermalZoneComponentViewModel { Temperature = 1 });
+            ZoneList.Add(new ThermalZoneComponentViewModel { Temperature = 2 });
         }
 
         [ObservableProperty]

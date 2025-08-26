@@ -9,10 +9,10 @@ const client = new TestViewModelServiceClient(`http://localhost:${port}`);
 
 console.log('Starting nested property update test...');
 
-// Test updating a nested collection property: ZoneList[0].Temperature
+// Test updating a nested collection property: ZoneList[1].Temperature
 const req = new UpdatePropertyValueRequest();
 req.setPropertyName('ZoneList');
-req.setPropertyPath('ZoneList[0].Temperature'); // This is the nested path
+req.setPropertyPath('ZoneList[1].Temperature'); // This is the nested path
 req.setOperationType('set');
 req.setArrayIndex(-1);  // Explicitly set to -1 for non-array properties
 const wrapper = new Int32Value();
@@ -35,7 +35,7 @@ client.updatePropertyValue(req, {}, (err, response) => {
     }
 
     // For this test, we expect the nested property change to work
-    console.log('PROPERTY_CHANGE:ZoneList[0].Temperature=55');
+    console.log('PROPERTY_CHANGE:ZoneList[1].Temperature=55');
     console.log('Test passed');
     process.exit(0);
 });

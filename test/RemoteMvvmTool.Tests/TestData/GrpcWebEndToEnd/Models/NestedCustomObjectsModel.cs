@@ -23,7 +23,7 @@ namespace Generated.ViewModels
             };
             
             IsActiveCompany = true;
-            LastUpdate = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc); // Y2K - memorable, non-zero timestamp
+            LastUpdate = new DateTime(2000, 1, 1, 0, 0, 0, 1, DateTimeKind.Utc); // Y2K with non-zero nanos
         }
 
         [ObservableProperty]

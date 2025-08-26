@@ -12,6 +12,7 @@ namespace Generated.ViewModels
             Temperature = 1; // Simple property for testing
             ZoneList.CollectionChanged += ZoneList_CollectionChanged;
             ZoneList.Add(new ThermalZoneComponentViewModel { Temperature = 1 });
+            ZoneList.Add(new ThermalZoneComponentViewModel { Temperature = 2 });
         }
 
         [ObservableProperty]

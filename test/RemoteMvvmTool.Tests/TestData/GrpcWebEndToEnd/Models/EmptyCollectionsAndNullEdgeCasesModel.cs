@@ -20,10 +20,10 @@ namespace Generated.ViewModels
             
             // Single item collections
             SingleItemList = new List<int> { 999 };
-            SingleItemDict = new Dictionary<string, bool> { { "solo", true } };
-            
-            ZeroValues = new List<int> { 0, 0, 0 }; // Multiple zeros
-            HasData = false; // Should be 0
+            SingleItemDict = new Dictionary<string, int> { { "solo", 7 } };
+
+            ZeroValues = new List<int> { 2, 3, 4 };
+            HasData = true;
         }
 
         [ObservableProperty]
@@ -42,7 +42,7 @@ namespace Generated.ViewModels
         private List<int> _singleItemList = new();
 
         [ObservableProperty]
-        private Dictionary<string, bool> _singleItemDict = new();
+        private Dictionary<string, int> _singleItemDict = new();
 
         [ObservableProperty]
         private List<int> _zeroValues = new();
