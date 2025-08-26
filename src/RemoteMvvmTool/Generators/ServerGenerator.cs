@@ -295,6 +295,10 @@ public static class ServerGenerator
                     {
                         sb.AppendLine($"            var {paramName} = ({p.TypeString})request.{GeneratorHelpers.ToPascalCase(p.Name)};");
                     }
+                    else if (p.FullTypeSymbol.ToDisplayString() == "System.Guid")
+                    {
+                        sb.AppendLine($"            var {paramName} = Guid.Parse(request.{GeneratorHelpers.ToPascalCase(p.Name)});");
+                    }
                     else
                     {
                         sb.AppendLine($"            var {paramName} = request.{GeneratorHelpers.ToPascalCase(p.Name)};");

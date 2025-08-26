@@ -1,5 +1,10 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using GrpcRemoteMvvmModelUtil;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using RemoteMvvmTool.Generators;
 using Xunit;
 
@@ -51,6 +56,38 @@ public class ServerGeneratorBugTests
     {
         var server = GenerateServer();
         Assert.Contains("case uint", server);
+    }
+
+    static Compilation CreateCompilation()
+    {
+        var refs = LoadDefaultRefs().Select(r => MetadataReference.CreateFromFile(r));
+        return CSharpCompilation.Create("TestCompilation", references: refs);
+    }
+
+    static List<string> LoadDefaultRefs()
+    {
+        var list = new List<string>();
+        string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
+        if (tpa != null)
+        {
+            foreach (var p in tpa.Split(Path.PathSeparator))
+                if (!string.IsNullOrEmpty(p) && File.Exists(p)) list.Add(p);
+        }
+        return list;
+    }
+
+    [Fact]
+    public void CommandWithGuidParameter_ParsesGuid()
+    {
+        var compilation = CreateCompilation();
+        var guidType = compilation.GetTypeByMetadataName("System.Guid")!;
+        var parameters = new List<ParameterInfo>
+        {
+            new("id", guidType.ToDisplayString(), guidType)
+        };
+        var cmd = new CommandInfo("DoThing", "DoThingCommand", parameters, false);
+        var code = ServerGenerator.Generate("Vm", "Test.Proto", "VmService", new List<PropertyInfo>(), new List<CommandInfo> { cmd }, "Generated.ViewModels");
+        Assert.Contains("var id = Guid.Parse(request.Id);", code);
     }
 }
 
