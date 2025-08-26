@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using GrpcRemoteMvvmModelUtil;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using RemoteMvvmTool.Generators;
 using Xunit;
 
@@ -51,6 +54,24 @@ public class ServerGeneratorBugTests
     {
         var server = GenerateServer();
         Assert.Contains("case uint", server);
+    }
+
+    [Fact]
+    public void CommandParameter_DateTime_Should_Use_ToDateTime()
+    {
+        var compilation = CSharpCompilation.Create("test",
+            references: new[] { MetadataReference.CreateFromFile(typeof(object).Assembly.Location) });
+        var dtSymbol = compilation.GetSpecialType(SpecialType.System_DateTime);
+        var cmd = new CommandInfo("SetTime", "SetTimeCommand",
+            new List<ParameterInfo> { new("time", "System.DateTime", dtSymbol) }, false);
+        var server = ServerGenerator.Generate(
+            "SampleViewModel",
+            "Generated.Protos",
+            "SampleViewModelService",
+            new List<PropertyInfo>(),
+            new List<CommandInfo> { cmd },
+            "Generated.ViewModels");
+        Assert.Contains("var time = request.Time.ToDateTime()", server);
     }
 }
 
