@@ -305,7 +305,7 @@ public class GrpcWebEndToEndTests
             await GenerateJavaScriptProtobufIfNeeded(paths.TestProjectDir);
             
             // Build the .NET project
-            BuildProject(paths.TestProjectDir);
+            await BuildProject(paths.TestProjectDir);
             
             // Run the end-to-end test with data validation
             await RunEndToEndTest(paths.TestProjectDir, expectedDataValues, nodeTestFile, expectedPropertyChange);
@@ -418,19 +418,6 @@ public class GrpcWebEndToEndTests
         }
 
         return (stdout, stderr);
-    }
-
-    // Keep the old synchronous methods for backward compatibility
-    static void RunCmd(string file, string args, string workDir, out string stdout, out string stderr)
-    {
-        var result = RunCmdAsync(file, args, workDir).GetAwaiter().GetResult();
-        stdout = result.stdout;
-        stderr = result.stderr;
-    }
-
-    static void RunCmd(string file, string args, string workDir)
-    {
-        RunCmdAsync(file, args, workDir).GetAwaiter().GetResult();
     }
 
     static int GetFreePort()
@@ -626,13 +613,13 @@ public class GrpcWebEndToEndTests
         }
 
         // Generate JavaScript files using npm script
-        RunNpmProtocScript(testProjectDir);
+        await RunNpmProtocScript(testProjectDir);
         
         // List generated files for verification
         ListGeneratedJavaScriptFiles(testProjectDir);
     }
 
-    private static void RunNpmProtocScript(string testProjectDir)
+    private static async Task RunNpmProtocScript(string testProjectDir)
     {
         Console.WriteLine("Running npm protoc script to generate JavaScript protobuf files...");
         var npmPaths = new[]
@@ -641,13 +628,13 @@ public class GrpcWebEndToEndTests
             "npm.cmd",
             "npm"
         };
-        
+
         foreach (var npmPath in npmPaths)
         {
             try
             {
                 Console.WriteLine($"Trying npm at: {npmPath}");
-                RunCmd(npmPath, "run protoc", testProjectDir);
+                await RunCmdAsync(npmPath, "run protoc", testProjectDir);
                 Console.WriteLine("✅ JavaScript protobuf files generated successfully");
                 return;
             }
@@ -656,7 +643,7 @@ public class GrpcWebEndToEndTests
                 Console.WriteLine($"Failed with {npmPath}: {ex.Message}");
             }
         }
-        
+
         throw new Exception("Could not generate JavaScript protobuf files using npm script. Ensure Node.js is installed and npm is in PATH, or that package.json has a 'protoc' script defined.");
     }
 
@@ -676,12 +663,12 @@ public class GrpcWebEndToEndTests
         }
     }
 
-    private static void BuildProject(string testProjectDir)
+    private static async Task BuildProject(string testProjectDir)
     {
         Console.WriteLine("Building project...");
         try
         {
-            RunCmd("dotnet", "build", testProjectDir);
+            await RunCmdAsync("dotnet", "build", testProjectDir);
             Console.WriteLine("✅ Project built successfully");
         }
         catch (Exception ex)
@@ -779,7 +766,7 @@ public class GrpcWebEndToEndTests
             try
             {
                 Console.WriteLine($"Running Node.js test with: {nodePath}");
-                RunCmd(nodePath, $"{jsTestFileName} {port}", testProjectDir, out var stdout, out var stderr);
+                var (stdout, stderr) = await RunCmdAsync(nodePath, $"{jsTestFileName} {port}", testProjectDir);
 
                 // Combine both STDOUT and STDERR for comprehensive parsing
                 actualOutput = stdout + "\n" + stderr;
@@ -1220,7 +1207,7 @@ public class GrpcWebEndToEndTests
         return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
     }
 
-    static Task InstallNpmPackages(string projectDir)
+    static async Task InstallNpmPackages(string projectDir)
     {
         var npmPaths = new[]
         {
@@ -1228,22 +1215,22 @@ public class GrpcWebEndToEndTests
             "npm.cmd",
             "npm"
         };
-        
+
         foreach (var npmPath in npmPaths)
         {
             try
             {
                 Console.WriteLine($"Trying npm at: {npmPath}");
-                RunCmd(npmPath, "install", projectDir);
+                await RunCmdAsync(npmPath, "install", projectDir);
                 Console.WriteLine("✅ npm install completed successfully");
-                return Task.CompletedTask;
+                return;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Failed with {npmPath}: {ex.Message}");
             }
         }
-        
+
         throw new Exception("Could not find npm executable or npm install failed. Ensure Node.js is installed and npm is in PATH.");
     }
 
