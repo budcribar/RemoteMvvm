@@ -207,7 +207,7 @@ public class Program
                 {
                     var baseClass = result.ViewModelSymbol?.BaseType?.ToDisplayString() ?? string.Empty;
                     var hasParameterlessCtor = result.ViewModelSymbol?.Constructors.Any(c => c.Parameters.Length == 0 && !c.IsImplicitlyDeclared) ?? false;
-                    var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace, baseClass, runType, hasParameterlessCtor);
+                    var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace, baseClass, runType, hasParameterlessCtor, result.Properties);
                     await File.WriteAllTextAsync(partialPath, partial);
                 }
             }
