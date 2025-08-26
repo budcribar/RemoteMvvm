@@ -291,9 +291,19 @@ public static class ServerGenerator
                 foreach (var p in cmd.Parameters)
                 {
                     var paramName = GeneratorHelpers.ToCamelCase(p.Name);
-                    if (p.FullTypeSymbol!.TypeKind == TypeKind.Enum)
+                    var paramProp = GeneratorHelpers.ToPascalCase(p.Name);
+                    var typeDisplay = p.FullTypeSymbol!.ToDisplayString();
+                    if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
                     {
-                        sb.AppendLine($"            var {paramName} = ({p.TypeString})request.{GeneratorHelpers.ToPascalCase(p.Name)};");
+                        sb.AppendLine($"            var {paramName} = ({p.TypeString})request.{paramProp};");
+                    }
+                    else if (typeDisplay == "System.DateTime")
+                    {
+                        sb.AppendLine($"            var {paramName} = request.{paramProp}.ToDateTime();");
+                    }
+                    else if (typeDisplay == "System.DateTime?")
+                    {
+                        sb.AppendLine($"            var {paramName} = request.{paramProp}?.ToDateTime();");
                     }
                     else if (p.FullTypeSymbol.ToDisplayString() == "System.Guid")
                     {
@@ -301,7 +311,7 @@ public static class ServerGenerator
                     }
                     else
                     {
-                        sb.AppendLine($"            var {paramName} = request.{GeneratorHelpers.ToPascalCase(p.Name)};");
+                        sb.AppendLine($"            var {paramName} = request.{paramProp};");
                     }
                 }
                 
