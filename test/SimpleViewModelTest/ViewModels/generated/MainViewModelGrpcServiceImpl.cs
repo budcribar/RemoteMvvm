@@ -177,26 +177,66 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             object target = _viewModel;
             var pathParts = propertyPath.Split('.');
             
-            // Navigate to nested property if needed
+            // Navigate to nested property if needed, handling collection indices
             for (int i = 0; i < pathParts.Length - 1; i++)
             {
-                var prop = target.GetType().GetProperty(pathParts[i]);
-                if (prop == null)
+                var part = pathParts[i];
+                int bracketIndex = part.IndexOf('[');
+                if (bracketIndex >= 0)
                 {
-                    response.Success = false;
-                    response.ErrorMessage = $"Property '{pathParts[i]}' not found in path '{propertyPath}'";
-                    return response;
+                    var propName = part[..bracketIndex];
+                    var end = part.IndexOf(']', bracketIndex);
+                    if (end < 0)
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = $"Invalid path segment '{part}' in '{propertyPath}'";
+                        return response;
+                    }
+                    var indexStr = part[(bracketIndex + 1)..end];
+                    var prop = target.GetType().GetProperty(propName);
+                    if (prop == null)
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = $"Property '{propName}' not found in path '{propertyPath}'";
+                        return response;
+                    }
+                    if (prop.GetValue(target) is IList list && int.TryParse(indexStr, out int idx))
+                    {
+                        if (idx < 0 || idx >= list.Count)
+                        {
+                            response.Success = false;
+                            response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
+                            return response;
+                        }
+                        target = list[idx];
+                    }
+                    else
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = $"Property '{propName}' is not an indexable list";
+                        return response;
+                    }
                 }
-                var nextTarget = prop.GetValue(target);
-                if (nextTarget == null)
+                else
                 {
-                    response.Success = false;
-                    response.ErrorMessage = $"Null value encountered at '{pathParts[i]}' in path '{propertyPath}'";
-                    return response;
+                    var prop = target.GetType().GetProperty(part);
+                    if (prop == null)
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = $"Property '{part}' not found in path '{propertyPath}'";
+                        return response;
+                    }
+                    var nextTarget = prop.GetValue(target);
+                    if (nextTarget == null)
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = $"Null value encountered at '{part}' in path '{propertyPath}'";
+                        return response;
+                    }
+                    target = nextTarget;
                 }
-                target = nextTarget;
             }
-            
+
             var finalPropertyName = pathParts[pathParts.Length - 1];
             var propertyInfo = target.GetType().GetProperty(finalPropertyName);
             
@@ -219,7 +259,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             if (oldValue != null) response.OldValue = PackToAny(oldValue);
             
             // Handle collection indexing
-            if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex >= 0)
+            if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex > -1)
                 response = HandleCollectionUpdate(target, propertyInfo, request);
             else
             {
@@ -292,7 +332,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             Debug.WriteLine($"[GrpcService:MainViewModel] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'");
         }
         // Handle list/array updates
-        else if (collection is System.Collections.IList list && request.ArrayIndex >= 0)
+        else if (collection is System.Collections.IList list && request.ArrayIndex > -1)
         {
             if (request.ArrayIndex >= list.Count)
             {
@@ -476,34 +516,70 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         Debug.WriteLine("[GrpcService:MainViewModel] PropertyChanged event fired for property: " + (e.PropertyName ?? "<null>"));
         Debug.WriteLine("[GrpcService:MainViewModel] Current subscriber count: " + _subscriberChannels.Count);
         if (string.IsNullOrEmpty(e.PropertyName)) return;
+        var fullPath = e.PropertyName;
+        var topLevel = fullPath.Split(new[] {'.','['}, 2)[0];
         object? newValue = null;
-        try { newValue = sender?.GetType().GetProperty(e.PropertyName)?.GetValue(sender); }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error getting property value for " + e.PropertyName + ": " + ex.Message); return; }
-        Debug.WriteLine("[GrpcService:MainViewModel] Property " + e.PropertyName + " changed to: " + (newValue?.ToString() ?? "<null>"));
+        try { newValue = GetValueByPath(_viewModel, fullPath); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error getting property value for " + fullPath + ": " + ex.Message); return; }
+        Debug.WriteLine("[GrpcService:MainViewModel] Property " + fullPath + " changed to: " + (newValue?.ToString() ?? "<null>"));
 
-        var notification = new Generated.Protos.PropertyChangeNotification 
-        { 
-            PropertyName = e.PropertyName,
-            PropertyPath = e.PropertyName, // For simple properties, path equals name
-            ChangeType = "property" // Can be enhanced to detect collection changes
+        var notification = new Generated.Protos.PropertyChangeNotification
+        {
+            PropertyName = topLevel,
+            PropertyPath = fullPath,
+            ChangeType = fullPath == topLevel ? "property" : "nested"
         };
         notification.NewValue = PackToAny(newValue);
         Debug.WriteLine("[GrpcService:MainViewModel] Created notification with TypeUrl: " + (notification.NewValue?.TypeUrl ?? "<null>"));
 
-        // Send notifications directly to unbounded channels (non-blocking queues)
-        // No need for Task.Run since channels are designed to be non-blocking
-        int successfulWrites = 0;
-        foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
+        // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
+        _ = Task.Run(async () =>
         {
-            try { 
-                await channelWriter.WriteAsync(notification); 
-                successfulWrites++;
-                Debug.WriteLine("[GrpcService:MainViewModel] Successfully wrote notification to subscriber channel");
+            int successfulWrites = 0;
+            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
+            {
+                try { 
+                    await channelWriter.WriteAsync(notification); 
+                    successfulWrites++;
+                    Debug.WriteLine("[GrpcService:MainViewModel] Successfully wrote notification to subscriber channel");
+                }
+                catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:MainViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
+                catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
             }
-            catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:MainViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
-            catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
+            Debug.WriteLine("[GrpcService:MainViewModel] Property change notification sent to " + successfulWrites + " subscribers");
+        });
+    }
+
+    private static object? GetValueByPath(object target, string path)
+    {
+        object? current = target;
+        foreach (var part in path.Split('.'))
+        {
+            if (current == null) return null;
+            int bracketIndex = part.IndexOf('[');
+            if (bracketIndex >= 0)
+            {
+                var propName = part[..bracketIndex];
+                var end = part.IndexOf(']', bracketIndex);
+                if (end < 0) return null;
+                var indexStr = part[(bracketIndex + 1)..end];
+                var prop = current.GetType().GetProperty(propName);
+                if (prop == null) return null;
+                if (prop.GetValue(current) is IList list && int.TryParse(indexStr, out int idx))
+                {
+                    if (idx < 0 || idx >= list.Count) return null;
+                    current = list[idx];
+                }
+                else return null;
+            }
+            else
+            {
+                var prop = current.GetType().GetProperty(part);
+                if (prop == null) return null;
+                current = prop.GetValue(current);
+            }
         }
-        Debug.WriteLine("[GrpcService:MainViewModel] Property change notification sent to " + successfulWrites + " subscribers");
+        return current;
     }
 
     private static Any PackToAny(object? value)

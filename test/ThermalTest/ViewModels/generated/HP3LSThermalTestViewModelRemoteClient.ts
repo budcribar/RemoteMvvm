@@ -7,7 +7,7 @@ import { HP3LSThermalTestViewModelState, UpdatePropertyValueRequest, UpdatePrope
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { BoolValue, DoubleValue, Int32Value, Int64Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, Int32Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 // Enum Mappings
@@ -225,6 +225,11 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.propertyStream = this.grpcClient.subscribeToPropertyChanges(req);
         this.propertyStream.on('data', (update: PropertyChangeNotification) => {
             const anyVal = update.getNewValue();
+            const path = update.getPropertyPath();
+            if (path) {
+                const value = this.unpackAny(anyVal);
+                this.setByPath(this, path, value);
+            } else {
             switch (update.getPropertyName()) {
                 case 'Instructions':
                     this.instructions = anyVal?.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
@@ -245,7 +250,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
                     this.showReadme = anyVal?.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
                     break;
             }
-            
+            }
             // Notify with server flag - UI can update but won't send back to server
             this.notifyChange(true);
         });
@@ -257,6 +262,44 @@ export class HP3LSThermalTestViewModelRemoteClient {
             this.propertyStream = undefined;
             setTimeout(() => this.startListeningToPropertyChanges(), 1000);
         });
+    }
+
+    private setByPath(target: any, path: string, value: any): void {
+        const parts = path.split('.');
+        let obj: any = target;
+        for (let i = 0; i < parts.length; i++) {
+            const m = /(\w+)(?:\[(\d+)\])?/.exec(parts[i]);
+            if (!m) return;
+            const key = m[1].charAt(0).toLowerCase() + m[1].slice(1);
+            const idx = m[2] !== undefined ? parseInt(m[2], 10) : undefined;
+            if (i === parts.length - 1) {
+                if (idx !== undefined) {
+                    if (Array.isArray(obj[key])) obj[key][idx] = value;
+                } else {
+                    obj[key] = value;
+                }
+            } else {
+                obj = idx !== undefined ? obj[key][idx] : obj[key];
+                if (obj === undefined) return;
+            }
+        }
+    }
+
+    private unpackAny(anyVal: Any | undefined): any {
+        if (!anyVal) return undefined;
+        const typeUrl = anyVal.getTypeUrl();
+        switch (typeUrl) {
+            case 'type.googleapis.com/google.protobuf.StringValue':
+                return anyVal.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
+            case 'type.googleapis.com/google.protobuf.Int32Value':
+                return anyVal.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
+            case 'type.googleapis.com/google.protobuf.BoolValue':
+                return anyVal.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
+            case 'type.googleapis.com/google.protobuf.Timestamp':
+                return anyVal.unpack(Timestamp.deserializeBinary, 'google.protobuf.Timestamp')?.toDate();
+            default:
+                return undefined;
+        }
     }
 
     private createAnyValue(value: any): Any {
@@ -281,11 +324,6 @@ export class HP3LSThermalTestViewModelRemoteClient {
                     const int32 = new Int32Value();
                     int32.setValue(value);
                     anyValue.pack(int32.serializeBinary(), 'google.protobuf.Int32Value');
-                    return anyValue;
-                } else {
-                    const double = new DoubleValue();
-                    double.setValue(value);
-                    anyValue.pack(double.serializeBinary(), 'google.protobuf.DoubleValue');
                     return anyValue;
                 }
             }

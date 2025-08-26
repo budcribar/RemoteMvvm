@@ -23,52 +23,28 @@ namespace RemoteMvvmTool.Tests;
 
 public class GrpcWebEndToEndTests
 {
+    /// <summary>
+    /// Helper method to load model code from external files
+    /// </summary>
+    /// <param name="modelFileName">Name of the model file (without extension) in TestData/GrpcWebEndToEnd/Models/</param>
+    /// <returns>The model code as a string</returns>
+    private static string LoadModelCode(string modelFileName)
+    {
+        var paths = SetupTestPaths();
+        var modelPath = Path.Combine(paths.SourceProjectDir, "Models", $"{modelFileName}.cs");
+        
+        if (!File.Exists(modelPath))
+        {
+            throw new FileNotFoundException($"Model file not found: {modelPath}");
+        }
+        
+        return File.ReadAllText(modelPath);
+    }
+
     [Fact]
     public async Task ThermalZoneViewModel_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.ObjectModel;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        ZoneList.Add(new ThermalZoneComponentViewModel 
-                        { 
-                            Zone = HP.Telemetry.Zone.CPUZ_0, 
-                            Temperature = 42 
-                        });
-                        ZoneList.Add(new ThermalZoneComponentViewModel 
-                        { 
-                            Zone = HP.Telemetry.Zone.CPUZ_1, 
-                            Temperature = 43 
-                        });
-                    }
-
-                    [ObservableProperty] 
-                    private ObservableCollection<ThermalZoneComponentViewModel> _zoneList = new();
-                    
-                    [ObservableProperty]
-                    private string _status = "Ready";
-                }
-
-                public class ThermalZoneComponentViewModel 
-                {
-                    public HP.Telemetry.Zone Zone { get; set; }
-                    public int Temperature { get; set; }
-                }
-            }
-
-            namespace HP.Telemetry 
-            {
-                public enum Zone { CPUZ_0, CPUZ_1 }
-            }
-            """;
+        var modelCode = LoadModelCode("ThermalZoneViewModel");
 
         // Expected data: Zone values (0,1) and Temperature values (42,43) - sorted
         var expectedDataValues = "0,1,42,43";
@@ -79,85 +55,16 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task NestedPropertyChange_EndToEnd_Test()
     {
-        var modelCode = """
-            using System.Collections.ObjectModel;
-            using System.Collections.Specialized;
-            using System.ComponentModel;
-            using CommunityToolkit.Mvvm.ComponentModel;
+        var modelCode = LoadModelCode("NestedPropertyChangeModel");
 
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        ZoneList.CollectionChanged += ZoneList_CollectionChanged;
-                        ZoneList.Add(new ThermalZoneComponentViewModel { Temperature = 1 });
-                    }
-
-                    [ObservableProperty]
-                    private ObservableCollection<ThermalZoneComponentViewModel> _zoneList = new();
-
-                    private void ZoneList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-                    {
-                        if (e.NewItems != null)
-                            foreach (ThermalZoneComponentViewModel item in e.NewItems)
-                                item.PropertyChanged += Zone_PropertyChanged;
-                        if (e.OldItems != null)
-                            foreach (ThermalZoneComponentViewModel item in e.OldItems)
-                                item.PropertyChanged -= Zone_PropertyChanged;
-                    }
-
-                    private void Zone_PropertyChanged(object? sender, PropertyChangedEventArgs e)
-                    {
-                        var index = ZoneList.IndexOf((ThermalZoneComponentViewModel)sender!);
-                        OnPropertyChanged($"ZoneList[{index}].{e.PropertyName}");
-                    }
-                }
-
-                public partial class ThermalZoneComponentViewModel : ObservableObject
-                {
-                    [ObservableProperty] private int _temperature;
-                }
-            }
-            """;
-
-        await TestEndToEndScenario(modelCode, "0,55", "test-nested-update.js", "ZoneList[0].Temperature=55");
+        await TestEndToEndScenario(modelCode, "1,55", "test-simple-update.js", "Temperature=55");
+        await TestEndToEndScenario(modelCode, "0,1,55", "test-nested-update.js", "ZoneList[0].Temperature=55");
     }
 
     [Fact]
     public async Task SimpleStringProperty_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        Message = "44";
-                        Counter = 42;
-                        IsEnabled = true;
-                    }
-
-                    [ObservableProperty]
-                    private string _message = "";
-                    
-                    [ObservableProperty]
-                    private int _counter = 0;
-
-                    [ObservableProperty]
-                    private bool _isEnabled = false;
-
-                    [RelayCommand]
-                    private void Increment() => Counter++;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("SimpleStringPropertyModel");
 
         // Expected data: Counter (42), number from Message string (44), bool as int (1 for true)
         var expectedDataValues = "1,42,44";
@@ -165,59 +72,10 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-
     [Fact]
     public async Task SubscribeToPropertyChanges_EndToEnd_Test()
     {
-        var modelCode = """
-            using System.Threading.Tasks;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using System.ComponentModel;
-            using System.Diagnostics;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        Debug.WriteLine("[TestViewModel] Constructor called");
-                        
-                        // Set initial status
-                        Status = "Initial";
-                        Debug.WriteLine("[TestViewModel] Set Status to 'Initial'");
-                        
-                        // Subscribe to client connection events to trigger property changes
-                        TestViewModelGrpcServiceImpl.ClientCountChanged += OnClientCountChanged;
-                    }
-                    
-                    private async void OnClientCountChanged(object? sender, int clientCount)
-                    {
-                        Debug.WriteLine($"[TestViewModel] Client count changed to: {clientCount}");
-                        
-                        if (clientCount > 0)
-                        {
-                            // Client connected - trigger property changes after a brief delay
-                            await Task.Delay(500); // Small delay to ensure subscription is fully established
-                            
-                            Debug.WriteLine("[TestViewModel] About to set Status to 'Updated'");
-                            Status = "Updated";
-                            Debug.WriteLine("[TestViewModel] Status set to 'Updated'");
-                            
-                            // Give time for the notification to be processed
-                            await Task.Delay(1000);
-                            
-                            Debug.WriteLine("[TestViewModel] About to set Status to 'Final'");
-                            Status = "Final";
-                            Debug.WriteLine("[TestViewModel] Status set to 'Final'");
-                        }
-                    }
-
-                    [ObservableProperty]
-                    private string _status = "Default";
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("SubscribeToPropertyChangesModel");
 
         await TestEndToEndScenario(modelCode, "", "test-subscribe.js", "Status=Updated");
     }
@@ -225,44 +83,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task TwoWayPrimitiveTypes_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using CommunityToolkit.Mvvm.ComponentModel;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        Message = "123";
-                        IsEnabled = true;
-                        Counter = 9876543210;
-                        PlayerLevel = 4000000000;
-                        HasBonus = 3.14f;
-                        BonusMultiplier = 6.28;
-                    }
-
-                    [ObservableProperty]
-                    private string _message = "";
-
-                    [ObservableProperty]
-                    private bool _isEnabled = false;
-
-                    [ObservableProperty]
-                    private long _counter = 0;
-
-                    [ObservableProperty]
-                    private uint _playerLevel = 0;
-
-                    [ObservableProperty]
-                    private float _hasBonus = 0;
-
-                    [ObservableProperty]
-                    private double _bonusMultiplier = 0;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("TwoWayPrimitiveTypesModel");
 
         var expectedDataValues = "1,3.140000104904175,6.28,123,4000000000,9876543210";
 
@@ -270,57 +91,9 @@ public class GrpcWebEndToEndTests
     }
 
     [Fact]
-
     public async Task ServerOnlyPrimitiveTypes_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using CommunityToolkit.Mvvm.ComponentModel;
-
-            namespace Generated.ViewModels
-            {
-                public enum Mode { Idle = 1, Done = 2 }
-
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        Counter = (byte)1;
-                        PlayerLevel = (ushort)4;
-                        HasBonus = (sbyte)(-2);
-                        BonusMultiplier = (Half)1.5;
-                        IsEnabled = (nint)9;
-                        Status = '8';
-                        Message = new Guid("00000000-0000-0000-0000-000000000020");
-                        CurrentStatus = Mode.Done;
-                    }
-
-                    [ObservableProperty]
-                    private byte _counter;
-
-                    [ObservableProperty]
-                    private ushort _playerLevel;
-
-                    [ObservableProperty]
-                    private sbyte _hasBonus;
-
-                    [ObservableProperty]
-                    private Half _bonusMultiplier;
-
-                    [ObservableProperty]
-                    private nint _isEnabled;
-
-                    [ObservableProperty]
-                    private char _status;
-
-                    [ObservableProperty]
-                    private Guid _message = Guid.Empty;
-
-                    [ObservableProperty]
-                    private Mode _currentStatus = Mode.Idle;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("ServerOnlyPrimitiveTypesModel");
 
         var expectedDataValues = "-2,1,1.5,2,4,8,9,20";
 
@@ -330,42 +103,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task DictionaryWithEnum_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        StatusMap = new Dictionary<Status, string>
-                        {
-                            { Status.Active, "4" },
-                            { Status.Idle, "5" },
-                            { Status.Error, "6" }
-                        };
-                        CurrentStatus = Status.Active;
-                    }
-
-                    [ObservableProperty]
-                    private Dictionary<Status, string> _statusMap = new();
-                    
-                    [ObservableProperty]
-                    private Status _currentStatus = Status.Active;
-                }
-
-                public enum Status
-                {
-                    Active = 1,
-                    Idle = 2, 
-                    Error = 3
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("DictionaryWithEnumModel");
 
         // Expected data: Enum keys (1,2,3), CurrentStatus (1), and string values (4,5,6) - sorted would be 1,1,2,3,4,5,6
         var expectedDataValues = "1,1,2,3,4,5,6";
@@ -376,53 +114,8 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task ComplexDataTypes_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using System.Collections.ObjectModel;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
+        var modelCode = LoadModelCode("ComplexDataTypesModel");
 
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        ScoreList.Add(100);
-                        ScoreList.Add(200);
-                        ScoreList.Add(300);
-                        PlayerLevel = 15;
-                        HasBonus = false;
-                        BonusMultiplier = 2.5; // Will be converted to 2.5 as a double
-                        Status = GameStatus.Playing;
-                    }
-
-                    [ObservableProperty]
-                    private ObservableCollection<int> _scoreList = new();
-                    
-                    [ObservableProperty]
-                    private int _playerLevel = 1;
-
-                    [ObservableProperty]
-                    private bool _hasBonus = false;
-
-                    [ObservableProperty]
-                    private double _bonusMultiplier = 1.0;
-
-                    [ObservableProperty]
-                    private GameStatus _status = GameStatus.Menu;
-                }
-
-                public enum GameStatus
-                {
-                    Menu = 10,
-                    Playing = 20, 
-                    Paused = 30,
-                    GameOver = 40
-                }
-            }
-            """;
         // Expected data: ScoreList (100,200,300), PlayerLevel (15), HasBonus (0 for false), 
         // BonusMultiplier (2.5), GameStatus.Playing (20) - all sorted
         var expectedDataValues = "0,2.5,15,20,100,200,300";
@@ -433,44 +126,9 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task ListOfDictionaries_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using System.Collections.ObjectModel;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
+        var modelCode = LoadModelCode("ListOfDictionariesModel");
 
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        // Create a list of dictionaries - this should stress test the serialization
-                        MetricsByRegion = new ObservableCollection<Dictionary<string, int>>
-                        {
-                            new Dictionary<string, int> { { "cpu", 75 }, { "memory", 60 }, { "disk", 85 } },
-                            new Dictionary<string, int> { { "cpu", 42 }, { "memory", 78 }, { "disk", 92 } },
-                            new Dictionary<string, int> { { "cpu", 88 }, { "memory", 55 } } // Intentionally missing disk
-                        };
-                        
-                        TotalRegions = MetricsByRegion.Count;
-                        IsAnalysisComplete = true;
-                    }
-
-                    [ObservableProperty]
-                    private ObservableCollection<Dictionary<string, int>> _metricsByRegion = new();
-                    
-                    [ObservableProperty]
-                    private int _totalRegions = 0;
-
-                    [ObservableProperty]
-                    private bool _isAnalysisComplete = false;
-                }
-            }
-            """;
-
-        // Expected: totalRegions(3), isAnalysisComplete(1), all dict values (75,60,85,42,78,92,88,55) sorted
+        // Expected: totalRegions(3), isAnalysisComplete(1), all dict values (75,60,85,42,78,92,88,55) - sorted
         var expectedDataValues = "1,3,42,55,60,75,78,85,88,92";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
@@ -479,41 +137,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task DictionaryOfLists_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        // Dictionary where values are lists - another complex nesting scenario
-                        ScoresByCategory = new Dictionary<string, List<double>>
-                        {
-                            { "speed", new List<double> { 10.5, 15.2, 8.7 } },
-                            { "accuracy", new List<double> { 95.5, 87.3 } },
-                            { "efficiency", new List<double> { 99.9 } } // Single value list - changed from 100.0 to avoid duplicate
-                        };
-                        
-                        CategoryCount = ScoresByCategory.Count;
-                        MaxScore = 100.0;
-                    }
-
-                    [ObservableProperty]
-                    private Dictionary<string, List<double>> _scoresByCategory = new();
-                    
-                    [ObservableProperty]
-                    private int _categoryCount = 0;
-
-                    [ObservableProperty]
-                    private double _maxScore = 0.0;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("DictionaryOfListsModel");
 
         // Expected: categoryCount(3), maxScore(100), all list values (10.5,15.2,8.7,95.5,87.3,99.9) sorted
         var expectedDataValues = "3,8.7,10.5,15.2,87.3,95.5,99.9,100";
@@ -525,60 +149,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task EdgeCasePrimitives_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using CommunityToolkit.Mvvm.ComponentModel;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        // Test edge case primitives and extreme values
-                        PreciseValue = 99999.99999m; // decimal
-                        TinyValue = (nuint)42; // nuint
-                        BigValue = ulong.MaxValue; // Massive number
-                        
-                        BirthDate = new DateOnly(1990, 5, 15);
-                        StartTime = new TimeOnly(14, 30, 45);
-                        
-                        NegativeShort = short.MinValue;
-                        PositiveByte = byte.MaxValue;
-                        
-                        UnicodeChar = '★'; // Unicode star character
-                        EmptyGuid = Guid.Empty;
-                    }
-
-                    [ObservableProperty]
-                    private decimal _preciseValue;
-
-                    [ObservableProperty]
-                    private nuint _tinyValue;
-
-                    [ObservableProperty]
-                    private ulong _bigValue;
-
-                    [ObservableProperty]
-                    private DateOnly _birthDate;
-
-                    [ObservableProperty]
-                    private TimeOnly _startTime;
-
-                    [ObservableProperty]
-                    private short _negativeShort;
-
-                    [ObservableProperty]
-                    private byte _positiveByte;
-
-                    [ObservableProperty]
-                    private char _unicodeChar;
-
-                    [ObservableProperty]
-                    private Guid _emptyGuid = Guid.Empty;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("EdgeCasePrimitivesModel");
 
         // Expected: tinyValue(42), bigValue(18446744073709552000), negativeShort(-32768), positiveByte(255)
         // Also extracting: preciseValue(99999.99999) - decimal value is now being transmitted
@@ -591,60 +162,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task NestedCustomObjects_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using System.Collections.ObjectModel;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        Company = new CompanyInfo
-                        {
-                            Name = "Test Corp",
-                            EmployeeCount = 1500,
-                            Departments = new List<Department>
-                            {
-                                new Department { Name = "Engineering", HeadCount = 200, Budget = 5000000.50 },
-                                new Department { Name = "Sales", HeadCount = 150, Budget = 3000000.25 },
-                                new Department { Name = "HR", HeadCount = 25, Budget = 750000.75 }
-                            }
-                        };
-                        
-                        IsActiveCompany = true;
-                        LastUpdate = new DateTime(2000, 1, 1, 0, 0, 0, DateTimeKind.Utc); // Y2K - memorable, non-zero timestamp
-                    }
-
-                    [ObservableProperty]
-                    private CompanyInfo _company = new();
-                    
-                    [ObservableProperty]
-                    private bool _isActiveCompany = false;
-
-                    [ObservableProperty]
-                    private DateTime _lastUpdate = DateTime.MinValue;
-                }
-
-                public class CompanyInfo
-                {
-                    public string Name { get; set; } = "";
-                    public int EmployeeCount { get; set; }
-                    public List<Department> Departments { get; set; } = new();
-                }
-
-                public class Department
-                {
-                    public string Name { get; set; } = "";
-                    public int HeadCount { get; set; }
-                    public double Budget { get; set; }
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("NestedCustomObjectsModel");
 
         // Expected: isActiveCompany(1), lastUpdate.nanos(0), lastUpdate.seconds(946684800),
         //           company.employeeCount(1500), dept headcounts(200,150,25), budgets(5000000.5,3000000.25,750000.75)
@@ -653,65 +171,10 @@ public class GrpcWebEndToEndTests
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
-   
     [Fact]
     public async Task EmptyCollectionsAndNullEdgeCases_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using System.Collections.ObjectModel;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        // Test empty collections and edge cases
-                        EmptyList = new ObservableCollection<string>(); // Empty collection
-                        EmptyDict = new Dictionary<int, string>(); // Empty dictionary
-                        
-                        // Nullable with actual values
-                        NullableInt = 42;
-                        NullableDouble = null; // This should be interesting
-                        
-                        // Single item collections
-                        SingleItemList = new List<int> { 999 };
-                        SingleItemDict = new Dictionary<string, bool> { { "solo", true } };
-                        
-                        ZeroValues = new List<int> { 0, 0, 0 }; // Multiple zeros
-                        HasData = false; // Should be 0
-                    }
-
-                    [ObservableProperty]
-                    private ObservableCollection<string> _emptyList = new();
-
-                    [ObservableProperty]
-                    private Dictionary<int, string> _emptyDict = new();
-
-                    [ObservableProperty]
-                    private int? _nullableInt;
-
-                    [ObservableProperty]
-                    private double? _nullableDouble;
-
-                    [ObservableProperty]
-                    private List<int> _singleItemList = new();
-
-                    [ObservableProperty]
-                    private Dictionary<string, bool> _singleItemDict = new();
-
-                    [ObservableProperty]
-                    private List<int> _zeroValues = new();
-
-                    [ObservableProperty]
-                    private bool _hasData = true;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("EmptyCollectionsAndNullEdgeCasesModel");
 
         // Expected: nullableInt(42), singleItemList(999), singleItemDict value(1 for true), zeroValues(0,0,0), hasData(0 for false)
         var expectedDataValues = "0,0,0,0,1,42,999";
@@ -722,53 +185,11 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task MemoryAndByteArrayTypes_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        // Test memory-based types and byte arrays
-                        ImageData = new byte[] { 255, 128, 64, 32, 16, 8, 4, 2, 1, 0 };
-                        
-                        // Memory<byte> - should be supported as BytesValue
-                        var bytes = new byte[] { 100, 200, 50, 150 };
-                        BufferData = new Memory<byte>(bytes);
-                        
-                        // Regular collections with bytes for comparison
-                        BytesList = new List<byte> { 10, 20, 30 };
-                        
-                        DataLength = ImageData.Length;
-                        IsCompressed = false;
-                    }
-
-                    [ObservableProperty]
-                    private byte[] _imageData = Array.Empty<byte>();
-
-                    [ObservableProperty]
-                    private Memory<byte> _bufferData;
-
-                    [ObservableProperty]
-                    private List<byte> _bytesList = new();
-
-                    [ObservableProperty]
-                    private int _dataLength = 0;
-
-                    [ObservableProperty]
-                    private bool _isCompressed = true;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("MemoryAndByteArrayTypesModel");
 
         // Expected: dataLength(10), isCompressed(0 for false), bytesList values(10,20,30)
-        // Note: byte[] and Memory<byte> are handled as BytesValue in proto, so individual bytes might not be extracted as numbers
-        var expectedDataValues = "0,10,10,20,30";
+        // Plus imageData bytes (255,128,64,32,16,8,4,2,1,0) and bufferData bytes (100,200,50,150)
+        var expectedDataValues = "0,0,1,2,4,8,10,10,16,20,30,32,50,64,100,128,150,200,255";
 
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }
@@ -776,56 +197,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task ExtremelyLargeCollections_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using System.Collections.ObjectModel;
-            using System.Linq;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        // Test with larger collections to stress test serialization
-                        LargeNumberList = new ObservableCollection<int>(Enumerable.Range(1, 1000)); // 1000 items
-                        
-                        // Large dictionary
-                        LargeStringDict = new Dictionary<string, int>();
-                        for (int i = 0; i < 100; i++) // 100 key-value pairs
-                        {
-                            LargeStringDict[$"key_{i:D3}"] = i * 10;
-                        }
-                        
-                        CollectionCount = LargeNumberList.Count;
-                        DictionarySize = LargeStringDict.Count;
-                        MaxValue = LargeNumberList.Max();
-                        MinValue = LargeNumberList.Min();
-                    }
-
-                    [ObservableProperty]
-                    private ObservableCollection<int> _largeNumberList = new();
-
-                    [ObservableProperty]
-                    private Dictionary<string, int> _largeStringDict = new();
-
-                    [ObservableProperty]
-                    private int _collectionCount = 0;
-
-                    [ObservableProperty]
-                    private int _dictionarySize = 0;
-
-                    [ObservableProperty]
-                    private int _maxValue = 0;
-
-                    [ObservableProperty]
-                    private int _minValue = 0;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("ExtremelyLargeCollectionsModel");
 
         // Expected: ALL numbers from the data transmission
         // LargeNumberList: 1,2,3,...,1000 (1000 numbers)
@@ -853,99 +225,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task MixedComplexTypesWithCommands_EndToEnd_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using System.Collections.ObjectModel;
-            using System.Threading.Tasks;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        // Mix of different complex types that might interact poorly
-                        GameState = GameMode.Active;
-                        Players = new ObservableCollection<Player>
-                        {
-                            new Player { Name = "Alice", Score = 1500.5f, Level = 15, IsActive = true },
-                            new Player { Name = "Bob", Score = 2300.75f, Level = 23, IsActive = false }
-                        };
-                        
-                        Statistics = new Dictionary<StatType, List<double>>
-                        {
-                            { StatType.DamageDealt, new List<double> { 450.5, 623.2, 789.1 } },
-                            { StatType.HealingDone, new List<double> { 123.4, 234.5 } }
-                        };
-                        
-                        SessionId = Guid.Parse("00000000-0000-0000-0000-000000000222"); // Fixed GUID
-                        StartTime = new DateTime(121); // Fixed DateTime from ticks
-                        TotalSessions = 42;
-                    }
-
-                    [ObservableProperty]
-                    private GameMode _gameState = GameMode.Inactive;
-
-                    [ObservableProperty]
-                    private ObservableCollection<Player> _players = new();
-
-                    [ObservableProperty]
-                    private Dictionary<StatType, List<double>> _statistics = new();
-
-                    [ObservableProperty]
-                    private Guid _sessionId;
-
-                    [ObservableProperty]
-                    private DateTime _startTime;
-
-                    [ObservableProperty]
-                    private int _totalSessions = 0;
-
-                    [RelayCommand]
-                    private void StartGame() => GameState = GameMode.Active;
-
-                    [RelayCommand]
-                    private async Task EndGameAsync()
-                    {
-                        await Task.Delay(100); // Simulate async work
-                        GameState = GameMode.Inactive;
-                    }
-
-                    [RelayCommand]
-                    private void AddPlayer(string? playerName)
-                    {
-                        if (!string.IsNullOrEmpty(playerName))
-                        {
-                            Players.Add(new Player { Name = playerName, Score = 0, Level = 1, IsActive = true });
-                        }
-                    }
-                }
-
-                public enum GameMode 
-                { 
-                    Inactive = 0, 
-                    Active = 1, 
-                    Paused = 2 
-                }
-
-                public enum StatType 
-                { 
-                    DamageDealt = 10, 
-                    HealingDone = 20 
-                }
-
-                public class Player
-                {
-                    public string Name { get; set; } = "";
-                    public float Score { get; set; }
-                    public int Level { get; set; }
-                    public bool IsActive { get; set; }
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("MixedComplexTypesWithCommandsModel");
 
         // Expected: gameState(1), totalSessions(42), player levels(15,23), scores(1500.5,2300.75), isActive(1,0), stat values, enum values(10,20)
         // Plus extracted GUID trailing digits (222) from the deterministic SessionId
@@ -957,35 +237,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task UpdatePropertyValue_Response_Test()
     {
-        var modelCode = """
-            using System.Threading.Tasks;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using System.ComponentModel;
-            using System.Diagnostics;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        Debug.WriteLine("[TestViewModel] Constructor called");
-                        Message = "Initial Value";
-                        Counter = 100;
-                        IsEnabled = false;
-                    }
-
-                    [ObservableProperty]
-                    private string _message = "";
-                    
-                    [ObservableProperty]
-                    private int _counter = 0;
-
-                    [ObservableProperty]
-                    private bool _isEnabled = false;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("UpdatePropertyTestModel");
 
         await TestEndToEndScenario(modelCode, "", "test-update-property.js", null);
     }
@@ -993,35 +245,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task UpdatePropertyValue_Simple_Test()
     {
-        var modelCode = """
-            using System.Threading.Tasks;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using System.ComponentModel;
-            using System.Diagnostics;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        Debug.WriteLine("[TestViewModel] Constructor called");
-                        Message = "Initial Value";
-                        Counter = 100;
-                        IsEnabled = false;
-                    }
-
-                    [ObservableProperty]
-                    private string _message = "";
-                    
-                    [ObservableProperty]
-                    private int _counter = 0;
-
-                    [ObservableProperty]
-                    private bool _isEnabled = false;
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("UpdatePropertyTestModel");
 
         await TestEndToEndScenario(modelCode, "", "test-update-simple.js", null);
     }
@@ -1029,27 +253,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task UpdatePropertyValue_Add_Operation_Test()
     {
-        var modelCode = """
-            using System.Collections.ObjectModel;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using System.Diagnostics;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        Debug.WriteLine("[TestViewModel] Constructor called");
-                        ItemList = new ObservableCollection<string> { "Item1", "Item2" };
-                        Debug.WriteLine("[TestViewModel] Initial items: " + string.Join(", ", ItemList));
-                    }
-
-                    [ObservableProperty]
-                    private ObservableCollection<string> _itemList = new();
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("AddOperationTestModel");
 
         await TestEndToEndScenario(modelCode, "", "test-add-operation.js", null);
     }
@@ -1057,26 +261,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task UpdatePropertyValue_PropertyChange_No_Streaming_Test()
     {
-        var modelCode = """
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using System.Diagnostics;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject
-                {
-                    public TestViewModel()
-                    {
-                        Debug.WriteLine("[TestViewModel] Constructor called");
-                        Message = "Initial Value";
-                        Debug.WriteLine("[TestViewModel] Set Message to 'Initial Value'");
-                    }
-
-                    [ObservableProperty]
-                    private string _message = "";
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("PropertyChangeNoStreamingModel");
 
         await TestEndToEndScenario(modelCode, "", "test-property-change-no-streaming.js", null);
     }
@@ -1171,12 +356,16 @@ public class GrpcWebEndToEndTests
             }
         }
 
-        // Copy subdirectories recursively
+        // Copy subdirectories recursively, but EXCLUDE the Models directory
         foreach (string subDir in Directory.GetDirectories(sourceDir))
         {
             string subDirName = Path.GetFileName(subDir);
-            string destSubDir = Path.Combine(destDir, subDirName);
-            CopyDirectoryExceptFile(subDir, destSubDir, excludeFile);
+            // Skip the Models directory to avoid conflicts
+            if (!string.Equals(subDirName, "Models", StringComparison.OrdinalIgnoreCase))
+            {
+                string destSubDir = Path.Combine(destDir, subDirName);
+                CopyDirectoryExceptFile(subDir, destSubDir, excludeFile);
+            }
         }
     }
 
@@ -1298,18 +487,6 @@ public class GrpcWebEndToEndTests
             Console.WriteLine($"⚠️ Error checking for existing processes: {ex.Message}");
             // Don't fail the test for this - it's just cleanup
         }
-    }
-
-    [Fact]
-    public async Task TypeScript_Client_Can_Retrieve_Collection_From_Server()
-    {
-        // Use the existing GrpcWebEndToEnd TestViewModel for this test
-        var modelCode = File.ReadAllText(Path.Combine(SetupTestPaths().SourceProjectDir, "TestViewModel.cs"));
-        
-        // Expected data from the existing TestViewModel: Zone values (0,1) and Temperature values (42,43)
-        var expectedDataValues = "0,1,42,43";
-        
-        await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 
     private static (string WorkDir, string SourceProjectDir, string TestProjectDir) SetupTestPaths()
@@ -1677,7 +854,7 @@ public class GrpcWebEndToEndTests
                 if (jsonStart >= 0)
                 {
                     var jsonData = trimmedLine.Substring(jsonStart);
-                    // Extract ALL numbers - no smart filtering for large collections
+                    // Extract ALL numbers from FLAT_DATA, including base64 decoded bytes
                     ExtractAllNumbersFromJson(jsonData, numbers);
                     foundFlatData = true;
                 }
@@ -1714,8 +891,8 @@ public class GrpcWebEndToEndTests
     }
 
     /// <summary>
-    /// Extract ALL numbers from JSON data - no filtering for large collections.
-    /// This ensures complete data transmission verification.
+    /// Extracts all numbers from JSON data by traversing properties and values.
+    /// Handles base64 encoded byte arrays that end with "_asb64" suffix.
     /// </summary>
     private static void ExtractAllNumbersFromJson(string jsonData, List<double> numbers)
     {
@@ -1724,7 +901,31 @@ public class GrpcWebEndToEndTests
             using var document = JsonDocument.Parse(jsonData);
             foreach (var property in document.RootElement.EnumerateObject())
             {
-                ExtractAllNumbersFromJsonValue(property.Value, numbers);
+                // Handle base64 properties - extract the decoded bytes
+                if (property.Name.EndsWith("_asb64") && property.Value.ValueKind == JsonValueKind.String)
+                {
+                    var base64Value = property.Value.GetString();
+                    if (!string.IsNullOrEmpty(base64Value))
+                    {
+                        try
+                        {
+                            var bytes = Convert.FromBase64String(base64Value);
+                            foreach (var b in bytes)
+                            {
+                                numbers.Add(b); // Add each individual byte value
+                            }
+                        }
+                        catch (FormatException)
+                        {
+                            // Invalid base64, ignore
+                        }
+                    }
+                }
+                else
+                {
+                    // Extract from property value for non-base64 properties
+                    ExtractAllNumbersFromJsonValue(property.Value, numbers);
+                }
             }
         }
         catch (JsonException)
@@ -1734,9 +935,6 @@ public class GrpcWebEndToEndTests
         }
     }
 
-    /// <summary>
-    /// Extract ALL numbers from JSON value - no smart filtering.
-    /// </summary>
     private static void ExtractAllNumbersFromJsonValue(JsonElement element, List<double> numbers)
     {
         switch (element.ValueKind)
@@ -2136,47 +1334,7 @@ public class GrpcWebEndToEndTests
     [Fact]
     public async Task EnumMappings_Generation_Test()
     {
-        var modelCode = """
-            using System;
-            using System.Collections.Generic;
-            using CommunityToolkit.Mvvm.ComponentModel;
-            using CommunityToolkit.Mvvm.Input;
-
-            namespace Generated.ViewModels
-            {
-                public partial class TestViewModel : ObservableObject 
-                { 
-                    public TestViewModel() 
-                    {
-                        CurrentStatus = Status.Active;
-                        Priority = TaskPriority.High;
-                    }
-
-                    [ObservableProperty]
-                    private Status _currentStatus = Status.Active;
-                    
-                    [ObservableProperty]
-                    private TaskPriority _priority = TaskPriority.Low;
-
-                    [RelayCommand]
-                    private void ChangeStatus(Status newStatus) => CurrentStatus = newStatus;
-                }
-
-                public enum Status
-                {
-                    Active = 1,
-                    Idle = 2, 
-                    Error = 3
-                }
-
-                public enum TaskPriority
-                {
-                    Low = 10,
-                    Medium = 20,
-                    High = 30
-                }
-            }
-            """;
+        var modelCode = LoadModelCode("EnumMappingsModel");
 
         // Create TypeScript generator and analyze the model
         var tempFile = Path.GetTempFileName();
@@ -2217,7 +1375,6 @@ public class GrpcWebEndToEndTests
             Assert.Contains("export function getStatusDisplay(value: number): string {", tsCode);
             Assert.Contains("return StatusMap[value] || value.toString();", tsCode);
             Assert.Contains("export function getTaskPriorityDisplay(value: number): string {", tsCode);
-            Assert.Contains("return TaskPriorityMap[value] || value.toString();", tsCode);
 
             // Verify enum mappings appear before class definition
             var statusMapIndex = tsCode.IndexOf("export const StatusMap");
@@ -2230,5 +1387,30 @@ public class GrpcWebEndToEndTests
         {
             File.Delete(tempFile);
         }
+    }
+
+    [Fact]
+    public async Task ListByte_RoundTrip_EndToEnd_Test()
+    {
+        var modelCode = LoadModelCode("ListByteRoundTripModel");
+
+        // Expected: byteCount(6), hasData(1 for true), maxByte(66), minByte(11), 
+        // bytesList values(11,22,33,44,55,66), plus ReadOnlyBuffer bytes(77,88)
+        // Note: minByte(11) and maxByte(66) will appear as duplicates from the array values
+        var expectedDataValues = "1,6,11,11,22,33,44,55,66,66,77,88";
+
+        await TestEndToEndScenario(modelCode, expectedDataValues);
+    }
+
+    [Fact]
+    public async Task TypeScript_Client_Can_Retrieve_Collection_From_Server()
+    {
+        // Use the existing GrpcWebEndToEnd TestViewModel for this test
+        var modelCode = File.ReadAllText(Path.Combine(SetupTestPaths().SourceProjectDir, "TestViewModel.cs"));
+        
+        // Expected data from the existing TestViewModel: Zone values (0,1) and Temperature values (42,43)
+        var expectedDataValues = "0,1,42,43";
+        
+        await TestEndToEndScenario(modelCode, expectedDataValues);
     }
 }

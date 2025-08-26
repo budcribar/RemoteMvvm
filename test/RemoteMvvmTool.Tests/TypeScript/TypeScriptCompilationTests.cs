@@ -104,9 +104,9 @@ public class TypeScriptCompilationTests
         File.WriteAllText(Path.Combine(gp, "empty_pb.d.ts"), "export class Empty { serializeBinary(): Uint8Array; }");
         File.WriteAllText(Path.Combine(gp, "empty_pb.js"), "exports.Empty = class { serializeBinary() { return new Uint8Array(); } };");
         File.WriteAllText(Path.Combine(gp, "any_pb.d.ts"),
-            "export class Any { pack(a:Uint8Array,b:string):void; unpack(fn:any,name:string):any; static pack(data:any):Any; serializeBinary(): Uint8Array; }");
+            "export class Any { pack(a:Uint8Array,b:string):void; unpack(fn:any,name:string):any; getTypeUrl():string; static pack(data:any):Any; serializeBinary(): Uint8Array; }");
         File.WriteAllText(Path.Combine(gp, "any_pb.js"),
-            "class AnyImpl { pack(){} unpack(){ return null; } static pack(data) { return new AnyImpl(); } serializeBinary() { return new Uint8Array(); } } exports.Any = AnyImpl;");
+            "class AnyImpl { pack(){} unpack(){ return null; } getTypeUrl(){ return 'test.type.url'; } static pack(data) { return new AnyImpl(); } serializeBinary() { return new Uint8Array(); } } exports.Any = AnyImpl;");
         File.WriteAllText(Path.Combine(gp, "wrappers_pb.d.ts"),
             "export class StringValue { setValue(v:string):void; getValue():string; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):StringValue; }\n" +
             "export class Int32Value { setValue(v:number):void; getValue():number; serializeBinary():Uint8Array; static deserializeBinary(b:Uint8Array):Int32Value; }\n" +
@@ -148,7 +148,7 @@ export {{ UpdatePropertyValueResponse }};
             "exports.UpdatePropertyValueRequest = class { constructor(){ this.p=''; this.v=undefined; this.path=''; this.key=''; this.idx=-1; this.op=''; } setPropertyName(v){ this.p=v; } getPropertyName(){ return this.p; } setNewValue(v){ this.v=v; } getNewValue(){ return this.v; } setPropertyPath(v){ this.path=v; } getPropertyPath(){ return this.path; } setCollectionKey(v){ this.key=v; } getCollectionKey(){ return this.key; } setArrayIndex(v){ this.idx=v; } getArrayIndex(){ return this.idx; } setOperationType(v){ this.op=v; } getOperationType(){ return this.op; } };" +
             "exports.UpdatePropertyValueResponse = class { constructor(){ this.success=true; this.error=''; } getSuccess(){ return this.success; } setSuccess(v){ this.success=v; } getErrorMessage(){ return this.error; } setErrorMessage(v){ this.error=v; } };" +
             "exports.SubscribeRequest = class { setClientId(){} };" +
-            "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} };" +
+            "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} getPropertyPath(){return ''} };" +
             "exports.ConnectionStatusResponse = class { getStatus(){return 0} };" +
             "exports.ConnectionStatus = { CONNECTED:0, DISCONNECTED:1 };" +
             "exports.StateChangedRequest = class { setState(){} };" +
@@ -158,7 +158,7 @@ export {{ UpdatePropertyValueResponse }};
             "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; setPropertyPath(v:string):void; getPropertyPath():string; setCollectionKey(v:string):void; getCollectionKey():string; setArrayIndex(v:number):void; getArrayIndex():number; setOperationType(v:string):void; getOperationType():string; }\n" +
             "export class UpdatePropertyValueResponse { getSuccess():boolean; setSuccess(v:boolean):void; getErrorMessage():string; setErrorMessage(v:string):void; }\n" +
             "export class SubscribeRequest { setClientId(v:string):void; }\n" +
-            "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; }\n" +
+            "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; getPropertyPath():string; }\n" +
             "export class ConnectionStatusResponse { getStatus():number; }\n" +
             "export enum ConnectionStatus { CONNECTED=0, DISCONNECTED=1 }\n" +
             "export class StateChangedRequest { setState(v:any):void; }\n" +

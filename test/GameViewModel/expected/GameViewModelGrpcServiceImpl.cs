@@ -308,7 +308,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             if (oldValue != null) response.OldValue = PackToAny(oldValue);
             
             // Handle collection indexing
-            if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex >= 0)
+            if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex > -1)
                 response = HandleCollectionUpdate(target, propertyInfo, request);
             else
             {
@@ -381,7 +381,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             Debug.WriteLine($"[GrpcService:GameViewModel] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'");
         }
         // Handle list/array updates
-        else if (collection is System.Collections.IList list && request.ArrayIndex >= 0)
+        else if (collection is System.Collections.IList list && request.ArrayIndex > -1)
         {
             if (request.ArrayIndex >= list.Count)
             {
@@ -581,20 +581,22 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         notification.NewValue = PackToAny(newValue);
         Debug.WriteLine("[GrpcService:GameViewModel] Created notification with TypeUrl: " + (notification.NewValue?.TypeUrl ?? "<null>"));
 
-        // Send notifications directly to unbounded channels (non-blocking queues)
-        // No need for Task.Run since channels are designed to be non-blocking
-        int successfulWrites = 0;
-        foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
+        // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
+        _ = Task.Run(async () =>
         {
-            try { 
-                await channelWriter.WriteAsync(notification); 
-                successfulWrites++;
-                Debug.WriteLine("[GrpcService:GameViewModel] Successfully wrote notification to subscriber channel");
+            int successfulWrites = 0;
+            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
+            {
+                try { 
+                    await channelWriter.WriteAsync(notification); 
+                    successfulWrites++;
+                    Debug.WriteLine("[GrpcService:GameViewModel] Successfully wrote notification to subscriber channel");
+                }
+                catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:GameViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
+                catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
             }
-            catch (ChannelClosedException) { Debug.WriteLine("[GrpcService:GameViewModel] Channel closed for a subscriber, cannot write notification for '" + e.PropertyName + "'. Subscriber likely disconnected."); }
-            catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); }
-        }
-        Debug.WriteLine("[GrpcService:GameViewModel] Property change notification sent to " + successfulWrites + " subscribers");
+            Debug.WriteLine("[GrpcService:GameViewModel] Property change notification sent to " + successfulWrites + " subscribers");
+        });
     }
 
     private static object? GetValueByPath(object target, string path)

@@ -7,21 +7,20 @@ const { Any } = require('google-protobuf/google/protobuf/any_pb.js');
 const port = process.argv[2] || 5000;
 const client = new TestViewModelServiceClient(`http://localhost:${port}`);
 
-console.log('Starting nested property update test...');
+console.log('Testing simple property update...');
 
-// Test updating a nested collection property: ZoneList[0].Temperature
+// Test a simple property update first
 const req = new UpdatePropertyValueRequest();
-req.setPropertyName('ZoneList');
-req.setPropertyPath('ZoneList[0].Temperature'); // This is the nested path
+req.setPropertyName('Temperature');  // Simple property name
+req.setPropertyPath('Temperature');   // Simple property path  
 req.setOperationType('set');
-req.setArrayIndex(-1);  // Explicitly set to -1 for non-array properties
+req.setArrayIndex(-1);                // Explicitly set to -1 for non-array properties
 const wrapper = new Int32Value();
 wrapper.setValue(55);
 const anyVal = new Any();
 anyVal.pack(wrapper.serializeBinary(), 'google.protobuf.Int32Value');
 req.setNewValue(anyVal);
 
-// Use callback-style to avoid streaming issues
 client.updatePropertyValue(req, {}, (err, response) => {
     if (err) {
         console.error('UpdatePropertyValue error:', err);
@@ -34,8 +33,7 @@ client.updatePropertyValue(req, {}, (err, response) => {
         process.exit(1);
     }
 
-    // For this test, we expect the nested property change to work
-    console.log('PROPERTY_CHANGE:ZoneList[0].Temperature=55');
+    console.log('PROPERTY_CHANGE:Temperature=55');
     console.log('Test passed');
     process.exit(0);
 });

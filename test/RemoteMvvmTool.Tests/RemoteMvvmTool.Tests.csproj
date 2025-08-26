@@ -15,10 +15,16 @@
     <EmbeddedResource Remove="TestData\GrpcWebEndToEnd\**" />
     <EmbeddedResource Remove="TestData\Work\**" />
     <None Remove="TestData\GrpcWebEndToEnd\**" />
-   
     <None Remove="TestData\Work\**" />
     <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
-     <TypeScriptCompile Remove="TestData\Work\**" />
+    <TypeScriptCompile Remove="TestData\Work\**" />
+  </ItemGroup>
+
+  <!-- Include model files as content (not compiled) so they can be read at runtime -->
+  <ItemGroup>
+    <None Include="TestData\GrpcWebEndToEnd\Models\*.cs">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -57,7 +63,9 @@
     <None Include="TestData\GrpcWebEndToEnd\test-add-operation.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-basic-connectivity.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-deadlock-fix.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-nested-update-no-streaming.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-property-change-no-streaming.js" />
+    <None Include="TestData\GrpcWebEndToEnd\test-simple-update.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-subscribe-manual.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-subscribe-pure.js" />
     <None Include="TestData\GrpcWebEndToEnd\test-subscribe-simple.js" />

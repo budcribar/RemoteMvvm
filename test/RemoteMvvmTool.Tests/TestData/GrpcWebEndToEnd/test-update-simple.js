@@ -49,6 +49,7 @@ async function testUpdateProperty() {
         // Create update request
         const request = new UpdatePropertyValueRequest();
         request.setPropertyName('Message');
+        request.setArrayIndex(-1);  // Explicitly set to -1 for non-array properties
 
         const stringValue = new StringValue();
         stringValue.setValue('Updated via enhanced UpdatePropertyValue!');

@@ -35,6 +35,17 @@ public static class TypeScriptClientGenerator
         var enumTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         CollectEnumTypes(props, cmds, enumTypes);
 
+        // Only import wrappers that actually exist in the protobuf library
+        var availableWrappers = new HashSet<string> { "StringValue", "Int32Value", "Int64Value", "UInt32Value", "UInt64Value", "BoolValue", "FloatValue", "DoubleValue" };
+        var wrapperImports = new HashSet<string>();
+        
+        foreach (var p in props)
+        {
+            var w = GeneratorHelpers.GetWrapperType(p.TypeString);
+            if (w != null && w != "Timestamp" && availableWrappers.Contains(w)) 
+                wrapperImports.Add(w);
+        }
+
         string GetStateName(INamedTypeSymbol t)
         {
             var name = t.Name;
@@ -248,13 +259,11 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("import * as grpcWeb from 'grpc-web';");
         sb.AppendLine("import { Empty } from 'google-protobuf/google/protobuf/empty_pb';");
         sb.AppendLine("import { Any } from 'google-protobuf/google/protobuf/any_pb';");
-        var wrapperImports = new HashSet<string> { "StringValue", "Int32Value", "Int64Value", "UInt32Value", "UInt64Value", "BoolValue", "FloatValue", "DoubleValue" };
-        foreach (var p in props)
+        
+        if (wrapperImports.Count > 0)
         {
-            var w = GeneratorHelpers.GetWrapperType(p.TypeString);
-            if (w != null && w != "Timestamp") wrapperImports.Add(w);
+            sb.AppendLine($"import {{ {string.Join(", ", wrapperImports.OrderBy(s => s))} }} from 'google-protobuf/google/protobuf/wrappers_pb';");
         }
-        sb.AppendLine($"import {{ {string.Join(", ", wrapperImports.OrderBy(s => s))} }} from 'google-protobuf/google/protobuf/wrappers_pb';");
         sb.AppendLine("import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';");
         sb.AppendLine();
 
@@ -547,7 +556,7 @@ public static class TypeScriptClientGenerator
         foreach (var p in props)
         {
             var wrapper = GeneratorHelpers.GetWrapperType(p.TypeString);
-            if (wrapper != null)
+            if (wrapper != null && availableWrappers.Contains(wrapper))
             {
                 string unpack = wrapper switch
                 {
@@ -562,12 +571,15 @@ public static class TypeScriptClientGenerator
                     "Timestamp" => "Timestamp.deserializeBinary",
                     _ => ""
                 };
-                sb.AppendLine($"                case '{p.Name}':");
-                if (wrapper == "Timestamp")
-                    sb.AppendLine($"                    this.{GeneratorHelpers.ToCamelCase(p.Name)} = anyVal?.unpack({unpack}, 'google.protobuf.{wrapper}')?.toDate();");
-                else
-                    sb.AppendLine($"                    this.{GeneratorHelpers.ToCamelCase(p.Name)} = anyVal?.unpack({unpack}, 'google.protobuf.{wrapper}')?.getValue();");
-                sb.AppendLine("                    break;");
+                if (!string.IsNullOrEmpty(unpack))
+                {
+                    sb.AppendLine($"                case '{p.Name}':");
+                    if (wrapper == "Timestamp")
+                        sb.AppendLine($"                    this.{GeneratorHelpers.ToCamelCase(p.Name)} = anyVal?.unpack({unpack}, 'google.protobuf.{wrapper}')?.toDate();");
+                    else
+                        sb.AppendLine($"                    this.{GeneratorHelpers.ToCamelCase(p.Name)} = anyVal?.unpack({unpack}, 'google.protobuf.{wrapper}')?.getValue();");
+                    sb.AppendLine("                    break;");
+                }
             }
         }
         sb.AppendLine("            }");
@@ -608,25 +620,55 @@ public static class TypeScriptClientGenerator
         sb.AppendLine();
         sb.AppendLine("    private unpackAny(anyVal: Any | undefined): any {");
         sb.AppendLine("        if (!anyVal) return undefined;");
-        sb.AppendLine("        switch (anyVal.getTypeUrl()) {");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.StringValue':");
-        sb.AppendLine("                return anyVal.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Int32Value':");
-        sb.AppendLine("                return anyVal.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Int64Value':");
-        sb.AppendLine("                return Number(anyVal.unpack(Int64Value.deserializeBinary, 'google.protobuf.Int64Value')?.getValue());");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.UInt32Value':");
-        sb.AppendLine("                return anyVal.unpack(UInt32Value.deserializeBinary, 'google.protobuf.UInt32Value')?.getValue();");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.UInt64Value':");
-        sb.AppendLine("                return Number(anyVal.unpack(UInt64Value.deserializeBinary, 'google.protobuf.UInt64Value')?.getValue());");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.BoolValue':");
-        sb.AppendLine("                return anyVal.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.FloatValue':");
-        sb.AppendLine("                return anyVal.unpack(FloatValue.deserializeBinary, 'google.protobuf.FloatValue')?.getValue();");
-        sb.AppendLine("            case 'type.googleapis.com/google.protobuf.DoubleValue':");
-        sb.AppendLine("                return anyVal.unpack(DoubleValue.deserializeBinary, 'google.protobuf.DoubleValue')?.getValue();");
+        sb.AppendLine("        const typeUrl = anyVal.getTypeUrl();");
+        sb.AppendLine("        switch (typeUrl) {");
+        
+        // Only add cases for available wrappers
+        if (wrapperImports.Contains("StringValue"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.StringValue':");
+            sb.AppendLine("                return anyVal.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();");
+        }
+        if (wrapperImports.Contains("Int32Value"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Int32Value':");
+            sb.AppendLine("                return anyVal.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();");
+        }
+        if (wrapperImports.Contains("Int64Value"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Int64Value':");
+            sb.AppendLine("                return Number(anyVal.unpack(Int64Value.deserializeBinary, 'google.protobuf.Int64Value')?.getValue());");
+        }
+        if (wrapperImports.Contains("UInt32Value"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.UInt32Value':");
+            sb.AppendLine("                return anyVal.unpack(UInt32Value.deserializeBinary, 'google.protobuf.UInt32Value')?.getValue();");
+        }
+        if (wrapperImports.Contains("UInt64Value"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.UInt64Value':");
+            sb.AppendLine("                return Number(anyVal.unpack(UInt64Value.deserializeBinary, 'google.protobuf.UInt64Value')?.getValue());");
+        }
+        if (wrapperImports.Contains("BoolValue"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.BoolValue':");
+            sb.AppendLine("                return anyVal.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();");
+        }
+        if (wrapperImports.Contains("FloatValue"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.FloatValue':");
+            sb.AppendLine("                return anyVal.unpack(FloatValue.deserializeBinary, 'google.protobuf.FloatValue')?.getValue();");
+        }
+        if (wrapperImports.Contains("DoubleValue"))
+        {
+            sb.AppendLine("            case 'type.googleapis.com/google.protobuf.DoubleValue':");
+            sb.AppendLine("                return anyVal.unpack(DoubleValue.deserializeBinary, 'google.protobuf.DoubleValue')?.getValue();");
+        }
+        
+        // Timestamp is always available
         sb.AppendLine("            case 'type.googleapis.com/google.protobuf.Timestamp':");
         sb.AppendLine("                return anyVal.unpack(Timestamp.deserializeBinary, 'google.protobuf.Timestamp')?.toDate();");
+        
         sb.AppendLine("            default:");
         sb.AppendLine("                return undefined;");
         sb.AppendLine("        }");
@@ -643,31 +685,64 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        const anyValue = new Any();");
         sb.AppendLine("        ");
         sb.AppendLine("        switch (typeof value) {");
-        sb.AppendLine("            case 'string': {");
-        sb.AppendLine("                const str = new StringValue();");
-        sb.AppendLine("                str.setValue(value);");
-        sb.AppendLine("                anyValue.pack(str.serializeBinary(), 'google.protobuf.StringValue');");
-        sb.AppendLine("                return anyValue;");
-        sb.AppendLine("            }");
-        sb.AppendLine("            case 'number': {");
-        sb.AppendLine("                if (Number.isInteger(value)) {");
-        sb.AppendLine("                    const int32 = new Int32Value();");
-        sb.AppendLine("                    int32.setValue(value);");
-        sb.AppendLine("                    anyValue.pack(int32.serializeBinary(), 'google.protobuf.Int32Value');");
-        sb.AppendLine("                    return anyValue;");
-        sb.AppendLine("                } else {");
-        sb.AppendLine("                    const double = new DoubleValue();");
-        sb.AppendLine("                    double.setValue(value);");
-        sb.AppendLine("                    anyValue.pack(double.serializeBinary(), 'google.protobuf.DoubleValue');");
-        sb.AppendLine("                    return anyValue;");
-        sb.AppendLine("                }");
-        sb.AppendLine("            }");
-        sb.AppendLine("            case 'boolean': {");
-        sb.AppendLine("                const bool = new BoolValue();");
-        sb.AppendLine("                bool.setValue(value);");
-        sb.AppendLine("                anyValue.pack(bool.serializeBinary(), 'google.protobuf.BoolValue');");
-        sb.AppendLine("                return anyValue;");
-        sb.AppendLine("            }");
+        
+        if (wrapperImports.Contains("StringValue"))
+        {
+            sb.AppendLine("            case 'string': {");
+            sb.AppendLine("                const str = new StringValue();");
+            sb.AppendLine("                str.setValue(value);");
+            sb.AppendLine("                anyValue.pack(str.serializeBinary(), 'google.protobuf.StringValue');");
+            sb.AppendLine("                return anyValue;");
+            sb.AppendLine("            }");
+        }
+        
+        if (wrapperImports.Contains("Int32Value") || wrapperImports.Contains("DoubleValue") || wrapperImports.Contains("FloatValue"))
+        {
+            sb.AppendLine("            case 'number': {");
+            if (wrapperImports.Contains("Int32Value"))
+            {
+                sb.AppendLine("                if (Number.isInteger(value)) {");
+                sb.AppendLine("                    const int32 = new Int32Value();");
+                sb.AppendLine("                    int32.setValue(value);");
+                sb.AppendLine("                    anyValue.pack(int32.serializeBinary(), 'google.protobuf.Int32Value');");
+                sb.AppendLine("                    return anyValue;");
+                sb.AppendLine("                }");
+            }
+            if (wrapperImports.Contains("FloatValue"))
+            {
+                if (wrapperImports.Contains("Int32Value"))
+                    sb.AppendLine("                else if (Math.abs(value) <= 3.4028235e+38) { // Float range check");
+                else
+                    sb.AppendLine("                if (Math.abs(value) <= 3.4028235e+38) { // Float range check");
+                sb.AppendLine("                    const float = new FloatValue();");
+                sb.AppendLine("                    float.setValue(value);");
+                sb.AppendLine("                    anyValue.pack(float.serializeBinary(), 'google.protobuf.FloatValue');");
+                sb.AppendLine("                    return anyValue;");
+                sb.AppendLine("                }");
+            }
+            if (wrapperImports.Contains("DoubleValue"))
+            {
+                var elsePart = (wrapperImports.Contains("Int32Value") || wrapperImports.Contains("FloatValue")) ? "else {" : "{";
+                sb.AppendLine($"                {elsePart}");
+                sb.AppendLine("                    const double = new DoubleValue();");
+                sb.AppendLine("                    double.setValue(value);");
+                sb.AppendLine("                    anyValue.pack(double.serializeBinary(), 'google.protobuf.DoubleValue');");
+                sb.AppendLine("                    return anyValue;");
+                sb.AppendLine("                }");
+            }
+            sb.AppendLine("            }");
+        }
+        
+        if (wrapperImports.Contains("BoolValue"))
+        {
+            sb.AppendLine("            case 'boolean': {");
+            sb.AppendLine("                const bool = new BoolValue();");
+            sb.AppendLine("                bool.setValue(value);");
+            sb.AppendLine("                anyValue.pack(bool.serializeBinary(), 'google.protobuf.BoolValue');");
+            sb.AppendLine("                return anyValue;");
+            sb.AppendLine("            }");
+        }
+        
         sb.AppendLine("            default: {");
         sb.AppendLine("                const empty = new Empty();");
         sb.AppendLine("                anyValue.pack(empty.serializeBinary(), 'google.protobuf.Empty');");

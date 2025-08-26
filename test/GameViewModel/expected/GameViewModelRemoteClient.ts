@@ -7,7 +7,7 @@ import { GameViewModelState, UpdatePropertyValueRequest, UpdatePropertyValueResp
 import * as grpcWeb from 'grpc-web';
 import { Empty } from 'google-protobuf/google/protobuf/empty_pb';
 import { Any } from 'google-protobuf/google/protobuf/any_pb';
-import { BoolValue, DoubleValue, FloatValue, Int32Value, Int64Value, StringValue, UInt32Value, UInt64Value } from 'google-protobuf/google/protobuf/wrappers_pb';
+import { BoolValue, Int32Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 export class GameViewModelRemoteClient {
@@ -254,23 +254,14 @@ export class GameViewModelRemoteClient {
 
     private unpackAny(anyVal: Any | undefined): any {
         if (!anyVal) return undefined;
-        switch (anyVal.getTypeUrl()) {
+        const typeUrl = anyVal.getTypeUrl();
+        switch (typeUrl) {
             case 'type.googleapis.com/google.protobuf.StringValue':
                 return anyVal.unpack(StringValue.deserializeBinary, 'google.protobuf.StringValue')?.getValue();
             case 'type.googleapis.com/google.protobuf.Int32Value':
                 return anyVal.unpack(Int32Value.deserializeBinary, 'google.protobuf.Int32Value')?.getValue();
-            case 'type.googleapis.com/google.protobuf.Int64Value':
-                return Number(anyVal.unpack(Int64Value.deserializeBinary, 'google.protobuf.Int64Value')?.getValue());
-            case 'type.googleapis.com/google.protobuf.UInt32Value':
-                return anyVal.unpack(UInt32Value.deserializeBinary, 'google.protobuf.UInt32Value')?.getValue();
-            case 'type.googleapis.com/google.protobuf.UInt64Value':
-                return Number(anyVal.unpack(UInt64Value.deserializeBinary, 'google.protobuf.UInt64Value')?.getValue());
             case 'type.googleapis.com/google.protobuf.BoolValue':
                 return anyVal.unpack(BoolValue.deserializeBinary, 'google.protobuf.BoolValue')?.getValue();
-            case 'type.googleapis.com/google.protobuf.FloatValue':
-                return anyVal.unpack(FloatValue.deserializeBinary, 'google.protobuf.FloatValue')?.getValue();
-            case 'type.googleapis.com/google.protobuf.DoubleValue':
-                return anyVal.unpack(DoubleValue.deserializeBinary, 'google.protobuf.DoubleValue')?.getValue();
             case 'type.googleapis.com/google.protobuf.Timestamp':
                 return anyVal.unpack(Timestamp.deserializeBinary, 'google.protobuf.Timestamp')?.toDate();
             default:
@@ -300,11 +291,6 @@ export class GameViewModelRemoteClient {
                     const int32 = new Int32Value();
                     int32.setValue(value);
                     anyValue.pack(int32.serializeBinary(), 'google.protobuf.Int32Value');
-                    return anyValue;
-                } else {
-                    const double = new DoubleValue();
-                    double.setValue(value);
-                    anyValue.pack(double.serializeBinary(), 'google.protobuf.DoubleValue');
                     return anyValue;
                 }
             }
