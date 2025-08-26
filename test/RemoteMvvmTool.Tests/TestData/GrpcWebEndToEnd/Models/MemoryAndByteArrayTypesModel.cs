@@ -10,7 +10,7 @@ namespace Generated.ViewModels
         public TestViewModel() 
         {
             // Test memory-based types and byte arrays
-            ImageData = new byte[] { 255, 128, 64, 32, 16, 8, 4, 2, 1, 0 };
+            ImageData = new byte[] { 255, 128, 64, 32, 16, 8, 4, 2, 3 };
             
             // Memory<byte> - should be supported as BytesValue
             var bytes = new byte[] { 100, 200, 50, 150 };
@@ -20,7 +20,7 @@ namespace Generated.ViewModels
             BytesList = new List<byte> { 10, 20, 30 };
             
             DataLength = ImageData.Length;
-            IsCompressed = false;
+            IsCompressed = true;
         }
 
         [ObservableProperty]

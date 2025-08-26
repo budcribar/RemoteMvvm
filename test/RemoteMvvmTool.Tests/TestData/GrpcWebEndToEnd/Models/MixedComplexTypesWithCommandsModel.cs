@@ -12,11 +12,10 @@ namespace Generated.ViewModels
         public TestViewModel() 
         {
             // Mix of different complex types that might interact poorly
-            GameState = GameMode.Active;
+            GameState = GameMode.Paused;
             Players = new ObservableCollection<Player>
             {
-                new Player { Name = "Alice", Score = 1500.5f, Level = 15, IsActive = true },
-                new Player { Name = "Bob", Score = 2300.75f, Level = 23, IsActive = false }
+                new Player { Name = "Alice", Score = 1500.5f, Level = 15, IsActive = true }
             };
             
             Statistics = new Dictionary<StatType, List<double>>
@@ -31,7 +30,7 @@ namespace Generated.ViewModels
         }
 
         [ObservableProperty]
-        private GameMode _gameState = GameMode.Inactive;
+        private GameMode _gameState = GameMode.Paused;
 
         [ObservableProperty]
         private ObservableCollection<Player> _players = new();

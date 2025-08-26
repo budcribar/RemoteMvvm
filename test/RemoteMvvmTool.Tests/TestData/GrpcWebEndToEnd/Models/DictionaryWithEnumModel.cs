@@ -15,20 +15,21 @@ namespace Generated.ViewModels
                 { Status.Idle, "5" },
                 { Status.Error, "6" }
             };
-            CurrentStatus = Status.Active;
+            CurrentStatus = Status.Maintenance;
         }
 
         [ObservableProperty]
         private Dictionary<Status, string> _statusMap = new();
         
         [ObservableProperty]
-        private Status _currentStatus = Status.Active;
+        private Status _currentStatus = Status.Maintenance;
     }
 
     public enum Status
     {
         Active = 1,
-        Idle = 2, 
-        Error = 3
+        Idle = 2,
+        Error = 3,
+        Maintenance = 7
     }
 }

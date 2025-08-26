@@ -14,7 +14,7 @@ namespace Generated.ViewModels
             ScoreList.Add(200);
             ScoreList.Add(300);
             PlayerLevel = 15;
-            HasBonus = false;
+            HasBonus = true;
             BonusMultiplier = 2.5; // Will be converted to 2.5 as a double
             Status = GameStatus.Playing;
         }
@@ -26,7 +26,7 @@ namespace Generated.ViewModels
         private int _playerLevel = 1;
 
         [ObservableProperty]
-        private bool _hasBonus = false;
+        private bool _hasBonus = true;
 
         [ObservableProperty]
         private double _bonusMultiplier = 1.0;
