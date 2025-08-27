@@ -78,5 +78,19 @@ public class TsProjectGeneratorTests
         string readme = TsProjectGenerator.GenerateReadme("TestProject");
         Assert.Contains("npm run build", readme);
     }
+
+    [Fact]
+    public void GenerateAppTs_HandlesCollectionsAndComplexTypes()
+    {
+        var props = new List<PropertyInfo>
+        {
+            new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
+            new("TestSettings", "TestSettingsModel", null!)
+        };
+        string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, new List<CommandInfo>());
+        Assert.Contains("JSON.stringify(vm.zoneList, null, 2)", ts);
+        Assert.Contains("JSON.stringify(vm.testSettings, null, 2)", ts);
+        Assert.Contains("JSON.stringify(currentValue) !== newValue", ts);
+    }
 }
 

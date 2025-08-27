@@ -41,9 +41,14 @@ public static class TsProjectGenerator
         foreach (var p in props)
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
-            var assignExpr = p.TypeString.ToLowerInvariant().Contains("string")
-                ? $"vm.{camel}"
-                : $"JSON.stringify(vm.{camel})";
+            string typeStr = p.TypeString.ToLowerInvariant();
+            string assignExpr;
+            if (typeStr.Contains("string"))
+                assignExpr = $"vm.{camel}";
+            else if (typeStr.Contains("int") || typeStr.Contains("number") || typeStr.Contains("double") || typeStr.Contains("float") || typeStr.Contains("decimal") || typeStr.Contains("long") || typeStr.Contains("bool"))
+                assignExpr = $"String(vm.{camel})";
+            else
+                assignExpr = $"JSON.stringify(vm.{camel}, null, 2)";
             sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).value = {assignExpr};");
         }
         sb.AppendLine("    (document.getElementById('connection-status') as HTMLElement).textContent = vm.connectionStatus;");
@@ -66,45 +71,34 @@ public static class TsProjectGenerator
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
             sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).addEventListener('change', (e) => {{");
             sb.AppendLine($"        const newValue = (e.target as HTMLInputElement).value;");
-            
-            // Handle type conversion based on property type
+            sb.AppendLine($"        const currentValue = vm.{camel};");
+            sb.AppendLine("        // Only update if value actually changed");
+
+            string comparison;
             string convertedValue;
-            string currentValueComparison;
-            if (p.TypeString.ToLowerInvariant().Contains("int") || p.TypeString.ToLowerInvariant().Contains("number"))
+            string typeStr = p.TypeString.ToLowerInvariant();
+            if (typeStr.Contains("int") || typeStr.Contains("number"))
             {
                 convertedValue = "Number(newValue)";
-                currentValueComparison = "Number(newValue)";
+                comparison = "Number(newValue) !== currentValue";
             }
-            else if (p.TypeString.ToLowerInvariant().Contains("bool"))
+            else if (typeStr.Contains("bool"))
             {
                 convertedValue = "newValue.toLowerCase() === 'true'";
-                currentValueComparison = "Boolean(newValue.toLowerCase() === 'true')";
+                comparison = "Boolean(newValue.toLowerCase() === 'true') !== currentValue";
             }
-            else if (p.TypeString.ToLowerInvariant().Contains("string"))
+            else if (typeStr.Contains("string"))
             {
                 convertedValue = "newValue";
-                currentValueComparison = "newValue";
+                comparison = "newValue !== currentValue";
             }
             else
             {
-                // For complex types, try to parse as JSON
                 convertedValue = "JSON.parse(newValue)";
-                currentValueComparison = "JSON.stringify(vm." + camel + ")";
+                comparison = "JSON.stringify(currentValue) !== newValue";
             }
 
-            if (p.TypeString.ToLowerInvariant().Contains("string"))
-            {
-                sb.AppendLine($"        const currentValue = vm.{camel};");
-                sb.AppendLine("        // Only update if value actually changed");
-                sb.AppendLine($"        if ({currentValueComparison} !== currentValue) {{");
-            }
-            else
-            {
-                sb.AppendLine($"        const currentValue = vm.{camel};");
-                sb.AppendLine("        // Only update if value actually changed");
-                sb.AppendLine($"        if ({currentValueComparison} !== currentValue) {{");
-            }
-            
+            sb.AppendLine($"        if ({comparison}) {{");
             sb.AppendLine($"            vm.updatePropertyValueDebounced('{p.Name}', {convertedValue});");
             sb.AppendLine("        }");
             sb.AppendLine("    });");
