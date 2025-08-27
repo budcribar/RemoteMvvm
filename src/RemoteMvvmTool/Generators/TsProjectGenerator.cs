@@ -54,14 +54,20 @@ public static class TsProjectGenerator
             else if (IsCollectionType(typeStr))
             {
                 sb.AppendLine($"    const {camel}El = document.getElementById('{camel}') as HTMLElement;");
+                sb.AppendLine($"    const {camel}RootOpen = ({camel}El.querySelector('details[data-root]') as HTMLDetailsElement)?.open ?? true;");
+                sb.AppendLine($"    const {camel}ItemOpen: boolean[] = Array.from({camel}El.querySelectorAll('details[data-index]')).map(d => (d as HTMLDetailsElement).open);");
                 sb.AppendLine($"    {camel}El.innerHTML = '';");
                 sb.AppendLine($"    const {camel}Details = document.createElement('details');");
-                sb.AppendLine($"    {camel}Details.open = true;");
+                sb.AppendLine($"    {camel}Details.setAttribute('data-root', '');");
+                sb.AppendLine($"    {camel}Details.open = {camel}RootOpen;");
                 sb.AppendLine($"    const {camel}Summary = document.createElement('summary');");
                 sb.AppendLine($"    {camel}Summary.textContent = '{p.Name}';");
                 sb.AppendLine($"    {camel}Details.appendChild({camel}Summary);");
                 sb.AppendLine($"    vm.{camel}.forEach((item: any, index: number) => {{");
                 sb.AppendLine($"        const itemDetails = document.createElement('details');");
+        
+                sb.AppendLine($"        itemDetails.setAttribute('data-index', String(index));");
+                sb.AppendLine($"        itemDetails.open = {camel}ItemOpen[index] ?? false;");
                 sb.AppendLine($"        const itemSummary = document.createElement('summary');");
                 sb.AppendLine($"        itemSummary.textContent = `{p.Name}[${{index}}]`;");
                 sb.AppendLine($"        itemDetails.appendChild(itemSummary);");
@@ -98,9 +104,11 @@ public static class TsProjectGenerator
             else
             {
                 sb.AppendLine($"    const {camel}El = document.getElementById('{camel}') as HTMLElement;");
+                sb.AppendLine($"    const {camel}RootOpen = ({camel}El.querySelector('details[data-root]') as HTMLDetailsElement)?.open ?? true;");
                 sb.AppendLine($"    {camel}El.innerHTML = '';");
                 sb.AppendLine($"    const {camel}Details = document.createElement('details');");
-                sb.AppendLine($"    {camel}Details.open = true;");
+                sb.AppendLine($"    {camel}Details.setAttribute('data-root', '');");
+                sb.AppendLine($"    {camel}Details.open = {camel}RootOpen;");
                 sb.AppendLine($"    const {camel}Summary = document.createElement('summary');");
                 sb.AppendLine($"    {camel}Summary.textContent = '{p.Name}';");
                 sb.AppendLine($"    {camel}Details.appendChild({camel}Summary);");
