@@ -42,25 +42,33 @@ function computeMaxTempC(deviceName: string | undefined): number {
 
 function buildZonesPayload(): any[] {
     const zonesArr = Array.isArray(vm.zoneList) ? vm.zoneList : [];
+    // Import the enum map
+    const { ThermalStateEnumMap } = require('./HP3LSThermalTestViewModelRemoteClient');
     return zonesArr
         .filter((z: any) => z && (z.isActive === undefined || !!z.isActive))
-        .map((z: any, idx: number) => ({
-            active: z.isActive ?? true,
-            background: z.background ?? '#fafafa',
-            status: String(z.status ?? ''),
-            state: String(z.state ?? ''),
-            progress: Number(z.progress ?? 0),
-            zone: String(z.zone ?? ''),
-            'zone-index': idx,
-            fanSpeed: Number(z.fanSpeed ?? 0),
-            deviceName: z.deviceName ?? 'Device',
-            temperature: Number(z.temperature ?? 0),
-            maxTemp: computeMaxTempC(z.deviceName),
-            processorLoadName: 'Processor Load',
-            processorLoad: Number(z.processorLoad ?? 0),
-            cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
-            // stateDescriptions: can be added if available
-        }));
+        .map((z: any, idx: number) => {
+            const statusStr = (z.status in ThermalStateEnumMap) ? ThermalStateEnumMap[z.status] : String(z.status ?? '');
+            const stateStr = (z.state in ThermalStateEnumMap) ? ThermalStateEnumMap[z.state] : String(z.state ?? '');
+            const displayedStatus = statusStr === 'CheckInProgress' ? stateStr : statusStr;
+            return {
+                active: z.isActive ?? true,
+                background: z.background ?? '#fafafa',
+                status: statusStr,
+                state: stateStr,
+                displayedStatus,
+                progress: Number(z.progress ?? 0),
+                zone: String(z.zone ?? ''),
+                'zone-index': idx,
+                fanSpeed: Number(z.fanSpeed ?? 0),
+                deviceName: z.deviceName ?? 'Device',
+                temperature: Number(z.temperature ?? 0),
+                maxTemp: computeMaxTempC(z.deviceName),
+                processorLoadName: 'Processor Load',
+                processorLoad: Number(z.processorLoad ?? 0),
+                cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
+                // stateDescriptions: can be added if available
+            };
+        });
 }
 
 async function render() {

@@ -92,10 +92,10 @@ export class ThermalZoneElement extends HTMLElement {
         }
         .runtime-properties { text-align: center; }
         .runtime-property {
-          background: #fff;
-          border-radius: 6px;
-          padding: 6px 10px;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+          background: transparent;
+          border-radius: 0;
+          padding: 4px 6px;
+          box-shadow: none;
           text-align: center;
           font-weight: 600;
           min-width: 80px;
@@ -214,8 +214,9 @@ export class ThermalZoneElement extends HTMLElement {
   const maxTemp = this.num('max-temp');
   const zoneLabel = this.getAttribute('zone-label') ?? '';
   const fan = this.num('fan-speed');
-  const primary = status === 'CheckInProgress' ? state : status;
-  propPrimary.textContent = primary;
+  // Prefer displayedStatus attribute if present
+  const displayedStatus = this.getAttribute('displayedstatus');
+  propPrimary.textContent = displayedStatus ?? (status === 'CheckInProgress' ? state : status);
   propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
   propZone.textContent = zoneLabel;
   propFan.textContent = `${fan} RPM`;
