@@ -287,16 +287,26 @@ export class ThermalMainElement extends HTMLElement {
     zonesHost.innerHTML = '';
     try {
       const zonesAttr = this.getAttribute('zones');
+      const zoneMapAttr = this.getAttribute('zone-map');
+      let zoneMap: Record<string, string> = {};
+      if (zoneMapAttr) {
+        try { zoneMap = JSON.parse(zoneMapAttr); } catch {}
+      }
       if (zonesAttr) {
         const zones = JSON.parse(zonesAttr) as Array<any>;
-        for (const z of zones) {
+        for (let i = 0; i < zones.length; i++) {
+          const z = zones[i];
           const el = document.createElement('x-thermal-zone');
           if (z.active !== undefined) el.setAttribute('active', String(!!z.active));
           if (z.background) el.setAttribute('background', z.background);
           if (z.status) el.setAttribute('status', z.status);
           if (z.state) el.setAttribute('state', z.state);
           if (z.progress !== undefined) el.setAttribute('progress', String(z.progress));
-          if (z.zone) el.setAttribute('zone', String(z.zone));
+          if (z.zone) el.setAttribute('zone', z.zone);
+          // Pass mapped zone label instead of the map
+          let zoneLabel = String(i);
+          if (zoneMap && zoneMap[z.zone]) zoneLabel = zoneMap[z.zone];
+          el.setAttribute('zone-label', zoneLabel);
           if (z.fanSpeed !== undefined) el.setAttribute('fan-speed', String(z.fanSpeed));
           if (z.deviceName) el.setAttribute('device-name', z.deviceName);
           if (z.temperature !== undefined) el.setAttribute('temperature', String(z.temperature));
@@ -305,6 +315,7 @@ export class ThermalMainElement extends HTMLElement {
           if (z.processorLoad !== undefined) el.setAttribute('processor-load', String(z.processorLoad));
           if (z.cpuLoadThreshold !== undefined) el.setAttribute('cpu-load-threshold', String(z.cpuLoadThreshold));
           if (z.stateDescriptions) el.setAttribute('state-descriptions', JSON.stringify(z.stateDescriptions));
+          // No longer pass zoneMap
           zonesHost.appendChild(el);
         }
       }

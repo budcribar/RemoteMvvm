@@ -205,12 +205,12 @@ export class ThermalZoneElement extends HTMLElement {
   const runtimeProps = this.root.getElementById('runtimeProps') as HTMLDivElement;
 
   const maxTemp = this.num('max-temp');
-  const zoneIndex = this.getAttribute('zone-index');
+  const zoneLabel = this.getAttribute('zone-label') ?? '';
   const fan = this.num('fan-speed');
   const primary = status === 'CheckInProgress' ? state : status;
   propPrimary.textContent = primary;
   propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
-  propZone.textContent = zoneIndex !== null ? `Zone ${zoneIndex}` : '';
+  propZone.textContent = zoneLabel;
   propFan.textContent = `${fan} RPM`;
 
     // Apply state-based class styling (supports either textual status/state values)

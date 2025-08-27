@@ -11,6 +11,25 @@ import { BoolValue, Int32Value, StringValue } from 'google-protobuf/google/proto
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
 // Enum Mappings
+// Enum mapping for HP.Telemetry.Zone
+export const ZoneMap: Record<number, string> = {
+  0: 'Other',
+  1: 'CPUZ_0',
+  2: 'CPUZ_1',
+  3: 'GFXZ_0',
+  4: 'EXTZ_0',
+  5: 'LOCZ_0',
+  6: 'BATZ_0',
+  7: 'CHGZ_0',
+  8: 'SK1Z_0',
+  9: 'SK2Z_0',
+  10: 'PCHZ_0'
+};
+
+export function getZoneDisplay(value: number): string {
+  return ZoneMap[value] || value.toString();
+}
+
 // Enum mapping for HPSystemsTools.Models.ThermalStateEnum
 export const ThermalStateEnumMap: Record<number, string> = {
   0: 'Unknown',
@@ -44,6 +63,8 @@ export interface ThermalZoneState {
   background: string;
   status: number;
   state: number;
+  stateDescription: string;
+  statusDescription: string;
 }
 
 export interface TestSettingsState {

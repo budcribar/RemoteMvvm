@@ -3,7 +3,7 @@
 // </auto-generated>
 
 import { HP3LSThermalTestViewModelServiceClient } from './generated/HP3LSThermalTestViewModelServiceServiceClientPb';
-import { HP3LSThermalTestViewModelRemoteClient } from './HP3LSThermalTestViewModelRemoteClient';
+import { HP3LSThermalTestViewModelRemoteClient, ZoneMap } from './HP3LSThermalTestViewModelRemoteClient';
 import './components/gauge';
 import './components/readme';
 import './components/thermal-zone';
@@ -50,7 +50,7 @@ function buildZonesPayload(): any[] {
             status: String(z.status ?? ''),
             state: String(z.state ?? ''),
             progress: Number(z.progress ?? 0),
-            zone: z.deviceName ? String(z.deviceName) : String(z.zone ?? ''),
+            zone: String(z.zone ?? ''),
             'zone-index': idx,
             fanSpeed: Number(z.fanSpeed ?? 0),
             deviceName: z.deviceName ?? 'Device',
@@ -80,6 +80,13 @@ async function render() {
         if (vm.cpuTemperatureThreshold != null) main.setAttribute('temp-threshold', String(vm.cpuTemperatureThreshold));
         if (vm.cpuLoadThreshold != null) main.setAttribute('cpu-load-threshold', String(vm.cpuLoadThreshold));
         if (vm.cpuLoadTimeSpan != null) main.setAttribute('cpu-load-time', String(vm.cpuLoadTimeSpan));
+
+        // Pass zone map if available
+        if (typeof ZoneMap === 'object' && ZoneMap !== null) {
+            main.setAttribute('zone-map', JSON.stringify(ZoneMap));
+        } else {
+            main.removeAttribute('zone-map');
+        }
 
         // Zones
         try {
@@ -181,10 +188,6 @@ function ensureReadmeModal(open: boolean, main: HTMLElement) {
 async function init() {
     try {
         await vm.initializeRemote();
-            // Add a 1-second polling timer for live updates (survives codegen)
-        setInterval(() => {
-            vm.refreshState().catch(() => {});
-        }, 1000);
         vm.addChangeListener(render);
         render();
 
