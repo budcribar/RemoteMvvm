@@ -58,18 +58,7 @@ namespace RemoteMvvmTool
             root.AddOption(clientNsOption);
             root.AddOption(runOption);
 
-            bool NeedsGeneration(string outputFile, IEnumerable<string> inputs)
-            {
-                if (!File.Exists(outputFile))
-                    return true;
-                var outTime = File.GetLastWriteTimeUtc(outputFile);
-                foreach (var inp in inputs)
-                {
-                    if (File.Exists(inp) && File.GetLastWriteTimeUtc(inp) > outTime)
-                        return true;
-                }
-                return false;
-            }
+            bool NeedsGeneration(string outputFile, IEnumerable<string> inputs) => true;
 
             root.SetHandler(async (generate, output, protoOutput, vms, protoNs, serviceNameOpt, clientNsOpt, runType) =>
             {
