@@ -82,7 +82,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.zoneList;
         // Only update if value actually changed
-        if (JSON.stringify(vm.zoneList) !== currentValue) {
+        if (JSON.stringify(currentValue) !== newValue) {
             vm.updatePropertyValueDebounced('ZoneList', JSON.parse(newValue));
         }
     });
@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.testSettings;
         // Only update if value actually changed
-        if (JSON.stringify(vm.testSettings) !== currentValue) {
+        if (JSON.stringify(currentValue) !== newValue) {
             vm.updatePropertyValueDebounced('TestSettings', JSON.parse(newValue));
         }
     });
