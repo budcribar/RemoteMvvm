@@ -41,10 +41,76 @@ public static class TsProjectGenerator
         foreach (var p in props)
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
-            var assignExpr = p.TypeString.ToLowerInvariant().Contains("string")
-                ? $"vm.{camel}"
-                : $"JSON.stringify(vm.{camel})";
-            sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).value = {assignExpr};");
+            string typeStr = p.TypeString.ToLowerInvariant();
+            if (IsPrimitiveType(typeStr))
+            {
+                string assignExpr;
+                if (typeStr.Contains("string"))
+                    assignExpr = $"vm.{camel}";
+                else
+                    assignExpr = $"String(vm.{camel})";
+                sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).value = {assignExpr};");
+            }
+            else if (IsCollectionType(typeStr))
+            {
+                sb.AppendLine($"    const {camel}El = document.getElementById('{camel}') as HTMLElement;");
+                sb.AppendLine($"    {camel}El.innerHTML = '';");
+                sb.AppendLine($"    vm.{camel}.forEach((item: any, index: number) => {{");
+                sb.AppendLine($"        const itemDiv = document.createElement('div');");
+                sb.AppendLine($"        Object.entries(item).forEach(([key, value]) => {{");
+                sb.AppendLine($"            const label = document.createElement('label');");
+                sb.AppendLine("            label.textContent = `${key}: `;");
+                sb.AppendLine($"            const input = document.createElement('input');");
+                sb.AppendLine($"            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                sb.AppendLine($"            input.addEventListener('change', async (e) => {{");
+                sb.AppendLine($"                const newVal = (e.target as HTMLInputElement).value;");
+                sb.AppendLine($"                let parsed: any;");
+                sb.AppendLine($"                if (typeof value === 'number') parsed = Number(newVal);");
+                sb.AppendLine($"                else if (typeof value === 'boolean') parsed = newVal.toLowerCase() === 'true';");
+                sb.AppendLine($"                else {{ try {{ parsed = JSON.parse(newVal); }} catch {{ parsed = newVal; }} }}");
+                sb.AppendLine($"                const newCollection = vm.{camel}.map((z: any) => Object.assign({{}}, z));");
+                sb.AppendLine($"                if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {{");
+                sb.AppendLine($"                    (newCollection[index] as any)[key] = parsed;");
+                sb.AppendLine($"                    try {{ await vm.updatePropertyValueDebounced('{p.Name}', newCollection); }}");
+                sb.AppendLine($"                    catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
+                sb.AppendLine($"                }}");
+                sb.AppendLine($"            }});");
+                sb.AppendLine($"            label.appendChild(input);");
+                sb.AppendLine($"            const wrapper = document.createElement('div');");
+                sb.AppendLine($"            wrapper.appendChild(label);");
+                sb.AppendLine($"            itemDiv.appendChild(wrapper);");
+                sb.AppendLine($"        }});");
+                sb.AppendLine($"        {camel}El.appendChild(itemDiv);");
+                sb.AppendLine($"    }});");
+            }
+            else
+            {
+                sb.AppendLine($"    const {camel}El = document.getElementById('{camel}') as HTMLElement;");
+                sb.AppendLine($"    {camel}El.innerHTML = '';");
+                sb.AppendLine($"    Object.entries(vm.{camel} as any).forEach(([key, value]) => {{");
+                sb.AppendLine($"        const label = document.createElement('label');");
+                sb.AppendLine("        label.textContent = `${key}: `;");
+                sb.AppendLine($"        const input = document.createElement('input');");
+                sb.AppendLine($"        input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                sb.AppendLine($"        input.addEventListener('change', async (e) => {{");
+                sb.AppendLine($"            const newVal = (e.target as HTMLInputElement).value;");
+                sb.AppendLine($"            let parsed: any;");
+                sb.AppendLine($"            if (typeof value === 'number') parsed = Number(newVal);");
+                sb.AppendLine($"            else if (typeof value === 'boolean') parsed = newVal.toLowerCase() === 'true';");
+                sb.AppendLine($"            else {{ try {{ parsed = JSON.parse(newVal); }} catch {{ parsed = newVal; }} }}");
+                sb.AppendLine($"            const newObj = Object.assign({{}}, vm.{camel});");
+                sb.AppendLine($"            if (JSON.stringify((newObj as any)[key]) !== JSON.stringify(parsed)) {{");
+                sb.AppendLine($"                (newObj as any)[key] = parsed;");
+                sb.AppendLine($"                try {{ await vm.updatePropertyValueDebounced('{p.Name}', newObj); }}");
+                sb.AppendLine($"                catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
+                sb.AppendLine($"            }}");
+                sb.AppendLine($"        }});");
+                sb.AppendLine($"        label.appendChild(input);");
+                sb.AppendLine($"        const wrapper = document.createElement('div');");
+                sb.AppendLine($"        wrapper.appendChild(label);");
+                sb.AppendLine($"        {camel}El.appendChild(wrapper);");
+                sb.AppendLine($"    }});");
+            }
         }
         sb.AppendLine("    (document.getElementById('connection-status') as HTMLElement).textContent = vm.connectionStatus;");
         sb.AppendLine("}");
@@ -64,48 +130,37 @@ public static class TsProjectGenerator
         foreach (var p in props)
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
-            sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).addEventListener('change', (e) => {{");
+            string typeStr = p.TypeString.ToLowerInvariant();
+            if (!IsPrimitiveType(typeStr)) continue;
+            sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).addEventListener('change', async (e) => {{");
             sb.AppendLine($"        const newValue = (e.target as HTMLInputElement).value;");
-            
-            // Handle type conversion based on property type
+            sb.AppendLine($"        const currentValue = vm.{camel};");
+            sb.AppendLine("        // Only update if value actually changed");
+
+            string comparison;
             string convertedValue;
-            string currentValueComparison;
-            if (p.TypeString.ToLowerInvariant().Contains("int") || p.TypeString.ToLowerInvariant().Contains("number"))
+            if (typeStr.Contains("int") || typeStr.Contains("number"))
             {
                 convertedValue = "Number(newValue)";
-                currentValueComparison = "Number(newValue)";
+                comparison = "Number(newValue) !== currentValue";
             }
-            else if (p.TypeString.ToLowerInvariant().Contains("bool"))
+            else if (typeStr.Contains("bool"))
             {
                 convertedValue = "newValue.toLowerCase() === 'true'";
-                currentValueComparison = "Boolean(newValue.toLowerCase() === 'true')";
+                comparison = "Boolean(newValue.toLowerCase() === 'true') !== currentValue";
             }
-            else if (p.TypeString.ToLowerInvariant().Contains("string"))
+            else // string
             {
                 convertedValue = "newValue";
-                currentValueComparison = "newValue";
-            }
-            else
-            {
-                // For complex types, try to parse as JSON
-                convertedValue = "JSON.parse(newValue)";
-                currentValueComparison = "JSON.stringify(vm." + camel + ")";
+                comparison = "newValue !== currentValue";
             }
 
-            if (p.TypeString.ToLowerInvariant().Contains("string"))
-            {
-                sb.AppendLine($"        const currentValue = vm.{camel};");
-                sb.AppendLine("        // Only update if value actually changed");
-                sb.AppendLine($"        if ({currentValueComparison} !== currentValue) {{");
-            }
-            else
-            {
-                sb.AppendLine($"        const currentValue = vm.{camel};");
-                sb.AppendLine("        // Only update if value actually changed");
-                sb.AppendLine($"        if ({currentValueComparison} !== currentValue) {{");
-            }
-            
-            sb.AppendLine($"            vm.updatePropertyValueDebounced('{p.Name}', {convertedValue});");
+            sb.AppendLine($"        if ({comparison}) {{");
+            sb.AppendLine("            try {");
+            sb.AppendLine($"                await vm.updatePropertyValueDebounced('{p.Name}', {convertedValue});");
+            sb.AppendLine("            } catch (err) {");
+            sb.AppendLine($"                handleError(err, 'Update {p.Name}');");
+            sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine("    });");
         }
@@ -134,6 +189,21 @@ public static class TsProjectGenerator
         return "undefined";
     }
 
+    private static bool IsPrimitiveType(string typeStr)
+    {
+        typeStr = typeStr.ToLowerInvariant();
+        return typeStr.Contains("string") || typeStr.Contains("bool") || typeStr.Contains("int") ||
+               typeStr.Contains("number") || typeStr.Contains("double") || typeStr.Contains("float") ||
+               typeStr.Contains("decimal") || typeStr.Contains("long");
+    }
+
+    private static bool IsCollectionType(string typeStr)
+    {
+        typeStr = typeStr.ToLowerInvariant();
+        return typeStr.Contains("observablecollection") || typeStr.Contains("ienumerable") ||
+               typeStr.Contains("icollection") || typeStr.Contains("list") || typeStr.EndsWith("[]");
+    }
+
     public static string GenerateIndexHtml(string vmName, List<PropertyInfo> props, List<CommandInfo> cmds)
     {
         var sb = new StringBuilder();
@@ -147,7 +217,11 @@ public static class TsProjectGenerator
         foreach (var p in props)
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
-            sb.AppendLine($"    <div><label>{p.Name}: <input id='{camel}'/></label></div>");
+            string typeStr = p.TypeString.ToLowerInvariant();
+            if (IsPrimitiveType(typeStr))
+                sb.AppendLine($"    <div><label>{p.Name}: <input id='{camel}'/></label></div>");
+            else
+                sb.AppendLine($"    <div><label>{p.Name}:</label><div id='{camel}'></div></div>");
         }
         foreach (var cmd in cmds)
         {
