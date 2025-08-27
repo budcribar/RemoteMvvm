@@ -45,10 +45,12 @@ export class ThermalZoneElement extends HTMLElement {
           display: flex;
           flex-flow: column wrap;
           border: 1px solid #ccc;
-          width: 90%;
+          width: 540px;
+          max-width: 98vw;
           border-radius: 8px;
           padding: 12px;
           background: #fafafa;
+          margin: 0 auto;
         }
 
         /* Progress */
@@ -81,20 +83,25 @@ export class ThermalZoneElement extends HTMLElement {
         /* Runtime properties */
         .runtime-properties-container {
           display: flex;
-          flex-flow: row wrap;
-          justify-content: space-evenly;
-          gap: 8px;
-          margin: 8px 0;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          gap: 12px;
+          margin: 8px 0 4px 0;
+          flex-wrap: wrap;
         }
         .runtime-properties { text-align: center; }
         .runtime-property {
           background: #fff;
           border-radius: 6px;
-          padding: 8px;
+          padding: 6px 10px;
           box-shadow: 0 1px 2px rgba(0,0,0,0.06);
           text-align: center;
           font-weight: 600;
-          min-width: 120px;
+          min-width: 80px;
+          max-width: 160px;
+          font-size: 0.98em;
+          white-space: nowrap;
         }
 
         /* Gauges */

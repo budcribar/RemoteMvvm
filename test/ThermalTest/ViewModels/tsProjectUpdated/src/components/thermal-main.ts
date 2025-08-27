@@ -69,8 +69,12 @@ export class ThermalMainElement extends HTMLElement {
         .test-description { /* keep default block; styling optional */ }
         .test-parameters {
           display: flex;
-          flex-flow: row wrap;
-          justify-content: space-evenly;
+          flex-direction: row;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 24px;
+          width: 100%;
+          margin-bottom: 0.5em;
         }
         .show-hide-options {
           display: flex;
@@ -80,9 +84,11 @@ export class ThermalMainElement extends HTMLElement {
         }
         .slider {
           display: flex;
-          flex-flow: column nowrap;
-          justify-content: space-evenly;
-          align-self: center;
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: center;
+          min-width: 220px;
+          max-width: 260px;
           font-size: .8rem;
           background: #fff;
           border-radius: 8px;
@@ -96,12 +102,16 @@ export class ThermalMainElement extends HTMLElement {
         }
         .slider-content {
           display: flex;
-          flex-flow: row nowrap;
-          justify-content: space-evenly;
+          flex-direction: row;
+          justify-content: space-between;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
+          width: 100%;
         }
-        .slider-input input[type=range] { width: 260px; max-width: 60vw; }
+        .slider-input input[type=range] {
+          width: 140px;
+          max-width: 30vw;
+        }
         .slider-label label { font-weight: 600; min-width: 48px; display: inline-block; text-align: right; }
         .thermal-zones-container {
           display: flex;
