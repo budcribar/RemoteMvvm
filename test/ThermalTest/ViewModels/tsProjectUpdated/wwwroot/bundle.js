@@ -2375,7 +2375,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   HP3LSThermalTestViewModelRemoteClient: () => (/* binding */ HP3LSThermalTestViewModelRemoteClient),
 /* harmony export */   ThermalStateEnumMap: () => (/* binding */ ThermalStateEnumMap),
-/* harmony export */   getThermalStateEnumDisplay: () => (/* binding */ getThermalStateEnumDisplay)
+/* harmony export */   ZoneMap: () => (/* binding */ ZoneMap),
+/* harmony export */   getThermalStateEnumDisplay: () => (/* binding */ getThermalStateEnumDisplay),
+/* harmony export */   getZoneDisplay: () => (/* binding */ getZoneDisplay)
 /* harmony export */ });
 /* harmony import */ var _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/HP3LSThermalTestViewModelService_pb.js */ "./src/generated/HP3LSThermalTestViewModelService_pb.js");
 /* harmony import */ var _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__);
@@ -2396,6 +2398,23 @@ __webpack_require__.r(__webpack_exports__);
 
 
 // Enum Mappings
+// Enum mapping for HP.Telemetry.Zone
+const ZoneMap = {
+    0: 'Other',
+    1: 'CPUZ_0',
+    2: 'CPUZ_1',
+    3: 'GFXZ_0',
+    4: 'EXTZ_0',
+    5: 'LOCZ_0',
+    6: 'BATZ_0',
+    7: 'CHGZ_0',
+    8: 'SK1Z_0',
+    9: 'SK2Z_0',
+    10: 'PCHZ_0'
+};
+function getZoneDisplay(value) {
+    return ZoneMap[value] || value.toString();
+}
 // Enum mapping for HPSystemsTools.Models.ThermalStateEnum
 const ThermalStateEnumMap = {
     0: 'Unknown',
@@ -3355,9 +3374,18 @@ class ThermalMainElement extends HTMLElement {
         zonesHost.innerHTML = '';
         try {
             const zonesAttr = this.getAttribute('zones');
+            const zoneMapAttr = this.getAttribute('zone-map');
+            let zoneMap = {};
+            if (zoneMapAttr) {
+                try {
+                    zoneMap = JSON.parse(zoneMapAttr);
+                }
+                catch { }
+            }
             if (zonesAttr) {
                 const zones = JSON.parse(zonesAttr);
-                for (const z of zones) {
+                for (let i = 0; i < zones.length; i++) {
+                    const z = zones[i];
                     const el = document.createElement('x-thermal-zone');
                     if (z.active !== undefined)
                         el.setAttribute('active', String(!!z.active));
@@ -3370,7 +3398,12 @@ class ThermalMainElement extends HTMLElement {
                     if (z.progress !== undefined)
                         el.setAttribute('progress', String(z.progress));
                     if (z.zone)
-                        el.setAttribute('zone', String(z.zone));
+                        el.setAttribute('zone', String(i));
+                    // Pass mapped zone label instead of the map
+                    let zoneLabel = String(i);
+                    if (zoneMap && zoneMap[i])
+                        zoneLabel = zoneMap[i];
+                    el.setAttribute('zone-label', zoneLabel);
                     if (z.fanSpeed !== undefined)
                         el.setAttribute('fan-speed', String(z.fanSpeed));
                     if (z.deviceName)
@@ -3387,6 +3420,7 @@ class ThermalMainElement extends HTMLElement {
                         el.setAttribute('cpu-load-threshold', String(z.cpuLoadThreshold));
                     if (z.stateDescriptions)
                         el.setAttribute('state-descriptions', JSON.stringify(z.stateDescriptions));
+                    // No longer pass zoneMap
                     zonesHost.appendChild(el);
                 }
             }
@@ -3607,12 +3641,12 @@ class ThermalZoneElement extends HTMLElement {
         const propFan = this.root.getElementById('propFan');
         const runtimeProps = this.root.getElementById('runtimeProps');
         const maxTemp = this.num('max-temp');
-        const zoneIndex = this.getAttribute('zone-index');
+        const zoneLabel = this.getAttribute('zone-label') ?? '';
         const fan = this.num('fan-speed');
         const primary = status === 'CheckInProgress' ? state : status;
         propPrimary.textContent = primary;
         propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
-        propZone.textContent = zoneIndex !== null ? `Zone ${zoneIndex}` : '';
+        propZone.textContent = zoneLabel;
         propFan.textContent = `${fan} RPM`;
         // Apply state-based class styling (supports either textual status/state values)
         const sanitize = (s) => (s || '').toString().replace(/\s+/g, '').replace(/[^\w-]/g, '');
@@ -6955,10 +6989,6 @@ function ensureReadmeModal(open, main) {
 async function init() {
     try {
         await vm.initializeRemote();
-        // Add a 1-second polling timer for live updates (survives codegen)
-        setInterval(() => {
-            vm.refreshState().catch(() => { });
-        }, 1000);
         vm.addChangeListener(render);
         render();
         // Add event listeners for all VM properties

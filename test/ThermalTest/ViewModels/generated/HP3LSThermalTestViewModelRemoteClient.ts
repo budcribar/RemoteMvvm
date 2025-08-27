@@ -63,6 +63,8 @@ export interface ThermalZoneState {
   background: string;
   status: number;
   state: number;
+  stateDescription: string;
+  statusDescription: string;
 }
 
 export interface TestSettingsState {

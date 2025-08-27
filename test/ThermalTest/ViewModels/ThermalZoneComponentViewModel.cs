@@ -4,21 +4,28 @@ using HPSystemsTools.Models;
 using HPSystemsTools.Services;
 using Microsoft.AspNetCore.Components;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace HPSystemsTools.ViewModels
 {
     public partial class ThermalZoneComponentViewModel : ObservableObject
     {
-        private readonly ThermalZoneService _thermalZoneService;
+        private ThermalZoneService? _thermalZoneService;
         private TestSettingsModel _testSettings = new();
 
         [ObservableProperty]
         public partial Zone Zone { get; set; }
+
+        partial void OnZoneChanged(Zone value)
+        {
+            _thermalZoneService = new ThermalZoneService(value);
+        }
+
         [ObservableProperty]
         public partial bool IsActive { get; set; }
         [ObservableProperty]
-        public partial string DeviceName { get; set; }
+        public partial string DeviceName { get; set; } = "";
         [ObservableProperty]
         public partial int Temperature { get; set; }
         [ObservableProperty]
@@ -38,15 +45,62 @@ namespace HPSystemsTools.ViewModels
         [ObservableProperty]
         public partial ThermalStateEnum State { get; set; }
 
+        private string _stateDescription = "Unknown state";
+        public string StateDescription
+        {
+            get => _stateDescription;
+            private set => SetProperty(ref _stateDescription, value);
+        }
+
+        partial void OnStateChanged(ThermalStateEnum oldValue, ThermalStateEnum newValue)
+        {
+            StateDescription = StateDescriptions.TryGetValue(newValue, out var desc)
+                ? desc
+                : "Unknown state";
+        }
+
+        private string _statusDescription = "Unknown status";
+        public string StatusDescription
+        {
+            get => _statusDescription;
+            private set => SetProperty(ref _statusDescription, value);
+        }
+
+        private static readonly Dictionary<ThermalStateEnum, string> StateDescriptions = new()
+        {
+            {ThermalStateEnum.Unknown, "Initializing" },
+            {ThermalStateEnum.MaybeRunningHot, "Unsupported processor. The unit may be running hot." },
+            {ThermalStateEnum.MaybeOk, "Unsupported processor. The thermal mechanism appears functional." },
+            {ThermalStateEnum.RunningHot, "The unit may be running hot." },
+            {ThermalStateEnum.Ok, "The thermal mechanism appears functional." },
+            {ThermalStateEnum.StressLevelExceeded, "The operational conditions for the test are outside the allowed boundaries. Try closing some applications to reduce the processor load." },
+            {ThermalStateEnum.Pass, "The thermal mechanism appears functional." },
+            {ThermalStateEnum.Fail, "The unit is running hot. Please check the processor cooling solution." },
+            {ThermalStateEnum.MaybePass, "Unsupported processor. The thermal mechanism appears functional." },
+            {ThermalStateEnum.MaybeFail, "Unsupported processor. The unit may be running hot." },
+            {ThermalStateEnum.CheckInProgress, "Please wait for the test to complete." },
+            {ThermalStateEnum.Reset, "The operational conditions for the test are outside the allowed boundaries. Try closing some applications to reduce the processor load. The test will resume once operational conditions are met." }
+        };
+
+        partial void OnStatusChanged(ThermalStateEnum oldValue, ThermalStateEnum newValue)
+        {
+            StatusDescription = StateDescriptions.TryGetValue(newValue, out var desc)
+                ? desc
+                : "Unknown status";
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ThermalZoneComponentViewModel"/> class.
         /// </summary>
-        public ThermalZoneComponentViewModel(Zone zone)
-        {
-            Zone = zone;
-            _thermalZoneService = new ThermalZoneService(zone);
-        }
+        //public ThermalZoneComponentViewModel(Zone zone)
+        //{
+        //    Zone = zone;
+        //    _thermalZoneService = new ThermalZoneService(zone);
+        //}
 
+        public ThermalZoneComponentViewModel()
+        {
+        }
         /// <summary>
         /// Called when the component is initialized.
         /// </summary>

@@ -19,11 +19,7 @@ namespace HPSystemsTools.ViewModels
         {
             TestSettings = new TestSettingsModel();
            
-            var zones = new [] { new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_0 }, new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_1 } };
-
-            Zones = zones.ToDictionary(z => z.Zone, z => z);
-            ZoneList = new ObservableCollection<ThermalZoneComponentViewModel>(zones);
-
+        
             CpuLoadThreshold = TestSettings.CpuLoadThreshold;
             CpuTemperatureThreshold = TestSettings.CpuTemperatureThreshold;
             CpuLoadTimeSpan = TestSettings.CpuLoadTimeSpan;
@@ -83,6 +79,13 @@ namespace HPSystemsTools.ViewModels
         {
             _test = test;
             Instructions = _test?.Localized?.Instructions ?? "";
+            var zones = new[] { new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_0 }, new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_1 } };
+
+            Zones = zones.ToDictionary(z => z.Zone, z => z);
+
+            foreach (var z in zones)
+                ZoneList.Add(z);
+
         }
 
         public void OnNext(ITelemetryReading telemetry)

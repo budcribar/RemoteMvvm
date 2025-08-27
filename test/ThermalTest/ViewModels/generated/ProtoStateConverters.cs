@@ -27,6 +27,8 @@ public static class ProtoStateConverters
         state.Background = model.Background;
         state.Status = (int)model.Status;
         state.State = (int)model.State;
+        state.StateDescription = model.StateDescription;
+        state.StatusDescription = model.StatusDescription;
         return state;
     }
 

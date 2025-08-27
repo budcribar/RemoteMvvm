@@ -37,6 +37,8 @@ message ThermalZoneComponentViewModelState {
   string background = 10; // Original C#: string Background
   int32 status = 11; // Original C#: HPSystemsTools.Models.ThermalStateEnum Status
   int32 state = 12; // Original C#: HPSystemsTools.Models.ThermalStateEnum State
+  string state_description = 13; // Original C#: string StateDescription
+  string status_description = 14; // Original C#: string StatusDescription
 }
 
 message TestSettingsModelState {
