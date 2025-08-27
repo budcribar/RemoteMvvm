@@ -87,10 +87,16 @@ public class TsProjectGeneratorTests
             new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
             new("TestSettings", "TestSettingsModel", null!)
         };
-        string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, new List<CommandInfo>());
+        var cmds = new List<CommandInfo>
+        {
+            new("DoWork", "DoWorkCommand", new List<ParameterInfo>(), false)
+        };
+        string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, cmds);
         Assert.Contains("JSON.stringify(vm.zoneList, null, 2)", ts);
         Assert.Contains("JSON.stringify(vm.testSettings, null, 2)", ts);
-        Assert.Contains("JSON.stringify(currentValue) !== newValue", ts);
+        Assert.Contains("JSON.stringify(currentValue, null, 2) !== newValue", ts);
+        Assert.Contains("await vm.updatePropertyValueDebounced('ZoneList'", ts);
+        Assert.Contains("await vm.doWork", ts);
     }
 }
 

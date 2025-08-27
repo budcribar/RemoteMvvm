@@ -69,7 +69,7 @@ public static class TsProjectGenerator
         foreach (var p in props)
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
-            sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).addEventListener('change', (e) => {{");
+            sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).addEventListener('change', async (e) => {{");
             sb.AppendLine($"        const newValue = (e.target as HTMLInputElement).value;");
             sb.AppendLine($"        const currentValue = vm.{camel};");
             sb.AppendLine("        // Only update if value actually changed");
@@ -95,11 +95,15 @@ public static class TsProjectGenerator
             else
             {
                 convertedValue = "JSON.parse(newValue)";
-                comparison = "JSON.stringify(currentValue) !== newValue";
+                comparison = "JSON.stringify(currentValue, null, 2) !== newValue";
             }
 
             sb.AppendLine($"        if ({comparison}) {{");
-            sb.AppendLine($"            vm.updatePropertyValueDebounced('{p.Name}', {convertedValue});");
+            sb.AppendLine("            try {");
+            sb.AppendLine($"                await vm.updatePropertyValueDebounced('{p.Name}', {convertedValue});");
+            sb.AppendLine("            } catch (err) {");
+            sb.AppendLine($"                handleError(err, 'Update {p.Name}');");
+            sb.AppendLine("            }");
             sb.AppendLine("        }");
             sb.AppendLine("    });");
         }
