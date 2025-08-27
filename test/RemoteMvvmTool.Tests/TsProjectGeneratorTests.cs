@@ -93,6 +93,7 @@ public class TsProjectGeneratorTests
         };
         string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, cmds);
         Assert.Contains("vm.zoneList.forEach", ts);
+        Assert.Contains("document.createElement('details')", ts);
         Assert.Contains("Object.entries(vm.testSettings", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('ZoneList'", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('TestSettings'", ts);
@@ -110,6 +111,7 @@ public class TsProjectGeneratorTests
         string html = TsProjectGenerator.GenerateIndexHtml("Vm", props, new List<CommandInfo>());
         Assert.Contains("<div id='zoneList'></div>", html);
         Assert.Contains("<div id='testSettings'></div>", html);
+        Assert.Contains("<style>", html);
         Assert.DoesNotContain("<input id='zoneList'", html);
     }
 }
