@@ -15,6 +15,7 @@ namespace PeakSWC.Mvvm.Remote
         public string[]? AllowedMethods { get; set; } = null;
         public string[]? ExposedHeaders { get; set; } = null;
         public string? LogLevel { get; set; } = "Debug";
+        public string RunString { get; set; } = "WPF";
     }
 
     public class ClientOptions
