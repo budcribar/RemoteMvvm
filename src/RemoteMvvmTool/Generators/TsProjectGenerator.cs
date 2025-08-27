@@ -55,11 +55,22 @@ public static class TsProjectGenerator
             {
                 sb.AppendLine($"    const {camel}El = document.getElementById('{camel}') as HTMLElement;");
                 sb.AppendLine($"    {camel}El.innerHTML = '';");
+                sb.AppendLine($"    const {camel}Details = document.createElement('details');");
+                sb.AppendLine($"    {camel}Details.open = true;");
+                sb.AppendLine($"    const {camel}Summary = document.createElement('summary');");
+                sb.AppendLine($"    {camel}Summary.textContent = '{p.Name}';");
+                sb.AppendLine($"    {camel}Details.appendChild({camel}Summary);");
                 sb.AppendLine($"    vm.{camel}.forEach((item: any, index: number) => {{");
-                sb.AppendLine($"        const itemDiv = document.createElement('div');");
+                sb.AppendLine($"        const itemDetails = document.createElement('details');");
+                sb.AppendLine($"        const itemSummary = document.createElement('summary');");
+                sb.AppendLine($"        itemSummary.textContent = `{p.Name}[${{index}}]`;");
+                sb.AppendLine($"        itemDetails.appendChild(itemSummary);");
+                sb.AppendLine($"        const container = document.createElement('div');");
                 sb.AppendLine($"        Object.entries(item).forEach(([key, value]) => {{");
-                sb.AppendLine($"            const label = document.createElement('label');");
-                sb.AppendLine("            label.textContent = `${key}: `;");
+                sb.AppendLine($"            const field = document.createElement('div');");
+                sb.AppendLine($"            field.className = 'field';");
+                sb.AppendLine($"            const label = document.createElement('span');");
+                sb.AppendLine("            label.textContent = key;");
                 sb.AppendLine($"            const input = document.createElement('input');");
                 sb.AppendLine($"            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
                 sb.AppendLine($"            input.addEventListener('change', async (e) => {{");
@@ -75,21 +86,30 @@ public static class TsProjectGenerator
                 sb.AppendLine($"                    catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
                 sb.AppendLine($"                }}");
                 sb.AppendLine($"            }});");
-                sb.AppendLine($"            label.appendChild(input);");
-                sb.AppendLine($"            const wrapper = document.createElement('div');");
-                sb.AppendLine($"            wrapper.appendChild(label);");
-                sb.AppendLine($"            itemDiv.appendChild(wrapper);");
+                sb.AppendLine($"            field.appendChild(label);");
+                sb.AppendLine($"            field.appendChild(input);");
+                sb.AppendLine($"            container.appendChild(field);");
                 sb.AppendLine($"        }});");
-                sb.AppendLine($"        {camel}El.appendChild(itemDiv);");
+                sb.AppendLine($"        itemDetails.appendChild(container);");
+                sb.AppendLine($"        {camel}Details.appendChild(itemDetails);");
                 sb.AppendLine($"    }});");
+                sb.AppendLine($"    {camel}El.appendChild({camel}Details);");
             }
             else
             {
                 sb.AppendLine($"    const {camel}El = document.getElementById('{camel}') as HTMLElement;");
                 sb.AppendLine($"    {camel}El.innerHTML = '';");
+                sb.AppendLine($"    const {camel}Details = document.createElement('details');");
+                sb.AppendLine($"    {camel}Details.open = true;");
+                sb.AppendLine($"    const {camel}Summary = document.createElement('summary');");
+                sb.AppendLine($"    {camel}Summary.textContent = '{p.Name}';");
+                sb.AppendLine($"    {camel}Details.appendChild({camel}Summary);");
+                sb.AppendLine($"    const container = document.createElement('div');");
                 sb.AppendLine($"    Object.entries(vm.{camel} as any).forEach(([key, value]) => {{");
-                sb.AppendLine($"        const label = document.createElement('label');");
-                sb.AppendLine("        label.textContent = `${key}: `;");
+                sb.AppendLine($"        const field = document.createElement('div');");
+                sb.AppendLine($"        field.className = 'field';");
+                sb.AppendLine($"        const label = document.createElement('span');");
+                sb.AppendLine("        label.textContent = key;");
                 sb.AppendLine($"        const input = document.createElement('input');");
                 sb.AppendLine($"        input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
                 sb.AppendLine($"        input.addEventListener('change', async (e) => {{");
@@ -105,11 +125,12 @@ public static class TsProjectGenerator
                 sb.AppendLine($"                catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
                 sb.AppendLine($"            }}");
                 sb.AppendLine($"        }});");
-                sb.AppendLine($"        label.appendChild(input);");
-                sb.AppendLine($"        const wrapper = document.createElement('div');");
-                sb.AppendLine($"        wrapper.appendChild(label);");
-                sb.AppendLine($"        {camel}El.appendChild(wrapper);");
+                sb.AppendLine($"        field.appendChild(label);");
+                sb.AppendLine($"        field.appendChild(input);");
+                sb.AppendLine($"        container.appendChild(field);");
                 sb.AppendLine($"    }});");
+                sb.AppendLine($"    {camel}Details.appendChild(container);");
+                sb.AppendLine($"    {camel}El.appendChild({camel}Details);");
             }
         }
         sb.AppendLine("    (document.getElementById('connection-status') as HTMLElement).textContent = vm.connectionStatus;");
@@ -212,6 +233,14 @@ public static class TsProjectGenerator
         sb.AppendLine("<html lang=\"en\">\n<head>");
         sb.AppendLine("    <meta charset=\"utf-8\" />");
         sb.AppendLine($"    <title>{vmName} Client</title>");
+        sb.AppendLine("    <style>");
+        sb.AppendLine("        body { font-family: Arial, sans-serif; margin: 20px; }");
+        sb.AppendLine("        .field { margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }");
+        sb.AppendLine("        .field label span, .field span { font-weight: 600; min-width: 150px; }");
+        sb.AppendLine("        details { border: 1px solid #ccc; border-radius: 4px; padding: 8px; margin-bottom: 8px; }");
+        sb.AppendLine("        details > summary { cursor: pointer; }");
+        sb.AppendLine("        #connection-status { margin-top: 10px; font-weight: 600; }");
+        sb.AppendLine("    </style>");
         sb.AppendLine("</head>\n<body>");
         sb.AppendLine("    <h3>Remote ViewModel</h3>");
         foreach (var p in props)
@@ -219,9 +248,9 @@ public static class TsProjectGenerator
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
             string typeStr = p.TypeString.ToLowerInvariant();
             if (IsPrimitiveType(typeStr))
-                sb.AppendLine($"    <div><label>{p.Name}: <input id='{camel}'/></label></div>");
+                sb.AppendLine($"    <div class='field'><label>{p.Name}: <input id='{camel}'/></label></div>");
             else
-                sb.AppendLine($"    <div><label>{p.Name}:</label><div id='{camel}'></div></div>");
+                sb.AppendLine($"    <div id='{camel}'></div>");
         }
         foreach (var cmd in cmds)
         {
