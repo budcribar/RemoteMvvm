@@ -263,9 +263,20 @@ export class ThermalZoneElement extends HTMLElement {
 
     // Details
     const details = this.root.getElementById('details') as HTMLDivElement;
-    const sdStatus = this.desc[status] ?? status;
-    const sdState = this.desc[state] ?? state;
-    const detailText = status === 'CheckInProgress' ? `${sdStatus} ${sdState}`.trim() : sdStatus;
+    // Use statusDescription and stateDescription attributes if present
+    const statusDescription = this.getAttribute('statusdescription') || '';
+    const stateDescription = this.getAttribute('statedescription') || '';
+    let detailText = '';
+    if (status === 'CheckInProgress') {
+      // If both are empty, show a default message
+      if (!statusDescription && !stateDescription) {
+        detailText = 'Please wait for the test to complete. Initializing';
+      } else {
+        detailText = `${statusDescription}${stateDescription}`.trim();
+      }
+    } else {
+      detailText = statusDescription || status;
+    }
     details.textContent = detailText;
   }
 }

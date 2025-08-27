@@ -66,6 +66,8 @@ function buildZonesPayload(): any[] {
                 processorLoadName: 'Processor Load',
                 processorLoad: Number(z.processorLoad ?? 0),
                 cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
+                statusDescription: z.statusDescription ?? '',
+                stateDescription: z.stateDescription ?? '',
                 // stateDescriptions: can be added if available
             };
         });
