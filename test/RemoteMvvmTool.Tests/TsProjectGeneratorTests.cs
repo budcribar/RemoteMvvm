@@ -92,11 +92,25 @@ public class TsProjectGeneratorTests
             new("DoWork", "DoWorkCommand", new List<ParameterInfo>(), false)
         };
         string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, cmds);
-        Assert.Contains("JSON.stringify(vm.zoneList, null, 2)", ts);
-        Assert.Contains("JSON.stringify(vm.testSettings, null, 2)", ts);
-        Assert.Contains("JSON.stringify(currentValue, null, 2) !== newValue", ts);
+        Assert.Contains("vm.zoneList.forEach", ts);
+        Assert.Contains("Object.entries(vm.testSettings", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('ZoneList'", ts);
+        Assert.Contains("await vm.updatePropertyValueDebounced('TestSettings'", ts);
         Assert.Contains("await vm.doWork", ts);
+    }
+
+    [Fact]
+    public void GenerateIndexHtml_UsesContainersForComplexTypes()
+    {
+        var props = new List<PropertyInfo>
+        {
+            new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
+            new("TestSettings", "TestSettingsModel", null!)
+        };
+        string html = TsProjectGenerator.GenerateIndexHtml("Vm", props, new List<CommandInfo>());
+        Assert.Contains("<div id='zoneList'></div>", html);
+        Assert.Contains("<div id='testSettings'></div>", html);
+        Assert.DoesNotContain("<input id='zoneList'", html);
     }
 }
 
