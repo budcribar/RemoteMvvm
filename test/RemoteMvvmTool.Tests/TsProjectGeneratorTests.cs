@@ -98,6 +98,8 @@ public class TsProjectGeneratorTests
         Assert.Contains("await vm.updatePropertyValueDebounced('ZoneList'", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('TestSettings'", ts);
         Assert.Contains("await vm.doWork", ts);
+        Assert.Contains("querySelector('details[data-root]')", ts);
+        Assert.Contains("querySelectorAll('details[data-index]')", ts);
     }
 
     [Fact]
