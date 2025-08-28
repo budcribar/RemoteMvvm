@@ -33,31 +33,11 @@ namespace HPSystemsTools.ViewModels
         private GrpcChannel? _channel;
         private HPSystemsTools.ViewModels.RemoteClients.HP3LSThermalTestViewModelRemoteClient? _remoteClient;
 
-        // Auto-generated nested property change handlers for ZoneList
-        private void ZoneList_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-                foreach (HPSystemsTools.ViewModels.ThermalZoneComponentViewModel item in e.NewItems)
-                    item.PropertyChanged += ZoneList_ItemPropertyChanged;
-            if (e.OldItems != null)
-                foreach (HPSystemsTools.ViewModels.ThermalZoneComponentViewModel item in e.OldItems)
-                    item.PropertyChanged -= ZoneList_ItemPropertyChanged;
-        }
-
-        private void ZoneList_ItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            var index = ZoneList.IndexOf((HPSystemsTools.ViewModels.ThermalZoneComponentViewModel)sender!);
-            OnPropertyChanged($"ZoneList[{index}].{e.PropertyName}");
-        }
-
         public HP3LSThermalTestViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
             _grpcService = new HP3LSThermalTestViewModelGrpcServiceImpl(this);
-
-            // Auto-generated event wiring for nested property changes
-            ZoneList.CollectionChanged += ZoneList_CollectionChanged;
 
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);

@@ -63,11 +63,11 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             private set => SetProperty(ref _cpuLoadTimeSpan, value);
         }
 
-        private System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> _zoneList = default!;
-        public System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel> ZoneList
+        private HPSystemsTools.ViewModels.ZoneCollection _zones = default!;
+        public HPSystemsTools.ViewModels.ZoneCollection Zones
         {
-            get => _zoneList;
-            private set => SetProperty(ref _zoneList, value);
+            get => _zones;
+            private set => SetProperty(ref _zones, value);
         }
 
         private HPSystemsTools.Models.TestSettingsModel _testSettings = default!;
@@ -120,7 +120,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                 this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
                                 this.CpuLoadThreshold = state.CpuLoadThreshold;
                                 this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
-                                this.ZoneList = new System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.ZoneList.Select(ProtoStateConverters.FromProto));
+                                this.Zones = new HPSystemsTools.ViewModels.ZoneCollection(state.Zones.Select(ProtoStateConverters.FromProto));
                                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                                 this.ShowDescription = state.ShowDescription;
                                 this.ShowReadme = state.ShowReadme;
@@ -163,7 +163,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
                 this.CpuLoadThreshold = state.CpuLoadThreshold;
                 this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
-                this.ZoneList = new System.Collections.ObjectModel.ObservableCollection<HPSystemsTools.ViewModels.ThermalZoneComponentViewModel>(state.ZoneList.Select(ProtoStateConverters.FromProto));
+                this.Zones = new HPSystemsTools.ViewModels.ZoneCollection(state.Zones.Select(ProtoStateConverters.FromProto));
                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                 this.ShowDescription = state.ShowDescription;
                 this.ShowReadme = state.ShowReadme;
@@ -235,8 +235,8 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                      if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadThreshold = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(CpuLoadTimeSpan):
                      if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadTimeSpan = (int)update.NewValue.Unpack<Int32Value>().Value; break;
-                                   case nameof(ZoneList):
-                                       Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for ZoneList with WKT Any not fully implemented or is Any."); break;
+                                   case nameof(Zones):
+                                       Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for Zones with WKT Any not fully implemented or is Any."); break;
                                    case nameof(TestSettings):
                                        Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for TestSettings with WKT Any not fully implemented or is Any."); break;
                                    case nameof(ShowDescription):

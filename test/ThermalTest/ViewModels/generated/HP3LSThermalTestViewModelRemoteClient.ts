@@ -84,7 +84,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
     cpuTemperatureThreshold: number;
     cpuLoadThreshold: number;
     cpuLoadTimeSpan: number;
-    zoneList: ThermalZoneState[];
+    zones: ThermalZoneState[];
     testSettings: TestSettingsState;
     showDescription: boolean;
     showReadme: boolean;
@@ -119,7 +119,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zoneList = (state as any).getZoneListList().map((v:any) => v.toObject());
+        this.zones = (state as any).getZonesList().map((v:any) => v.toObject());
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
@@ -135,7 +135,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zoneList = (state as any).getZoneListList().map((v:any) => v.toObject());
+        this.zones = (state as any).getZonesList().map((v:any) => v.toObject());
         this.testSettings = (state as any).getTestSettings()?.toObject();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();

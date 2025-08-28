@@ -86,13 +86,13 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             state.CpuLoadTimeSpan = propValue;
         }
         catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property CpuLoadTimeSpan to state.CpuLoadTimeSpan: " + ex.ToString()); }
-        // Mapping property: ZoneList to state.ZoneList
+        // Mapping property: Zones to state.Zones
         try
         {
-            var propValue = _viewModel.ZoneList;
-            if (propValue != null) state.ZoneList.AddRange(propValue.Where(e => e != null).Select(HPSystemsTools.ViewModels.ProtoStateConverters.ToProto).Where(s => s != null));
+            var propValue = _viewModel.Zones;
+            if (propValue != null) state.Zones.AddRange(propValue.Where(e => e != null).Select(HPSystemsTools.ViewModels.ProtoStateConverters.ToProto).Where(s => s != null));
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property ZoneList to state.ZoneList: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine("[GrpcService:HP3LSThermalTestViewModel] Error mapping property Zones to state.Zones: " + ex.ToString()); }
         // Mapping property: TestSettings to state.TestSettings
         try
         {

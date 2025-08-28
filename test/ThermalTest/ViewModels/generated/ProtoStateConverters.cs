@@ -36,17 +36,6 @@ public static class ProtoStateConverters
     {
         var model = new HPSystemsTools.ViewModels.ThermalZoneComponentViewModel();
         model.Zone = (HP.Telemetry.Zone)state.Zone;
-        model.IsActive = state.IsActive;
-        model.DeviceName = state.DeviceName;
-        model.Temperature = state.Temperature;
-        model.ProcessorLoad = state.ProcessorLoad;
-        model.FanSpeed = state.FanSpeed;
-        model.SecondsInState = state.SecondsInState;
-        model.FirstSeenInState = state.FirstSeenInState?.ToDateTime() ?? DateTime.MinValue;
-        model.Progress = state.Progress;
-        model.Background = state.Background;
-        model.Status = (HPSystemsTools.Models.ThermalStateEnum)state.Status;
-        model.State = (HPSystemsTools.Models.ThermalStateEnum)state.State;
         return model;
     }
 
