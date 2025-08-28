@@ -129,7 +129,7 @@ public static class TsProjectGenerator
                 sb.AppendLine($"    const {camel}Summary = document.createElement('summary');");
                 sb.AppendLine($"    {camel}Summary.textContent = '{p.Name}';");
                 sb.AppendLine($"    {camel}Details.appendChild({camel}Summary);");
-                sb.AppendLine($"    const container = document.createElement('div');");
+                sb.AppendLine($"    const {camel}Container = document.createElement('div');");
                 sb.AppendLine($"    Object.entries(vm.{camel} as any).forEach(([key, value]) => {{");
                 sb.AppendLine($"        const field = document.createElement('div');");
                 sb.AppendLine($"        field.className = 'field';");
@@ -158,9 +158,9 @@ public static class TsProjectGenerator
                 sb.AppendLine($"        }});");
                 sb.AppendLine($"        field.appendChild(label);");
                 sb.AppendLine($"        field.appendChild(input);");
-                sb.AppendLine($"        container.appendChild(field);");
+                sb.AppendLine($"        {camel}Container.appendChild(field);");
                 sb.AppendLine($"    }});");
-                sb.AppendLine($"    {camel}Details.appendChild(container);");
+                sb.AppendLine($"    {camel}Details.appendChild({camel}Container);");
                 sb.AppendLine($"    {camel}El.appendChild({camel}Details);");
             }
         }
