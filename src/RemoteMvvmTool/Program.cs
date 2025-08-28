@@ -39,7 +39,7 @@ namespace RemoteMvvmTool
         public static async Task<int> Main(string[] args)
         {
             Environment.ExitCode = 0;
-            var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts,tsproject");
+            var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts,tsproject,csproject");
             var outputOption = new Option<string>("--output", () => "generated", "Output directory for generated code files");
             var protoOutputOption = new Option<string>("--protoOutput", () => "protos", "Directory for generated .proto file");
             var vmArgument = new Argument<List<string>>("viewmodels", "ViewModel .cs files") { Arity = ArgumentArity.OneOrMore };
@@ -67,6 +67,7 @@ namespace RemoteMvvmTool
                 bool genServer = gens.Contains("server") || gens.Contains("all");
                 bool genClient = gens.Contains("client") || gens.Contains("all");
                 bool genTsProject = gens.Contains("tsproject");
+                bool genCsProject = gens.Contains("csproject");
                 bool genTs = gens.Contains("ts") || gens.Contains("all") || gens.Contains("tsclient") || genTsProject;
 
                 var baseDir = Environment.CurrentDirectory;
@@ -171,6 +172,26 @@ namespace RemoteMvvmTool
                     await File.WriteAllTextAsync(readmePath, TsProjectGenerator.GenerateReadme(result.ViewModelName));
                 }
                 string vmNamespaceStr = result.ViewModelSymbol?.ContainingNamespace.ToDisplayString() ?? string.Empty;
+                if (genCsProject)
+                {
+                    string projDir = Path.Combine(output, "csProject");
+                    Directory.CreateDirectory(projDir);
+                    string csProj = CsProjectGenerator.GenerateCsProj(result.ViewModelName, serviceName, runType);
+                    await File.WriteAllTextAsync(Path.Combine(projDir, result.ViewModelName + ".csproj"), csProj);
+                    string programCs = CsProjectGenerator.GenerateProgramCs(result.ViewModelName, runType, protoNamespace, serviceName, clientNamespace, result.Properties, result.Commands);
+                    await File.WriteAllTextAsync(Path.Combine(projDir, "Program.cs"), programCs);
+                    string clientPathProj = Path.Combine(projDir, result.ViewModelName + "RemoteClient.cs");
+                    var clientProj = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
+                    await File.WriteAllTextAsync(clientPathProj, clientProj);
+                    var rootTypesProj = result.Properties.Select(p => p.FullTypeSymbol!)
+                        .Concat(result.Commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!)));
+                    var convProj = ConversionGenerator.Generate(protoNamespace, vmNamespaceStr, rootTypesProj, result.Compilation);
+                    await File.WriteAllTextAsync(Path.Combine(projDir, "ProtoStateConverters.cs"), convProj);
+                    string protoDirProj = Path.Combine(projDir, "protos");
+                    Directory.CreateDirectory(protoDirProj);
+                    var protoTextProj = ProtoGenerator.Generate(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
+                    await File.WriteAllTextAsync(Path.Combine(protoDirProj, serviceName + ".proto"), protoTextProj);
+                }
                 if (genServer)
                 {
                     string serverPath = Path.Combine(output, result.ViewModelName + "GrpcServiceImpl.cs");
