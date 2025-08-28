@@ -3,7 +3,7 @@
 // </auto-generated>
 
 import { HP3LSThermalTestViewModelServiceClient } from './generated/HP3LSThermalTestViewModelServiceServiceClientPb';
-import { HP3LSThermalTestViewModelRemoteClient, readOnlyMemberMap } from './HP3LSThermalTestViewModelRemoteClient';
+import { HP3LSThermalTestViewModelRemoteClient, getThermalStateEnumDisplay } from './HP3LSThermalTestViewModelRemoteClient';
 
 const grpcHost = 'http://localhost:50052';
 const grpcClient = new HP3LSThermalTestViewModelServiceClient(grpcHost);
@@ -43,42 +43,44 @@ async function render() {
         itemDetails.setAttribute('data-index', String(index));
         itemDetails.open = zonesItemOpen[index] ?? false;
         const itemSummary = document.createElement('summary');
-        itemSummary.textContent = `Zones[${index}]`;
+        itemSummary.textContent = `[${index}]`;
         itemDetails.appendChild(itemSummary);
         const container = document.createElement('div');
         Object.entries(item).forEach(([key, value]) => {
             const field = document.createElement('div');
             field.className = 'field';
             const label = document.createElement('span');
-            label.textContent = key;
-            if (zonesItemRo.has(key)) {
+            label.textContent = key + ':';
+            let displayValue: any = value;
+            if (key === 'status' || key === 'state') displayValue = getThermalStateEnumDisplay(Number(value));
+            const input = document.createElement('input');
+            if (typeof value === 'boolean') {
+                input.type = 'checkbox';
+                input.checked = Boolean(value);
+            } else {
+                input.type = typeof value === 'number' ? 'number' : 'text';
+                input.value = value instanceof Date ? value.toISOString() : typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
+            }
+            input.addEventListener('change', async (e) => {
+                const tgt = e.target as HTMLInputElement;
+                let parsed: any;
+                if (value instanceof Date) parsed = new Date(tgt.value);
+                else if (typeof value === 'number') parsed = tgt.valueAsNumber;
+                else if (typeof value === 'boolean') parsed = tgt.checked;
+                else { try { parsed = JSON.parse(tgt.value); } catch { parsed = tgt.value; } }
+                const newCollection = vm.zones.map((z: any) => Object.assign({}, z));
+                if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {
+                    (newCollection[index] as any)[key] = parsed;
+                    try { await vm.updatePropertyValueDebounced('Zones', newCollection); }
+                    catch (err) { handleError(err, 'Update Zones'); }
+                }
+            });
+            field.appendChild(label);
+            if (key === 'status' || key === 'state') {
                 const valueEl = document.createElement('span');
-                valueEl.textContent = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-                field.appendChild(label);
+                valueEl.textContent = displayValue instanceof Date ? displayValue.toISOString() : String(displayValue);
                 field.appendChild(valueEl);
             } else {
-                const input = document.createElement('input');
-                if (typeof value === 'boolean') {
-                    input.type = 'checkbox';
-                    input.checked = Boolean(value);
-                } else {
-                    input.type = typeof value === 'number' ? 'number' : 'text';
-                    input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-                }
-                input.addEventListener('change', async (e) => {
-                    const tgt = e.target as HTMLInputElement;
-                    let parsed: any;
-                    if (typeof value === 'number') parsed = tgt.valueAsNumber;
-                    else if (typeof value === 'boolean') parsed = tgt.checked;
-                    else { try { parsed = JSON.parse(tgt.value); } catch { parsed = tgt.value; } }
-                    const newCollection = vm.zones.map((z: any) => Object.assign({}, z));
-                    if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {
-                        (newCollection[index] as any)[key] = parsed;
-                        try { await vm.updatePropertyValueDebounced('Zones', newCollection); }
-                        catch (err) { handleError(err, 'Update Zones'); }
-                    }
-                });
-                field.appendChild(label);
                 field.appendChild(input);
             }
             container.appendChild(field);
@@ -102,37 +104,11 @@ async function render() {
         const field = document.createElement('div');
         field.className = 'field';
         const label = document.createElement('span');
-        label.textContent = key;
-        if (testSettingsRo.has(key)) {
-            const valueEl = document.createElement('span');
-            valueEl.textContent = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-            field.appendChild(label);
-            field.appendChild(valueEl);
-        } else {
-            const input = document.createElement('input');
-            if (typeof value === 'boolean') {
-                input.type = 'checkbox';
-                input.checked = Boolean(value);
-            } else {
-                input.type = typeof value === 'number' ? 'number' : 'text';
-                input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-            }
-            input.addEventListener('change', async (e) => {
-                const tgt = e.target as HTMLInputElement;
-                let parsed: any;
-                if (typeof value === 'number') parsed = tgt.valueAsNumber;
-                else if (typeof value === 'boolean') parsed = tgt.checked;
-                else { try { parsed = JSON.parse(tgt.value); } catch { parsed = tgt.value; } }
-                const newObj = Object.assign({}, vm.testSettings);
-                if (JSON.stringify((newObj as any)[key]) !== JSON.stringify(parsed)) {
-                    (newObj as any)[key] = parsed;
-                    try { await vm.updatePropertyValueDebounced('TestSettings', newObj); }
-                    catch (err) { handleError(err, 'Update TestSettings'); }
-                }
-            });
-            field.appendChild(label);
-            field.appendChild(input);
-        }
+        label.textContent = key + ':';
+        const valueEl = document.createElement('span');
+        valueEl.textContent = value instanceof Date ? value.toISOString() : typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
+        field.appendChild(label);
+        field.appendChild(valueEl);
         testSettingsContainer.appendChild(field);
     });
     testSettingsDetails.appendChild(testSettingsContainer);
