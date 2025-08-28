@@ -251,7 +251,8 @@ public static class TsProjectGenerator
     {
         typeStr = typeStr.ToLowerInvariant();
         return typeStr.Contains("observablecollection") || typeStr.Contains("ienumerable") ||
-               typeStr.Contains("icollection") || typeStr.Contains("list") || typeStr.EndsWith("[]");
+               typeStr.Contains("icollection") || typeStr.Contains("list") ||
+               typeStr.EndsWith("[]") || typeStr.Contains("collection");
     }
 
     public static string GenerateIndexHtml(string vmName, List<PropertyInfo> props, List<CommandInfo> cmds)
