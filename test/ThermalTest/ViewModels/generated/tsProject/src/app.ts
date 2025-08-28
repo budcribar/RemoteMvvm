@@ -29,6 +29,7 @@ async function render() {
     (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).value = String(vm.cpuLoadTimeSpan);
     const zonesEl = document.getElementById('zones') as HTMLElement;
     const zonesRootOpen = (zonesEl.querySelector('details[data-root]') as HTMLDetailsElement)?.open ?? true;
+    const zonesItemOpen: boolean[] = Array.from(zonesEl.querySelectorAll('details[data-index]')).map(d => (d as HTMLDetailsElement).open);
     zonesEl.innerHTML = '';
     const zonesDetails = document.createElement('details');
     zonesDetails.setAttribute('data-root', '');
@@ -36,38 +37,47 @@ async function render() {
     const zonesSummary = document.createElement('summary');
     zonesSummary.textContent = 'Zones';
     zonesDetails.appendChild(zonesSummary);
-    const zonesContainer = document.createElement('div');
-    Object.entries(vm.zones as any).forEach(([key, value]) => {
-        const field = document.createElement('div');
-        field.className = 'field';
-        const label = document.createElement('span');
-        label.textContent = key;
-        const input = document.createElement('input');
-        if (typeof value === 'boolean') {
-            input.type = 'checkbox';
-            input.checked = Boolean(value);
-        } else {
-            input.type = typeof value === 'number' ? 'number' : 'text';
-            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-        }
-        input.addEventListener('change', async (e) => {
-            const tgt = e.target as HTMLInputElement;
-            let parsed: any;
-            if (typeof value === 'number') parsed = tgt.valueAsNumber;
-            else if (typeof value === 'boolean') parsed = tgt.checked;
-            else { try { parsed = JSON.parse(tgt.value); } catch { parsed = tgt.value; } }
-            const newObj = Object.assign({}, vm.zones);
-            if (JSON.stringify((newObj as any)[key]) !== JSON.stringify(parsed)) {
-                (newObj as any)[key] = parsed;
-                try { await vm.updatePropertyValueDebounced('Zones', newObj); }
-                catch (err) { handleError(err, 'Update Zones'); }
+    vm.zones.forEach((item: any, index: number) => {
+        const itemDetails = document.createElement('details');
+        itemDetails.setAttribute('data-index', String(index));
+        itemDetails.open = zonesItemOpen[index] ?? false;
+        const itemSummary = document.createElement('summary');
+        itemSummary.textContent = `Zones[${index}]`;
+        itemDetails.appendChild(itemSummary);
+        const container = document.createElement('div');
+        Object.entries(item).forEach(([key, value]) => {
+            const field = document.createElement('div');
+            field.className = 'field';
+            const label = document.createElement('span');
+            label.textContent = key;
+            const input = document.createElement('input');
+            if (typeof value === 'boolean') {
+                input.type = 'checkbox';
+                input.checked = Boolean(value);
+            } else {
+                input.type = typeof value === 'number' ? 'number' : 'text';
+                input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
             }
+            input.addEventListener('change', async (e) => {
+                const tgt = e.target as HTMLInputElement;
+                let parsed: any;
+                if (typeof value === 'number') parsed = tgt.valueAsNumber;
+                else if (typeof value === 'boolean') parsed = tgt.checked;
+                else { try { parsed = JSON.parse(tgt.value); } catch { parsed = tgt.value; } }
+                const newCollection = vm.zones.map((z: any) => Object.assign({}, z));
+                if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {
+                    (newCollection[index] as any)[key] = parsed;
+                    try { await vm.updatePropertyValueDebounced('Zones', newCollection); }
+                    catch (err) { handleError(err, 'Update Zones'); }
+                }
+            });
+            field.appendChild(label);
+            field.appendChild(input);
+            container.appendChild(field);
         });
-        field.appendChild(label);
-        field.appendChild(input);
-        zonesContainer.appendChild(field);
+        itemDetails.appendChild(container);
+        zonesDetails.appendChild(itemDetails);
     });
-    zonesDetails.appendChild(zonesContainer);
     zonesEl.appendChild(zonesDetails);
     const testSettingsEl = document.getElementById('testSettings') as HTMLElement;
     const testSettingsRootOpen = (testSettingsEl.querySelector('details[data-root]') as HTMLDetailsElement)?.open ?? true;
