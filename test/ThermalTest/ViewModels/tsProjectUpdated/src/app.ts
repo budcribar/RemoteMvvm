@@ -50,6 +50,7 @@ function buildZonesPayload(): any[] {
             const statusStr = (z.status in ThermalStateEnumMap) ? ThermalStateEnumMap[z.status] : String(z.status ?? '');
             const stateStr = (z.state in ThermalStateEnumMap) ? ThermalStateEnumMap[z.state] : String(z.state ?? '');
             const displayedStatus = statusStr === 'CheckInProgress' ? stateStr : statusStr;
+            const zoneStr = (z.zone in ZoneMap) ? ZoneMap[z.zone] : String(z.zone ?? '');
             return {
                 active: z.isActive ?? true,
                 background: z.background ?? '#fafafa',
@@ -57,7 +58,7 @@ function buildZonesPayload(): any[] {
                 state: stateStr,
                 displayedStatus,
                 progress: Number(z.progress ?? 0),
-                zone: String(z.zone ?? ''),
+                zone: zoneStr,
                 'zone-index': idx,
                 fanSpeed: Number(z.fanSpeed ?? 0),
                 deviceName: z.deviceName ?? 'Device',
