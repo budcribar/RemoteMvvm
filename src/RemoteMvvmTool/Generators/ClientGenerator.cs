@@ -145,6 +145,14 @@ public static class ClientGenerator
             };
         }
 
+        bool DerivesFromObservableCollection(INamedTypeSymbol? t)
+        {
+            for (var bt = t?.BaseType; bt != null; bt = bt.BaseType)
+                if (bt.OriginalDefinition.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
+                    return true;
+            return false;
+        }
+
         string ValueFromProto(string expr, ITypeSymbol type, string prefix)
         {
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(type, out var k, out var v))
@@ -167,6 +175,8 @@ public static class ClientGenerator
                         return $"{expr}{elemConversion}.ToList()";
                     else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
                         return $"new System.Collections.ObjectModel.ObservableCollection<{elemType.ToDisplayString()}>({expr}{elemConversion})";
+                    else if (DerivesFromObservableCollection(named))
+                        return $"{expr}{elemConversion}.Aggregate(new {type.ToDisplayString()}(), (c, e) => {{ c.Add(e); return c; }})";
                     else
                         return $"new {type.ToDisplayString()}({expr}{elemConversion})";
                 }
@@ -289,6 +299,11 @@ public static class ClientGenerator
                                 psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
                             else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
                                 psb.AppendLine($"{ind}this.{prop.Name} = new System.Collections.ObjectModel.ObservableCollection<{elem.ToDisplayString()}>(state.{protoStateFieldName}{sel});");
+                            else if (DerivesFromObservableCollection(named))
+                            {
+                                psb.AppendLine($"{ind}this.{prop.Name} = new {prop.TypeString}();");
+                                psb.AppendLine($"{ind}foreach (var e in state.{protoStateFieldName}{sel}) this.{prop.Name}.Add(e);");
+                            }
                             else
                                 psb.AppendLine($"{ind}this.{prop.Name} = new {prop.TypeString}(state.{protoStateFieldName}{sel});");
                         }

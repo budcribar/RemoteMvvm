@@ -39,7 +39,7 @@ namespace HPSystemsTools.ViewModels
         [ObservableProperty]
         public partial int Progress { get; private set; }
         [ObservableProperty]
-        public partial string Background { get; set; }
+        public partial string Background { get; private set; }
         [ObservableProperty]
         public partial ThermalStateEnum Status { get; private set; }
         [ObservableProperty]
