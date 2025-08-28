@@ -139,6 +139,42 @@ public class ThermalViewModelGenerationTests
     }
 
     [Fact]
+    public async Task Generators_Handle_Derived_ObservableCollections()
+    {
+        var code = """
+public class ObservablePropertyAttribute : System.Attribute {}
+public class RelayCommandAttribute : System.Attribute {}
+namespace HP.Telemetry { public enum Zone { CPUZ_0, CPUZ_1 } }
+public class ThermalZoneComponentViewModel { public HP.Telemetry.Zone Zone { get; set; } }
+public class ZoneCollection : System.Collections.ObjectModel.ObservableCollection<ThermalZoneComponentViewModel> {}
+public partial class TestViewModel : ObservableObject
+{
+    [ObservableProperty]
+    public partial ZoneCollection Zones { get; set; } = new ZoneCollection();
+}
+public class ObservableObject {}
+""";
+        var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tempDir);
+        var vmFile = Path.Combine(tempDir, "TestViewModel.cs");
+        File.WriteAllText(vmFile, code);
+        var refs = LoadDefaultRefs();
+        var (_, name, props, cmds, compilation) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
+
+        var proto = ProtoGenerator.Generate("Test.Protos", name + "Service", name, props, cmds, compilation);
+        Assert.Contains("repeated ThermalZoneComponentViewModelState zones", proto);
+
+        var client = ClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, string.Empty);
+        Assert.Contains("new ZoneCollection(state.Zones", client);
+
+        var server = ServerGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, string.Empty);
+        Assert.Contains("state.Zones.AddRange(propValue.Where", server);
+
+        var tsClient = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
+        Assert.Contains("zones: ThermalZoneState[]", tsClient);
+    }
+
+    [Fact]
     public async Task Generated_Server_Packs_PropertyChanges_For_Supported_Types()
     {
         var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "../../../../.."));

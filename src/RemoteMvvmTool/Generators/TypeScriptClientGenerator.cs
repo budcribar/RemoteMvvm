@@ -68,33 +68,38 @@ public static class TypeScriptClientGenerator
                 type = nullable.TypeArguments[0];
             }
 
-            string result;
+            string result = string.Empty;
 
             if (type is IArrayTypeSymbol arr)
             {
                 result = MapTsType(arr.ElementType) + "[]";
             }
-            else if (type is INamedTypeSymbol named && named.IsGenericType)
+            else if (type is INamedTypeSymbol named)
             {
-                if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
+                if (named.IsGenericType)
                 {
-                    result = MapTsType(named.TypeArguments[0]) + "[]";
+                    if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
+                    {
+                        result = MapTsType(named.TypeArguments[0]) + "[]";
+                    }
+                    else if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var key, out var val))
+                    {
+                        var keyTs = MapKeyType(key!);
+                        var valTs = MapTsType(val!);
+                        result = $"Record<{keyTs}, {valTs}>";
+                    }
+                    else if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
+                    {
+                        result = MapTsType(memElem!) + "[]";
+                    }
                 }
-                else if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var key, out var val))
-                {
-                    var keyTs = MapKeyType(key!);
-                    var valTs = MapTsType(val!);
-                    result = $"Record<{keyTs}, {valTs}>";
-                }
-                else if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
-                {
-                    result = MapTsType(memElem!) + "[]";
-                }
-                else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
+
+                if (string.IsNullOrEmpty(result) && GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
                 {
                     result = MapTsType(elem!) + "[]";
                 }
-                else
+
+                if (string.IsNullOrEmpty(result))
                 {
                     var wktNamed = GeneratorHelpers.GetProtoWellKnownTypeFor(named);
                     result = wktNamed switch
