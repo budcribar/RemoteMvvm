@@ -79,6 +79,9 @@ public static class ServerGenerator
                 "System.Char" or "char" => $"{expr}.ToString()",
                 "System.Guid" => $"{expr}.ToString()",
                 "System.Decimal" or "decimal" => $"{expr}.ToString()",
+                "System.DateOnly" => $"{expr}.ToString()",
+                "System.TimeOnly" => $"{expr}.ToString()",
+                "nuint" or "System.UIntPtr" => $"(ulong){expr}",
                 _ => expr
             };
         }
@@ -189,12 +192,8 @@ public static class ServerGenerator
                 }
                 else
                 {
-                    if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
-                        sb.AppendLine($"            state.{p.Name} = (int)propValue;");
-                    else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
-                        sb.AppendLine($"            state.{p.Name} = {viewModelNamespace}.ProtoStateConverters.ToProto(propValue);");
-                    else
-                        sb.AppendLine($"            state.{p.Name} = propValue;");
+                    var assignment = ValueToProto("propValue", p.FullTypeSymbol, "pv");
+                    sb.AppendLine($"            state.{p.Name} = {assignment};");
                 }
             }
             else if (p.FullTypeSymbol is IArrayTypeSymbol arr)
@@ -218,26 +217,8 @@ public static class ServerGenerator
             }
             else
             {
-                // Handle special type conversions for well-known types
-                var typeDisplayString = p.FullTypeSymbol.ToDisplayString();
-                var assignment = typeDisplayString switch
-                {
-                    "System.DateTime" => $"Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(propValue.ToUniversalTime())",
-                    "System.Half" => $"(float)propValue",
-                    "System.Char" or "char" => $"propValue.ToString()",
-                    "System.Guid" => $"propValue.ToString()",
-                    "System.Decimal" or "decimal" => $"propValue.ToString()",
-                    "System.DateOnly" => $"propValue.ToString()",
-                    "System.TimeOnly" => $"propValue.ToString()",
-                    _ => "propValue"
-                };
-                
-                if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
-                    sb.AppendLine($"            state.{p.Name} = (int)propValue;");
-                else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
-                    sb.AppendLine($"            state.{p.Name} = {viewModelNamespace}.ProtoStateConverters.ToProto(propValue);");
-                else
-                    sb.AppendLine($"            state.{p.Name} = {assignment};");
+                var assignment = ValueToProto("propValue", p.FullTypeSymbol, "pv");
+                sb.AppendLine($"            state.{p.Name} = {assignment};");
             }
             sb.AppendLine("        }");
             sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.ToString()); }}");
