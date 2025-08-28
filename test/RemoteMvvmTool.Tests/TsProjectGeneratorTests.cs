@@ -85,6 +85,7 @@ public class TsProjectGeneratorTests
         var props = new List<PropertyInfo>
         {
             new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
+            new("Zones", "ZoneCollection", null!),
             new("TestSettings", "TestSettingsModel", null!)
         };
         var cmds = new List<CommandInfo>
@@ -93,10 +94,12 @@ public class TsProjectGeneratorTests
         };
         string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, cmds);
         Assert.Contains("vm.zoneList.forEach", ts);
+        Assert.Contains("vm.zones.forEach", ts);
         Assert.Contains("document.createElement('details')", ts);
         Assert.Contains("Object.entries(vm.testSettings", ts);
         Assert.Contains("const testSettingsContainer = document.createElement('div');", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('ZoneList'", ts);
+        Assert.Contains("await vm.updatePropertyValueDebounced('Zones'", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('TestSettings'", ts);
         Assert.Contains("await vm.doWork", ts);
         Assert.Contains("querySelector('details[data-root]')", ts);
@@ -109,13 +112,16 @@ public class TsProjectGeneratorTests
         var props = new List<PropertyInfo>
         {
             new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
+            new("Zones", "ZoneCollection", null!),
             new("TestSettings", "TestSettingsModel", null!)
         };
         string html = TsProjectGenerator.GenerateIndexHtml("Vm", props, new List<CommandInfo>());
         Assert.Contains("<div id='zoneList'></div>", html);
+        Assert.Contains("<div id='zones'></div>", html);
         Assert.Contains("<div id='testSettings'></div>", html);
         Assert.Contains("<style>", html);
         Assert.DoesNotContain("<input id='zoneList'", html);
+        Assert.DoesNotContain("<input id='zones'", html);
     }
 
     [Fact]
