@@ -130,4 +130,21 @@ public class ObservableObject {}
         var ts = await GenerateTsAsync(code);
         Assert.Contains("Timestamp.deserializeBinary", ts);
     }
+
+    [Fact]
+    public async Task Nested_timestamp_fields_are_converted_to_dates()
+    {
+        var code = @"\
+public class ObservablePropertyAttribute : System.Attribute {}
+public class Zone { public System.DateTime FirstSeenInState { get; set; } }
+public partial class TestViewModel : ObservableObject
+{
+    [ObservableProperty]
+    public Zone[] Zones { get; set; }
+}
+public class ObservableObject {}
+";
+        var ts = await GenerateTsAsync(code);
+        Assert.Contains("getZonesList().map((v:any) => { const obj = v.toObject(); obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; })", ts);
+    }
 }
