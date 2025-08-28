@@ -10,15 +10,30 @@ using System.Threading.Tasks;
 
 namespace HPSystemsTools.ViewModels
 {
+    public class ZoneCollection : ObservableCollection<ThermalZoneComponentViewModel>
+    {
+        public ThermalZoneComponentViewModel this[Zone zone]
+        {
+            get
+            {
+                var match = this.FirstOrDefault(z => z.Zone == zone);
+                if (match == null)
+                    throw new KeyNotFoundException($"Zone '{zone}' not found.");
+                return match;
+            }
+        }
+
+        public bool ContainsKey(Zone zone) => this.FirstOrDefault(z => z.Zone == zone) != null;
+
+    }
     public partial class HP3LSThermalTestViewModel : ObservableObject
     {
-        public Dictionary<Zone, ThermalZoneComponentViewModel> Zones = [];
+        //public Dictionary<Zone, ThermalZoneComponentViewModel> Zones = [];
         private HP3LSThermalTest _test = default!;
 
         public HP3LSThermalTestViewModel()
         {
-            TestSettings = new TestSettingsModel();
-           
+            TestSettings = new TestSettingsModel();           
         
             CpuLoadThreshold = TestSettings.CpuLoadThreshold;
             CpuTemperatureThreshold = TestSettings.CpuTemperatureThreshold;
@@ -58,7 +73,7 @@ namespace HPSystemsTools.ViewModels
 
 
         [ObservableProperty]
-        public partial ObservableCollection<ThermalZoneComponentViewModel> ZoneList { get; set; } = [];
+        public partial ZoneCollection Zones { get; set; } = [];
 
         [ObservableProperty]
         internal partial TestSettingsModel TestSettings { get; set; } = default!;
@@ -81,11 +96,8 @@ namespace HPSystemsTools.ViewModels
             Instructions = _test?.Localized?.Instructions ?? "";
             var zones = new[] { new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_0 }, new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_1 } };
 
-            Zones = zones.ToDictionary(z => z.Zone, z => z);
-
             foreach (var z in zones)
-                ZoneList.Add(z);
-
+                Zones.Add(z);
         }
 
         public void OnNext(ITelemetryReading telemetry)

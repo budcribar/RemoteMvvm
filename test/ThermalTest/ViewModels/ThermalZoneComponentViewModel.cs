@@ -23,27 +23,27 @@ namespace HPSystemsTools.ViewModels
         }
 
         [ObservableProperty]
-        public partial bool IsActive { get; set; }
+        public partial bool IsActive { get; private set; }
         [ObservableProperty]
-        public partial string DeviceName { get; set; } = "";
+        public partial string DeviceName { get; private set; } = "";
         [ObservableProperty]
-        public partial int Temperature { get; set; }
+        public partial int Temperature { get; private set; }
         [ObservableProperty]
-        public partial int ProcessorLoad { get; set; }
+        public partial int ProcessorLoad { get; private set; }
         [ObservableProperty]
-        public partial int FanSpeed { get; set; }
+        public partial int FanSpeed { get; private set; }
         [ObservableProperty]
-        public partial int SecondsInState { get; set; }
+        public partial int SecondsInState { get; private set; }
         [ObservableProperty]
-        public partial DateTime FirstSeenInState { get; set; }
+        public partial DateTime FirstSeenInState { get; private set; }
         [ObservableProperty]
-        public partial int Progress { get; set; }
+        public partial int Progress { get; private set; }
         [ObservableProperty]
-        public partial string Background { get; set; }
+        public partial string Background { get; private set; }
         [ObservableProperty]
-        public partial ThermalStateEnum Status { get; set; }
+        public partial ThermalStateEnum Status { get; private set; }
         [ObservableProperty]
-        public partial ThermalStateEnum State { get; set; }
+        public partial ThermalStateEnum State { get; private set; }
 
         private string _stateDescription = "Unknown state";
         public string StateDescription
