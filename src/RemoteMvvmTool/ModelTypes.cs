@@ -9,7 +9,8 @@ namespace GrpcRemoteMvvmModelUtil
     /// <param name="Name">The property name.</param>
     /// <param name="TypeString">The property type as a string.</param>
     /// <param name="FullTypeSymbol">The full type symbol from Roslyn analysis.</param>
-    public record PropertyInfo(string Name, string TypeString, ITypeSymbol FullTypeSymbol);
+    /// <param name="IsReadOnly">Whether the property lacks a public setter.</param>
+    public record PropertyInfo(string Name, string TypeString, ITypeSymbol FullTypeSymbol, bool IsReadOnly = false);
     
     /// <summary>
     /// Represents information about a relay command in a ViewModel.

@@ -295,6 +295,12 @@ public static class TypeScriptClientGenerator
         {
             sb.AppendLine($"    {GeneratorHelpers.ToCamelCase(p.Name)}: {MapTsType(p.FullTypeSymbol)};");
         }
+        bool hasReadOnly = props.Any(p => p.IsReadOnly);
+        if (hasReadOnly)
+        {
+            var roList = string.Join(", ", props.Where(p => p.IsReadOnly).Select(p => $"'{p.Name}'"));
+            sb.AppendLine($"    private readonly readOnlyProps = new Set<string>([{roList}]);");
+        }
         sb.AppendLine("    connectionStatus: string = 'Unknown';");
         sb.AppendLine();
         sb.AppendLine("    addChangeListener(cb: ((isFromServer?: boolean) => void) | (() => void)): void {");
@@ -438,6 +444,15 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("    }");
         sb.AppendLine();
         sb.AppendLine("    async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {");
+        if (hasReadOnly)
+        {
+            sb.AppendLine("        if (this.readOnlyProps?.has(propertyName)) {");
+            sb.AppendLine("            const res = new UpdatePropertyValueResponse();");
+            sb.AppendLine("            res.setSuccess(false);");
+            sb.AppendLine("            res.setErrorMessage(`Property ${propertyName} is read-only`);");
+            sb.AppendLine("            return res;");
+            sb.AppendLine("        }");
+        }
         sb.AppendLine("        const req = new UpdatePropertyValueRequest();");
         sb.AppendLine("        req.setPropertyName(propertyName);");
         sb.AppendLine("        req.setArrayIndex(-1); // Default to -1 for non-array properties");
@@ -454,6 +469,8 @@ public static class TypeScriptClientGenerator
         sb.AppendLine();
         sb.AppendLine("    // Debounced property update to prevent rapid-fire server calls");
         sb.AppendLine("    updatePropertyValueDebounced(propertyName: string, value: any, delayMs: number = 200): void {");
+        if (hasReadOnly)
+            sb.AppendLine("        if (this.readOnlyProps?.has(propertyName)) return;");
         sb.AppendLine("        // Clear existing timeout for this property");
         sb.AppendLine("        const existingTimeout = this.updateDebounceMap.get(propertyName);");
         sb.AppendLine("        if (existingTimeout) {");

@@ -153,7 +153,8 @@ namespace GrpcRemoteMvvmModelUtil
                     if (obsPropAttribute != null)
                     {
                         var typeName = propertySymbol.Type.ToDisplayString(FullNameFormat).Replace("global::", "");
-                        props.Add(new PropertyInfo(propertySymbol.Name, typeName, propertySymbol.Type));
+                        bool isReadOnly = propertySymbol.SetMethod == null || propertySymbol.SetMethod.DeclaredAccessibility != Accessibility.Public;
+                        props.Add(new PropertyInfo(propertySymbol.Name, typeName, propertySymbol.Type, isReadOnly));
                     }
                 }
             }

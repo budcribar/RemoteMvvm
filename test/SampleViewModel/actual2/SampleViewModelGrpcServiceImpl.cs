@@ -246,7 +246,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
                 return response;
             }
             
-            if (!propertyInfo.CanWrite)
+            if (propertyInfo.SetMethod == null || !propertyInfo.SetMethod.IsPublic)
             {
                 response.Success = false;
                 response.ErrorMessage = $"Property '{finalPropertyName}' is read-only";
