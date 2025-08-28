@@ -52,19 +52,19 @@ export function getThermalStateEnumDisplay(value: number): string {
 
 export interface ThermalZoneState {
   zone: number;
-  isActive: boolean;
-  deviceName: string;
-  temperature: number;
-  processorLoad: number;
-  fanSpeed: number;
-  secondsInState: number;
-  firstSeenInState: Date;
-  progress: number;
-  background: string;
-  status: number;
-  state: number;
-  stateDescription: string;
-  statusDescription: string;
+  readonly isActive: boolean;
+  readonly deviceName: string;
+  readonly temperature: number;
+  readonly processorLoad: number;
+  readonly fanSpeed: number;
+  readonly secondsInState: number;
+  readonly firstSeenInState: Date;
+  readonly progress: number;
+  readonly background: string;
+  readonly status: number;
+  readonly state: number;
+  readonly stateDescription: string;
+  readonly statusDescription: string;
 }
 
 export interface TestSettingsState {

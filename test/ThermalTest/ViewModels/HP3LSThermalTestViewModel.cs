@@ -69,13 +69,11 @@ namespace HPSystemsTools.ViewModels
                 TestSettings.CpuLoadTimeSpan = value;
         }
 
-
+        [ObservableProperty]
+        public partial ZoneCollection Zones { get; private set; } = [];
 
         [ObservableProperty]
-        public partial ZoneCollection Zones { get; set; } = [];
-
-        [ObservableProperty]
-        internal partial TestSettingsModel TestSettings { get; private set; } = default!;
+        internal partial TestSettingsModel TestSettings { get; set; } = default!;
 
         /// <summary>
         /// Controls the visibility of the description section.

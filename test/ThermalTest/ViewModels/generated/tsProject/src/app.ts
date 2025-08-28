@@ -94,29 +94,10 @@ async function render() {
         field.className = 'field';
         const label = document.createElement('span');
         label.textContent = key;
-        const input = document.createElement('input');
-        if (typeof value === 'boolean') {
-            input.type = 'checkbox';
-            input.checked = Boolean(value);
-        } else {
-            input.type = typeof value === 'number' ? 'number' : 'text';
-            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-        }
-        input.addEventListener('change', async (e) => {
-            const tgt = e.target as HTMLInputElement;
-            let parsed: any;
-            if (typeof value === 'number') parsed = tgt.valueAsNumber;
-            else if (typeof value === 'boolean') parsed = tgt.checked;
-            else { try { parsed = JSON.parse(tgt.value); } catch { parsed = tgt.value; } }
-            const newObj = Object.assign({}, vm.testSettings);
-            if (JSON.stringify((newObj as any)[key]) !== JSON.stringify(parsed)) {
-                (newObj as any)[key] = parsed;
-                try { await vm.updatePropertyValueDebounced('TestSettings', newObj); }
-                catch (err) { handleError(err, 'Update TestSettings'); }
-            }
-        });
+        const valueEl = document.createElement('span');
+        valueEl.textContent = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
         field.appendChild(label);
-        field.appendChild(input);
+        field.appendChild(valueEl);
         testSettingsContainer.appendChild(field);
     });
     testSettingsDetails.appendChild(testSettingsContainer);
