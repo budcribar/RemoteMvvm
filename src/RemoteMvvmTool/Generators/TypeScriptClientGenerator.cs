@@ -197,9 +197,9 @@ public static class TypeScriptClientGenerator
                             GeneratorHelpers.GetProtoWellKnownTypeFor(m.Type) == "Timestamp")
                 .ToList();
             if (members.Count == 0)
-                return $"{varName}.toObject()";
+                return $"typeof {varName}.toObject === 'function' ? {varName}.toObject() : {varName}";
             var sbLocal = new StringBuilder();
-            sbLocal.Append("{ const obj = " + varName + ".toObject();");
+            sbLocal.Append("{ const obj = typeof " + varName + ".toObject === 'function' ? " + varName + ".toObject() : " + varName + ";");
             foreach (var m in members)
             {
                 sbLocal.Append($" obj.{GeneratorHelpers.ToCamelCase(m.Name)} = {varName}.get{m.Name}()?.toDate();");
@@ -387,7 +387,7 @@ public static class TypeScriptClientGenerator
                     : $"(state as any).get{p.Name}()";
             }
             else if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol, out _, out _))
-                expr = $"(state as any).get{p.Name}Map().toObject()";
+                expr = $"(() => {{ var m = (state as any).get{p.Name}Map(); return typeof m.toObject === 'function' ? m.toObject() : m; }})()";
             else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol, out var elem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
@@ -466,7 +466,7 @@ public static class TypeScriptClientGenerator
                     : $"(state as any).get{p.Name}()";
             }
             else if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol, out _, out _))
-                expr = $"(state as any).get{p.Name}Map().toObject()";
+                expr = $"(() => {{ var m = (state as any).get{p.Name}Map(); return typeof m.toObject === 'function' ? m.toObject() : m; }})()";
             else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol, out var elem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
