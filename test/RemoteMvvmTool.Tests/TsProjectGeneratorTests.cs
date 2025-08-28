@@ -116,5 +116,29 @@ public class TsProjectGeneratorTests
         Assert.Contains("<style>", html);
         Assert.DoesNotContain("<input id='zoneList'", html);
     }
+
+    [Fact]
+    public void GenerateAppTs_ReadOnlyPropertyIsNotEditable()
+    {
+        var props = new List<PropertyInfo>
+        {
+            new("Name", "string", null!, true)
+        };
+        string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, new List<CommandInfo>());
+        Assert.Contains("textContent = String(vm.name);", ts);
+        Assert.DoesNotContain("updatePropertyValueDebounced('Name'", ts);
+    }
+
+    [Fact]
+    public void GenerateIndexHtml_ReadOnlyPropertyUsesSpan()
+    {
+        var props = new List<PropertyInfo>
+        {
+            new("Name", "string", null!, true)
+        };
+        string html = TsProjectGenerator.GenerateIndexHtml("Vm", props, new List<CommandInfo>());
+        Assert.Contains("<span id='name'></span>", html);
+        Assert.DoesNotContain("<input id='name'", html);
+    }
 }
 
