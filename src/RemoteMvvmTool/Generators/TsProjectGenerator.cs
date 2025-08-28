@@ -44,12 +44,17 @@ public static class TsProjectGenerator
             string typeStr = p.TypeString.ToLowerInvariant();
             if (IsPrimitiveType(typeStr))
             {
-                string assignExpr;
-                if (typeStr.Contains("string"))
-                    assignExpr = $"vm.{camel}";
+                if (typeStr.Contains("bool"))
+                    sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).checked = vm.{camel};");
                 else
-                    assignExpr = $"String(vm.{camel})";
-                sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).value = {assignExpr};");
+                {
+                    string assignExpr;
+                    if (typeStr.Contains("string"))
+                        assignExpr = $"vm.{camel}";
+                    else
+                        assignExpr = $"String(vm.{camel})";
+                    sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).value = {assignExpr};");
+                }
             }
             else if (IsCollectionType(typeStr))
             {
@@ -78,13 +83,19 @@ public static class TsProjectGenerator
                 sb.AppendLine($"            const label = document.createElement('span');");
                 sb.AppendLine("            label.textContent = key;");
                 sb.AppendLine($"            const input = document.createElement('input');");
-                sb.AppendLine($"            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                sb.AppendLine($"            if (typeof value === 'boolean') {{");
+                sb.AppendLine($"                input.type = 'checkbox';");
+                sb.AppendLine($"                input.checked = Boolean(value);");
+                sb.AppendLine($"            }} else {{");
+                sb.AppendLine($"                input.type = typeof value === 'number' ? 'number' : 'text';");
+                sb.AppendLine($"                input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                sb.AppendLine($"            }}");
                 sb.AppendLine($"            input.addEventListener('change', async (e) => {{");
-                sb.AppendLine($"                const newVal = (e.target as HTMLInputElement).value;");
+                sb.AppendLine($"                const tgt = e.target as HTMLInputElement;");
                 sb.AppendLine($"                let parsed: any;");
-                sb.AppendLine($"                if (typeof value === 'number') parsed = Number(newVal);");
-                sb.AppendLine($"                else if (typeof value === 'boolean') parsed = newVal.toLowerCase() === 'true';");
-                sb.AppendLine($"                else {{ try {{ parsed = JSON.parse(newVal); }} catch {{ parsed = newVal; }} }}");
+                sb.AppendLine($"                if (typeof value === 'number') parsed = tgt.valueAsNumber;");
+                sb.AppendLine($"                else if (typeof value === 'boolean') parsed = tgt.checked;");
+                sb.AppendLine($"                else {{ try {{ parsed = JSON.parse(tgt.value); }} catch {{ parsed = tgt.value; }} }}");
                 sb.AppendLine($"                const newCollection = vm.{camel}.map((z: any) => Object.assign({{}}, z));");
                 sb.AppendLine($"                if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {{");
                 sb.AppendLine($"                    (newCollection[index] as any)[key] = parsed;");
@@ -119,13 +130,19 @@ public static class TsProjectGenerator
                 sb.AppendLine($"        const label = document.createElement('span');");
                 sb.AppendLine("        label.textContent = key;");
                 sb.AppendLine($"        const input = document.createElement('input');");
-                sb.AppendLine($"        input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
-                sb.AppendLine($"        input.addEventListener('change', async (e) => {{");
-                sb.AppendLine($"            const newVal = (e.target as HTMLInputElement).value;");
+                sb.AppendLine($"        if (typeof value === 'boolean') {{");
+                sb.AppendLine($"            input.type = 'checkbox';");
+                sb.AppendLine($"            input.checked = Boolean(value);");
+                sb.AppendLine($"        }} else {{");
+                sb.AppendLine($"            input.type = typeof value === 'number' ? 'number' : 'text';");
+                sb.AppendLine($"            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                sb.AppendLine($"        }}");
+        sb.AppendLine($"        input.addEventListener('change', async (e) => {{");
+                sb.AppendLine($"            const tgt = e.target as HTMLInputElement;");
                 sb.AppendLine($"            let parsed: any;");
-                sb.AppendLine($"            if (typeof value === 'number') parsed = Number(newVal);");
-                sb.AppendLine($"            else if (typeof value === 'boolean') parsed = newVal.toLowerCase() === 'true';");
-                sb.AppendLine($"            else {{ try {{ parsed = JSON.parse(newVal); }} catch {{ parsed = newVal; }} }}");
+                sb.AppendLine($"            if (typeof value === 'number') parsed = tgt.valueAsNumber;");
+                sb.AppendLine($"            else if (typeof value === 'boolean') parsed = tgt.checked;");
+                sb.AppendLine($"            else {{ try {{ parsed = JSON.parse(tgt.value); }} catch {{ parsed = tgt.value; }} }}");
                 sb.AppendLine($"            const newObj = Object.assign({{}}, vm.{camel});");
                 sb.AppendLine($"            if (JSON.stringify((newObj as any)[key]) !== JSON.stringify(parsed)) {{");
                 sb.AppendLine($"                (newObj as any)[key] = parsed;");
@@ -162,7 +179,8 @@ public static class TsProjectGenerator
             string typeStr = p.TypeString.ToLowerInvariant();
             if (!IsPrimitiveType(typeStr)) continue;
             sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).addEventListener('change', async (e) => {{");
-            sb.AppendLine($"        const newValue = (e.target as HTMLInputElement).value;");
+            string newValueExpr = typeStr.Contains("bool") ? "(e.target as HTMLInputElement).checked" : "(e.target as HTMLInputElement).value";
+            sb.AppendLine($"        const newValue = {newValueExpr};");
             sb.AppendLine($"        const currentValue = vm.{camel};");
             sb.AppendLine("        // Only update if value actually changed");
 
@@ -175,8 +193,8 @@ public static class TsProjectGenerator
             }
             else if (typeStr.Contains("bool"))
             {
-                convertedValue = "newValue.toLowerCase() === 'true'";
-                comparison = "Boolean(newValue.toLowerCase() === 'true') !== currentValue";
+                convertedValue = "newValue";
+                comparison = "Boolean(newValue) !== currentValue";
             }
             else // string
             {
@@ -241,31 +259,122 @@ public static class TsProjectGenerator
         sb.AppendLine("<html lang=\"en\">\n<head>");
         sb.AppendLine("    <meta charset=\"utf-8\" />");
         sb.AppendLine($"    <title>{vmName} Client</title>");
+        sb.AppendLine("    <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">");
+        sb.AppendLine("    <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>");
+        sb.AppendLine("    <link href=\"https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap\" rel=\"stylesheet\">");
         sb.AppendLine("    <style>");
-        sb.AppendLine("        body { font-family: Arial, sans-serif; margin: 20px; }");
-        sb.AppendLine("        .field { margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }");
-        sb.AppendLine("        .field label span, .field span { font-weight: 600; min-width: 150px; }");
-        sb.AppendLine("        details { border: 1px solid #ccc; border-radius: 4px; padding: 8px; margin-bottom: 8px; }");
-        sb.AppendLine("        details > summary { cursor: pointer; }");
-        sb.AppendLine("        #connection-status { margin-top: 10px; font-weight: 600; }");
+        sb.AppendLine("        body {");
+        sb.AppendLine("            font-family: 'Roboto', sans-serif;");
+        sb.AppendLine("            margin: 0;");
+        sb.AppendLine("            padding: 20px;");
+        sb.AppendLine("            background-color: #f4f7f6;");
+        sb.AppendLine("            color: #333;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        .container {");
+        sb.AppendLine("            max-width: 800px;");
+        sb.AppendLine("            margin: auto;");
+        sb.AppendLine("            background: #fff;");
+        sb.AppendLine("            padding: 20px;");
+        sb.AppendLine("            border-radius: 8px;");
+        sb.AppendLine("            box-shadow: 0 2px 10px rgba(0,0,0,0.1);");
+        sb.AppendLine("        }");
+        sb.AppendLine("        h3 {");
+        sb.AppendLine("            color: #0056b3;");
+        sb.AppendLine("            border-bottom: 2px solid #0056b3;");
+        sb.AppendLine("            padding-bottom: 10px;");
+        sb.AppendLine("            margin-bottom: 20px;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        .field {");
+        sb.AppendLine("            margin-bottom: 12px;");
+        sb.AppendLine("            display: flex;");
+        sb.AppendLine("            gap: 8px;");
+        sb.AppendLine("            align-items: center;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        .field label {");
+        sb.AppendLine("            font-weight: 500;");
+        sb.AppendLine("            min-width: 200px;");
+        sb.AppendLine("            color: #555;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        input[type=\"text\"], input[type=\"number\"] {");
+        sb.AppendLine("            width: 100%;");
+        sb.AppendLine("            padding: 8px;");
+        sb.AppendLine("            border: 1px solid #ccc;");
+        sb.AppendLine("            border-radius: 4px;");
+        sb.AppendLine("            box-sizing: border-box;");
+        sb.AppendLine("            transition: border-color 0.3s;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        input[type=\"text\"]:focus, input[type=\"number\"]:focus {");
+        sb.AppendLine("            border-color: #0056b3;");
+        sb.AppendLine("            outline: none;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        button {");
+        sb.AppendLine("            background-color: #0056b3;");
+        sb.AppendLine("            color: white;");
+        sb.AppendLine("            padding: 10px 15px;");
+        sb.AppendLine("            border: none;");
+        sb.AppendLine("            border-radius: 4px;");
+        sb.AppendLine("            cursor: pointer;");
+        sb.AppendLine("            font-size: 16px;");
+        sb.AppendLine("            transition: background-color 0.3s;");
+        sb.AppendLine("            margin-right: 10px;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        button:hover {");
+        sb.AppendLine("            background-color: #004494;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        button:disabled {");
+        sb.AppendLine("            background-color: #ccc;");
+        sb.AppendLine("            cursor: not-allowed;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        details {");
+        sb.AppendLine("            border: 1px solid #e0e0e0;");
+        sb.AppendLine("            border-radius: 4px;");
+        sb.AppendLine("            padding: 10px;");
+        sb.AppendLine("            margin-bottom: 10px;");
+        sb.AppendLine("            background-color: #fafafa;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        details > summary {");
+        sb.AppendLine("            cursor: pointer;");
+        sb.AppendLine("            font-weight: 500;");
+        sb.AppendLine("            color: #0056b3;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        #connection-status {");
+        sb.AppendLine("            margin-top: 20px;");
+        sb.AppendLine("            font-weight: 500;");
+        sb.AppendLine("            padding: 10px;");
+        sb.AppendLine("            border-radius: 4px;");
+        sb.AppendLine("            background-color: #e9ecef;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        .nested-container {");
+        sb.AppendLine("            padding-left: 20px;");
+        sb.AppendLine("            border-left: 2px solid #e0e0e0;");
+        sb.AppendLine("            margin-top: 10px;");
+        sb.AppendLine("        }");
         sb.AppendLine("    </style>");
         sb.AppendLine("</head>\n<body>");
-        sb.AppendLine("    <h3>Remote ViewModel</h3>");
+        sb.AppendLine("    <div class=\"container\">\n        <h3>Remote ViewModel</h3>");
         foreach (var p in props)
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
             string typeStr = p.TypeString.ToLowerInvariant();
             if (IsPrimitiveType(typeStr))
-                sb.AppendLine($"    <div class='field'><label>{p.Name}: <input id='{camel}'/></label></div>");
+            {
+                string inputType = "text";
+                if (typeStr.Contains("bool"))
+                    inputType = "checkbox";
+                else if (typeStr.Contains("int") || typeStr.Contains("number") || typeStr.Contains("double") || typeStr.Contains("float") || typeStr.Contains("decimal") || typeStr.Contains("long"))
+                    inputType = "number";
+                sb.AppendLine($"        <div class='field'><label for='{camel}'>{p.Name}</label><input id='{camel}' type='{inputType}'/></div>");
+            }
             else
-                sb.AppendLine($"    <div id='{camel}'></div>");
+                sb.AppendLine($"        <div id='{camel}'></div>");
         }
         foreach (var cmd in cmds)
         {
             string camel = GeneratorHelpers.ToCamelCase(cmd.MethodName);
-            sb.AppendLine($"    <button id='{camel}-btn'>{cmd.MethodName}</button>");
+            sb.AppendLine($"        <button id='{camel}-btn'>{cmd.MethodName}</button>");
         }
-        sb.AppendLine("    <div id='connection-status'></div>");
+        sb.AppendLine("        <div id='connection-status'></div>");
+        sb.AppendLine("    </div>");
         sb.AppendLine("    <script src='bundle.js'></script>");
         sb.AppendLine("</body>\n</html>");
         return sb.ToString();
