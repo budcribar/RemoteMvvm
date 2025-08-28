@@ -195,7 +195,10 @@ public static class TypeScriptClientGenerator
                     .Where(p => p.GetMethod != null && p.Parameters.Length == 0);
                 foreach (var m in members)
                 {
-                    ifaceSb.AppendLine($"  {GeneratorHelpers.ToCamelCase(m.Name)}: {MapTsType(m.Type)};");
+                    var ro = m.SetMethod == null || m.SetMethod.DeclaredAccessibility != Accessibility.Public
+                        ? "readonly "
+                        : string.Empty;
+                    ifaceSb.AppendLine($"  {ro}{GeneratorHelpers.ToCamelCase(m.Name)}: {MapTsType(m.Type)};");
                 }
                 ifaceSb.AppendLine("}");
                 ifaceSb.AppendLine();

@@ -85,29 +85,39 @@ public static class TsProjectGenerator
                 sb.AppendLine($"            field.className = 'field';");
                 sb.AppendLine($"            const label = document.createElement('span');");
                 sb.AppendLine("            label.textContent = key;");
-                sb.AppendLine($"            const input = document.createElement('input');");
-                sb.AppendLine($"            if (typeof value === 'boolean') {{");
-                sb.AppendLine($"                input.type = 'checkbox';");
-                sb.AppendLine($"                input.checked = Boolean(value);");
-                sb.AppendLine($"            }} else {{");
-                sb.AppendLine($"                input.type = typeof value === 'number' ? 'number' : 'text';");
-                sb.AppendLine($"                input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
-                sb.AppendLine($"            }}");
-                sb.AppendLine($"            input.addEventListener('change', async (e) => {{");
-                sb.AppendLine($"                const tgt = e.target as HTMLInputElement;");
-                sb.AppendLine($"                let parsed: any;");
-                sb.AppendLine($"                if (typeof value === 'number') parsed = tgt.valueAsNumber;");
-                sb.AppendLine($"                else if (typeof value === 'boolean') parsed = tgt.checked;");
-                sb.AppendLine($"                else {{ try {{ parsed = JSON.parse(tgt.value); }} catch {{ parsed = tgt.value; }} }}");
-                sb.AppendLine($"                const newCollection = vm.{camel}.map((z: any) => Object.assign({{}}, z));");
-                sb.AppendLine($"                if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {{");
-                sb.AppendLine($"                    (newCollection[index] as any)[key] = parsed;");
-                sb.AppendLine($"                    try {{ await vm.updatePropertyValueDebounced('{p.Name}', newCollection); }}");
-                sb.AppendLine($"                    catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
-                sb.AppendLine($"                }}");
-                sb.AppendLine($"            }});");
-                sb.AppendLine($"            field.appendChild(label);");
-                sb.AppendLine($"            field.appendChild(input);");
+                if (p.IsReadOnly)
+                {
+                    sb.AppendLine($"            const valueEl = document.createElement('span');");
+                    sb.AppendLine($"            valueEl.textContent = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                    sb.AppendLine($"            field.appendChild(label);");
+                    sb.AppendLine($"            field.appendChild(valueEl);");
+                }
+                else
+                {
+                    sb.AppendLine($"            const input = document.createElement('input');");
+                    sb.AppendLine($"            if (typeof value === 'boolean') {{");
+                    sb.AppendLine($"                input.type = 'checkbox';");
+                    sb.AppendLine($"                input.checked = Boolean(value);");
+                    sb.AppendLine($"            }} else {{");
+                    sb.AppendLine($"                input.type = typeof value === 'number' ? 'number' : 'text';");
+                    sb.AppendLine($"                input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                    sb.AppendLine($"            }}");
+                    sb.AppendLine($"            input.addEventListener('change', async (e) => {{");
+                    sb.AppendLine($"                const tgt = e.target as HTMLInputElement;");
+                    sb.AppendLine($"                let parsed: any;");
+                    sb.AppendLine($"                if (typeof value === 'number') parsed = tgt.valueAsNumber;");
+                    sb.AppendLine($"                else if (typeof value === 'boolean') parsed = tgt.checked;");
+                    sb.AppendLine($"                else {{ try {{ parsed = JSON.parse(tgt.value); }} catch {{ parsed = tgt.value; }} }}");
+                    sb.AppendLine($"                const newCollection = vm.{camel}.map((z: any) => Object.assign({{}}, z));");
+                    sb.AppendLine($"                if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {{");
+                    sb.AppendLine($"                    (newCollection[index] as any)[key] = parsed;");
+                    sb.AppendLine($"                    try {{ await vm.updatePropertyValueDebounced('{p.Name}', newCollection); }}");
+                    sb.AppendLine($"                    catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
+                    sb.AppendLine($"                }}");
+                    sb.AppendLine($"            }});");
+                    sb.AppendLine($"            field.appendChild(label);");
+                    sb.AppendLine($"            field.appendChild(input);");
+                }
                 sb.AppendLine($"            container.appendChild(field);");
                 sb.AppendLine($"        }});");
                 sb.AppendLine($"        itemDetails.appendChild(container);");
@@ -132,29 +142,39 @@ public static class TsProjectGenerator
                 sb.AppendLine($"        field.className = 'field';");
                 sb.AppendLine($"        const label = document.createElement('span');");
                 sb.AppendLine("        label.textContent = key;");
-                sb.AppendLine($"        const input = document.createElement('input');");
-                sb.AppendLine($"        if (typeof value === 'boolean') {{");
-                sb.AppendLine($"            input.type = 'checkbox';");
-                sb.AppendLine($"            input.checked = Boolean(value);");
-                sb.AppendLine($"        }} else {{");
-                sb.AppendLine($"            input.type = typeof value === 'number' ? 'number' : 'text';");
-                sb.AppendLine($"            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
-                sb.AppendLine($"        }}");
-        sb.AppendLine($"        input.addEventListener('change', async (e) => {{");
-                sb.AppendLine($"            const tgt = e.target as HTMLInputElement;");
-                sb.AppendLine($"            let parsed: any;");
-                sb.AppendLine($"            if (typeof value === 'number') parsed = tgt.valueAsNumber;");
-                sb.AppendLine($"            else if (typeof value === 'boolean') parsed = tgt.checked;");
-                sb.AppendLine($"            else {{ try {{ parsed = JSON.parse(tgt.value); }} catch {{ parsed = tgt.value; }} }}");
-                sb.AppendLine($"            const newObj = Object.assign({{}}, vm.{camel});");
-                sb.AppendLine($"            if (JSON.stringify((newObj as any)[key]) !== JSON.stringify(parsed)) {{");
-                sb.AppendLine($"                (newObj as any)[key] = parsed;");
-                sb.AppendLine($"                try {{ await vm.updatePropertyValueDebounced('{p.Name}', newObj); }}");
-                sb.AppendLine($"                catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
-                sb.AppendLine($"            }}");
-                sb.AppendLine($"        }});");
-                sb.AppendLine($"        field.appendChild(label);");
-                sb.AppendLine($"        field.appendChild(input);");
+                if (p.IsReadOnly)
+                {
+                    sb.AppendLine($"        const valueEl = document.createElement('span');");
+                    sb.AppendLine($"        valueEl.textContent = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                    sb.AppendLine($"        field.appendChild(label);");
+                    sb.AppendLine($"        field.appendChild(valueEl);");
+                }
+                else
+                {
+                    sb.AppendLine($"        const input = document.createElement('input');");
+                    sb.AppendLine($"        if (typeof value === 'boolean') {{");
+                    sb.AppendLine($"            input.type = 'checkbox';");
+                    sb.AppendLine($"            input.checked = Boolean(value);");
+                    sb.AppendLine($"        }} else {{");
+                    sb.AppendLine($"            input.type = typeof value === 'number' ? 'number' : 'text';");
+                    sb.AppendLine($"            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);");
+                    sb.AppendLine($"        }}");
+            sb.AppendLine($"        input.addEventListener('change', async (e) => {{");
+                    sb.AppendLine($"            const tgt = e.target as HTMLInputElement;");
+                    sb.AppendLine($"            let parsed: any;");
+                    sb.AppendLine($"            if (typeof value === 'number') parsed = tgt.valueAsNumber;");
+                    sb.AppendLine($"            else if (typeof value === 'boolean') parsed = tgt.checked;");
+                    sb.AppendLine($"            else {{ try {{ parsed = JSON.parse(tgt.value); }} catch {{ parsed = tgt.value; }} }}");
+                    sb.AppendLine($"            const newObj = Object.assign({{}}, vm.{camel});");
+                    sb.AppendLine($"            if (JSON.stringify((newObj as any)[key]) !== JSON.stringify(parsed)) {{");
+                    sb.AppendLine($"                (newObj as any)[key] = parsed;");
+                    sb.AppendLine($"                try {{ await vm.updatePropertyValueDebounced('{p.Name}', newObj); }}");
+                    sb.AppendLine($"                catch (err) {{ handleError(err, 'Update {p.Name}'); }}");
+                    sb.AppendLine($"            }}");
+                    sb.AppendLine($"        }});");
+                    sb.AppendLine($"        field.appendChild(label);");
+                    sb.AppendLine($"        field.appendChild(input);");
+                }
                 sb.AppendLine($"        {camel}Container.appendChild(field);");
                 sb.AppendLine($"    }});");
                 sb.AppendLine($"    {camel}Details.appendChild({camel}Container);");
