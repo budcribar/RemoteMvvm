@@ -26,6 +26,9 @@ export interface DeviceInfoState {
   status: number;
 }
 
+export const readOnlyMemberMap: Record<string, Set<string>> = {
+};
+
 export class MainViewModelRemoteClient {
     private readonly grpcClient: MainViewModelServiceClient;
     private propertyStream?: grpcWeb.ClientReadableStream<PropertyChangeNotification>;
