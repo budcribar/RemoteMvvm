@@ -1439,10 +1439,10 @@ public class GrpcWebEndToEndTests
     public async Task TypeScript_Client_Can_Retrieve_Collection_From_Server()
     {
         // Use the existing GrpcWebEndToEnd TestViewModel for this test
-        var modelCode = File.ReadAllText(Path.Combine(SetupTestPaths().SourceProjectDir, "TestViewModel.cs"));
-        
+        var modelCode = LoadModelCode("TypeScriptCanReadCollection");
+
         // Expected data from the existing TestViewModel: Zone values (0,1) and Temperature values (42,43)
-        var expectedDataValues = "0,1,42,43";
+        var expectedDataValues = "1,2,42,43";
         
         await TestEndToEndScenario(modelCode, expectedDataValues);
     }

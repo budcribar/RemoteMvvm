@@ -65,7 +65,7 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
                             try
                             {
                                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: _cts.Token);
-                                this.Devices = new System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo>(state.Devices.Select(e => ProtoStateConverters.FromProto(e)));
+                                this.Devices = new System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo>(state.Devices.Select(ProtoStateConverters.FromProto));
                                 Debug.WriteLine("[ClientProxy] State re-synced after reconnect.");
                             }
                             catch (Exception ex)
@@ -101,7 +101,7 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[MainViewModelRemoteClient] Initial state received.");
-                this.Devices = new System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo>(state.Devices.Select(e => ProtoStateConverters.FromProto(e)));
+                this.Devices = new System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo>(state.Devices.Select(ProtoStateConverters.FromProto));
                 _isInitialized = true;
                 Debug.WriteLine("[MainViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
