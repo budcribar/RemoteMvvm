@@ -2377,7 +2377,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   ThermalStateEnumMap: () => (/* binding */ ThermalStateEnumMap),
 /* harmony export */   ZoneMap: () => (/* binding */ ZoneMap),
 /* harmony export */   getThermalStateEnumDisplay: () => (/* binding */ getThermalStateEnumDisplay),
-/* harmony export */   getZoneDisplay: () => (/* binding */ getZoneDisplay)
+/* harmony export */   getZoneDisplay: () => (/* binding */ getZoneDisplay),
+/* harmony export */   readOnlyMemberMap: () => (/* binding */ readOnlyMemberMap)
 /* harmony export */ });
 /* harmony import */ var _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./generated/HP3LSThermalTestViewModelService_pb.js */ "./src/generated/HP3LSThermalTestViewModelService_pb.js");
 /* harmony import */ var _generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_generated_HP3LSThermalTestViewModelService_pb_js__WEBPACK_IMPORTED_MODULE_0__);
@@ -2433,6 +2434,9 @@ const ThermalStateEnumMap = {
 function getThermalStateEnumDisplay(value) {
     return ThermalStateEnumMap[value] || value.toString();
 }
+const readOnlyMemberMap = {
+    ThermalZoneState: new Set(['isActive', 'deviceName', 'temperature', 'processorLoad', 'fanSpeed', 'secondsInState', 'firstSeenInState', 'progress', 'status', 'state', 'stateDescription', 'statusDescription']),
+};
 class HP3LSThermalTestViewModelRemoteClient {
     addChangeListener(cb) {
         this.changeCallbacks.push(cb);
@@ -2456,7 +2460,7 @@ class HP3LSThermalTestViewModelRemoteClient {
     constructor(grpcClient) {
         this.changeCallbacks = [];
         this.updateDebounceMap = new Map(); // Internal debouncing (any for cross-platform compatibility)
-        this.readOnlyProps = new Set(['Instructions', 'TestSettings']);
+        this.readOnlyProps = new Set(['Instructions', 'Zones', 'TestSettings']);
         this.connectionStatus = 'Unknown';
         this.grpcClient = grpcClient;
     }
@@ -2466,8 +2470,8 @@ class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = state.getCpuTemperatureThreshold();
         this.cpuLoadThreshold = state.getCpuLoadThreshold();
         this.cpuLoadTimeSpan = state.getCpuLoadTimeSpan();
-        this.zones = state.getZonesList().map((v) => v.toObject());
-        this.testSettings = state.getTestSettings()?.toObject();
+        this.zones = state.getZonesList().map((v) => { const obj = v.toObject(); obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
+        this.testSettings = (() => { const v = state.getTestSettings(); return v ? v.toObject() : undefined; })();
         this.showDescription = state.getShowDescription();
         this.showReadme = state.getShowReadme();
         this.connectionStatus = 'Connected';
@@ -2481,8 +2485,8 @@ class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = state.getCpuTemperatureThreshold();
         this.cpuLoadThreshold = state.getCpuLoadThreshold();
         this.cpuLoadTimeSpan = state.getCpuLoadTimeSpan();
-        this.zones = state.getZonesList().map((v) => v.toObject());
-        this.testSettings = state.getTestSettings()?.toObject();
+        this.zones = state.getZonesList().map((v) => { const obj = v.toObject(); obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
+        this.testSettings = (() => { const v = state.getTestSettings(); return v ? v.toObject() : undefined; })();
         this.showDescription = state.getShowDescription();
         this.showReadme = state.getShowReadme();
         this.notifyChange();
@@ -2796,47 +2800,98 @@ class HP3LSThermalTestViewModelServiceClient {
     }
     getState(request, metadata, callback) {
         if (callback !== undefined) {
+            const wrappedCallback = (err, response) => {
+                if (err) {
+                    console.error('HP3LSThermalTestViewModelServiceClient.getState RPC error:', err);
+                }
+                callback(err, response);
+            };
             return this.client_.rpcCall(this.hostname_ +
-                '/generated_protos.HP3LSThermalTestViewModelService/GetState', request, metadata || {}, this.methodDescriptorGetState, callback);
+                '/generated_protos.HP3LSThermalTestViewModelService/GetState', request, metadata || {}, this.methodDescriptorGetState, wrappedCallback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/generated_protos.HP3LSThermalTestViewModelService/GetState', request, metadata || {}, this.methodDescriptorGetState);
+            '/generated_protos.HP3LSThermalTestViewModelService/GetState', request, metadata || {}, this.methodDescriptorGetState).catch((err) => {
+            console.error('HP3LSThermalTestViewModelServiceClient.getState Promise error:', err);
+            throw err;
+        });
     }
     updatePropertyValue(request, metadata, callback) {
         if (callback !== undefined) {
+            const wrappedCallback = (err, response) => {
+                if (err) {
+                    console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue RPC error:', err);
+                }
+                callback(err, response);
+            };
             return this.client_.rpcCall(this.hostname_ +
-                '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue', request, metadata || {}, this.methodDescriptorUpdatePropertyValue, callback);
+                '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue', request, metadata || {}, this.methodDescriptorUpdatePropertyValue, wrappedCallback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue', request, metadata || {}, this.methodDescriptorUpdatePropertyValue);
+            '/generated_protos.HP3LSThermalTestViewModelService/UpdatePropertyValue', request, metadata || {}, this.methodDescriptorUpdatePropertyValue).catch((err) => {
+            console.error('HP3LSThermalTestViewModelServiceClient.updatePropertyValue Promise error:', err);
+            throw err;
+        });
     }
     subscribeToPropertyChanges(request, metadata) {
-        return this.client_.serverStreaming(this.hostname_ +
+        const stream = this.client_.serverStreaming(this.hostname_ +
             '/generated_protos.HP3LSThermalTestViewModelService/SubscribeToPropertyChanges', request, metadata || {}, this.methodDescriptorSubscribeToPropertyChanges);
+        if (stream && typeof stream.on === 'function') {
+            stream.on('error', (err) => {
+                console.error('HP3LSThermalTestViewModelServiceClient.subscribeToPropertyChanges stream error:', err);
+            });
+        }
+        return stream;
     }
     stateChanged(request, metadata, callback) {
         if (callback !== undefined) {
+            const wrappedCallback = (err, response) => {
+                if (err) {
+                    console.error('HP3LSThermalTestViewModelServiceClient.stateChanged RPC error:', err);
+                }
+                callback(err, response);
+            };
             return this.client_.rpcCall(this.hostname_ +
-                '/generated_protos.HP3LSThermalTestViewModelService/StateChanged', request, metadata || {}, this.methodDescriptorStateChanged, callback);
+                '/generated_protos.HP3LSThermalTestViewModelService/StateChanged', request, metadata || {}, this.methodDescriptorStateChanged, wrappedCallback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/generated_protos.HP3LSThermalTestViewModelService/StateChanged', request, metadata || {}, this.methodDescriptorStateChanged);
+            '/generated_protos.HP3LSThermalTestViewModelService/StateChanged', request, metadata || {}, this.methodDescriptorStateChanged).catch((err) => {
+            console.error('HP3LSThermalTestViewModelServiceClient.stateChanged Promise error:', err);
+            throw err;
+        });
     }
     cancelTest(request, metadata, callback) {
         if (callback !== undefined) {
+            const wrappedCallback = (err, response) => {
+                if (err) {
+                    console.error('HP3LSThermalTestViewModelServiceClient.cancelTest RPC error:', err);
+                }
+                callback(err, response);
+            };
             return this.client_.rpcCall(this.hostname_ +
-                '/generated_protos.HP3LSThermalTestViewModelService/CancelTest', request, metadata || {}, this.methodDescriptorCancelTest, callback);
+                '/generated_protos.HP3LSThermalTestViewModelService/CancelTest', request, metadata || {}, this.methodDescriptorCancelTest, wrappedCallback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/generated_protos.HP3LSThermalTestViewModelService/CancelTest', request, metadata || {}, this.methodDescriptorCancelTest);
+            '/generated_protos.HP3LSThermalTestViewModelService/CancelTest', request, metadata || {}, this.methodDescriptorCancelTest).catch((err) => {
+            console.error('HP3LSThermalTestViewModelServiceClient.cancelTest Promise error:', err);
+            throw err;
+        });
     }
     ping(request, metadata, callback) {
         if (callback !== undefined) {
+            const wrappedCallback = (err, response) => {
+                if (err) {
+                    console.error('HP3LSThermalTestViewModelServiceClient.ping RPC error:', err);
+                }
+                callback(err, response);
+            };
             return this.client_.rpcCall(this.hostname_ +
-                '/generated_protos.HP3LSThermalTestViewModelService/Ping', request, metadata || {}, this.methodDescriptorPing, callback);
+                '/generated_protos.HP3LSThermalTestViewModelService/Ping', request, metadata || {}, this.methodDescriptorPing, wrappedCallback);
         }
         return this.client_.unaryCall(this.hostname_ +
-            '/generated_protos.HP3LSThermalTestViewModelService/Ping', request, metadata || {}, this.methodDescriptorPing);
+            '/generated_protos.HP3LSThermalTestViewModelService/Ping', request, metadata || {}, this.methodDescriptorPing).catch((err) => {
+            console.error('HP3LSThermalTestViewModelServiceClient.ping Promise error:', err);
+            throw err;
+        });
     }
 }
 
@@ -5917,6 +5972,7 @@ async function render() {
     document.getElementById('cpuLoadTimeSpan').value = String(vm.cpuLoadTimeSpan);
     const zonesEl = document.getElementById('zones');
     const zonesRootOpen = zonesEl.querySelector('details[data-root]')?.open ?? true;
+    const zonesItemOpen = Array.from(zonesEl.querySelectorAll('details[data-index]')).map(d => d.open);
     zonesEl.innerHTML = '';
     const zonesDetails = document.createElement('details');
     zonesDetails.setAttribute('data-root', '');
@@ -5924,52 +5980,81 @@ async function render() {
     const zonesSummary = document.createElement('summary');
     zonesSummary.textContent = 'Zones';
     zonesDetails.appendChild(zonesSummary);
-    const zonesContainer = document.createElement('div');
-    Object.entries(vm.zones).forEach(([key, value]) => {
-        const field = document.createElement('div');
-        field.className = 'field';
-        const label = document.createElement('span');
-        label.textContent = key;
-        const input = document.createElement('input');
-        if (typeof value === 'boolean') {
-            input.type = 'checkbox';
-            input.checked = Boolean(value);
-        }
-        else {
-            input.type = typeof value === 'number' ? 'number' : 'text';
-            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-        }
-        input.addEventListener('change', async (e) => {
-            const tgt = e.target;
-            let parsed;
-            if (typeof value === 'number')
-                parsed = tgt.valueAsNumber;
-            else if (typeof value === 'boolean')
-                parsed = tgt.checked;
+    const zonesItemRo = _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.readOnlyMemberMap['ThermalZoneState'] ?? new Set();
+    const zonesEnumDisplay = {
+        'zone': _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.getZoneDisplay,
+        'status': _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.getThermalStateEnumDisplay,
+        'state': _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.getThermalStateEnumDisplay,
+    };
+    vm.zones.forEach((item, index) => {
+        const itemDetails = document.createElement('details');
+        itemDetails.setAttribute('data-index', String(index));
+        itemDetails.open = zonesItemOpen[index] ?? false;
+        const itemSummary = document.createElement('summary');
+        itemSummary.textContent = `[${index}]`;
+        itemDetails.appendChild(itemSummary);
+        const container = document.createElement('div');
+        Object.entries(item).forEach(([key, value]) => {
+            const field = document.createElement('div');
+            field.className = 'field';
+            const label = document.createElement('span');
+            label.textContent = `${key}:`;
+            let displayValue = value;
+            const enumFn = zonesEnumDisplay[key];
+            if (enumFn)
+                displayValue = enumFn(Number(value));
+            if (zonesItemRo.has(key)) {
+                const valueEl = document.createElement('span');
+                valueEl.textContent = displayValue instanceof Date ? displayValue.toISOString() : typeof displayValue === 'object' ? JSON.stringify(displayValue, null, 2) : String(displayValue);
+                field.appendChild(label);
+                field.appendChild(valueEl);
+            }
             else {
-                try {
-                    parsed = JSON.parse(tgt.value);
+                const input = document.createElement('input');
+                if (typeof value === 'boolean') {
+                    input.type = 'checkbox';
+                    input.checked = Boolean(value);
                 }
-                catch {
-                    parsed = tgt.value;
+                else {
+                    input.type = typeof value === 'number' ? 'number' : 'text';
+                    input.value = value instanceof Date ? value.toISOString() : typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
                 }
+                input.addEventListener('change', async (e) => {
+                    const tgt = e.target;
+                    let parsed;
+                    if (value instanceof Date)
+                        parsed = new Date(tgt.value);
+                    else if (typeof value === 'number')
+                        parsed = tgt.valueAsNumber;
+                    else if (typeof value === 'boolean')
+                        parsed = tgt.checked;
+                    else {
+                        try {
+                            parsed = JSON.parse(tgt.value);
+                        }
+                        catch {
+                            parsed = tgt.value;
+                        }
+                    }
+                    const newCollection = vm.zones.map((z) => Object.assign({}, z));
+                    if (JSON.stringify(newCollection[index][key]) !== JSON.stringify(parsed)) {
+                        newCollection[index][key] = parsed;
+                        try {
+                            await vm.updatePropertyValueDebounced('Zones', newCollection);
+                        }
+                        catch (err) {
+                            handleError(err, 'Update Zones');
+                        }
+                    }
+                });
+                field.appendChild(label);
+                field.appendChild(input);
             }
-            const newObj = Object.assign({}, vm.zones);
-            if (JSON.stringify(newObj[key]) !== JSON.stringify(parsed)) {
-                newObj[key] = parsed;
-                try {
-                    await vm.updatePropertyValueDebounced('Zones', newObj);
-                }
-                catch (err) {
-                    handleError(err, 'Update Zones');
-                }
-            }
+            container.appendChild(field);
         });
-        field.appendChild(label);
-        field.appendChild(input);
-        zonesContainer.appendChild(field);
+        itemDetails.appendChild(container);
+        zonesDetails.appendChild(itemDetails);
     });
-    zonesDetails.appendChild(zonesContainer);
     zonesEl.appendChild(zonesDetails);
     const testSettingsEl = document.getElementById('testSettings');
     const testSettingsRootOpen = testSettingsEl.querySelector('details[data-root]')?.open ?? true;
@@ -5981,48 +6066,60 @@ async function render() {
     testSettingsSummary.textContent = 'TestSettings';
     testSettingsDetails.appendChild(testSettingsSummary);
     const testSettingsContainer = document.createElement('div');
+    const testSettingsRo = _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.readOnlyMemberMap['TestSettingsState'] ?? new Set();
     Object.entries(vm.testSettings).forEach(([key, value]) => {
         const field = document.createElement('div');
         field.className = 'field';
         const label = document.createElement('span');
-        label.textContent = key;
-        const input = document.createElement('input');
-        if (typeof value === 'boolean') {
-            input.type = 'checkbox';
-            input.checked = Boolean(value);
+        label.textContent = `${key}:`;
+        let displayValue = value;
+        if (testSettingsRo.has(key)) {
+            const valueEl = document.createElement('span');
+            valueEl.textContent = displayValue instanceof Date ? displayValue.toISOString() : typeof displayValue === 'object' ? JSON.stringify(displayValue, null, 2) : String(displayValue);
+            field.appendChild(label);
+            field.appendChild(valueEl);
         }
         else {
-            input.type = typeof value === 'number' ? 'number' : 'text';
-            input.value = typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
-        }
-        input.addEventListener('change', async (e) => {
-            const tgt = e.target;
-            let parsed;
-            if (typeof value === 'number')
-                parsed = tgt.valueAsNumber;
-            else if (typeof value === 'boolean')
-                parsed = tgt.checked;
+            const input = document.createElement('input');
+            if (typeof value === 'boolean') {
+                input.type = 'checkbox';
+                input.checked = Boolean(value);
+            }
             else {
-                try {
-                    parsed = JSON.parse(tgt.value);
-                }
-                catch {
-                    parsed = tgt.value;
-                }
+                input.type = typeof value === 'number' ? 'number' : 'text';
+                input.value = value instanceof Date ? value.toISOString() : typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value);
             }
-            const newObj = Object.assign({}, vm.testSettings);
-            if (JSON.stringify(newObj[key]) !== JSON.stringify(parsed)) {
-                newObj[key] = parsed;
-                try {
-                    await vm.updatePropertyValueDebounced('TestSettings', newObj);
+            input.addEventListener('change', async (e) => {
+                const tgt = e.target;
+                let parsed;
+                if (value instanceof Date)
+                    parsed = new Date(tgt.value);
+                else if (typeof value === 'number')
+                    parsed = tgt.valueAsNumber;
+                else if (typeof value === 'boolean')
+                    parsed = tgt.checked;
+                else {
+                    try {
+                        parsed = JSON.parse(tgt.value);
+                    }
+                    catch {
+                        parsed = tgt.value;
+                    }
                 }
-                catch (err) {
-                    handleError(err, 'Update TestSettings');
+                const newObj = Object.assign({}, vm.testSettings);
+                if (JSON.stringify(newObj[key]) !== JSON.stringify(parsed)) {
+                    newObj[key] = parsed;
+                    try {
+                        await vm.updatePropertyValueDebounced('TestSettings', newObj);
+                    }
+                    catch (err) {
+                        handleError(err, 'Update TestSettings');
+                    }
                 }
-            }
-        });
-        field.appendChild(label);
-        field.appendChild(input);
+            });
+            field.appendChild(label);
+            field.appendChild(input);
+        }
         testSettingsContainer.appendChild(field);
     });
     testSettingsDetails.appendChild(testSettingsContainer);

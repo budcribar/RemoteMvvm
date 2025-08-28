@@ -131,7 +131,7 @@ public static class CsProjectGenerator
                 {
                     sb.AppendLine($"        var {camel}Label = new Label {{ Text = \"{p.Name}\" }};");
                     sb.AppendLine($"        panel.Controls.Add({camel}Label);");
-                    sb.AppendLine($"        var {camel}Box = new TextBox { Width = 200 };");
+                    sb.AppendLine($"        var {camel}Box = new TextBox {{ Width = 200 }};");
                     sb.AppendLine($"        {camel}Box.DataBindings.Add(\"Text\", vm, nameof({projectName}RemoteClient.{p.Name}));");
                     sb.AppendLine($"        {camel}Box.Leave += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new StringValue {{ Value = {camel}Box.Text }}) }});");
                     sb.AppendLine($"        panel.Controls.Add({camel}Box);");
