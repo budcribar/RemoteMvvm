@@ -62,12 +62,12 @@ public static class CsProjectGenerator
         sb.AppendLine("public class Program");
         sb.AppendLine("{");
         sb.AppendLine("    [STAThread]");
-        sb.AppendLine("    public static async Task Main()");
+        sb.AppendLine("    public static void Main()");
         sb.AppendLine("    {");
         sb.AppendLine("        var channel = GrpcChannel.ForAddress(\"http://localhost:50052\");");
         sb.AppendLine($"        var grpcClient = new {serviceName}.{serviceName}Client(channel);");
         sb.AppendLine($"        var vm = new {projectName}RemoteClient(grpcClient);");
-        sb.AppendLine("        await vm.InitializeRemoteAsync();");
+        sb.AppendLine("        vm.InitializeRemoteAsync().GetAwaiter().GetResult();");
         sb.AppendLine();
 
         if (isWpf)
