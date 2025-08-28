@@ -36,7 +36,6 @@ public static class ProtoStateConverters
     {
         var model = new HPSystemsTools.ViewModels.ThermalZoneComponentViewModel();
         model.Zone = (HP.Telemetry.Zone)state.Zone;
-        model.Background = state.Background;
         return model;
     }
 
