@@ -23,7 +23,7 @@ function handleError(err: any, context?: string) {
 
 
 async function render() {
-    (document.getElementById('instructions') as HTMLInputElement).value = vm.instructions;
+    (document.getElementById('instructions') as HTMLElement).textContent = String(vm.instructions);
     (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).value = String(vm.cpuTemperatureThreshold);
     (document.getElementById('cpuLoadThreshold') as HTMLInputElement).value = String(vm.cpuLoadThreshold);
     (document.getElementById('cpuLoadTimeSpan') as HTMLInputElement).value = String(vm.cpuLoadTimeSpan);
@@ -128,18 +128,6 @@ async function init() {
 
 document.addEventListener('DOMContentLoaded', () => {
     init();
-    (document.getElementById('instructions') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
-        const currentValue = vm.instructions;
-        // Only update if value actually changed
-        if (newValue !== currentValue) {
-            try {
-                await vm.updatePropertyValueDebounced('Instructions', newValue);
-            } catch (err) {
-                handleError(err, 'Update Instructions');
-            }
-        }
-    });
     (document.getElementById('cpuTemperatureThreshold') as HTMLInputElement).addEventListener('change', async (e) => {
         const newValue = (e.target as HTMLInputElement).value;
         const currentValue = vm.cpuTemperatureThreshold;

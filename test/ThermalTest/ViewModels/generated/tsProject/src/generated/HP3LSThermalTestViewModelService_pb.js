@@ -329,7 +329,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.toObject = function(includ
     cpuTemperatureThreshold: jspb.Message.getFieldWithDefault(msg, 2, 0),
     cpuLoadThreshold: jspb.Message.getFieldWithDefault(msg, 3, 0),
     cpuLoadTimeSpan: jspb.Message.getFieldWithDefault(msg, 4, 0),
-    zoneListList: jspb.Message.toObjectList(msg.getZoneListList(),
+    zonesList: jspb.Message.toObjectList(msg.getZonesList(),
     proto.generated_protos.ThermalZoneComponentViewModelState.toObject, includeInstance),
     testSettings: (f = msg.getTestSettings()) && proto.generated_protos.TestSettingsModelState.toObject(includeInstance, f),
     showDescription: jspb.Message.getBooleanFieldWithDefault(msg, 7, false),
@@ -389,7 +389,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.deserializeBinaryFromReade
     case 5:
       var value = new proto.generated_protos.ThermalZoneComponentViewModelState;
       reader.readMessage(value,proto.generated_protos.ThermalZoneComponentViewModelState.deserializeBinaryFromReader);
-      msg.addZoneList(value);
+      msg.addZones(value);
       break;
     case 6:
       var value = new proto.generated_protos.TestSettingsModelState;
@@ -461,7 +461,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.serializeBinaryToWriter = 
       f
     );
   }
-  f = message.getZoneListList();
+  f = message.getZonesList();
   if (f.length > 0) {
     writer.writeRepeatedMessage(
       5,
@@ -567,10 +567,10 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setCpuLoadTimeSp
 
 
 /**
- * repeated ThermalZoneComponentViewModelState zone_list = 5;
+ * repeated ThermalZoneComponentViewModelState zones = 5;
  * @return {!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>}
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getZoneListList = function() {
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getZonesList = function() {
   return /** @type{!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>} */ (
     jspb.Message.getRepeatedWrapperField(this, proto.generated_protos.ThermalZoneComponentViewModelState, 5));
 };
@@ -580,7 +580,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.getZoneListList 
  * @param {!Array<!proto.generated_protos.ThermalZoneComponentViewModelState>} value
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
 */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setZoneListList = function(value) {
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setZonesList = function(value) {
   return jspb.Message.setRepeatedWrapperField(this, 5, value);
 };
 
@@ -590,7 +590,7 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.setZoneListList 
  * @param {number=} opt_index
  * @return {!proto.generated_protos.ThermalZoneComponentViewModelState}
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.addZoneList = function(opt_value, opt_index) {
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.addZones = function(opt_value, opt_index) {
   return jspb.Message.addToRepeatedWrapperField(this, 5, opt_value, proto.generated_protos.ThermalZoneComponentViewModelState, opt_index);
 };
 
@@ -599,8 +599,8 @@ proto.generated_protos.HP3LSThermalTestViewModelState.prototype.addZoneList = fu
  * Clears the list making it empty but non-null.
  * @return {!proto.generated_protos.HP3LSThermalTestViewModelState} returns this
  */
-proto.generated_protos.HP3LSThermalTestViewModelState.prototype.clearZoneListList = function() {
-  return this.setZoneListList([]);
+proto.generated_protos.HP3LSThermalTestViewModelState.prototype.clearZonesList = function() {
+  return this.setZonesList([]);
 };
 
 

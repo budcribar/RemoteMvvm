@@ -18,10 +18,10 @@ export class HP3LSThermalTestViewModelState extends jspb.Message {
   getCpuLoadTimeSpan(): number;
   setCpuLoadTimeSpan(value: number): HP3LSThermalTestViewModelState;
 
-  getZoneListList(): Array<ThermalZoneComponentViewModelState>;
-  setZoneListList(value: Array<ThermalZoneComponentViewModelState>): HP3LSThermalTestViewModelState;
-  clearZoneListList(): HP3LSThermalTestViewModelState;
-  addZoneList(value?: ThermalZoneComponentViewModelState, index?: number): ThermalZoneComponentViewModelState;
+  getZonesList(): Array<ThermalZoneComponentViewModelState>;
+  setZonesList(value: Array<ThermalZoneComponentViewModelState>): HP3LSThermalTestViewModelState;
+  clearZonesList(): HP3LSThermalTestViewModelState;
+  addZones(value?: ThermalZoneComponentViewModelState, index?: number): ThermalZoneComponentViewModelState;
 
   getTestSettings(): TestSettingsModelState | undefined;
   setTestSettings(value?: TestSettingsModelState): HP3LSThermalTestViewModelState;
@@ -48,7 +48,7 @@ export namespace HP3LSThermalTestViewModelState {
     cpuTemperatureThreshold: number,
     cpuLoadThreshold: number,
     cpuLoadTimeSpan: number,
-    zoneListList: Array<ThermalZoneComponentViewModelState.AsObject>,
+    zonesList: Array<ThermalZoneComponentViewModelState.AsObject>,
     testSettings?: TestSettingsModelState.AsObject,
     showDescription: boolean,
     showReadme: boolean,

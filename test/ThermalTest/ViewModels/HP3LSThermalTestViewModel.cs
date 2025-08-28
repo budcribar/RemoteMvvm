@@ -28,7 +28,6 @@ namespace HPSystemsTools.ViewModels
     }
     public partial class HP3LSThermalTestViewModel : ObservableObject
     {
-        //public Dictionary<Zone, ThermalZoneComponentViewModel> Zones = [];
         private HP3LSThermalTest _test = default!;
 
         public HP3LSThermalTestViewModel()
@@ -41,7 +40,7 @@ namespace HPSystemsTools.ViewModels
         }
 
         [ObservableProperty]
-        public partial string Instructions { get; set; } = "";
+        public partial string Instructions { get; private set; } = "";
 
         [ObservableProperty]
         public partial int CpuTemperatureThreshold { get; set; }
@@ -76,7 +75,7 @@ namespace HPSystemsTools.ViewModels
         public partial ZoneCollection Zones { get; set; } = [];
 
         [ObservableProperty]
-        internal partial TestSettingsModel TestSettings { get; set; } = default!;
+        internal partial TestSettingsModel TestSettings { get; private set; } = default!;
 
         /// <summary>
         /// Controls the visibility of the description section.

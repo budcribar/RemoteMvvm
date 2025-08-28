@@ -88,6 +88,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
     testSettings: TestSettingsState;
     showDescription: boolean;
     showReadme: boolean;
+    private readonly readOnlyProps = new Set<string>(['Instructions', 'TestSettings']);
     connectionStatus: string = 'Unknown';
 
     addChangeListener(cb: ((isFromServer?: boolean) => void) | (() => void)): void {
@@ -143,6 +144,12 @@ export class HP3LSThermalTestViewModelRemoteClient {
     }
 
     async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {
+        if (this.readOnlyProps?.has(propertyName)) {
+            const res = new UpdatePropertyValueResponse();
+            res.setSuccess(false);
+            res.setErrorMessage(`Property ${propertyName} is read-only`);
+            return res;
+        }
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
         req.setArrayIndex(-1); // Default to -1 for non-array properties
@@ -159,6 +166,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
 
     // Debounced property update to prevent rapid-fire server calls
     updatePropertyValueDebounced(propertyName: string, value: any, delayMs: number = 200): void {
+        if (this.readOnlyProps?.has(propertyName)) return;
         // Clear existing timeout for this property
         const existingTimeout = this.updateDebounceMap.get(propertyName);
         if (existingTimeout) {
