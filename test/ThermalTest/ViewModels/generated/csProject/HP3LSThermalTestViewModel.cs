@@ -28,7 +28,7 @@ namespace HPSystemsTools.ViewModels
     }
     public partial class HP3LSThermalTestViewModel : ObservableObject
     {
-        private HP3LSThermalTest _test = default!;
+        //private HP3LSThermalTest _test = default!;
 
         public HP3LSThermalTestViewModel()
         {
@@ -89,10 +89,10 @@ namespace HPSystemsTools.ViewModels
         [ObservableProperty]
         public partial bool ShowReadme { get; set; }
 
-        internal void OnInitialized(HP3LSThermalTest test)
+        internal void OnInitialized(/*HP3LSThermalTest test*/)
         {
-            _test = test;
-            Instructions = _test?.Localized?.Instructions ?? "";
+            //_test = test;
+            //Instructions = _test?.Localized?.Instructions ?? "";
             var zones = new[] { new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_0 }, new ThermalZoneComponentViewModel { Zone = Zone.CPUZ_1 } };
 
             foreach (var z in zones)
@@ -112,12 +112,12 @@ namespace HPSystemsTools.ViewModels
             {
                 case ThermalStateEnum.MaybePass:
                 case ThermalStateEnum.Pass:
-                    _test.FinishTest(true);
+                    //_test.FinishTest(true);
                     break;
                 case ThermalStateEnum.MaybeFail:
                 case ThermalStateEnum.Fail:
                 case ThermalStateEnum.Unknown:
-                    _test.FinishTest(false);
+                    //_test.FinishTest(false);
                     break;
                 default:
                     break;
@@ -127,7 +127,7 @@ namespace HPSystemsTools.ViewModels
         [RelayCommand]
         public void CancelTest()
         {
-            _test.CancelTest();
+            //_test.CancelTest();
         }
     }
 }
