@@ -4,14 +4,10 @@
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <LangVersion>preview</LangVersion>
     <UseWPF>true</UseWPF>
-	<LangVersion>preview</LangVersion>
     
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Remove="HP3LSThermalTest.cs" />
-    <Compile Remove="LocalizedKeys.cs" />
-  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
