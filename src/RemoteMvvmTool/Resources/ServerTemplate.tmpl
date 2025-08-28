@@ -409,6 +409,10 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
                 return (true, (short)anyValue.Unpack<Int32Value>().Value, "");
             if (anyValue.Is(Int32Value.Descriptor) && targetType == typeof(byte))
                 return (true, (byte)anyValue.Unpack<Int32Value>().Value, "");
+            if (anyValue.Is(Int64Value.Descriptor) && targetType == typeof(System.IntPtr))
+                return (true, (nint)anyValue.Unpack<Int64Value>().Value, "");
+            if (anyValue.Is(UInt64Value.Descriptor) && targetType == typeof(System.UIntPtr))
+                return (true, (nuint)anyValue.Unpack<UInt64Value>().Value, "");
             
             // Handle string-based type conversions
             if (anyValue.Is(StringValue.Descriptor) && targetType == typeof(char))
@@ -486,6 +490,10 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
                 return (true, guidVal, "");
             if (targetType == typeof(Half) && Half.TryParse(stringValue, out var halfVal))
                 return (true, halfVal, "");
+            if (targetType == typeof(System.IntPtr) && long.TryParse(stringValue, out var intptrVal))
+                return (true, (nint)intptrVal, "");
+            if (targetType == typeof(System.UIntPtr) && ulong.TryParse(stringValue, out var uintptrVal))
+                return (true, (nuint)uintptrVal, "");
         }
         catch (Exception ex)
         {
@@ -577,6 +585,8 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
             case short s: return Any.Pack(new Int32Value { Value = s });
             case byte b: return Any.Pack(new Int32Value { Value = b });
             case DateTime dt: return Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
+            case nint ni: return Any.Pack(new Int64Value { Value = (long)ni });
+            case nuint nu: return Any.Pack(new UInt64Value { Value = (ulong)nu });
             case char c: return Any.Pack(new StringValue { Value = c.ToString() });
             case Half h: return Any.Pack(new FloatValue { Value = (float)h });
             case Guid g: return Any.Pack(new StringValue { Value = g.ToString() });
@@ -617,6 +627,8 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
             case float f: return Value.ForNumber(f);
             case short s: return Value.ForNumber(s);
             case byte b: return Value.ForNumber(b);
+            case nint ni: return Value.ForNumber((double)(long)ni);
+            case nuint nu: return Value.ForNumber((double)(ulong)nu);
             case char c: return Value.ForString(c.ToString());
             case Half h: return Value.ForNumber((double)(float)h);
             case Guid g: return Value.ForString(g.ToString());
