@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "wwwroot\\app.js",
   "scripts": {
-    "protoc": "protoc --plugin=protoc-gen-ts=\".\\node_modules\\.bin\\protoc-gen-ts.cmd\" --plugin=protoc-gen-grpc-web=\".\\node_modules\\protoc-gen-grpc-web\\bin\\protoc-gen-grpc-web.exe\" --js_out=\"import_style=commonjs,binary:./src/generated\" --grpc-web_out=\"import_style=typescript,mode=grpcwebtext,service_suffix=ClientPb:./src/generated\" -Iprotos -Inode_modules/protoc/protoc/include PointerViewModelService.proto",
+    "protoc": "protoc --plugin=protoc-gen-ts=\".\\node_modules\\.bin\\protoc-gen-ts.cmd\" --plugin=protoc-gen-grpc-web=\".\\node_modules\\protoc-gen-grpc-web\\bin\\protoc-gen-grpc-web.exe\" --js_out=\"import_style=commonjs,binary:./src/generated\" --grpc-web_out=\"import_style=typescript,mode=grpcwebtext:./src/generated\" -Iprotos -Inode_modules/protoc/protoc/include PointerViewModelService.proto",
     "build": "webpack --mode development",
     "dev": "webpack serve --mode development --open"
   },

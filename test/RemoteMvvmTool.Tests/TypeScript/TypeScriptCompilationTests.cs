@@ -124,10 +124,7 @@ public class TypeScriptCompilationTests
         var gen = Path.Combine(dir, "generated");
         Directory.CreateDirectory(gen);
         
-        // Use the corrected filename (without duplicate "Service")
-        var clientFileName = serviceName.EndsWith("Service") 
-            ? serviceName.Substring(0, serviceName.Length - "Service".Length) + "ServiceClientPb.ts"
-            : serviceName + "ServiceClientPb.ts";
+        var clientFileName = serviceName + "ServiceClientPb.ts";
             
         File.WriteAllText(Path.Combine(gen, clientFileName), $@"
 import * as grpcWeb from 'grpc-web';
@@ -195,7 +192,7 @@ public class ObservableObject {{}}
 
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 {extraImports ?? string.Empty}
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
@@ -297,7 +294,7 @@ public async Task Generated_TypeScript_Compiles_And_Transfers_Dictionary()
     var testTs = $@"
 declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
@@ -364,7 +361,7 @@ public async Task Generated_TypeScript_Compiles_And_Transfers_ThermalZoneCollect
 
     var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
@@ -436,7 +433,7 @@ public class ObservableObject {}
 
     var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   async getState(_req:any) {{
     return {{
@@ -502,7 +499,7 @@ class FakeClient extends {name}ServiceClient {{
 
         var testTs = $@"declare var process: any;
 import {{ {name}RemoteClient }} from './{name}RemoteClient';
-import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceServiceClientPb';
 class FakeClient extends {name}ServiceClient {{
   lastReq: any;
   async getState(_req:any) {{
