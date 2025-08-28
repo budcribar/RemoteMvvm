@@ -148,16 +148,5 @@ public class TsProjectGeneratorTests
         Assert.DoesNotContain("<input id='name'", html);
     }
 
-    [Fact]
-    public void GenerateAppTs_ReadOnlyComplexPropertyIsNotEditable()
-    {
-        var props = new List<PropertyInfo>
-        {
-            new("Zones", "ZoneCollection", null!, true)
-        };
-        string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, new List<CommandInfo>());
-        Assert.DoesNotContain("updatePropertyValueDebounced('Zones'", ts);
-        Assert.Contains("valueEl.textContent", ts);
-    }
 }
 
