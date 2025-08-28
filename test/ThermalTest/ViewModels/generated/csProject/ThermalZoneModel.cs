@@ -9,7 +9,7 @@ namespace HPSystemsTools.Models
     public class ThermalZoneModel
     {
         public bool IsActive { get; set; }
-        public string DeviceName { get; set; }
+        public string DeviceName { get; set; } = "";
         public int Temperature { get; set; }
         public int ProcessorLoad { get; set; }
         public int FanSpeed { get; set; }

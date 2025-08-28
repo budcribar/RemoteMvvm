@@ -113,6 +113,7 @@ namespace HPSystemsTools.ViewModels
         /// </summary>
         public void Add(ITelemetryReading reading)
         {
+            if (_thermalZoneService == null) return;
             var thermalZone = _thermalZoneService.Add(reading);
             if (thermalZone == null) return;
             IsActive = thermalZone.IsActive;
@@ -128,6 +129,7 @@ namespace HPSystemsTools.ViewModels
         /// </summary>
         public void Update(TestSettingsModel settings)
         {
+            if (_thermalZoneService == null) return;
             _testSettings = settings ?? new TestSettingsModel();
             DateTime firstSeenInState;
             State = _thermalZoneService.GetState(_testSettings, out firstSeenInState);
