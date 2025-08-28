@@ -174,6 +174,25 @@ public static class TypeScriptClientGenerator
             return wkt == "StringValue" ? "string" : "number";
         }
 
+        string BuildToObjectWithDates(string varName, INamedTypeSymbol type)
+        {
+            var members = Helpers.GetAllMembers(type)
+                .OfType<IPropertySymbol>()
+                .Where(m => m.GetMethod != null && m.Parameters.Length == 0 &&
+                            GeneratorHelpers.GetProtoWellKnownTypeFor(m.Type) == "Timestamp")
+                .ToList();
+            if (members.Count == 0)
+                return $"{varName}.toObject()";
+            var sbLocal = new StringBuilder();
+            sbLocal.Append("{ const obj = " + varName + ".toObject();");
+            foreach (var m in members)
+            {
+                sbLocal.Append($" obj.{GeneratorHelpers.ToCamelCase(m.Name)} = {varName}.get{m.Name}()?.toDate();");
+            }
+            sbLocal.Append(" return obj; }");
+            return sbLocal.ToString();
+        }
+
         void EnqueuePropertyTypes()
         {
             foreach (var p in props)
@@ -338,7 +357,10 @@ public static class TypeScriptClientGenerator
                          (elemNt.TypeKind == TypeKind.Class || elemNt.TypeKind == TypeKind.Struct) &&
                          !GeneratorHelpers.IsWellKnownType(elem!) &&
                          elem!.TypeKind != TypeKind.Enum)
-                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
+                {
+                    var mapExpr = BuildToObjectWithDates("v", elemNt);
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => {mapExpr})";
+                }
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -350,7 +372,10 @@ public static class TypeScriptClientGenerator
                          (arrElemNt.TypeKind == TypeKind.Class || arrElemNt.TypeKind == TypeKind.Struct) &&
                          !GeneratorHelpers.IsWellKnownType(arr.ElementType) &&
                          arr.ElementType.TypeKind != TypeKind.Enum)
-                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
+                {
+                    var mapExpr = BuildToObjectWithDates("v", arrElemNt);
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => {mapExpr})";
+                }
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -362,7 +387,10 @@ public static class TypeScriptClientGenerator
                          (memElemNt.TypeKind == TypeKind.Class || memElemNt.TypeKind == TypeKind.Struct) &&
                          !GeneratorHelpers.IsWellKnownType(memElem!) &&
                          memElem!.TypeKind != TypeKind.Enum)
-                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
+                {
+                    var mapExpr = BuildToObjectWithDates("v", memElemNt);
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => {mapExpr})";
+                }
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -372,7 +400,10 @@ public static class TypeScriptClientGenerator
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
                      !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
                      p.FullTypeSymbol!.TypeKind != TypeKind.Enum)
-                expr = $"(state as any).get{p.Name}()?.toObject()";
+            {
+                var objExpr = BuildToObjectWithDates("v", nt);
+                expr = $"(() => {{ const v = (state as any).get{p.Name}(); return v ? {objExpr} : undefined; }})()";
+            }
             else
                 expr = $"(state as any).get{p.Name}()";
             sb.AppendLine($"        this.{GeneratorHelpers.ToCamelCase(p.Name)} = {expr};");
@@ -398,7 +429,10 @@ public static class TypeScriptClientGenerator
                          (elemNt.TypeKind == TypeKind.Class || elemNt.TypeKind == TypeKind.Struct) &&
                          !GeneratorHelpers.IsWellKnownType(elem!) &&
                          elem!.TypeKind != TypeKind.Enum)
-                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
+                {
+                    var mapExpr = BuildToObjectWithDates("v", elemNt);
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => {mapExpr})";
+                }
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -410,7 +444,10 @@ public static class TypeScriptClientGenerator
                          (arrElemNt.TypeKind == TypeKind.Class || arrElemNt.TypeKind == TypeKind.Struct) &&
                          !GeneratorHelpers.IsWellKnownType(arr.ElementType) &&
                          arr.ElementType.TypeKind != TypeKind.Enum)
-                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
+                {
+                    var mapExpr = BuildToObjectWithDates("v", arrElemNt);
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => {mapExpr})";
+                }
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -422,7 +459,10 @@ public static class TypeScriptClientGenerator
                          (memElemNt.TypeKind == TypeKind.Class || memElemNt.TypeKind == TypeKind.Struct) &&
                          !GeneratorHelpers.IsWellKnownType(memElem!) &&
                          memElem!.TypeKind != TypeKind.Enum)
-                    expr = $"(state as any).get{p.Name}List().map((v:any) => v.toObject())";
+                {
+                    var mapExpr = BuildToObjectWithDates("v", memElemNt);
+                    expr = $"(state as any).get{p.Name}List().map((v:any) => {mapExpr})";
+                }
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
@@ -432,7 +472,10 @@ public static class TypeScriptClientGenerator
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
                      !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
                      p.FullTypeSymbol!.TypeKind != TypeKind.Enum)
-                expr = $"(state as any).get{p.Name}()?.toObject()";
+            {
+                var objExpr = BuildToObjectWithDates("v", nt);
+                expr = $"(() => {{ const v = (state as any).get{p.Name}(); return v ? {objExpr} : undefined; }})()";
+            }
             else
                 expr = $"(state as any).get{p.Name}()";
             sb.AppendLine($"        this.{GeneratorHelpers.ToCamelCase(p.Name)} = {expr};");
