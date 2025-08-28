@@ -197,7 +197,7 @@ public static class TypeScriptClientGenerator
                             GeneratorHelpers.GetProtoWellKnownTypeFor(m.Type) == "Timestamp")
                 .ToList();
             if (members.Count == 0)
-                return $"{varName}.toObject()";
+                return "{ const obj = typeof " + varName + ".toObject === 'function' ? " + varName + ".toObject() : " + varName + "; return obj; }";
             var sbLocal = new StringBuilder();
             sbLocal.Append("{ const obj = " + varName + ".toObject();");
             foreach (var m in members)
