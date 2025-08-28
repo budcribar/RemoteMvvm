@@ -95,6 +95,7 @@ public class TsProjectGeneratorTests
         Assert.Contains("vm.zoneList.forEach", ts);
         Assert.Contains("document.createElement('details')", ts);
         Assert.Contains("Object.entries(vm.testSettings", ts);
+        Assert.Contains("const testSettingsContainer = document.createElement('div');", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('ZoneList'", ts);
         Assert.Contains("await vm.updatePropertyValueDebounced('TestSettings'", ts);
         Assert.Contains("await vm.doWork", ts);
