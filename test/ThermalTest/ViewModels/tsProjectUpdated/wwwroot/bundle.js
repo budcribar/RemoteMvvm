@@ -3167,8 +3167,12 @@ class ThermalMainElement extends HTMLElement {
         .test-description { /* keep default block; styling optional */ }
         .test-parameters {
           display: flex;
-          flex-flow: row wrap;
-          justify-content: space-evenly;
+          flex-direction: row;
+          justify-content: center;
+          align-items: flex-start;
+          gap: 24px;
+          width: 100%;
+          margin-bottom: 0.5em;
         }
         .show-hide-options {
           display: flex;
@@ -3178,9 +3182,11 @@ class ThermalMainElement extends HTMLElement {
         }
         .slider {
           display: flex;
-          flex-flow: column nowrap;
-          justify-content: space-evenly;
-          align-self: center;
+          flex-direction: column;
+          justify-content: flex-start;
+          align-items: center;
+          min-width: 220px;
+          max-width: 260px;
           font-size: .8rem;
           background: #fff;
           border-radius: 8px;
@@ -3194,12 +3200,16 @@ class ThermalMainElement extends HTMLElement {
         }
         .slider-content {
           display: flex;
-          flex-flow: row nowrap;
-          justify-content: space-evenly;
+          flex-direction: row;
+          justify-content: space-between;
           align-items: center;
-          gap: 12px;
+          gap: 10px;
+          width: 100%;
         }
-        .slider-input input[type=range] { width: 260px; max-width: 60vw; }
+        .slider-input input[type=range] {
+          width: 140px;
+          max-width: 30vw;
+        }
         .slider-label label { font-weight: 600; min-width: 48px; display: inline-block; text-align: right; }
         .thermal-zones-container {
           display: flex;
@@ -3398,11 +3408,11 @@ class ThermalMainElement extends HTMLElement {
                     if (z.progress !== undefined)
                         el.setAttribute('progress', String(z.progress));
                     if (z.zone)
-                        el.setAttribute('zone', String(i));
+                        el.setAttribute('zone', z.zone);
                     // Pass mapped zone label instead of the map
                     let zoneLabel = String(i);
-                    if (zoneMap && zoneMap[i])
-                        zoneLabel = zoneMap[i];
+                    if (zoneMap && zoneMap[z.zone])
+                        zoneLabel = zoneMap[z.zone];
                     el.setAttribute('zone-label', zoneLabel);
                     if (z.fanSpeed !== undefined)
                         el.setAttribute('fan-speed', String(z.fanSpeed));
@@ -3487,10 +3497,12 @@ class ThermalZoneElement extends HTMLElement {
           display: flex;
           flex-flow: column wrap;
           border: 1px solid #ccc;
-          width: 90%;
+          width: 540px;
+          max-width: 98vw;
           border-radius: 8px;
           padding: 12px;
           background: #fafafa;
+          margin: 0 auto;
         }
 
         /* Progress */
@@ -3523,20 +3535,25 @@ class ThermalZoneElement extends HTMLElement {
         /* Runtime properties */
         .runtime-properties-container {
           display: flex;
-          flex-flow: row wrap;
-          justify-content: space-evenly;
-          gap: 8px;
-          margin: 8px 0;
+          flex-direction: row;
+          justify-content: center;
+          align-items: center;
+          gap: 12px;
+          margin: 8px 0 4px 0;
+          flex-wrap: wrap;
         }
         .runtime-properties { text-align: center; }
         .runtime-property {
-          background: #fff;
-          border-radius: 6px;
-          padding: 8px;
-          box-shadow: 0 1px 2px rgba(0,0,0,0.06);
+          background: transparent;
+          border-radius: 0;
+          padding: 4px 6px;
+          box-shadow: none;
           text-align: center;
           font-weight: 600;
-          min-width: 120px;
+          min-width: 80px;
+          max-width: 160px;
+          font-size: 0.98em;
+          white-space: nowrap;
         }
 
         /* Gauges */
@@ -3643,8 +3660,9 @@ class ThermalZoneElement extends HTMLElement {
         const maxTemp = this.num('max-temp');
         const zoneLabel = this.getAttribute('zone-label') ?? '';
         const fan = this.num('fan-speed');
-        const primary = status === 'CheckInProgress' ? state : status;
-        propPrimary.textContent = primary;
+        // Prefer displayedStatus attribute if present
+        const displayedStatus = this.getAttribute('displayedstatus');
+        propPrimary.textContent = displayedStatus ?? (status === 'CheckInProgress' ? state : status);
         propMaxTemp.textContent = `Max Temp: ${maxTemp}\u00B0 C`;
         propZone.textContent = zoneLabel;
         propFan.textContent = `${fan} RPM`;
@@ -3687,9 +3705,22 @@ class ThermalZoneElement extends HTMLElement {
         gaugeTemp.setAttribute('max', String(Math.max(0, tempMax)));
         // Details
         const details = this.root.getElementById('details');
-        const sdStatus = this.desc[status] ?? status;
-        const sdState = this.desc[state] ?? state;
-        const detailText = status === 'CheckInProgress' ? `${sdStatus} ${sdState}`.trim() : sdStatus;
+        // Use statusDescription and stateDescription attributes if present
+        const statusDescription = this.getAttribute('statusdescription') || '';
+        const stateDescription = this.getAttribute('statedescription') || '';
+        let detailText = '';
+        if (status === 'CheckInProgress') {
+            // If both are empty, show a default message
+            if (!statusDescription && !stateDescription) {
+                detailText = 'Please wait for the test to complete. Initializing';
+            }
+            else {
+                detailText = `${statusDescription}${stateDescription}`.trim();
+            }
+        }
+        else {
+            detailText = statusDescription || status;
+        }
         details.textContent = detailText;
     }
 }
@@ -6839,25 +6870,35 @@ function computeMaxTempC(deviceName) {
 }
 function buildZonesPayload() {
     const zonesArr = Array.isArray(vm.zoneList) ? vm.zoneList : [];
+    // Import the enum map
+    const { ThermalStateEnumMap } = __webpack_require__(/*! ./HP3LSThermalTestViewModelRemoteClient */ "./src/HP3LSThermalTestViewModelRemoteClient.ts");
     return zonesArr
         .filter((z) => z && (z.isActive === undefined || !!z.isActive))
-        .map((z, idx) => ({
-        active: z.isActive ?? true,
-        background: z.background ?? '#fafafa',
-        status: String(z.status ?? ''),
-        state: String(z.state ?? ''),
-        progress: Number(z.progress ?? 0),
-        zone: z.deviceName ? String(z.deviceName) : String(z.zone ?? ''),
-        'zone-index': idx,
-        fanSpeed: Number(z.fanSpeed ?? 0),
-        deviceName: z.deviceName ?? 'Device',
-        temperature: Number(z.temperature ?? 0),
-        maxTemp: computeMaxTempC(z.deviceName),
-        processorLoadName: 'Processor Load',
-        processorLoad: Number(z.processorLoad ?? 0),
-        cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
-        // stateDescriptions: can be added if available
-    }));
+        .map((z, idx) => {
+        const statusStr = (z.status in ThermalStateEnumMap) ? ThermalStateEnumMap[z.status] : String(z.status ?? '');
+        const stateStr = (z.state in ThermalStateEnumMap) ? ThermalStateEnumMap[z.state] : String(z.state ?? '');
+        const displayedStatus = statusStr === 'CheckInProgress' ? stateStr : statusStr;
+        return {
+            active: z.isActive ?? true,
+            background: z.background ?? '#fafafa',
+            status: statusStr,
+            state: stateStr,
+            displayedStatus,
+            progress: Number(z.progress ?? 0),
+            zone: String(z.zone ?? ''),
+            'zone-index': idx,
+            fanSpeed: Number(z.fanSpeed ?? 0),
+            deviceName: z.deviceName ?? 'Device',
+            temperature: Number(z.temperature ?? 0),
+            maxTemp: computeMaxTempC(z.deviceName),
+            processorLoadName: 'Processor Load',
+            processorLoad: Number(z.processorLoad ?? 0),
+            cpuLoadThreshold: Number(vm?.testSettings?.cpuLoadThreshold ?? 100),
+            statusDescription: z.statusDescription ?? '',
+            stateDescription: z.stateDescription ?? '',
+            // stateDescriptions: can be added if available
+        };
+    });
 }
 async function render() {
     const main = document.querySelector('x-thermal-main');
@@ -6878,6 +6919,13 @@ async function render() {
             main.setAttribute('cpu-load-threshold', String(vm.cpuLoadThreshold));
         if (vm.cpuLoadTimeSpan != null)
             main.setAttribute('cpu-load-time', String(vm.cpuLoadTimeSpan));
+        // Pass zone map if available
+        if (typeof _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.ZoneMap === 'object' && _HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.ZoneMap !== null) {
+            main.setAttribute('zone-map', JSON.stringify(_HP3LSThermalTestViewModelRemoteClient__WEBPACK_IMPORTED_MODULE_1__.ZoneMap));
+        }
+        else {
+            main.removeAttribute('zone-map');
+        }
         // Zones
         try {
             const zones = buildZonesPayload();

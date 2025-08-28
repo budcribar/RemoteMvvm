@@ -7,7 +7,7 @@ namespace PeakSWC.Mvvm.Remote
 {
     public class ServerOptions
     {
-        public int Port { get; set; } = MonsterClicker.NetworkConfig.Port;
+        public int Port { get; set; } = 50052;
         public bool UseHttps { get; set; } = true;
         public string? CorsPolicyName { get; set; } = "AllowAll";
         public string[]? AllowedOrigins { get; set; } = null;
@@ -15,10 +15,11 @@ namespace PeakSWC.Mvvm.Remote
         public string[]? AllowedMethods { get; set; } = null;
         public string[]? ExposedHeaders { get; set; } = null;
         public string? LogLevel { get; set; } = "Debug";
+        public string RunString { get; set; } = "WPF";
     }
 
     public class ClientOptions
     {
-        public string Address { get; set; } = MonsterClicker.NetworkConfig.ServerAddress;
+        public string Address { get; set; } = "http://localhost:50052";
     }
 }

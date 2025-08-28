@@ -7,23 +7,31 @@
 <head>
     <meta charset="utf-8" />
     <title>PointerViewModel Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .field { margin-bottom: 8px; display: flex; gap: 8px; align-items: center; }
+        .field label span, .field span { font-weight: 600; min-width: 150px; }
+        details { border: 1px solid #ccc; border-radius: 4px; padding: 8px; margin-bottom: 8px; }
+        details > summary { cursor: pointer; }
+        #connection-status { margin-top: 10px; font-weight: 600; }
+    </style>
 </head>
 <body>
     <h3>Remote ViewModel</h3>
-    <div><label>Show: <input id='show'/></label></div>
-    <div><label>ShowSpinner: <input id='showSpinner'/></label></div>
-    <div><label>ClicksToPass: <input id='clicksToPass'/></label></div>
-    <div><label>Is3Btn: <input id='is3Btn'/></label></div>
-    <div><label>TestTimeoutSec: <input id='testTimeoutSec'/></label></div>
-    <div><label>Instructions: <input id='instructions'/></label></div>
-    <div><label>ShowCursorTest: <input id='showCursorTest'/></label></div>
-    <div><label>ShowConfigSelection: <input id='showConfigSelection'/></label></div>
-    <div><label>ShowClickInstructions: <input id='showClickInstructions'/></label></div>
-    <div><label>ShowTimer: <input id='showTimer'/></label></div>
-    <div><label>ShowBottom: <input id='showBottom'/></label></div>
-    <div><label>TimerText: <input id='timerText'/></label></div>
-    <div><label>SelectedDevice: <input id='selectedDevice'/></label></div>
-    <div><label>LastClickCount: <input id='lastClickCount'/></label></div>
+    <div class='field'><label>Show: <input id='show'/></label></div>
+    <div class='field'><label>ShowSpinner: <input id='showSpinner'/></label></div>
+    <div class='field'><label>ClicksToPass: <input id='clicksToPass'/></label></div>
+    <div class='field'><label>Is3Btn: <input id='is3Btn'/></label></div>
+    <div class='field'><label>TestTimeoutSec: <input id='testTimeoutSec'/></label></div>
+    <div class='field'><label>Instructions: <input id='instructions'/></label></div>
+    <div class='field'><label>ShowCursorTest: <input id='showCursorTest'/></label></div>
+    <div class='field'><label>ShowConfigSelection: <input id='showConfigSelection'/></label></div>
+    <div class='field'><label>ShowClickInstructions: <input id='showClickInstructions'/></label></div>
+    <div class='field'><label>ShowTimer: <input id='showTimer'/></label></div>
+    <div class='field'><label>ShowBottom: <input id='showBottom'/></label></div>
+    <div class='field'><label>TimerText: <input id='timerText'/></label></div>
+    <div class='field'><label>SelectedDevice: <input id='selectedDevice'/></label></div>
+    <div class='field'><label>LastClickCount: <input id='lastClickCount'/></label></div>
     <button id='initialize-btn'>Initialize</button>
     <button id='onCursorTest-btn'>OnCursorTest</button>
     <button id='onClickTest-btn'>OnClickTest</button>

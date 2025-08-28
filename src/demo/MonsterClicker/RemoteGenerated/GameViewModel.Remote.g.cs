@@ -8,30 +8,36 @@ using Grpc.Net.Client;
 using MonsterClicker.ViewModels.Protos;
 using MonsterClicker.ViewModels.RemoteClients;
 using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
+using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
-using System.Windows.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
+using System.Windows.Threading;
 using PeakSWC.Mvvm.Remote;
 
 namespace MonsterClicker.ViewModels
 {
-    public partial class GameViewModel : IDisposable
+    public partial class GameViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private GameViewModelGrpcServiceImpl? _grpcService;
+        private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private MonsterClicker.ViewModels.RemoteClients.GameViewModelRemoteClient? _remoteClient;
-        private readonly Dispatcher _dispatcher;
 
         public GameViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
             _dispatcher = Dispatcher.CurrentDispatcher;
-            _grpcService = new GameViewModelGrpcServiceImpl(this, _dispatcher);
+            _grpcService = new GameViewModelGrpcServiceImpl(this);
 
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -54,14 +60,22 @@ namespace MonsterClicker.ViewModels
             }));
 
             // Register the gRPC service implementation with ASP.NET Core DI
-            builder.Services.AddSingleton(_grpcService);
+            builder.Services.AddSingleton(_grpcService!);
 
             // Configure Kestrel to listen on the specified port with HTTP/2 support
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
-                kestrelOptions.ListenLocalhost(NetworkConfig.Port, listenOptions =>
+                // HTTP endpoint for compatibility (HTTP/1.1 + HTTP/2)
+                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+                });
+                
+                // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
+                kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
+                {
+                    listenOptions.UseHttps(); // Use development certificate
+                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
                 });
             });
 
@@ -90,7 +104,7 @@ namespace MonsterClicker.ViewModels
         public GameViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
+            _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
             var client = new GameViewModelService.GameViewModelServiceClient(_channel);
             _remoteClient = new GameViewModelRemoteClient(client);
