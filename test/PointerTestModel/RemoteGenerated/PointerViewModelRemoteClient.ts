@@ -10,6 +10,9 @@ import { Any } from 'google-protobuf/google/protobuf/any_pb';
 import { BoolValue, Int32Value, StringValue } from 'google-protobuf/google/protobuf/wrappers_pb';
 import { Timestamp } from 'google-protobuf/google/protobuf/timestamp_pb';
 
+export const readOnlyMemberMap: Record<string, Set<string>> = {
+};
+
 export class PointerViewModelRemoteClient {
     private readonly grpcClient: PointerViewModelServiceClient;
     private propertyStream?: grpcWeb.ClientReadableStream<PropertyChangeNotification>;

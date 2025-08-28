@@ -3,7 +3,7 @@
 // </auto-generated>
 
 import { PointerViewModelServiceClient } from './generated/PointerViewModelServiceServiceClientPb';
-import { PointerViewModelRemoteClient } from './PointerViewModelRemoteClient';
+import { PointerViewModelRemoteClient, readOnlyMemberMap } from './PointerViewModelRemoteClient';
 
 const grpcHost = 'http://localhost:50052';
 const grpcClient = new PointerViewModelServiceClient(grpcHost);

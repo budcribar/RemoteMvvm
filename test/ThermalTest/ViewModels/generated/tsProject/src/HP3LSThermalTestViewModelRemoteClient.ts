@@ -60,7 +60,7 @@ export interface ThermalZoneState {
   readonly secondsInState: number;
   readonly firstSeenInState: Date;
   readonly progress: number;
-  readonly background: string;
+  background: string;
   readonly status: number;
   readonly state: number;
   readonly stateDescription: string;
@@ -72,6 +72,10 @@ export interface TestSettingsState {
   cpuLoadThreshold: number;
   cpuLoadTimeSpan: number;
 }
+
+export const readOnlyMemberMap: Record<string, Set<string>> = {
+  ThermalZoneState: new Set(['isActive', 'deviceName', 'temperature', 'processorLoad', 'fanSpeed', 'secondsInState', 'firstSeenInState', 'progress', 'status', 'state', 'stateDescription', 'statusDescription']),
+};
 
 export class HP3LSThermalTestViewModelRemoteClient {
     private readonly grpcClient: HP3LSThermalTestViewModelServiceClient;
@@ -88,7 +92,7 @@ export class HP3LSThermalTestViewModelRemoteClient {
     testSettings: TestSettingsState;
     showDescription: boolean;
     showReadme: boolean;
-    private readonly readOnlyProps = new Set<string>(['Instructions', 'TestSettings']);
+    private readonly readOnlyProps = new Set<string>(['Instructions', 'Zones', 'TestSettings']);
     connectionStatus: string = 'Unknown';
 
     addChangeListener(cb: ((isFromServer?: boolean) => void) | (() => void)): void {
@@ -120,8 +124,8 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zones = (state as any).getZonesList().map((v:any) => v.toObject());
-        this.testSettings = (state as any).getTestSettings()?.toObject();
+        this.zones = (state as any).getZonesList().map((v:any) => { const obj = v.toObject(); obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
+        this.testSettings = (() => { const v = (state as any).getTestSettings(); return v ? v.toObject() : undefined; })();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
         this.connectionStatus = 'Connected';
@@ -136,8 +140,8 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zones = (state as any).getZonesList().map((v:any) => v.toObject());
-        this.testSettings = (state as any).getTestSettings()?.toObject();
+        this.zones = (state as any).getZonesList().map((v:any) => { const obj = v.toObject(); obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
+        this.testSettings = (() => { const v = (state as any).getTestSettings(); return v ? v.toObject() : undefined; })();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
         this.notifyChange();
