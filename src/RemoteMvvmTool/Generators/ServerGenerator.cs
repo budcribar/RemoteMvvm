@@ -189,12 +189,25 @@ public static class ServerGenerator
                 }
                 else
                 {
+                    var typeDisplayString = p.FullTypeSymbol.ToDisplayString();
+                    var assignment = typeDisplayString switch
+                    {
+                        "System.DateTime" => $"Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime(propValue.ToUniversalTime())",
+                        "System.Half" => $"(float)propValue",
+                        "System.Char" or "char" => $"propValue.ToString()",
+                        "System.Guid" => $"propValue.ToString()",
+                        "System.Decimal" or "decimal" => $"propValue.ToString()",
+                        "System.DateOnly" => $"propValue.ToString()",
+                        "System.TimeOnly" => $"propValue.ToString()",
+                        _ => "propValue",
+                    };
+
                     if (p.FullTypeSymbol.TypeKind == TypeKind.Enum)
                         sb.AppendLine($"            state.{p.Name} = (int)propValue;");
                     else if (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol))
                         sb.AppendLine($"            state.{p.Name} = {viewModelNamespace}.ProtoStateConverters.ToProto(propValue);");
                     else
-                        sb.AppendLine($"            state.{p.Name} = propValue;");
+                        sb.AppendLine($"            state.{p.Name} = {assignment};");
                 }
             }
             else if (p.FullTypeSymbol is IArrayTypeSymbol arr)
