@@ -62,7 +62,7 @@ public class ThermalViewModelGenerationTests
             "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
             refs);
         Assert.NotNull(result.ViewModelSymbol);
-        Assert.Contains(result.Properties, p => p.TypeString.Contains("ThermalZoneComponentViewModel"));
+        Assert.Contains(result.Properties, p => p.TypeString.Contains("TestSettingsModel"));
         Assert.Contains(result.Commands, c => c.MethodName == "StateChanged" && c.Parameters.Any(pr => pr.TypeString == "HPSystemsTools.Models.ThermalStateEnum"));
     }
 
