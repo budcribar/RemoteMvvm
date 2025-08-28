@@ -124,8 +124,8 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zones = (state as any).getZonesList().map((v:any) => { const obj = typeof v.toObject === 'function' ? v.toObject() : v; obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
-        this.testSettings = (() => { const v = (state as any).getTestSettings(); return v ? typeof v.toObject === 'function' ? v.toObject() : v : undefined; })();
+        this.zones = (state as any).getZonesList().map((v:any) => { const obj = v.toObject(); obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
+        this.testSettings = (() => { const v = (state as any).getTestSettings(); return v ? v.toObject() : undefined; })();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
         this.connectionStatus = 'Connected';
@@ -140,8 +140,8 @@ export class HP3LSThermalTestViewModelRemoteClient {
         this.cpuTemperatureThreshold = (state as any).getCpuTemperatureThreshold();
         this.cpuLoadThreshold = (state as any).getCpuLoadThreshold();
         this.cpuLoadTimeSpan = (state as any).getCpuLoadTimeSpan();
-        this.zones = (state as any).getZonesList().map((v:any) => { const obj = typeof v.toObject === 'function' ? v.toObject() : v; obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
-        this.testSettings = (() => { const v = (state as any).getTestSettings(); return v ? typeof v.toObject === 'function' ? v.toObject() : v : undefined; })();
+        this.zones = (state as any).getZonesList().map((v:any) => { const obj = v.toObject(); obj.firstSeenInState = v.getFirstSeenInState()?.toDate(); return obj; });
+        this.testSettings = (() => { const v = (state as any).getTestSettings(); return v ? v.toObject() : undefined; })();
         this.showDescription = (state as any).getShowDescription();
         this.showReadme = (state as any).getShowReadme();
         this.notifyChange();

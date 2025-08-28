@@ -64,7 +64,7 @@ export class MainViewModelRemoteClient {
 
     async initializeRemote(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.devices = (state as any).getDevicesList().map((v:any) => typeof v.toObject === 'function' ? v.toObject() : v);
+        this.devices = (state as any).getDevicesList().map((v:any) => v.toObject());
         this.connectionStatus = 'Connected';
         this.notifyChange();
         this.startListeningToPropertyChanges();
@@ -73,7 +73,7 @@ export class MainViewModelRemoteClient {
 
     async refreshState(): Promise<void> {
         const state = await this.grpcClient.getState(new Empty());
-        this.devices = (state as any).getDevicesList().map((v:any) => typeof v.toObject === 'function' ? v.toObject() : v);
+        this.devices = (state as any).getDevicesList().map((v:any) => v.toObject());
         this.notifyChange();
     }
 
