@@ -165,7 +165,8 @@ public class ObservableObject {}
         Assert.Contains("repeated ThermalZoneComponentViewModelState zones", proto);
 
         var client = ClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, string.Empty);
-        Assert.Contains("new ZoneCollection(state.Zones", client);
+        Assert.Contains("this.Zones = new ZoneCollection();", client);
+        Assert.Contains("foreach (var e in state.Zones.Select(ProtoStateConverters.FromProto)) this.Zones.Add(e);", client);
 
         var server = ServerGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, string.Empty);
         Assert.Contains("state.Zones.AddRange(propValue.Where", server);
