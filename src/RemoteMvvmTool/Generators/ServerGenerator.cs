@@ -115,9 +115,9 @@ public static class ServerGenerator
             sb.AppendLine("        try");
             sb.AppendLine("        {");
             sb.AppendLine($"            var propValue = _viewModel.{p.Name};");
-            if (p.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
+            if (p.FullTypeSymbol is INamedTypeSymbol named)
             {
-                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
+                if (named.IsGenericType && GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
                 {
                     var keyType = named.TypeArguments[0];
                     var valueType = named.TypeArguments[1];
@@ -139,7 +139,7 @@ public static class ServerGenerator
                         sb.AppendLine($"            if (propValue != null) state.{p.Name}.AddRange({dictExpr});");
                     }
                 }
-                else if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
+                else if (named.IsGenericType && GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
                 {
                     if (memElem?.SpecialType == SpecialType.System_Byte)
                         sb.AppendLine($"            if (!propValue.IsEmpty) state.{p.Name} = Google.Protobuf.ByteString.CopyFrom(propValue.ToArray());");

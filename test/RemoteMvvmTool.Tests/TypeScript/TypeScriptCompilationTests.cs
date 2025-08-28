@@ -410,6 +410,80 @@ class FakeClient extends {name}ServiceClient {{
         await RunCmdAsync("node", "test.js", Path.Combine(tempDir, "dist"));
 }
 
+[Fact]
+public async Task Generated_TypeScript_Compiles_With_Derived_Collection()
+{
+    var tempDir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+    Directory.CreateDirectory(tempDir);
+    var vmCode = """
+public class ObservablePropertyAttribute : System.Attribute {}
+public class RelayCommandAttribute : System.Attribute {}
+namespace HP.Telemetry { public enum Zone { CPUZ_0, CPUZ_1 } }
+namespace HPSystemsTools.ViewModels { public class ThermalZoneComponentViewModel { public HP.Telemetry.Zone Zone { get; set; } public int Temperature { get; set; } }
+public class ZoneCollection : System.Collections.ObjectModel.ObservableCollection<ThermalZoneComponentViewModel> {} }
+public partial class TestViewModel : ObservableObject { [ObservableProperty] public partial HPSystemsTools.ViewModels.ZoneCollection Zones { get; set; } = new HPSystemsTools.ViewModels.ZoneCollection(); }
+public class ObservableObject {}
+""";
+    var vmFile = Path.Combine(tempDir, "TestViewModel.cs");
+    File.WriteAllText(vmFile, vmCode);
+    var refs = LoadDefaultRefs();
+    var (_, name, props, cmds, _) = await ViewModelAnalyzer.AnalyzeAsync(new[] { vmFile }, "ObservablePropertyAttribute", "RelayCommandAttribute", refs, "ObservableObject");
+    var ts = TypeScriptClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds);
+    var tsClientFile = Path.Combine(tempDir, name + "RemoteClient.ts");
+    File.WriteAllText(tsClientFile, ts);
+
+    CreateTsStubs(tempDir, name, name + "Service");
+
+    var testTs = $@"declare var process: any;
+import {{ {name}RemoteClient }} from './{name}RemoteClient';
+import {{ {name}ServiceClient, UpdatePropertyValueResponse }} from './generated/{name}ServiceClientPb';
+class FakeClient extends {name}ServiceClient {{
+  async getState(_req:any) {{
+    return {{
+      getZonesList: () => [{{ zone: 0, temperature: 42 }}, {{ zone: 1, temperature: 43 }}]
+    }};
+  }}
+  updatePropertyValue(_req:any) {{ return Promise.resolve(new UpdatePropertyValueResponse()); }}
+  subscribeToPropertyChanges(_req:any) {{ return {{ on:()=>{{}}, cancel:()=>{{}} }} as any; }}
+  ping(_req:any) {{ return Promise.resolve({{ getStatus: () => 0 }}); }}
+  stateChanged(_req:any) {{ return Promise.resolve(); }}
+  cancelTest(_req:any) {{ return Promise.resolve(); }}
+}}
+(async () => {{
+  const client = new {name}RemoteClient(new FakeClient(''));
+  await client.initializeRemote();
+  if (client.zones.length !== 2 || client.zones[0].temperature !== 42 || client.zones[1].temperature !== 43) throw new Error('Collection transfer failed');
+  client.dispose();
+}})().catch(e => {{ console.error(e); process.exit(1); }});";
+    File.WriteAllText(Path.Combine(tempDir, "test.ts"), testTs);
+
+    var tsconfig = """
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "module": "commonjs",
+    "strict": false,
+    "esModuleInterop": true,
+    "lib": ["es2018", "dom"],
+    "outDir": "dist",
+    "allowJs": true,
+    "types": ["node"]
+  },
+  "include": ["**/*.ts", "**/*.js"]
+}
+""";
+    File.WriteAllText(Path.Combine(tempDir, "tsconfig.json"), tsconfig);
+
+    var result = RunPs("C:\\Program Files\\nodejs\\tsc.ps1", "--project tsconfig.json", tempDir);
+    if (result.StartsWith("Powershell"))
+        await RunCmdAsync("tsc", "--project tsconfig.json", tempDir);
+
+    if (result.Length > 0) Assert.Fail(result);
+
+    if (OperatingSystem.IsWindows())
+        await RunCmdAsync("node", "test.js", Path.Combine(tempDir, "dist"));
+}
+
     [Fact]
     public async Task Generated_TypeScript_Compiles_And_Transfers_ObservableCollection()
     {
