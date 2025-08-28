@@ -199,7 +199,7 @@ public static class TypeScriptClientGenerator
             if (members.Count == 0)
                 return $"typeof {varName}.toObject === 'function' ? {varName}.toObject() : {varName}";
             var sbLocal = new StringBuilder();
-            sbLocal.Append("{ const obj = typeof " + varName + ".toObject === 'function' ? " + varName + ".toObject() : " + varName + ";");
+            sbLocal.Append("{ const obj = " + varName + ".toObject();");
             foreach (var m in members)
             {
                 sbLocal.Append($" obj.{GeneratorHelpers.ToCamelCase(m.Name)} = {varName}.get{m.Name}()?.toDate();");
