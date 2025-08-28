@@ -12,7 +12,7 @@
     "protoc-gen-grpc-web": "^1.5.0"
   },
   "scripts": {
-    "protoc": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./ --grpc-web_out=import_style=commonjs,mode=grpcwebtext:./ -I protos protos/TestViewModelService.proto",
+    "protoc": "grpc_tools_node_protoc --js_out=import_style=commonjs,binary:./ --grpc-web_out=import_style=commonjs,mode=grpcwebtext,service_suffix=ClientPb:./ -I protos protos/TestViewModelService.proto",
     "clean": "rm -f *_pb.js *_grpc_web_pb.js"
   },
   "engines": {
