@@ -18,6 +18,7 @@ public static class CsProjectGenerator
     <TargetFramework>net8.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <LangVersion>preview</LangVersion>
     {(isWpf ? "<UseWPF>true</UseWPF>" : string.Empty)}
     {(isWinForms ? "<UseWindowsForms>true</UseWindowsForms>" : string.Empty)}
   </PropertyGroup>
