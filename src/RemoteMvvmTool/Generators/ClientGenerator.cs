@@ -278,7 +278,12 @@ public static class ClientGenerator
                             // Regular collection handling
                             string sel = string.Empty;
                             var elemConv = ValueFromProto("e", elem!, "e1");
-                            if (elemConv != "e") sel = $".Select(e => {elemConv})";
+                            if (elemConv != "e")
+                            {
+                                sel = elemConv == "ProtoStateConverters.FromProto(e)"
+                                    ? ".Select(ProtoStateConverters.FromProto)"
+                                    : $".Select(e => {elemConv})";
+                            }
 
                             if (named.TypeKind == TypeKind.Interface)
                                 psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
@@ -299,7 +304,12 @@ public static class ClientGenerator
                     var elem = arr.ElementType;
                     string sel = string.Empty;
                     var elemConv = ValueFromProto("e", elem, "e1");
-                    if (elemConv != "e") sel = $".Select(e => {elemConv})";
+                    if (elemConv != "e")
+                    {
+                        sel = elemConv == "ProtoStateConverters.FromProto(e)"
+                            ? ".Select(ProtoStateConverters.FromProto)"
+                            : $".Select(e => {elemConv})";
+                    }
                     psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToArray();");
                 }
                 else
