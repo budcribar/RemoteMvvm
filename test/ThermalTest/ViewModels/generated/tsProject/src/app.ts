@@ -36,7 +36,7 @@ async function render() {
     const zonesSummary = document.createElement('summary');
     zonesSummary.textContent = 'Zones';
     zonesDetails.appendChild(zonesSummary);
-    const container = document.createElement('div');
+    const zonesContainer = document.createElement('div');
     Object.entries(vm.zones as any).forEach(([key, value]) => {
         const field = document.createElement('div');
         field.className = 'field';
@@ -65,9 +65,9 @@ async function render() {
         });
         field.appendChild(label);
         field.appendChild(input);
-        container.appendChild(field);
+        zonesContainer.appendChild(field);
     });
-    zonesDetails.appendChild(container);
+    zonesDetails.appendChild(zonesContainer);
     zonesEl.appendChild(zonesDetails);
     const testSettingsEl = document.getElementById('testSettings') as HTMLElement;
     const testSettingsRootOpen = (testSettingsEl.querySelector('details[data-root]') as HTMLDetailsElement)?.open ?? true;
@@ -78,7 +78,7 @@ async function render() {
     const testSettingsSummary = document.createElement('summary');
     testSettingsSummary.textContent = 'TestSettings';
     testSettingsDetails.appendChild(testSettingsSummary);
-    const container = document.createElement('div');
+    const testSettingsContainer = document.createElement('div');
     Object.entries(vm.testSettings as any).forEach(([key, value]) => {
         const field = document.createElement('div');
         field.className = 'field';
@@ -107,9 +107,9 @@ async function render() {
         });
         field.appendChild(label);
         field.appendChild(input);
-        container.appendChild(field);
+        testSettingsContainer.appendChild(field);
     });
-    testSettingsDetails.appendChild(container);
+    testSettingsDetails.appendChild(testSettingsContainer);
     testSettingsEl.appendChild(testSettingsDetails);
     (document.getElementById('showDescription') as HTMLInputElement).checked = vm.showDescription;
     (document.getElementById('showReadme') as HTMLInputElement).checked = vm.showReadme;
