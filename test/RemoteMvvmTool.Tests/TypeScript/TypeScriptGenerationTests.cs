@@ -184,4 +184,16 @@ public class ObservableObject {}
         Assert.Contains("// Enum mapping for HP.Telemetry.Zone", ts);
         Assert.Contains("export const ZoneMap", ts);
     }
+
+    [Fact]
+    public void Generates_ReadOnly_Property_Guard()
+    {
+        var props = new List<PropertyInfo>
+        {
+            new("Name", "string", null!, true)
+        };
+        string ts = TypeScriptClientGenerator.Generate("Vm", "Ns", "VmService", props, new List<CommandInfo>());
+        Assert.Contains("readOnlyProps = new Set", ts);
+        Assert.Contains("this.readOnlyProps?.has(propertyName)", ts);
+    }
 }

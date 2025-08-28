@@ -288,7 +288,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                 return response;
             }
             
-            if (!propertyInfo.CanWrite)
+            if (propertyInfo.SetMethod == null || !propertyInfo.SetMethod.IsPublic)
             {
                 response.Success = false;
                 response.ErrorMessage = $"Property '{finalPropertyName}' is read-only";

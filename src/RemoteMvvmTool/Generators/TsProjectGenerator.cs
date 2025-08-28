@@ -44,8 +44,14 @@ public static class TsProjectGenerator
             string typeStr = p.TypeString.ToLowerInvariant();
             if (IsPrimitiveType(typeStr))
             {
-                if (typeStr.Contains("bool"))
+                if (p.IsReadOnly)
+                {
+                    sb.AppendLine($"    (document.getElementById('{camel}') as HTMLElement).textContent = String(vm.{camel});");
+                }
+                else if (typeStr.Contains("bool"))
+                {
                     sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).checked = vm.{camel};");
+                }
                 else
                 {
                     string assignExpr;
@@ -177,7 +183,7 @@ public static class TsProjectGenerator
         {
             string camel = GeneratorHelpers.ToCamelCase(p.Name);
             string typeStr = p.TypeString.ToLowerInvariant();
-            if (!IsPrimitiveType(typeStr)) continue;
+            if (!IsPrimitiveType(typeStr) || p.IsReadOnly) continue;
             sb.AppendLine($"    (document.getElementById('{camel}') as HTMLInputElement).addEventListener('change', async (e) => {{");
             string newValueExpr = typeStr.Contains("bool") ? "(e.target as HTMLInputElement).checked" : "(e.target as HTMLInputElement).value";
             sb.AppendLine($"        const newValue = {newValueExpr};");
@@ -358,12 +364,19 @@ public static class TsProjectGenerator
             string typeStr = p.TypeString.ToLowerInvariant();
             if (IsPrimitiveType(typeStr))
             {
-                string inputType = "text";
-                if (typeStr.Contains("bool"))
-                    inputType = "checkbox";
-                else if (typeStr.Contains("int") || typeStr.Contains("number") || typeStr.Contains("double") || typeStr.Contains("float") || typeStr.Contains("decimal") || typeStr.Contains("long"))
-                    inputType = "number";
-                sb.AppendLine($"        <div class='field'><label for='{camel}'>{p.Name}</label><input id='{camel}' type='{inputType}'/></div>");
+                if (p.IsReadOnly)
+                {
+                    sb.AppendLine($"        <div class='field'><label for='{camel}'>{p.Name}</label><span id='{camel}'></span></div>");
+                }
+                else
+                {
+                    string inputType = "text";
+                    if (typeStr.Contains("bool"))
+                        inputType = "checkbox";
+                    else if (typeStr.Contains("int") || typeStr.Contains("number") || typeStr.Contains("double") || typeStr.Contains("float") || typeStr.Contains("decimal") || typeStr.Contains("long"))
+                        inputType = "number";
+                    sb.AppendLine($"        <div class='field'><label for='{camel}'>{p.Name}</label><input id='{camel}' type='{inputType}'/></div>");
+                }
             }
             else
                 sb.AppendLine($"        <div id='{camel}'></div>");
