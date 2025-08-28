@@ -33,39 +33,42 @@ public static class ProtoGenerator
                 return $"repeated {elementType}";
             }
 
-            if (type is INamedTypeSymbol named && named.IsGenericType)
+            if (type is INamedTypeSymbol named)
             {
-                if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
+                if (named.IsGenericType)
                 {
-                    string elemProto = MapProtoType(memElem!, allowMessage: true);
-                    if (memElem!.SpecialType == SpecialType.System_Byte)
-                        return "bytes";
-                    return $"repeated {elemProto}";
-                }
-
-                if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var keyType, out var valueType))
-                {
-                    if (GeneratorHelpers.CanUseProtoMap(keyType!, valueType!))
+                    if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
                     {
-                        string keyProto = MapProtoType(keyType!, allowMessage: false);
-                        string valueProto = MapProtoType(valueType!, allowMessage: true);
-                        return $"map<{keyProto}, {valueProto}>";
+                        string elemProto = MapProtoType(memElem!, allowMessage: true);
+                        if (memElem!.SpecialType == SpecialType.System_Byte)
+                            return "bytes";
+                        return $"repeated {elemProto}";
                     }
-                    else
+
+                    if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out var keyType, out var valueType))
                     {
-                        string entryName = GeneratorHelpers.GetDictionaryEntryName(keyType!, valueType!);
-                        if (!mapEntryMessages.ContainsKey(entryName))
-                            mapEntryMessages[entryName] = (keyType!, valueType!);
-                        string valueProto = MapProtoType(valueType!, allowMessage: true);
-                        _ = MapProtoType(keyType!, allowMessage: true);
-                        return $"repeated {entryName}";
+                        if (GeneratorHelpers.CanUseProtoMap(keyType!, valueType!))
+                        {
+                            string keyProto = MapProtoType(keyType!, allowMessage: false);
+                            string valueProto = MapProtoType(valueType!, allowMessage: true);
+                            return $"map<{keyProto}, {valueProto}>";
+                        }
+                        else
+                        {
+                            string entryName = GeneratorHelpers.GetDictionaryEntryName(keyType!, valueType!);
+                            if (!mapEntryMessages.ContainsKey(entryName))
+                                mapEntryMessages[entryName] = (keyType!, valueType!);
+                            string valueProto = MapProtoType(valueType!, allowMessage: true);
+                            _ = MapProtoType(keyType!, allowMessage: true);
+                            return $"repeated {entryName}";
+                        }
                     }
                 }
 
                 if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elemType))
                 {
                     string elemProto = MapProtoType(elemType!, allowMessage: true);
-                    
+
                     // Check if the element type is a dictionary that would be mapped to a protobuf map
                     if (elemType is INamedTypeSymbol elemNamed && elemNamed.IsGenericType &&
                         GeneratorHelpers.TryGetDictionaryTypeArgs(elemNamed, out var elemKeyType, out var elemValueType))
@@ -90,7 +93,7 @@ public static class ProtoGenerator
                             return $"repeated {entryName}";
                         }
                     }
-                    
+
                     return $"repeated {elemProto}";
                 }
             }

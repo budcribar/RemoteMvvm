@@ -188,9 +188,9 @@ public static class ClientGenerator
             foreach (var prop in props)
             {
                 string protoStateFieldName = GeneratorHelpers.ToPascalCase(prop.Name);
-                if (prop.FullTypeSymbol is INamedTypeSymbol named && named.IsGenericType)
+                if (prop.FullTypeSymbol is INamedTypeSymbol named)
                 {
-                    if (GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
+                    if (named.IsGenericType && GeneratorHelpers.TryGetDictionaryTypeArgs(named, out _, out _))
                     {
                         var keyType = named.TypeArguments[0];
                         var valueType = named.TypeArguments[1];
@@ -200,7 +200,7 @@ public static class ClientGenerator
                         else
                             psb.AppendLine($"{ind}this.{prop.Name} = new {prop.TypeString}({dictExpr});");
                     }
-                    else if (GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
+                    else if (named.IsGenericType && GeneratorHelpers.TryGetMemoryElementType(named, out var memElem))
                     {
                         var typeDisplayString = named.ToDisplayString();
                         if (memElem?.SpecialType == SpecialType.System_Byte)
