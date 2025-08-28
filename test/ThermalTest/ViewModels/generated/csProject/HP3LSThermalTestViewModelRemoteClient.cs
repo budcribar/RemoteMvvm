@@ -120,7 +120,8 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                 this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
                                 this.CpuLoadThreshold = state.CpuLoadThreshold;
                                 this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
-                                this.Zones = new HPSystemsTools.ViewModels.ZoneCollection(state.Zones.Select(ProtoStateConverters.FromProto));
+                                this.Zones = new HPSystemsTools.ViewModels.ZoneCollection();
+                                foreach (var e in state.Zones.Select(ProtoStateConverters.FromProto)) this.Zones.Add(e);
                                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                                 this.ShowDescription = state.ShowDescription;
                                 this.ShowReadme = state.ShowReadme;
@@ -163,7 +164,8 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
                 this.CpuLoadThreshold = state.CpuLoadThreshold;
                 this.CpuLoadTimeSpan = state.CpuLoadTimeSpan;
-                this.Zones = new HPSystemsTools.ViewModels.ZoneCollection(state.Zones.Select(ProtoStateConverters.FromProto));
+                this.Zones = new HPSystemsTools.ViewModels.ZoneCollection();
+                foreach (var e in state.Zones.Select(ProtoStateConverters.FromProto)) this.Zones.Add(e);
                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                 this.ShowDescription = state.ShowDescription;
                 this.ShowReadme = state.ShowReadme;
