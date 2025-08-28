@@ -30,6 +30,7 @@ public static class TypeScriptClientGenerator
         var processed = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var queue = new Queue<INamedTypeSymbol>();
         var ifaceSb = new StringBuilder();
+        var roMemberMap = new Dictionary<string, List<string>>();
 
         // Collect all enum types used in properties and command parameters
         var enumTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
@@ -193,12 +194,20 @@ public static class TypeScriptClientGenerator
                 var members = Helpers.GetAllMembers(t)
                     .OfType<IPropertySymbol>()
                     .Where(p => p.GetMethod != null && p.Parameters.Length == 0);
+                var roList = new List<string>();
                 foreach (var m in members)
                 {
-                    ifaceSb.AppendLine($"  {GeneratorHelpers.ToCamelCase(m.Name)}: {MapTsType(m.Type)};");
+                    var ro = m.SetMethod == null || m.SetMethod.DeclaredAccessibility != Accessibility.Public
+                        ? "readonly "
+                        : string.Empty;
+                    if (ro.Length > 0)
+                        roList.Add(GeneratorHelpers.ToCamelCase(m.Name));
+                    ifaceSb.AppendLine($"  {ro}{GeneratorHelpers.ToCamelCase(m.Name)}: {MapTsType(m.Type)};");
                 }
                 ifaceSb.AppendLine("}");
                 ifaceSb.AppendLine();
+                if (roList.Count > 0)
+                    roMemberMap[name] = roList;
             }
         }
 
@@ -280,6 +289,15 @@ public static class TypeScriptClientGenerator
         // generate state interfaces for complex types
         GenerateInterfaces();
         sb.Append(ifaceSb.ToString());
+
+        sb.AppendLine("export const readOnlyMemberMap: Record<string, Set<string>> = {");
+        foreach (var kv in roMemberMap)
+        {
+            var propsList = string.Join(", ", kv.Value.Select(v => $"'{v}'"));
+            sb.AppendLine($"  {kv.Key}: new Set([{propsList}]),");
+        }
+        sb.AppendLine("};");
+        sb.AppendLine();
 
         sb.AppendLine($"export class {vmName}RemoteClient {{");
         sb.AppendLine($"    private readonly grpcClient: {serviceName}Client;");
@@ -861,10 +879,12 @@ public static class TypeScriptClientGenerator
         }
 
         foreach (var prop in props)
-            AddTypes(prop.FullTypeSymbol!);
+            if (prop.FullTypeSymbol != null)
+                AddTypes(prop.FullTypeSymbol);
 
         foreach (var cmd in cmds)
             foreach (var param in cmd.Parameters)
-                AddTypes(param.FullTypeSymbol!);
+                if (param.FullTypeSymbol != null)
+                    AddTypes(param.FullTypeSymbol);
     }
 }

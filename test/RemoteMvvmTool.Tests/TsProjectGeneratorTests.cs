@@ -147,5 +147,6 @@ public class TsProjectGeneratorTests
         Assert.Contains("<span id='name'></span>", html);
         Assert.DoesNotContain("<input id='name'", html);
     }
+
 }
 
