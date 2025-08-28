@@ -59,8 +59,22 @@ public static class TypeScriptClientGenerator
             return name + "State";
         }
 
-        string MapTsType(ITypeSymbol type)
+        string MapTsType(ITypeSymbol? type, string? typeString = null)
         {
+            if (type is null)
+            {
+                var wrapper = typeString != null ? GeneratorHelpers.GetWrapperType(typeString) : null;
+                return wrapper switch
+                {
+                    "StringValue" => "string",
+                    "BoolValue" => "boolean",
+                    "Int32Value" or "Int64Value" or "UInt32Value" or "UInt64Value" or "FloatValue" or "DoubleValue" => "number",
+                    "Timestamp" => "Date",
+                    "Duration" => "number",
+                    _ => "any"
+                };
+            }
+
             bool isNullable = false;
             if (type is INamedTypeSymbol nullable && nullable.IsGenericType &&
                 nullable.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T)
@@ -198,7 +212,7 @@ public static class TypeScriptClientGenerator
         {
             foreach (var p in props)
             {
-                MapTsType(p.FullTypeSymbol); // populates queue via side-effects
+                MapTsType(p.FullTypeSymbol, p.TypeString); // populates queue via side-effects
             }
         }
 
@@ -327,7 +341,7 @@ public static class TypeScriptClientGenerator
         sb.AppendLine();
         foreach (var p in props)
         {
-            sb.AppendLine($"    {GeneratorHelpers.ToCamelCase(p.Name)}: {MapTsType(p.FullTypeSymbol)};");
+            sb.AppendLine($"    {GeneratorHelpers.ToCamelCase(p.Name)}: {MapTsType(p.FullTypeSymbol, p.TypeString)};");
         }
         bool hasReadOnly = props.Any(p => p.IsReadOnly);
         if (hasReadOnly)
@@ -365,9 +379,16 @@ public static class TypeScriptClientGenerator
         foreach (var p in props)
         {
             string expr;
-            if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
+            if (p.FullTypeSymbol == null)
+            {
+                var wrapper = GeneratorHelpers.GetWrapperType(p.TypeString);
+                expr = wrapper == "Timestamp"
+                    ? $"(state as any).get{p.Name}()?.toDate()"
+                    : $"(state as any).get{p.Name}()";
+            }
+            else if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol, out _, out _))
                 expr = $"(state as any).get{p.Name}Map().toObject()";
-            else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol!, out var elem))
+            else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol, out var elem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
@@ -397,7 +418,7 @@ public static class TypeScriptClientGenerator
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
-            else if (GeneratorHelpers.TryGetMemoryElementType(p.FullTypeSymbol!, out var memElem))
+            else if (GeneratorHelpers.TryGetMemoryElementType(p.FullTypeSymbol, out var memElem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(memElem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
@@ -412,12 +433,12 @@ public static class TypeScriptClientGenerator
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
-            else if (GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!) == "Timestamp")
+            else if (GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol) == "Timestamp")
                 expr = $"(state as any).get{p.Name}()?.toDate()";
             else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
-                     !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
-                     p.FullTypeSymbol!.TypeKind != TypeKind.Enum)
+                     !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol) &&
+                     p.FullTypeSymbol.TypeKind != TypeKind.Enum)
             {
                 var objExpr = BuildToObjectWithDates("v", nt);
                 expr = $"(() => {{ const v = (state as any).get{p.Name}(); return v ? {objExpr} : undefined; }})()";
@@ -437,9 +458,16 @@ public static class TypeScriptClientGenerator
         foreach (var p in props)
         {
             string expr;
-            if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol!, out _, out _))
+            if (p.FullTypeSymbol == null)
+            {
+                var wrapper = GeneratorHelpers.GetWrapperType(p.TypeString);
+                expr = wrapper == "Timestamp"
+                    ? $"(state as any).get{p.Name}()?.toDate()"
+                    : $"(state as any).get{p.Name}()";
+            }
+            else if (GeneratorHelpers.TryGetDictionaryTypeArgs(p.FullTypeSymbol, out _, out _))
                 expr = $"(state as any).get{p.Name}Map().toObject()";
-            else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol!, out var elem))
+            else if (GeneratorHelpers.TryGetEnumerableElementType(p.FullTypeSymbol, out var elem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(elem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
@@ -469,7 +497,7 @@ public static class TypeScriptClientGenerator
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
-            else if (GeneratorHelpers.TryGetMemoryElementType(p.FullTypeSymbol!, out var memElem))
+            else if (GeneratorHelpers.TryGetMemoryElementType(p.FullTypeSymbol, out var memElem))
             {
                 if (GeneratorHelpers.GetProtoWellKnownTypeFor(memElem!) == "Timestamp")
                     expr = $"(state as any).get{p.Name}List().map((v:any) => v.toDate())";
@@ -484,12 +512,12 @@ public static class TypeScriptClientGenerator
                 else
                     expr = $"(state as any).get{p.Name}List()";
             }
-            else if (GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!) == "Timestamp")
+            else if (GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol) == "Timestamp")
                 expr = $"(state as any).get{p.Name}()?.toDate()";
             else if (p.FullTypeSymbol is INamedTypeSymbol nt &&
                      (nt.TypeKind == TypeKind.Class || nt.TypeKind == TypeKind.Struct) &&
-                     !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol!) &&
-                     p.FullTypeSymbol!.TypeKind != TypeKind.Enum)
+                     !GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol) &&
+                     p.FullTypeSymbol.TypeKind != TypeKind.Enum)
             {
                 var objExpr = BuildToObjectWithDates("v", nt);
                 expr = $"(() => {{ const v = (state as any).get{p.Name}(); return v ? {objExpr} : undefined; }})()";
