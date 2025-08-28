@@ -13,12 +13,12 @@ namespace HP3LSThermalTestViewModel;
 public class Program
 {
     [STAThread]
-    public static async Task Main()
+    public static void Main()
     {
         var channel = GrpcChannel.ForAddress("http://localhost:50052");
         var grpcClient = new HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient(channel);
         var vm = new HP3LSThermalTestViewModelRemoteClient(grpcClient);
-        await vm.InitializeRemoteAsync();
+        vm.InitializeRemoteAsync().GetAwaiter().GetResult();
 
         var app = new Application();
         var window = new Window { Title = "HP3LSThermalTestViewModel" };
@@ -37,31 +37,49 @@ public class Program
         panel.Children.Add(cpuTemperatureThresholdLabel);
         var cpuTemperatureThresholdBox = new TextBox();
         cpuTemperatureThresholdBox.SetBinding(TextBox.TextProperty, new Binding(nameof(HP3LSThermalTestViewModelRemoteClient.CpuTemperatureThreshold)) { Source = vm });
-        cpuTemperatureThresholdBox.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{ PropertyName = "CpuTemperatureThreshold", NewValue = Any.Pack(new StringValue { Value = cpuTemperatureThresholdBox.Text }) });
+        cpuTemperatureThresholdBox.LostFocus += async (_, __) =>
+        {
+            if (int.TryParse(cpuTemperatureThresholdBox.Text, out var value))
+            {
+                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest { PropertyName = "CpuTemperatureThreshold", NewValue = Any.Pack(new Int32Value { Value = value }) });
+            }
+        };
         panel.Children.Add(cpuTemperatureThresholdBox);
         var cpuLoadThresholdLabel = new TextBlock { Text = "CpuLoadThreshold" };
         panel.Children.Add(cpuLoadThresholdLabel);
         var cpuLoadThresholdBox = new TextBox();
         cpuLoadThresholdBox.SetBinding(TextBox.TextProperty, new Binding(nameof(HP3LSThermalTestViewModelRemoteClient.CpuLoadThreshold)) { Source = vm });
-        cpuLoadThresholdBox.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{ PropertyName = "CpuLoadThreshold", NewValue = Any.Pack(new StringValue { Value = cpuLoadThresholdBox.Text }) });
+        cpuLoadThresholdBox.LostFocus += async (_, __) =>
+        {
+            if (int.TryParse(cpuLoadThresholdBox.Text, out var value))
+            {
+                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest { PropertyName = "CpuLoadThreshold", NewValue = Any.Pack(new Int32Value { Value = value }) });
+            }
+        };
         panel.Children.Add(cpuLoadThresholdBox);
         var cpuLoadTimeSpanLabel = new TextBlock { Text = "CpuLoadTimeSpan" };
         panel.Children.Add(cpuLoadTimeSpanLabel);
         var cpuLoadTimeSpanBox = new TextBox();
         cpuLoadTimeSpanBox.SetBinding(TextBox.TextProperty, new Binding(nameof(HP3LSThermalTestViewModelRemoteClient.CpuLoadTimeSpan)) { Source = vm });
-        cpuLoadTimeSpanBox.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{ PropertyName = "CpuLoadTimeSpan", NewValue = Any.Pack(new StringValue { Value = cpuLoadTimeSpanBox.Text }) });
+        cpuLoadTimeSpanBox.LostFocus += async (_, __) =>
+        {
+            if (int.TryParse(cpuLoadTimeSpanBox.Text, out var value))
+            {
+                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest { PropertyName = "CpuLoadTimeSpan", NewValue = Any.Pack(new Int32Value { Value = value }) });
+            }
+        };
         panel.Children.Add(cpuLoadTimeSpanBox);
         var zonesLabel = new TextBlock { Text = "Zones" };
         panel.Children.Add(zonesLabel);
         var zonesBox = new TextBox();
         zonesBox.SetBinding(TextBox.TextProperty, new Binding(nameof(HP3LSThermalTestViewModelRemoteClient.Zones)) { Source = vm });
-        zonesBox.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{ PropertyName = "Zones", NewValue = Any.Pack(new StringValue { Value = zonesBox.Text }) });
+        //zonesBox.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{ PropertyName = "Zones", NewValue = Any.Pack(new StringValue { Value = zonesBox.Text }) });
         panel.Children.Add(zonesBox);
         var testSettingsLabel = new TextBlock { Text = "TestSettings" };
         panel.Children.Add(testSettingsLabel);
         var testSettingsBox = new TextBox();
         testSettingsBox.SetBinding(TextBox.TextProperty, new Binding(nameof(HP3LSThermalTestViewModelRemoteClient.TestSettings)) { Source = vm });
-        testSettingsBox.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{ PropertyName = "TestSettings", NewValue = Any.Pack(new StringValue { Value = testSettingsBox.Text }) });
+        //testSettingsBox.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{ PropertyName = "TestSettings", NewValue = Any.Pack(new StringValue { Value = testSettingsBox.Text }) });
         panel.Children.Add(testSettingsBox);
         var showDescriptionCheck = new CheckBox { Content = "ShowDescription" };
         showDescriptionCheck.SetBinding(CheckBox.IsCheckedProperty, new Binding(nameof(HP3LSThermalTestViewModelRemoteClient.ShowDescription)) { Source = vm });

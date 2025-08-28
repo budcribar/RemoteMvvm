@@ -32,6 +32,8 @@ namespace HPSystemsTools.ViewModels
 
         public HP3LSThermalTestViewModel()
         {
+            Instructions = "";
+            Zones = new ZoneCollection();
             TestSettings = new TestSettingsModel();           
         
             CpuLoadThreshold = TestSettings.CpuLoadThreshold;
@@ -40,7 +42,7 @@ namespace HPSystemsTools.ViewModels
         }
 
         [ObservableProperty]
-        public partial string Instructions { get; private set; } = "";
+        public partial string Instructions { get; private set; }
 
         [ObservableProperty]
         public partial int CpuTemperatureThreshold { get; set; }
@@ -72,10 +74,10 @@ namespace HPSystemsTools.ViewModels
 
 
         [ObservableProperty]
-        public partial ZoneCollection Zones { get; private set; } = [];
+        public partial ZoneCollection Zones { get; private set; }
 
         [ObservableProperty]
-        internal partial TestSettingsModel TestSettings { get; set; } = default!;
+        internal partial TestSettingsModel TestSettings { get; set; }
 
         /// <summary>
         /// Controls the visibility of the description section.

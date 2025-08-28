@@ -24,8 +24,13 @@ namespace HPSystemsTools.ViewModels
 
         [ObservableProperty]
         public partial bool IsActive { get; private set; }
-        [ObservableProperty]
-        public partial string DeviceName { get; private set; } = "";
+                [ObservableProperty]
+        public partial string DeviceName { get; private set; }
+
+        public ThermalZoneComponentViewModel()
+        {
+            DeviceName = "";
+        }
         [ObservableProperty]
         public partial int Temperature { get; private set; }
         [ObservableProperty]
@@ -98,9 +103,6 @@ namespace HPSystemsTools.ViewModels
         //    _thermalZoneService = new ThermalZoneService(zone);
         //}
 
-        public ThermalZoneComponentViewModel()
-        {
-        }
         /// <summary>
         /// Called when the component is initialized.
         /// </summary>
