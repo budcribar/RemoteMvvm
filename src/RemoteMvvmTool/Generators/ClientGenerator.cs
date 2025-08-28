@@ -125,6 +125,26 @@ public static class ClientGenerator
             };
         }
 
+        string ValueToProto(string expr, ITypeSymbol type)
+        {
+            if (type.TypeKind == TypeKind.Enum) return $"(int){expr}";
+            var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
+            if (wkt == "Timestamp") return $"Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime({expr}.ToUniversalTime())";
+            if (!GeneratorHelpers.IsWellKnownType(type)) return $"ProtoStateConverters.ToProto({expr})";
+            var typeDisplayString = type.ToDisplayString();
+            return typeDisplayString switch
+            {
+                "System.Half" => $"(float){expr}",
+                "System.Char" or "char" => $"{expr}.ToString()",
+                "System.Guid" => $"{expr}.ToString()",
+                "System.Decimal" or "decimal" => $"{expr}.ToString()",
+                "System.DateOnly" => $"{expr}.ToString()",
+                "System.TimeOnly" => $"{expr}.ToString()",
+                "nuint" or "System.UIntPtr" => $"(ulong){expr}",
+                _ => expr
+            };
+        }
+
         string ValueFromProto(string expr, ITypeSymbol type, string prefix)
         {
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(type, out var k, out var v))
@@ -171,7 +191,20 @@ public static class ClientGenerator
             var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
             if (wkt == "Timestamp") return $"{expr}.ToDateTime()";
             if (!GeneratorHelpers.IsWellKnownType(type)) return $"ProtoStateConverters.FromProto({expr})";
-            return expr;
+            var typeDisplayString = type.ToDisplayString();
+            return typeDisplayString switch
+            {
+                "System.Decimal" or "decimal" => $"decimal.Parse({expr})",
+                "System.Char" or "char" => $"{expr}[0]",
+                "System.Guid" => $"Guid.Parse({expr})",
+                "System.DateOnly" => $"DateOnly.Parse({expr})",
+                "System.TimeOnly" => $"TimeOnly.Parse({expr})",
+                "System.Half" => $"(Half){expr}",
+                "nuint" or "System.UIntPtr" => $"(nuint){expr}",
+                "short" or "System.Int16" => $"(short){expr}",
+                "byte" or "System.Byte" => $"(byte){expr}",
+                _ => expr
+            };
         }
 
         string DictFromProto(string fieldExpr, ITypeSymbol kType, ITypeSymbol vType, string _)
@@ -244,11 +277,9 @@ public static class ClientGenerator
                         {
                             // Regular collection handling
                             string sel = string.Empty;
-                            if (elem!.TypeKind == TypeKind.Enum)
-                                sel = $".Select(e => ({elem.ToDisplayString()})e)";
-                            else if (!GeneratorHelpers.IsWellKnownType(elem))
-                                sel = ".Select(ProtoStateConverters.FromProto)";
-                            
+                            var elemConv = ValueFromProto("e", elem!, "e1");
+                            if (elemConv != "e") sel = $".Select(e => {elemConv})";
+
                             if (named.TypeKind == TypeKind.Interface)
                                 psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToList();");
                             else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
@@ -259,55 +290,22 @@ public static class ClientGenerator
                     }
                     else
                     {
-                        if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
-                            psb.AppendLine($"{ind}this.{prop.Name} = ({prop.TypeString})state.{protoStateFieldName};");
-                        else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
-                            psb.AppendLine($"{ind}this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
-                        else
-                            psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName};");
+                        var assign = ValueFromProto($"state.{protoStateFieldName}", prop.FullTypeSymbol, "val");
+                        psb.AppendLine($"{ind}this.{prop.Name} = {assign};");
                     }
                 }
                 else if (prop.FullTypeSymbol is IArrayTypeSymbol arr)
                 {
-                    string sel = string.Empty;
                     var elem = arr.ElementType;
-                    if (elem.TypeKind == TypeKind.Enum)
-                        sel = $".Select(e => ({elem.ToDisplayString()})e)";
-                    else if (!GeneratorHelpers.IsWellKnownType(elem))
-                        sel = ".Select(ProtoStateConverters.FromProto)";
+                    string sel = string.Empty;
+                    var elemConv = ValueFromProto("e", elem, "e1");
+                    if (elemConv != "e") sel = $".Select(e => {elemConv})";
                     psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToArray();");
                 }
                 else
                 {
-                    if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
-                        psb.AppendLine($"{ind}this.{prop.Name} = ({prop.TypeString})state.{protoStateFieldName};");
-                    else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
-                        psb.AppendLine($"{ind}this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
-                    else
-                    {
-                        // Handle special type conversions for well-known types that need parsing
-                        var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
-                        var assignment = typeDisplayString switch
-                        {
-                            "System.Decimal" or "decimal" => $"decimal.Parse(state.{protoStateFieldName})",
-                            "System.Char" or "char" => $"state.{protoStateFieldName}[0]",
-                            "System.Guid" => $"Guid.Parse(state.{protoStateFieldName})",
-                            "System.DateOnly" => $"DateOnly.Parse(state.{protoStateFieldName})",
-                            "System.TimeOnly" => $"TimeOnly.Parse(state.{protoStateFieldName})",
-                            "System.Half" => $"(Half)state.{protoStateFieldName}",
-                            "nuint" or "System.UIntPtr" => $"(nuint)state.{protoStateFieldName}",
-                            "short" or "System.Int16" => $"(short)state.{protoStateFieldName}",
-                            "byte" or "System.Byte" => $"(byte)state.{protoStateFieldName}",
-                            _ => $"state.{protoStateFieldName}"
-                        };
-
-                        if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
-                            psb.AppendLine($"{ind}this.{prop.Name} = ({prop.TypeString})state.{protoStateFieldName};");
-                        else if (!GeneratorHelpers.IsWellKnownType(prop.FullTypeSymbol))
-                            psb.AppendLine($"{ind}this.{prop.Name} = ProtoStateConverters.FromProto(state.{protoStateFieldName});");
-                        else
-                            psb.AppendLine($"{ind}this.{prop.Name} = {assignment};");
-                    }
+                    var assign = ValueFromProto($"state.{protoStateFieldName}", prop.FullTypeSymbol, "val");
+                    psb.AppendLine($"{ind}this.{prop.Name} = {assign};");
                 }
             }
             return psb.ToString();
@@ -330,12 +328,8 @@ public static class ClientGenerator
                 var paramAssignments = cmd.Parameters.Select(p =>
                 {
                     var varName = GeneratorHelpers.LowercaseFirst(p.Name);
-                    string expr = p.FullTypeSymbol.TypeKind == TypeKind.Enum
-                        ? $"(int){varName}"
-                        : (!GeneratorHelpers.IsWellKnownType(p.FullTypeSymbol)
-                            ? $"ProtoStateConverters.ToProto({varName})"
-                            : varName);
-                    return $"{GeneratorHelpers.ToPascalCase(p.Name)} = {expr}";
+                    string expr = ValueToProto(varName, p.FullTypeSymbol!);
+                    return $"{GeneratorHelpers.ToPascalCase(p.Name)} = {expr}"; 
                 });
                 requestCreation = $"new {protoNs}.{baseMethodName}Request {{ {string.Join(", ", paramAssignments)} }}";
             }
