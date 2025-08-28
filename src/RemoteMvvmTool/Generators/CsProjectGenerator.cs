@@ -82,21 +82,86 @@ public static class CsProjectGenerator
             foreach (var p in props)
             {
                 string camel = char.ToLowerInvariant(p.Name[0]) + p.Name.Substring(1);
-                bool isBool = p.TypeString.Contains("bool", StringComparison.OrdinalIgnoreCase);
+                string typeStr = p.TypeString.ToLowerInvariant();
+                bool isBool = typeStr.Contains("bool");
                 if (isBool)
                 {
                     sb.AppendLine($"        var {camel}Check = new CheckBox {{ Content = \"{p.Name}\" }};");
-                    sb.AppendLine($"        {camel}Check.SetBinding(CheckBox.IsCheckedProperty, new Binding(nameof({projectName}RemoteClient.{p.Name})) {{ Source = vm }});");
-                    sb.AppendLine($"        {camel}Check.Click += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.IsChecked == true }}) }});");
+                    sb.AppendLine($"        {camel}Check.SetBinding(CheckBox.IsCheckedProperty, new Binding(nameof({projectName}RemoteClient.{p.Name})) {{ Source = vm, Mode = BindingMode.OneWay }});");
+                    if (!p.IsReadOnly)
+                        sb.AppendLine($"        {camel}Check.Click += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.IsChecked == true }}) }});");
                     sb.AppendLine($"        panel.Children.Add({camel}Check);");
                 }
                 else
                 {
                     sb.AppendLine($"        var {camel}Label = new TextBlock {{ Text = \"{p.Name}\" }};");
                     sb.AppendLine($"        panel.Children.Add({camel}Label);");
-                    sb.AppendLine($"        var {camel}Box = new TextBox();");
-                    sb.AppendLine($"        {camel}Box.SetBinding(TextBox.TextProperty, new Binding(nameof({projectName}RemoteClient.{p.Name})) {{ Source = vm }});");
-                    sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new StringValue {{ Value = {camel}Box.Text }}) }});");
+                    string readOnly = p.IsReadOnly ? " { IsReadOnly = true }" : string.Empty;
+                    sb.AppendLine($"        var {camel}Box = new TextBox{readOnly};");
+                    sb.AppendLine($"        {camel}Box.SetBinding(TextBox.TextProperty, new Binding(nameof({projectName}RemoteClient.{p.Name})) {{ Source = vm, Mode = BindingMode.OneWay }});");
+                    if (!p.IsReadOnly)
+                    {
+                        if (typeStr.Contains("int"))
+                        {
+                            sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (int.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new Int32Value {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else if (typeStr.Contains("long"))
+                        {
+                            sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (long.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new Int64Value {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else if (typeStr.Contains("float"))
+                        {
+                            sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (float.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new FloatValue {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else if (typeStr.Contains("double") || typeStr.Contains("decimal"))
+                        {
+                            sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (double.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new DoubleValue {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new StringValue {{ Value = {camel}Box.Text }}) }});");
+                        }
+                    }
                     sb.AppendLine($"        panel.Children.Add({camel}Box);");
                 }
             }
@@ -120,21 +185,86 @@ public static class CsProjectGenerator
             foreach (var p in props)
             {
                 string camel = char.ToLowerInvariant(p.Name[0]) + p.Name.Substring(1);
-                bool isBool = p.TypeString.Contains("bool", StringComparison.OrdinalIgnoreCase);
+                string typeStr = p.TypeString.ToLowerInvariant();
+                bool isBool = typeStr.Contains("bool");
                 if (isBool)
                 {
                     sb.AppendLine($"        var {camel}Check = new CheckBox {{ Text = \"{p.Name}\" }};");
-                    sb.AppendLine($"        {camel}Check.DataBindings.Add(\"Checked\", vm, nameof({projectName}RemoteClient.{p.Name}));");
-                    sb.AppendLine($"        {camel}Check.CheckedChanged += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.Checked }}) }});");
+                    sb.AppendLine($"        {camel}Check.DataBindings.Add(\"Checked\", vm, nameof({projectName}RemoteClient.{p.Name}), true, DataSourceUpdateMode.Never);");
+                    if (!p.IsReadOnly)
+                        sb.AppendLine($"        {camel}Check.CheckedChanged += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.Checked }}) }});");
                     sb.AppendLine($"        panel.Controls.Add({camel}Check);");
                 }
                 else
                 {
                     sb.AppendLine($"        var {camel}Label = new Label {{ Text = \"{p.Name}\" }};");
                     sb.AppendLine($"        panel.Controls.Add({camel}Label);");
-                    sb.AppendLine($"        var {camel}Box = new TextBox {{ Width = 200 }};");
-                    sb.AppendLine($"        {camel}Box.DataBindings.Add(\"Text\", vm, nameof({projectName}RemoteClient.{p.Name}));");
-                    sb.AppendLine($"        {camel}Box.Leave += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new StringValue {{ Value = {camel}Box.Text }}) }});");
+                    string ro = p.IsReadOnly ? " { Width = 200, ReadOnly = true }" : " { Width = 200 }";
+                    sb.AppendLine($"        var {camel}Box = new TextBox{ro};");
+                    sb.AppendLine($"        {camel}Box.DataBindings.Add(\"Text\", vm, nameof({projectName}RemoteClient.{p.Name}), true, DataSourceUpdateMode.Never);");
+                    if (!p.IsReadOnly)
+                    {
+                        if (typeStr.Contains("int"))
+                        {
+                            sb.AppendLine($"        {camel}Box.Leave += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (int.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new Int32Value {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else if (typeStr.Contains("long"))
+                        {
+                            sb.AppendLine($"        {camel}Box.Leave += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (long.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new Int64Value {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else if (typeStr.Contains("float"))
+                        {
+                            sb.AppendLine($"        {camel}Box.Leave += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (float.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new FloatValue {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else if (typeStr.Contains("double") || typeStr.Contains("decimal"))
+                        {
+                            sb.AppendLine($"        {camel}Box.Leave += async (_, __) =>");
+                            sb.AppendLine("        {");
+                            sb.AppendLine($"            if (double.TryParse({camel}Box.Text, out var value))");
+                            sb.AppendLine("            {");
+                            sb.AppendLine($"                await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest");
+                            sb.AppendLine("                {");
+                            sb.AppendLine($"                    PropertyName = \"{p.Name}\",");
+                            sb.AppendLine($"                    NewValue = Any.Pack(new DoubleValue {{ Value = value }})");
+                            sb.AppendLine("                });");
+                            sb.AppendLine("            }");
+                            sb.AppendLine("        };");
+                        }
+                        else
+                        {
+                            sb.AppendLine($"        {camel}Box.Leave += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new StringValue {{ Value = {camel}Box.Text }}) }});");
+                        }
+                    }
                     sb.AppendLine($"        panel.Controls.Add({camel}Box);");
                 }
             }

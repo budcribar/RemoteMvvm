@@ -53,4 +53,28 @@ public class CsProjectGeneratorTests
         Assert.Contains("UpdatePropertyValueRequest", prog);
         Assert.Contains("DoWorkCommand", prog);
     }
+
+    [Fact]
+    public void GenerateProgramCs_WpfHandlesReadOnlyAndInt()
+    {
+        var props = new List<PropertyInfo>
+        {
+            new("Instructions", "string", null!, true),
+            new("Threshold", "int", null!)
+        };
+        string prog = CsProjectGenerator.GenerateProgramCs("Vm", "wpf", "Proto.Ns", "Svc", "Client.Ns", props, new List<CommandInfo>());
+        Assert.Contains("IsReadOnly = true", prog);
+        Assert.Contains("Mode = BindingMode.OneWay", prog);
+        Assert.Contains("int.TryParse(thresholdBox.Text, out var value)", prog);
+        Assert.Contains("Any.Pack(new Int32Value", prog);
+    }
+
+    [Fact]
+    public void GenerateProgramCs_WinFormsUsesOneWayBinding()
+    {
+        var props = new List<PropertyInfo> { new("Count", "int", null!) };
+        string prog = CsProjectGenerator.GenerateProgramCs("Vm", "winforms", "Proto.Ns", "Svc", "Client.Ns", props, new List<CommandInfo>());
+        Assert.Contains("DataSourceUpdateMode.Never", prog);
+        Assert.Contains("int.TryParse(countBox.Text, out var value)", prog);
+    }
 }
