@@ -23,17 +23,17 @@ function handleError(err: any, context?: string) {
 
 
 async function render() {
-    (document.getElementById('show') as HTMLInputElement).value = String(vm.show);
-    (document.getElementById('showSpinner') as HTMLInputElement).value = String(vm.showSpinner);
+    (document.getElementById('show') as HTMLInputElement).checked = vm.show;
+    (document.getElementById('showSpinner') as HTMLInputElement).checked = vm.showSpinner;
     (document.getElementById('clicksToPass') as HTMLInputElement).value = String(vm.clicksToPass);
-    (document.getElementById('is3Btn') as HTMLInputElement).value = String(vm.is3Btn);
+    (document.getElementById('is3Btn') as HTMLInputElement).checked = vm.is3Btn;
     (document.getElementById('testTimeoutSec') as HTMLInputElement).value = String(vm.testTimeoutSec);
     (document.getElementById('instructions') as HTMLInputElement).value = vm.instructions;
-    (document.getElementById('showCursorTest') as HTMLInputElement).value = String(vm.showCursorTest);
-    (document.getElementById('showConfigSelection') as HTMLInputElement).value = String(vm.showConfigSelection);
-    (document.getElementById('showClickInstructions') as HTMLInputElement).value = String(vm.showClickInstructions);
-    (document.getElementById('showTimer') as HTMLInputElement).value = String(vm.showTimer);
-    (document.getElementById('showBottom') as HTMLInputElement).value = String(vm.showBottom);
+    (document.getElementById('showCursorTest') as HTMLInputElement).checked = vm.showCursorTest;
+    (document.getElementById('showConfigSelection') as HTMLInputElement).checked = vm.showConfigSelection;
+    (document.getElementById('showClickInstructions') as HTMLInputElement).checked = vm.showClickInstructions;
+    (document.getElementById('showTimer') as HTMLInputElement).checked = vm.showTimer;
+    (document.getElementById('showBottom') as HTMLInputElement).checked = vm.showBottom;
     (document.getElementById('timerText') as HTMLInputElement).value = vm.timerText;
     (document.getElementById('selectedDevice') as HTMLInputElement).value = vm.selectedDevice;
     (document.getElementById('lastClickCount') as HTMLInputElement).value = String(vm.lastClickCount);
@@ -53,24 +53,24 @@ async function init() {
 document.addEventListener('DOMContentLoaded', () => {
     init();
     (document.getElementById('show') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.show;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('Show', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('Show', newValue);
             } catch (err) {
                 handleError(err, 'Update Show');
             }
         }
     });
     (document.getElementById('showSpinner') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.showSpinner;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('ShowSpinner', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('ShowSpinner', newValue);
             } catch (err) {
                 handleError(err, 'Update ShowSpinner');
             }
@@ -89,12 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     (document.getElementById('is3Btn') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.is3Btn;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('Is3Btn', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('Is3Btn', newValue);
             } catch (err) {
                 handleError(err, 'Update Is3Btn');
             }
@@ -125,60 +125,60 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     (document.getElementById('showCursorTest') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.showCursorTest;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('ShowCursorTest', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('ShowCursorTest', newValue);
             } catch (err) {
                 handleError(err, 'Update ShowCursorTest');
             }
         }
     });
     (document.getElementById('showConfigSelection') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.showConfigSelection;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('ShowConfigSelection', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('ShowConfigSelection', newValue);
             } catch (err) {
                 handleError(err, 'Update ShowConfigSelection');
             }
         }
     });
     (document.getElementById('showClickInstructions') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.showClickInstructions;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('ShowClickInstructions', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('ShowClickInstructions', newValue);
             } catch (err) {
                 handleError(err, 'Update ShowClickInstructions');
             }
         }
     });
     (document.getElementById('showTimer') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.showTimer;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('ShowTimer', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('ShowTimer', newValue);
             } catch (err) {
                 handleError(err, 'Update ShowTimer');
             }
         }
     });
     (document.getElementById('showBottom') as HTMLInputElement).addEventListener('change', async (e) => {
-        const newValue = (e.target as HTMLInputElement).value;
+        const newValue = (e.target as HTMLInputElement).checked;
         const currentValue = vm.showBottom;
         // Only update if value actually changed
-        if (Boolean(newValue.toLowerCase() === 'true') !== currentValue) {
+        if (Boolean(newValue) !== currentValue) {
             try {
-                await vm.updatePropertyValueDebounced('ShowBottom', newValue.toLowerCase() === 'true');
+                await vm.updatePropertyValueDebounced('ShowBottom', newValue);
             } catch (err) {
                 handleError(err, 'Update ShowBottom');
             }
