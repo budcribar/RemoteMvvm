@@ -55,7 +55,7 @@ string tsconfig = $$"""
 }
 
 
-To install the RemoteMvvmTool you need to build the RemoteMvvmTool.sln
+To run the RemoteMvvmTool you need to install the Tool by building the RemoteMvvmTool.sln
 
 ## Build Instructions
 
