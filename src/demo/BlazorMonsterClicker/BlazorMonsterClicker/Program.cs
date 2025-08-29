@@ -39,7 +39,7 @@ namespace BlazorMonsterClicker
             });
 
             // For Blazor WASM in .NET 8, enable gRPC-Web compatibility
-          ",  AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport true);
+            AppContext.SetSwitch("System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport", true);
 
             // Register your GameViewModelRemoteClient
             builder.Services.AddScoped<GameViewModelRemoteClient>();
