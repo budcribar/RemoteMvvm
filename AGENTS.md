@@ -38,12 +38,13 @@ var tsconfig = """
 }
 """;
 
-another twist on raw string literals, using mocked interpolation.
-string tsconfig = """
+and use raw string literals with interpolation.
+var module = "commonjs";
+string tsconfig = $$"""
 {
   "compilerOptions": {
     "target": "es2018",
-    "module": "<<module>>",
+    "module": "{{module}}",
     "strict": false,
     "esModuleInterop": true,
     "lib": ["es2018", "dom"],
@@ -52,8 +53,16 @@ string tsconfig = """
   },
   "include": ["/*.ts", "/*.js"]
 }
-""".Replace("<<module>>", "commonJs");
 
-To install the RemoteMvvmTool you need to build the RemoteMvvmTool.csproj
+
+To install the RemoteMvvmTool you need to build the RemoteMvvmTool.sln
+
+## Build Instructions
+
+To build this project, use the following powershell command from the RemoteMvvm directory:
+
+```
+&"C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\Current\Bin\MSBuild.exe" RemoteMvvmTool.sln
+```
 
    
