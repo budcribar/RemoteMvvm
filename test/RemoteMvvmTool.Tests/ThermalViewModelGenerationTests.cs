@@ -31,7 +31,8 @@ public class ThermalViewModelGenerationTests
 
         foreach (var entry in Directory.EnumerateFileSystemEntries(generatedDir))
         {
-            if (Path.GetFileName(entry).Equals("tsProject", StringComparison.OrdinalIgnoreCase))
+            var fileName = Path.GetFileName(entry);
+            if (fileName.Equals("tsProject", StringComparison.OrdinalIgnoreCase) || fileName.Equals("csProject", StringComparison.OrdinalIgnoreCase))
                 continue;
 
             if (Directory.Exists(entry))
