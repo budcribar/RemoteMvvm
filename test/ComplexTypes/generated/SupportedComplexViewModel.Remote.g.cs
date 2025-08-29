@@ -25,7 +25,7 @@ namespace ComplexTypes.ViewModels
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private ComplexTypes.ViewModels.RemoteClients.SupportedComplexViewModelRemoteClient? _remoteClient;
-        private readonly Dispatcher _dispatcher;
+        private readonly Dispatcher? _dispatcher;
 
         public SupportedComplexViewModel(ServerOptions options) : this()
         {

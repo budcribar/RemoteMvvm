@@ -263,19 +263,20 @@ public static class ClientGenerator
                                 psb.AppendLine($"{ind}this.{prop.Name} = new Memory<{memElem?.ToDisplayString()}>(state.{protoStateFieldName}.ToArray());");
                         }
                     }
-                    else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem))
+                    else if (GeneratorHelpers.TryGetEnumerableElementType(named, out var elem) && elem != null)
                     {
                         // Special handling for collections of dictionaries
                         if (elem is INamedTypeSymbol elemNamed && elemNamed.IsGenericType &&
                             GeneratorHelpers.TryGetDictionaryTypeArgs(elemNamed, out var elemKeyType, out var elemValueType) &&
-                            GeneratorHelpers.CanUseProtoMap(elemKeyType!, elemValueType!))
+                            elemKeyType != null && elemValueType != null &&
+                            GeneratorHelpers.CanUseProtoMap(elemKeyType, elemValueType))
                         {
                             // This is a collection of dictionaries - convert from map-containing messages
-                            string keySel = KeyFromProto("kv.Key", elemKeyType!);
-                            string valSel = ValueFromProto("kv.Value", elemValueType!, "kv1");
-                            string dictType = $"Dictionary<{elemKeyType!.ToDisplayString()}, {elemValueType!.ToDisplayString()}>";
+                            string keySel = KeyFromProto("kv.Key", elemKeyType);
+                            string valSel = ValueFromProto("kv.Value", elemValueType, "kv1");
+                            string dictType = $"Dictionary<{elemKeyType.ToDisplayString()}, {elemValueType.ToDisplayString()}>";
                             string conversionExpr = $"state.{protoStateFieldName}.Select(mapMsg => mapMsg.Entries.ToDictionary(kv => {keySel}, kv => {valSel}))";
-                            
+
                             if (named.TypeKind == TypeKind.Interface)
                                 psb.AppendLine($"{ind}this.{prop.Name} = {conversionExpr}.ToList();");
                             else if (named.ConstructedFrom.ToDisplayString() == "System.Collections.ObjectModel.ObservableCollection<T>")
@@ -287,7 +288,7 @@ public static class ClientGenerator
                         {
                             // Regular collection handling
                             string sel = string.Empty;
-                            var elemConv = ValueFromProto("e", elem!, "e1");
+                            var elemConv = ValueFromProto("e", elem, "e1");
                             if (elemConv != "e")
                             {
                                 sel = elemConv == "ProtoStateConverters.FromProto(e)"
@@ -317,15 +318,18 @@ public static class ClientGenerator
                 else if (prop.FullTypeSymbol is IArrayTypeSymbol arr)
                 {
                     var elem = arr.ElementType;
-                    string sel = string.Empty;
-                    var elemConv = ValueFromProto("e", elem, "e1");
-                    if (elemConv != "e")
+                    if (elem != null)
                     {
-                        sel = elemConv == "ProtoStateConverters.FromProto(e)"
-                            ? ".Select(ProtoStateConverters.FromProto)"
-                            : $".Select(e => {elemConv})";
+                        string sel = string.Empty;
+                        var elemConv = ValueFromProto("e", elem, "e1");
+                        if (elemConv != "e")
+                        {
+                            sel = elemConv == "ProtoStateConverters.FromProto(e)"
+                                ? ".Select(ProtoStateConverters.FromProto)"
+                                : $".Select(e => {elemConv})";
+                        }
+                        psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToArray();");
                     }
-                    psb.AppendLine($"{ind}this.{prop.Name} = state.{protoStateFieldName}{sel}.ToArray();");
                 }
                 else
                 {

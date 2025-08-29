@@ -18,7 +18,7 @@ public partial class FourthLevel : ObservableObject
 public partial class ThirdLevel : ObservableObject
 {
     [ObservableProperty]
-    private FourthLevel[] series;
+    private FourthLevel[] series = System.Array.Empty<FourthLevel>();
 
     [ObservableProperty]
     private List<FourthLevel> items = new();

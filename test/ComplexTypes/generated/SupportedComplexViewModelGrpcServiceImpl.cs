@@ -194,7 +194,7 @@ public partial class SupportedComplexViewModelGrpcServiceImpl : SupportedComplex
         else if (newValue is float f) notification.NewValue = Any.Pack(new FloatValue { Value = f });
         else if (newValue is long l) notification.NewValue = Any.Pack(new Int64Value { Value = l });
         else if (newValue is DateTime dt) notification.NewValue = Any.Pack(Timestamp.FromDateTime(dt.ToUniversalTime()));
-        else { Debug.WriteLine($"[GrpcService:SupportedComplexViewModel] PropertyChanged: Packing not implemented for type {(newValue?.GetType().FullName ?? "null")} of property {e.PropertyName}."); notification.NewValue = Any.Pack(new StringValue { Value = newValue.ToString() }); }
+        else { Debug.WriteLine($"[GrpcService:SupportedComplexViewModel] PropertyChanged: Packing not implemented for type {(newValue?.GetType().FullName ?? "null")} of property {e.PropertyName}."); notification.NewValue = Any.Pack(new StringValue { Value = newValue?.ToString() ?? "null" }); }
 
         foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
         {
