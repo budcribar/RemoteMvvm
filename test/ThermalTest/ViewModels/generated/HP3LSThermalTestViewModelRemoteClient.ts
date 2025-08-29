@@ -60,7 +60,7 @@ export interface ThermalZoneState {
   readonly secondsInState: number;
   readonly firstSeenInState: Date;
   readonly progress: number;
-  background: string;
+  readonly background: string;
   readonly status: number;
   readonly state: number;
   readonly stateDescription: string;
@@ -74,7 +74,7 @@ export interface TestSettingsState {
 }
 
 export const readOnlyMemberMap: Record<string, Set<string>> = {
-  ThermalZoneState: new Set(['isActive', 'deviceName', 'temperature', 'processorLoad', 'fanSpeed', 'secondsInState', 'firstSeenInState', 'progress', 'status', 'state', 'stateDescription', 'statusDescription']),
+  ThermalZoneState: new Set(['isActive', 'deviceName', 'temperature', 'processorLoad', 'fanSpeed', 'secondsInState', 'firstSeenInState', 'progress', 'background', 'status', 'state', 'stateDescription', 'statusDescription']),
 };
 
 export class HP3LSThermalTestViewModelRemoteClient {
