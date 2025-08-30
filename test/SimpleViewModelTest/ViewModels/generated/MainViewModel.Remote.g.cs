@@ -28,17 +28,18 @@ namespace SimpleViewModelTest.ViewModels
     public partial class MainViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private MainViewModelGrpcServiceImpl? _grpcService;
-        private readonly Dispatcher _dispatcher;
+                private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private SimpleViewModelTest.ViewModels.RemoteClients.MainViewModelRemoteClient? _remoteClient;
-
+        
         public MainViewModel(ServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
+                        _dispatcher = Dispatcher.CurrentDispatcher;
+            // Always create service without dispatcher - MVVM Toolkit handles threading automatically
             _grpcService = new MainViewModelGrpcServiceImpl(this);
-
+            
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
         }
@@ -70,7 +71,7 @@ namespace SimpleViewModelTest.ViewModels
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });
-                
+
                 // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
                 kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
                 {
@@ -104,9 +105,9 @@ namespace SimpleViewModelTest.ViewModels
         public MainViewModel(ClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = null!;
+                        _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
-            var client = new MainViewModelService.MainViewModelServiceClient(_channel);
+            var client = new Generated.Protos.MainViewModelService.MainViewModelServiceClient(_channel);
             _remoteClient = new MainViewModelRemoteClient(client);
         }
 

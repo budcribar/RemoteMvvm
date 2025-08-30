@@ -28,17 +28,18 @@ namespace HPSystemsTools.ViewModels
     public partial class HP3LSThermalTestViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private HP3LSThermalTestViewModelGrpcServiceImpl? _grpcService;
-        private readonly Dispatcher _dispatcher;
+                private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private HPSystemsTools.ViewModels.RemoteClients.HP3LSThermalTestViewModelRemoteClient? _remoteClient;
-
+        
         public HP3LSThermalTestViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
+                        _dispatcher = Dispatcher.CurrentDispatcher;
+            // Always create service without dispatcher - MVVM Toolkit handles threading automatically
             _grpcService = new HP3LSThermalTestViewModelGrpcServiceImpl(this);
-
+            
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
         }
@@ -70,7 +71,7 @@ namespace HPSystemsTools.ViewModels
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });
-                
+
                 // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
                 kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
                 {
@@ -104,9 +105,9 @@ namespace HPSystemsTools.ViewModels
         public HP3LSThermalTestViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = null!;
+                        _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
-            var client = new HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient(_channel);
+            var client = new Generated.Protos.HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient(_channel);
             _remoteClient = new HP3LSThermalTestViewModelRemoteClient(client);
         }
 

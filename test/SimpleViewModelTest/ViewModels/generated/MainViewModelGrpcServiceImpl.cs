@@ -64,7 +64,7 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
             var propValue = _viewModel.Devices;
             if (propValue != null) state.Devices.AddRange(propValue.Where(e => e != null).Select(SimpleViewModelTest.ViewModels.ProtoStateConverters.ToProto).Where(s => s != null));
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:MainViewModel] Error mapping property Devices to state.Devices: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:MainViewModel] Error mapping property Devices to state.Devices: " + ex.ToString()); }
 
         return Task.FromResult(state);
     }
@@ -531,8 +531,8 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
                 catch (ChannelClosedException) { 
                     // Subscriber likely disconnected, this is expected
                 }
-                catch (Exception ex) { 
-                    Debug.WriteLine($"[MainViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); 
+                catch (Exception ex) {
+                    Debug.WriteLine($"[MainViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message);
                 }
             }
         });
@@ -679,8 +679,8 @@ public partial class MainViewModelGrpcServiceImpl : MainViewModelService.MainVie
         {
             Status = Generated.Protos.ConnectionStatus.Connected
         };
-        
-        Debug.WriteLine("[GrpcService:MainViewModel] Ping received, responding with Connected status");
+
+        Debug.WriteLine($"[GrpcService:MainViewModel] Ping received, responding with Connected status");
         return Task.FromResult(response);
     }
 

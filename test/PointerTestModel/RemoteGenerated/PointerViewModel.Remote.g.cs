@@ -28,17 +28,18 @@ namespace HPSystemsTools
     public partial class PointerViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private PointerViewModelGrpcServiceImpl? _grpcService;
-        private readonly Dispatcher _dispatcher;
+                private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private HPSystemsTools.RemoteClients.PointerViewModelRemoteClient? _remoteClient;
-
+        
         public PointerViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
+                        _dispatcher = Dispatcher.CurrentDispatcher;
+            // Always create service without dispatcher - MVVM Toolkit handles threading automatically
             _grpcService = new PointerViewModelGrpcServiceImpl(this);
-
+            
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
         }
@@ -70,7 +71,7 @@ namespace HPSystemsTools
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });
-                
+
                 // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
                 kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
                 {
@@ -104,9 +105,9 @@ namespace HPSystemsTools
         public PointerViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = null!;
+                        _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
-            var client = new PointerViewModelService.PointerViewModelServiceClient(_channel);
+            var client = new Pointer.ViewModels.Protos.PointerViewModelService.PointerViewModelServiceClient(_channel);
             _remoteClient = new PointerViewModelRemoteClient(client);
         }
 

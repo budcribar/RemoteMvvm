@@ -64,14 +64,14 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             var propValue = _viewModel.Name;
             state.Name = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Name to state.Name: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:SampleViewModel] Error mapping property Name to state.Name: " + ex.ToString()); }
         // Mapping property: Count to state.Count
         try
         {
             var propValue = _viewModel.Count;
             state.Count = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:SampleViewModel] Error mapping property Count to state.Count: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:SampleViewModel] Error mapping property Count to state.Count: " + ex.ToString()); }
 
         return Task.FromResult(state);
     }
@@ -246,7 +246,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
                 return response;
             }
             
-            if (!propertyInfo.CanWrite)
+            if (propertyInfo.SetMethod == null || !propertyInfo.SetMethod.IsPublic)
             {
                 response.Success = false;
                 response.ErrorMessage = $"Property '{finalPropertyName}' is read-only";
@@ -538,8 +538,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
                 catch (ChannelClosedException) { 
                     // Subscriber likely disconnected, this is expected
                 }
-                catch (Exception ex) { 
-                    Debug.WriteLine($"[SampleViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); 
+                catch (Exception ex) {
+                    Debug.WriteLine($"[SampleViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message);
                 }
             }
         });
@@ -725,8 +725,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         {
             Status = SampleApp.ViewModels.Protos.ConnectionStatus.Connected
         };
-        
-        Debug.WriteLine("[GrpcService:SampleViewModel] Ping received, responding with Connected status");
+
+        Debug.WriteLine($"[GrpcService:SampleViewModel] Ping received, responding with Connected status");
         return Task.FromResult(response);
     }
 

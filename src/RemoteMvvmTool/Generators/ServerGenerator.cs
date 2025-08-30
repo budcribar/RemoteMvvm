@@ -161,19 +161,26 @@ public static class ServerGenerator
                         string keySel = KeyToProto("kv.Key", elemKeyType!);
                         string valSel = ValueToProto("kv.Value", elemValueType!, "kv1");
                         
-                        sb.AppendLine($"            if (propValue != null)");
-                        sb.AppendLine($"            {{");
-                        sb.AppendLine($"                foreach (var dict in propValue)");
-                        sb.AppendLine($"                {{");
-                        sb.AppendLine($"                    var mapMsg = new {protoNs}.{dictMapName}();");
-                        sb.AppendLine($"                    if (dict != null)");
-    sb.AppendLine($"                    {{");
-    sb.AppendLine($"                        foreach (var kv in dict)");
-    sb.AppendLine($"                            mapMsg.Entries.Add({keySel}, {valSel});");
-    sb.AppendLine($"                    }}");
-    sb.AppendLine($"                    state.{p.Name}.Add(mapMsg);");
-    sb.AppendLine($"                }}");
-    sb.AppendLine($"            }}");
+                        var protoNsVar = protoNs;
+                        var dictMapNameVar = dictMapName;
+                        var keySelVar = keySel;
+                        var valSelVar = valSel;
+                        var propName = p.Name;
+                        sb.AppendLine($$"""
+                        if (propValue != null)
+                        {
+                            foreach (var dict in propValue)
+                            {
+                                var mapMsg = new {{protoNsVar}}.{{dictMapNameVar}}();
+                                if (dict != null)
+                                {
+                                    foreach (var kv in dict)
+                                        mapMsg.Entries.Add({{keySelVar}}, {{valSelVar}});
+                                }
+                                state.{{propName}}.Add(mapMsg);
+                            }
+                        }
+                        """);
                     }
                     else
                     {
@@ -238,7 +245,7 @@ public static class ServerGenerator
                 sb.AppendLine($"            state.{p.Name} = {assignment};");
             }
             sb.AppendLine("        }");
-            sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine(\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.ToString()); }}");
+            sb.AppendLine($"        catch (Exception ex) {{ Debug.WriteLine($\"[GrpcService:{vmName}] Error mapping property {p.Name} to state.{p.Name}: \" + ex.ToString()); }}");
         }
         
         return sb.ToString();
@@ -247,7 +254,7 @@ public static class ServerGenerator
     private static string GenerateCommandMethods(List<CommandInfo> cmds, string vmName, string protoNs)
     {
         var sb = new StringBuilder();
-        
+
         foreach (var cmd in cmds)
         {
             var baseName = cmd.MethodName.EndsWith("Async", StringComparison.Ordinal)
@@ -255,7 +262,7 @@ public static class ServerGenerator
                 : cmd.MethodName;
             var reqType = baseName + "Request";
             var respType = baseName + "Response";
-            
+
             sb.AppendLine();
             sb.AppendLine($"    public override Task<{protoNs}.{respType}> {baseName}({protoNs}.{reqType} request, ServerCallContext context)");
             sb.AppendLine("    {");
@@ -263,7 +270,7 @@ public static class ServerGenerator
             sb.AppendLine("        ");
             sb.AppendLine("        try");
             sb.AppendLine("        {");
-            
+
             // Add command type reference comment for better testability
             if (cmd.Parameters.Count > 0)
             {
@@ -281,7 +288,7 @@ public static class ServerGenerator
             {
                 sb.AppendLine("            // Executes command: IRelayCommand");
             }
-            
+
             // Direct command execution - MVVM Toolkit RelayCommand handles its own dispatching
             if (cmd.Parameters.Count > 0)
             {
@@ -312,7 +319,7 @@ public static class ServerGenerator
                         sb.AppendLine($"            var {paramName} = request.{paramProp};");
                     }
                 }
-                
+
                 var paramList = string.Join(", ", cmd.Parameters.Select(p => GeneratorHelpers.ToCamelCase(p.Name)));
                 if (cmd.Parameters.Count == 1)
                 {
@@ -327,7 +334,7 @@ public static class ServerGenerator
             {
                 sb.AppendLine($"            _viewModel.{cmd.CommandPropertyName}?.Execute(null);");
             }
-            
+
             sb.AppendLine($"            Debug.WriteLine(\"[GrpcService:{vmName}] Executed command {baseName}\");");
             sb.AppendLine("        }");
             sb.AppendLine("        catch (Exception ex)");
@@ -339,26 +346,30 @@ public static class ServerGenerator
             sb.AppendLine("        return Task.FromResult(response);");
             sb.AppendLine("    }");
         }
-        
+
         return sb.ToString();
     }
 
     private static string GeneratePingMethod(string vmName, string protoNs)
     {
         var sb = new StringBuilder();
-        
-        sb.AppendLine();
-        sb.AppendLine($"    public override Task<{protoNs}.ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)");
-        sb.AppendLine("    {");
-        sb.AppendLine($"        var response = new {protoNs}.ConnectionStatusResponse");
-        sb.AppendLine("        {");
-        sb.AppendLine($"            Status = {protoNs}.ConnectionStatus.Connected");
-        sb.AppendLine("        };");
-        sb.AppendLine("        ");
-        sb.AppendLine($"        Debug.WriteLine(\"[GrpcService:{vmName}] Ping received, responding with Connected status\");");
-        sb.AppendLine("        return Task.FromResult(response);");
-        sb.AppendLine("    }");
-        
+
+        var protoNsVar = protoNs;
+        var vmNameVar = vmName;
+        sb.AppendLine($$"""
+
+            public override Task<{{protoNsVar}}.ConnectionStatusResponse> Ping(Google.Protobuf.WellKnownTypes.Empty request, ServerCallContext context)
+            {
+                var response = new {{protoNsVar}}.ConnectionStatusResponse
+                {
+                    Status = {{protoNsVar}}.ConnectionStatus.Connected
+                };
+
+                Debug.WriteLine($"[GrpcService:{{vmName}}] Ping received, responding with Connected status");
+                return Task.FromResult(response);
+            }
+        """);
+
         return sb.ToString();
     }
 }

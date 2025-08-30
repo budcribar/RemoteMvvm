@@ -28,17 +28,18 @@ namespace MonsterClicker.ViewModels
     public partial class GameViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private GameViewModelGrpcServiceImpl? _grpcService;
-        private readonly Dispatcher _dispatcher;
+                private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private MonsterClicker.ViewModels.RemoteClients.GameViewModelRemoteClient? _remoteClient;
-
+        
         public GameViewModel(ServerOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = Dispatcher.CurrentDispatcher;
+                        _dispatcher = Dispatcher.CurrentDispatcher;
+            // Always create service without dispatcher - MVVM Toolkit handles threading automatically
             _grpcService = new GameViewModelGrpcServiceImpl(this);
-
+            
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
         }
@@ -70,7 +71,7 @@ namespace MonsterClicker.ViewModels
                 {
                     listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                 });
-                
+
                 // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
                 kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
                 {
@@ -104,9 +105,9 @@ namespace MonsterClicker.ViewModels
         public GameViewModel(ClientOptions options) : this()
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-            _dispatcher = null!;
+                        _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
-            var client = new GameViewModelService.GameViewModelServiceClient(_channel);
+            var client = new MonsterClicker.ViewModels.Protos.GameViewModelService.GameViewModelServiceClient(_channel);
             _remoteClient = new GameViewModelRemoteClient(client);
         }
 

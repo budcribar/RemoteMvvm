@@ -64,56 +64,56 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             var propValue = _viewModel.MonsterName;
             state.MonsterName = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property MonsterName to state.MonsterName: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property MonsterName to state.MonsterName: " + ex.ToString()); }
         // Mapping property: MonsterMaxHealth to state.MonsterMaxHealth
         try
         {
             var propValue = _viewModel.MonsterMaxHealth;
             state.MonsterMaxHealth = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property MonsterMaxHealth to state.MonsterMaxHealth: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property MonsterMaxHealth to state.MonsterMaxHealth: " + ex.ToString()); }
         // Mapping property: MonsterCurrentHealth to state.MonsterCurrentHealth
         try
         {
             var propValue = _viewModel.MonsterCurrentHealth;
             state.MonsterCurrentHealth = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property MonsterCurrentHealth to state.MonsterCurrentHealth: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property MonsterCurrentHealth to state.MonsterCurrentHealth: " + ex.ToString()); }
         // Mapping property: PlayerDamage to state.PlayerDamage
         try
         {
             var propValue = _viewModel.PlayerDamage;
             state.PlayerDamage = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property PlayerDamage to state.PlayerDamage: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property PlayerDamage to state.PlayerDamage: " + ex.ToString()); }
         // Mapping property: GameMessage to state.GameMessage
         try
         {
             var propValue = _viewModel.GameMessage;
             state.GameMessage = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property GameMessage to state.GameMessage: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property GameMessage to state.GameMessage: " + ex.ToString()); }
         // Mapping property: IsMonsterDefeated to state.IsMonsterDefeated
         try
         {
             var propValue = _viewModel.IsMonsterDefeated;
             state.IsMonsterDefeated = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property IsMonsterDefeated to state.IsMonsterDefeated: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property IsMonsterDefeated to state.IsMonsterDefeated: " + ex.ToString()); }
         // Mapping property: CanUseSpecialAttack to state.CanUseSpecialAttack
         try
         {
             var propValue = _viewModel.CanUseSpecialAttack;
             state.CanUseSpecialAttack = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property CanUseSpecialAttack to state.CanUseSpecialAttack: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property CanUseSpecialAttack to state.CanUseSpecialAttack: " + ex.ToString()); }
         // Mapping property: IsSpecialAttackOnCooldown to state.IsSpecialAttackOnCooldown
         try
         {
             var propValue = _viewModel.IsSpecialAttackOnCooldown;
             state.IsSpecialAttackOnCooldown = propValue;
         }
-        catch (Exception ex) { Debug.WriteLine("[GrpcService:GameViewModel] Error mapping property IsSpecialAttackOnCooldown to state.IsSpecialAttackOnCooldown: " + ex.ToString()); }
+        catch (Exception ex) { Debug.WriteLine($"[GrpcService:GameViewModel] Error mapping property IsSpecialAttackOnCooldown to state.IsSpecialAttackOnCooldown: " + ex.ToString()); }
 
         return Task.FromResult(state);
     }
@@ -580,8 +580,8 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                 catch (ChannelClosedException) { 
                     // Subscriber likely disconnected, this is expected
                 }
-                catch (Exception ex) { 
-                    Debug.WriteLine($"[GameViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); 
+                catch (Exception ex) {
+                    Debug.WriteLine($"[GameViewModelGrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message);
                 }
             }
         });
@@ -765,8 +765,8 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         {
             Status = MonsterClicker.ViewModels.Protos.ConnectionStatus.Connected
         };
-        
-        Debug.WriteLine("[GrpcService:GameViewModel] Ping received, responding with Connected status");
+
+        Debug.WriteLine($"[GrpcService:GameViewModel] Ping received, responding with Connected status");
         return Task.FromResult(response);
     }
 

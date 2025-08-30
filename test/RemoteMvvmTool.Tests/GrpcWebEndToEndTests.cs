@@ -286,9 +286,41 @@ public class GrpcWebEndToEndTests
     /// <param name="expectedDataValues">Comma-separated string of expected numeric values from the transferred data, sorted</param>
     internal static async Task TestEndToEndScenario(string modelCode, string expectedDataValues, string nodeTestFile = "test-protoc.js", string? expectedPropertyChange = null)
     {
-        // Kill any existing TestProject processes from previous test runs
+        // Aggressive cleanup: Kill any existing test processes and wait longer for cleanup
+        Console.WriteLine("🧹 Performing aggressive cleanup before test...");
         KillExistingTestProcesses();
-        
+
+        // Additional cleanup: Try to kill any dotnet processes that might be test servers
+        try
+        {
+            var dotnetProcesses = Process.GetProcessesByName("dotnet");
+            foreach (var process in dotnetProcesses)
+            {
+                try
+                {
+                    if (process.Id != Environment.ProcessId && // Don't kill ourselves
+                        process.StartTime > DateTime.Now.AddMinutes(-5)) // Only kill recent processes
+                    {
+                        Console.WriteLine($"Attempting to kill dotnet process {process.Id} (started {process.StartTime})");
+                        process.Kill();
+                        process.WaitForExit(2000);
+                        Console.WriteLine($"✅ Killed dotnet process {process.Id}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Could not kill dotnet process {process.Id}: {ex.Message}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ Error during dotnet process cleanup: {ex.Message}");
+        }
+
+        // Wait a bit longer for all processes to fully terminate
+        Thread.Sleep(3000);
+
         // Setup paths
         var paths = SetupTestPaths();
         bool testPassed = false;
@@ -454,46 +486,147 @@ public class GrpcWebEndToEndTests
     {
         try
         {
-            Console.WriteLine("Checking for existing TestProject processes...");
-            
-            // Find all processes named TestProject
-            var testProcesses = Process.GetProcessesByName("TestProject");
-            
-            if (testProcesses.Length > 0)
+            Console.WriteLine("Checking for existing test processes...");
+
+            // Kill processes by multiple patterns to be more comprehensive
+            var processPatterns = new[] { "TestProject", "dotnet" };
+            var killedProcesses = new HashSet<int>();
+
+            foreach (var pattern in processPatterns)
             {
-                Console.WriteLine($"Found {testProcesses.Length} existing TestProject process(es). Terminating...");
-                
-                foreach (var process in testProcesses)
+                try
                 {
-                    try
+                    var processes = Process.GetProcessesByName(pattern);
+                    foreach (var process in processes)
                     {
-                        Console.WriteLine($"Killing process {process.Id}: {process.ProcessName}");
-                        process.Kill();
-                        process.WaitForExit(5000); // Wait up to 5 seconds for clean exit
-                        Console.WriteLine($"✅ Process {process.Id} terminated");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"⚡️ Could not kill process {process.Id}: {ex.Message}");
-                    }
-                    finally
-                    {
-                        process.Dispose();
+                        // Skip current process and processes that are already being killed
+                        if (process.Id == Environment.ProcessId || killedProcesses.Contains(process.Id))
+                            continue;
+
+                        try
+                        {
+                            // Check if this process has command line arguments that suggest it's a test server
+                            var commandLine = GetProcessCommandLine(process);
+                            if (commandLine.Contains("run") && commandLine.Contains("--no-build") ||
+                                commandLine.Contains("TestProject") ||
+                                process.MainModule?.FileName.Contains("TestProject") == true)
+                            {
+                                Console.WriteLine($"Killing test server process {process.Id}: {process.ProcessName}");
+                                process.Kill();
+                                process.WaitForExit(3000); // Reduced wait time
+                                killedProcesses.Add(process.Id);
+                                Console.WriteLine($"✅ Process {process.Id} terminated");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"⚡️ Could not kill process {process.Id}: {ex.Message}");
+                        }
+                        finally
+                        {
+                            process.Dispose();
+                        }
                     }
                 }
-                
-                // Give the system a moment to clean up
-                Thread.Sleep(1000);
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"⚠️ Error checking {pattern} processes: {ex.Message}");
+                }
             }
-            else
+
+            // Also try to kill any processes listening on common test ports
+            KillProcessesOnPorts(new[] { 5000, 5001, 5002, 5003, 5004, 5005 });
+
+            // Give the system more time to clean up
+            Thread.Sleep(2000);
+
+            Console.WriteLine("✅ Process cleanup completed");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"⚠️ Error during process cleanup: {ex.Message}");
+            // Don't fail the test for this - it's just cleanup
+        }
+    }
+
+    private static string GetProcessCommandLine(Process process)
+    {
+        try
+        {
+            // Simplified approach: check if the process is dotnet and has test-related arguments
+            // by examining the process modules and main module path
+            if (process.ProcessName.Contains("dotnet") &&
+                process.MainModule?.FileName.Contains("TestProject") == true)
             {
-                Console.WriteLine("No existing TestProject processes found");
+                return "dotnet run --no-build"; // Assume it's a test server
+            }
+        }
+        catch
+        {
+            // Fallback: return empty string if we can't get command line
+        }
+        return "";
+    }
+
+    private static void KillProcessesOnPorts(int[] ports)
+    {
+        try
+        {
+            foreach (var port in ports)
+            {
+                // Use netstat to find processes listening on the port
+                var netstatProcess = new Process
+                {
+                    StartInfo = new ProcessStartInfo
+                    {
+                        FileName = "netstat",
+                        Arguments = $"-ano | findstr :{port}",
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        CreateNoWindow = true
+                    }
+                };
+
+                netstatProcess.Start();
+                var output = netstatProcess.StandardOutput.ReadToEnd();
+                netstatProcess.WaitForExit();
+
+                // Parse the output to find the process ID
+                var lines = output.Split('\n');
+                foreach (var line in lines)
+                {
+                    if (line.Contains($"LISTENING") || line.Contains($"ESTABLISHED"))
+                    {
+                        var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+                        if (parts.Length >= 5)
+                        {
+                            var pidStr = parts[parts.Length - 1];
+                            if (int.TryParse(pidStr, out var pid))
+                            {
+                                try
+                                {
+                                    var process = Process.GetProcessById(pid);
+                                    if (process.ProcessName.Contains("dotnet") || process.ProcessName.Contains("TestProject"))
+                                    {
+                                        Console.WriteLine($"Killing process {pid} listening on port {port}");
+                                        process.Kill();
+                                        process.WaitForExit(2000);
+                                        Console.WriteLine($"✅ Process {pid} terminated");
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"⚡️ Could not kill process {pid} on port {port}: {ex.Message}");
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️ Error checking for existing processes: {ex.Message}");
-            // Don't fail the test for this - it's just cleanup
+            Console.WriteLine($"⚠️ Error checking processes on ports: {ex.Message}");
         }
     }
 
@@ -1277,27 +1410,100 @@ public class GrpcWebEndToEndTests
     private static async Task WaitForServerReady(int port)
     {
         Console.WriteLine("Waiting for server to start...");
-        for (int i = 0; i < 30; i++)
+        var lastException = (Exception?)null;
+
+        for (int i = 0; i < 45; i++) // Increased from 30 to 45 attempts
         {
             try
             {
                 using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(2);
+                httpClient.Timeout = TimeSpan.FromSeconds(3); // Increased timeout
                 var response = await httpClient.GetAsync($"http://localhost:{port}");
+
                 if (response.StatusCode == HttpStatusCode.NotFound || response.IsSuccessStatusCode)
                 {
                     Console.WriteLine("✅ Server is responding");
                     return;
                 }
+                else
+                {
+                    Console.WriteLine($"Server responded with status {response.StatusCode}, attempt {i + 1}/45...");
+                }
             }
-            catch
+            catch (Exception ex)
             {
-                Console.WriteLine($"Server not ready yet, attempt {i + 1}/30...");
-                await Task.Delay(1000);
+                lastException = ex;
+                Console.WriteLine($"Server not ready yet, attempt {i + 1}/45... ({ex.Message})");
+
+                // On every 10th attempt, check if there are any conflicting processes
+                if ((i + 1) % 10 == 0)
+                {
+                    Console.WriteLine("🔍 Checking for conflicting processes...");
+                    try
+                    {
+                        // Check if port is in use
+                        var netstatProcess = new Process
+                        {
+                            StartInfo = new ProcessStartInfo
+                            {
+                                FileName = "netstat",
+                                Arguments = $"-ano | findstr :{port}",
+                                UseShellExecute = false,
+                                RedirectStandardOutput = true,
+                                CreateNoWindow = true
+                            }
+                        };
+
+                        netstatProcess.Start();
+                        var output = netstatProcess.StandardOutput.ReadToEnd();
+                        netstatProcess.WaitForExit();
+
+                        if (!string.IsNullOrWhiteSpace(output))
+                        {
+                            Console.WriteLine($"⚠️ Port {port} is in use by:");
+                            Console.WriteLine(output);
+                        }
+                        else
+                        {
+                            Console.WriteLine($"✅ Port {port} appears to be free");
+                        }
+                    }
+                    catch (Exception netstatEx)
+                    {
+                        Console.WriteLine($"⚠️ Could not check port status: {netstatEx.Message}");
+                    }
+                }
+            }
+
+            await Task.Delay(1500); // Slightly longer delay between attempts
+        }
+
+        // If we get here, the server failed to start
+        var errorMsg = $"Server failed to start within 67.5 seconds (45 attempts). Last error: {lastException?.Message ?? "Unknown error"}";
+
+        // Try to get more diagnostic information
+        try
+        {
+            var testProcesses = Process.GetProcessesByName("TestProject");
+            if (testProcesses.Length > 0)
+            {
+                errorMsg += $"\nFound {testProcesses.Length} TestProject processes still running.";
+                foreach (var proc in testProcesses)
+                {
+                    errorMsg += $"\n  - Process {proc.Id}: {proc.ProcessName} (CPU: {proc.TotalProcessorTime})";
+                }
+            }
+            else
+            {
+                errorMsg += "\nNo TestProject processes found.";
             }
         }
-        
-        throw new Exception("Server failed to start within 30 seconds");
+        catch (Exception ex)
+        {
+            errorMsg += $"\nCould not check for running processes: {ex.Message}";
+        }
+
+        throw new Exception(errorMsg);
     }
 
     private static void StopServerProcess(Process serverProcess)
