@@ -522,8 +522,8 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
                 catch (ChannelClosedException) { 
                     // Subscriber likely disconnected, this is expected
                 }
-                catch (Exception ex) { 
-                    Debug.WriteLine($"[<<VIEWMODEL_NAME>>GrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message); 
+                catch (Exception ex) {
+                    Debug.WriteLine($"[<<VIEWMODEL_NAME>>GrpcService] Error writing to subscriber channel for '" + e.PropertyName + "': " + ex.Message);
                 }
             }
         });
