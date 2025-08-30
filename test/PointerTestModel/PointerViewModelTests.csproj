@@ -77,10 +77,4 @@
 		<Exec Command="remotemvvm --generate proto,server,client,ts,tsproject --output &quot;$(ProjectDir)RemoteGenerated&quot; --protoNamespace Pointer.ViewModels.Protos @(RemoteMvvmViewModel->'&quot;%(FullPath)&quot;', ' ')" ContinueOnError="false" />
 	</Target>
 
-	<ItemGroup>
-		<Reference Include="HPI.Wrappers.BlazorPointerTest">
-			<HintPath>HPI.Wrappers.BlazorPointerTest.dll</HintPath>
-		</Reference>
-	</ItemGroup>
-
 </Project>

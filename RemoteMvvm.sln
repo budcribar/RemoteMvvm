@@ -4,8 +4,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.14.36109.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsterClicker", "src\demo\MonsterClicker\MonsterClicker.csproj", "{8320DA7B-82A6-474A-AB17-1B464AA023D7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A} = {47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlazorMonsterClicker", "src\demo\BlazorMonsterClicker\BlazorMonsterClicker\BlazorMonsterClicker.csproj", "{66AEA150-2D52-4BC8-AEE9-527F747D2F95}"
+	ProjectSection(ProjectDependencies) = postProject
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A} = {47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
@@ -13,6 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "TypeScriptMonsterClicker", "src\demo\TypeScriptMonsterClicker\TypeScriptMonsterClicker.esproj", "{7F84A14F-D16E-AA0A-0252-1BCF79CD5AB6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{47CDFF96-7D8E-434A-B5FE-F66BDB811B1A} = {47CDFF96-7D8E-434A-B5FE-F66BDB811B1A}
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{388C6387-F030-4CD9-BBDC-490B3CE21464}"
 EndProject
