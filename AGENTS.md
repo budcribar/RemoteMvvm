@@ -61,8 +61,6 @@ To run the RemoteMvvmTool you need to install the Tool by building the RemoteMvv
 
 To build this project, use the following powershell command from the RemoteMvvm directory:
 
-```
+```powershell
 &"C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\Current\Bin\MSBuild.exe" RemoteMvvmTool.sln
 ```
-
-   

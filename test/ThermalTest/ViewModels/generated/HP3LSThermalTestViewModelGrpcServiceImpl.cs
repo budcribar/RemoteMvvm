@@ -280,21 +280,20 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
 
             var finalPropertyName = pathParts[pathParts.Length - 1];
             var propertyInfo = target.GetType().GetProperty(finalPropertyName);
-            
             if (propertyInfo == null)
             {
                 response.Success = false;
                 response.ErrorMessage = $"Property '{finalPropertyName}' not found";
                 return response;
             }
-            
+
             if (propertyInfo.SetMethod == null || !propertyInfo.SetMethod.IsPublic)
             {
                 response.Success = false;
                 response.ErrorMessage = $"Property '{finalPropertyName}' is read-only";
                 return response;
             }
-            
+
             // Store old value for undo/history
             var oldValue = propertyInfo.GetValue(target);
             if (oldValue != null) response.OldValue = PackToAny(oldValue);
