@@ -85,7 +85,7 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
         }
     }
 
-    public override async Task<<<PROTO_NS>>.UpdatePropertyValueResponse> UpdatePropertyValue(<<PROTO_NS>>.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override Task<<<PROTO_NS>>.UpdatePropertyValueResponse> UpdatePropertyValue(<<PROTO_NS>>.UpdatePropertyValueRequest request, ServerCallContext context)
     {
         var response = new <<PROTO_NS>>.UpdatePropertyValueResponse();
         
@@ -102,7 +102,7 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
         }
         
         Debug.WriteLine($"[GrpcService:<<VIEWMODEL_NAME>>] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
-        return response;
+        return Task.FromResult(response);
     }
 
     private <<PROTO_NS>>.UpdatePropertyValueResponse UpdatePropertyValueInternal(<<PROTO_NS>>.UpdatePropertyValueRequest request)
@@ -176,7 +176,7 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
                         return response;
                     }
                     var indexStr = part[(bracketIndex + 1)..end];
-                    var prop = target.GetType().GetProperty(propName);
+                    var prop = target?.GetType().GetProperty(propName);
                     if (prop == null)
                     {
                         response.Success = false;
@@ -191,7 +191,7 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
                             response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
                             return response;
                         }
-                        target = list[idx];
+                        target = list[idx] ?? new();
                     }
                     else
                     {
@@ -202,7 +202,7 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
                 }
                 else
                 {
-                    var prop = target.GetType().GetProperty(part);
+                    var prop = target?.GetType().GetProperty(part);
                     if (prop == null)
                     {
                         response.Success = false;
@@ -221,7 +221,7 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
             }
 
             var finalPropertyName = pathParts[pathParts.Length - 1];
-            var propertyInfo = target.GetType().GetProperty(finalPropertyName);
+            var propertyInfo = target?.GetType().GetProperty(finalPropertyName);
             if (propertyInfo == null)
             {
                 response.Success = false;
@@ -515,10 +515,10 @@ public partial class <<VIEWMODEL_NAME>>GrpcServiceImpl : <<SERVICE_NAME>>.<<SERV
         {
             foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
             {
-                try { 
-                    await channelWriter.WriteAsync(notification); 
+                try {
+                    await channelWriter.WriteAsync(notification);
                 }
-                catch (ChannelClosedException) { 
+                catch (ChannelClosedException) {
                     // Subscriber likely disconnected, this is expected
                 }
                 catch (Exception ex) {

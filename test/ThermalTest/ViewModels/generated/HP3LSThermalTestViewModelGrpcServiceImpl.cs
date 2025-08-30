@@ -143,7 +143,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         }
     }
 
-    public override async Task<Generated.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override Task<Generated.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(Generated.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
         var response = new Generated.Protos.UpdatePropertyValueResponse();
         
@@ -160,7 +160,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         }
         
         Debug.WriteLine($"[GrpcService:HP3LSThermalTestViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
-        return response;
+        return Task.FromResult(response);
     }
 
     private Generated.Protos.UpdatePropertyValueResponse UpdatePropertyValueInternal(Generated.Protos.UpdatePropertyValueRequest request)
@@ -234,7 +234,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
                         return response;
                     }
                     var indexStr = part[(bracketIndex + 1)..end];
-                    var prop = target.GetType().GetProperty(propName);
+                    var prop = target?.GetType().GetProperty(propName);
                     if (prop == null)
                     {
                         response.Success = false;
@@ -249,7 +249,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
                             response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
                             return response;
                         }
-                        target = list[idx];
+                        target = list[idx] ?? new();
                     }
                     else
                     {
@@ -260,7 +260,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
                 }
                 else
                 {
-                    var prop = target.GetType().GetProperty(part);
+                    var prop = target?.GetType().GetProperty(part);
                     if (prop == null)
                     {
                         response.Success = false;
@@ -279,7 +279,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             }
 
             var finalPropertyName = pathParts[pathParts.Length - 1];
-            var propertyInfo = target.GetType().GetProperty(finalPropertyName);
+            var propertyInfo = target?.GetType().GetProperty(finalPropertyName);
             if (propertyInfo == null)
             {
                 response.Success = false;
@@ -573,10 +573,10 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         {
             foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
             {
-                try { 
-                    await channelWriter.WriteAsync(notification); 
+                try {
+                    await channelWriter.WriteAsync(notification);
                 }
-                catch (ChannelClosedException) { 
+                catch (ChannelClosedException) {
                     // Subscriber likely disconnected, this is expected
                 }
                 catch (Exception ex) {

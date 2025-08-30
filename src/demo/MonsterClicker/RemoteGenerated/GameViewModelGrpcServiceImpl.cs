@@ -143,7 +143,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         }
     }
 
-    public override async Task<MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
+    public override Task<MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
         var response = new MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse();
         
@@ -160,7 +160,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         }
         
         Debug.WriteLine($"[GrpcService:GameViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
-        return response;
+        return Task.FromResult(response);
     }
 
     private MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse UpdatePropertyValueInternal(MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest request)
@@ -234,7 +234,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                         return response;
                     }
                     var indexStr = part[(bracketIndex + 1)..end];
-                    var prop = target.GetType().GetProperty(propName);
+                    var prop = target?.GetType().GetProperty(propName);
                     if (prop == null)
                     {
                         response.Success = false;
@@ -249,7 +249,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                             response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
                             return response;
                         }
-                        target = list[idx];
+                        target = list[idx] ?? new();
                     }
                     else
                     {
@@ -260,7 +260,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                 }
                 else
                 {
-                    var prop = target.GetType().GetProperty(part);
+                    var prop = target?.GetType().GetProperty(part);
                     if (prop == null)
                     {
                         response.Success = false;
@@ -279,7 +279,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             }
 
             var finalPropertyName = pathParts[pathParts.Length - 1];
-            var propertyInfo = target.GetType().GetProperty(finalPropertyName);
+            var propertyInfo = target?.GetType().GetProperty(finalPropertyName);
             if (propertyInfo == null)
             {
                 response.Success = false;
@@ -573,10 +573,10 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         {
             foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
             {
-                try { 
-                    await channelWriter.WriteAsync(notification); 
+                try {
+                    await channelWriter.WriteAsync(notification);
                 }
-                catch (ChannelClosedException) { 
+                catch (ChannelClosedException) {
                     // Subscriber likely disconnected, this is expected
                 }
                 catch (Exception ex) {
