@@ -191,15 +191,7 @@ namespace {{vmNamespaceVar}}
             _remoteClient = new {{vmNameVar}}RemoteClient(client);
         }
 
-        public async Task<string> ExtractAndPrintData()
-        {
-            var dataValues = new List<double>();
-            // Logic to extract data from _remoteClient and add to dataValues
-            // This will involve reflection to get properties from _remoteClient
-            // and then recursively extract values.
-            // For now, I will just return a dummy string.
-            return "Dummy Data";
-        }
+        
 
         public async Task<{{vmNameVar}}RemoteClient> GetRemoteModel()
         {
