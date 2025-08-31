@@ -38,7 +38,7 @@ namespace SimpleViewModelTest.ViewModels
             if (options == null) throw new ArgumentNullException(nameof(options));
                         _dispatcher = Dispatcher.CurrentDispatcher;
             // Always create service without dispatcher - MVVM Toolkit handles threading automatically
-            _grpcService = new MainViewModelGrpcServiceImpl(this);
+            _grpcService = new MainViewModelGrpcServiceImpl(this, null);
             
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -93,6 +93,7 @@ namespace SimpleViewModelTest.ViewModels
             app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 
             // Map gRPC services
+            app.MapGet("/status", () => "Server is running.");
             app.MapGrpcService<MainViewModelGrpcServiceImpl>()
                .EnableGrpcWeb()
                .RequireCors("AllowAll");
@@ -110,6 +111,8 @@ namespace SimpleViewModelTest.ViewModels
             var client = new Generated.Protos.MainViewModelService.MainViewModelServiceClient(_channel);
             _remoteClient = new MainViewModelRemoteClient(client);
         }
+
+        
 
         public async Task<MainViewModelRemoteClient> GetRemoteModel()
         {

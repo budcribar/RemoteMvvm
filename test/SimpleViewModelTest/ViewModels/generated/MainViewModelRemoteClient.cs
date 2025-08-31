@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using SimpleViewModelTest.ViewModels;
 #if WPF_DISPATCHER
 using System.Windows;
 #endif

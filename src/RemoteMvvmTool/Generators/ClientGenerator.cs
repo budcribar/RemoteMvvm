@@ -21,8 +21,9 @@ public static class ClientGenerator
     /// <param name="props">The observable properties exposed by the view model.</param>
     /// <param name="cmds">The commands exposed by the view model.</param>
     /// <param name="clientNamespace">Optional namespace for the generated client class.</param>
+    /// <param name="vmNamespace">The namespace of the view model.</param>
     /// <returns>The generated C# source code.</returns>
-    public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds, string? clientNamespace = null)
+    public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds, string? clientNamespace = null, string? vmNamespace = null)
     {
         foreach (var p in props)
         {
@@ -443,6 +444,7 @@ public static class ClientGenerator
             ["<<AUTO_GENERATED_HEADER>>"] = headerSb.ToString().TrimEnd(),
             ["<<NAMESPACE>>"] = ns,
             ["<<VIEW_MODEL_NAME>>"] = vmName,
+            ["<<VIEW_MODEL_NS>>"] = vmNamespace ?? "Generated.ViewModels",
             ["<<PROTO_NS>>"] = protoNs,
             ["<<SERVICE_NAME>>"] = serviceName,
             ["<<PROPERTY_DECLARATIONS>>"] = propertyDecls.ToString(),

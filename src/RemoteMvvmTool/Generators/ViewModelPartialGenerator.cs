@@ -9,6 +9,103 @@ namespace RemoteMvvmTool.Generators;
 
 public static class ViewModelPartialGenerator
 {
+    private static void GenerateNestedPropertyChangeHandlers(StringBuilder sb, List<PropertyInfo> properties)
+    {
+        var collectionsNeedingHandlers = GetCollectionsNeedingEventHandlers(properties);
+
+        foreach (var collection in collectionsNeedingHandlers)
+        {
+            var propName = collection.Name;
+            var elementTypeName = GetElementTypeName(collection.FullTypeSymbol!);
+
+            sb.AppendLine($$"""
+        // Auto-generated nested property change handlers for {{propName}}
+        private void {{propName}}_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+                foreach ({{elementTypeName}} item in e.NewItems)
+                    item.PropertyChanged += {{propName}}_ItemPropertyChanged;
+            if (e.OldItems != null)
+                foreach ({{elementTypeName}} item in e.OldItems)
+                    item.PropertyChanged -= {{propName}}_ItemPropertyChanged;
+        }
+
+        private void {{propName}}_ItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            var index = {{propName}}.IndexOf(({{elementTypeName}})sender!);
+""");
+            sb.AppendLine($"            OnPropertyChanged($\"{{{propName}}}[{{index}}].{{e.PropertyName}}\");");
+            sb.AppendLine($$"""
+        }
+
+""");
+        }
+    }
+
+    private static void GenerateConstructorEventWiring(StringBuilder sb, List<PropertyInfo> properties)
+    {
+        var collectionsNeedingHandlers = GetCollectionsNeedingEventHandlers(properties);
+
+        if (collectionsNeedingHandlers.Count > 0)
+        {
+            sb.AppendLine("            // Auto-generated event wiring for nested property changes");
+            foreach (var collection in collectionsNeedingHandlers)
+            {
+                var propName = collection.Name;
+                sb.AppendLine($"            {propName}.CollectionChanged += {propName}_CollectionChanged;");
+            }
+            sb.AppendLine();
+        }
+    }
+
+    private static List<PropertyInfo> GetCollectionsNeedingEventHandlers(List<PropertyInfo> properties)
+    {
+        var result = new List<PropertyInfo>();
+
+        foreach (var prop in properties)
+        {
+            if (IsObservableCollectionOfNotifyingElements(prop.FullTypeSymbol!))
+            {
+                result.Add(prop);
+            }
+        }
+
+        return result;
+    }
+
+    private static bool IsObservableCollectionOfNotifyingElements(ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol is not INamedTypeSymbol namedType) return false;
+
+        // Check if it's ObservableCollection<T>
+        if (!namedType.IsGenericType) return false;
+        var genericTypeDefinition = namedType.ConstructedFrom.ToDisplayString();
+        if (genericTypeDefinition != "System.Collections.ObjectModel.ObservableCollection<T>") return false;
+
+        // Check if T implements INotifyPropertyChanged
+        var elementType = namedType.TypeArguments[0];
+        return ImplementsINotifyPropertyChanged(elementType);
+    }
+
+    private static bool ImplementsINotifyPropertyChanged(ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol is not INamedTypeSymbol namedType) return false;
+
+        // Check all interfaces
+        var allInterfaces = namedType.AllInterfaces;
+        return allInterfaces.Any(i => i.ToDisplayString() == "System.ComponentModel.INotifyPropertyChanged");
+    }
+
+    private static string GetElementTypeName(ITypeSymbol collectionType)
+    {
+        if (collectionType is INamedTypeSymbol namedType && namedType.IsGenericType)
+        {
+            var elementType = namedType.TypeArguments[0];
+            return elementType.ToDisplayString();
+        }
+        return "object";
+    }
+
     public static string Generate(string vmName, string protoNs, string serviceName, string vmNamespace, string clientNamespace, string baseClass, string runType = "wpf", bool hasParameterlessConstructor = true, List<PropertyInfo>? properties = null)
     {
         var sb = new StringBuilder();
@@ -27,9 +124,9 @@ public static class ViewModelPartialGenerator
         // Determine base clause
         var baseClause = string.IsNullOrWhiteSpace(baseClassVar) ? "" : baseClassVar;
         if (!string.IsNullOrWhiteSpace(baseClause))
-            baseClause += ", IDisposable";
+            baseClass += ", IDisposable";
         else
-            baseClause = "IDisposable";
+            baseClass = "IDisposable";
 
         // Determine constructor suffixes
         var serverCtorSuffix = hasParameterlessConstructorVar ? " : this()" : string.Empty;
@@ -48,7 +145,7 @@ public static class ViewModelPartialGenerator
         {
             "wpf" => "            _dispatcher = Dispatcher.CurrentDispatcher;",
             "winforms" => $$"""
-            _dispatcher = new SystemForms.Control();
+            _dispatcher = new System.Windows.Forms.Control();
             _dispatcher.CreateControl();
 """,
             _ => ""
@@ -104,7 +201,7 @@ using PeakSWC.Mvvm.Remote;
 
 namespace {{vmNamespaceVar}}
 {
-    public partial class {{vmNameVar}} : {{baseClause}}
+    public partial class {{vmNameVar}} : {{baseClass}}
     {
         private {{vmNameVar}}GrpcServiceImpl? _grpcService;
         {{dispatcherField}}
@@ -210,102 +307,5 @@ namespace {{vmNamespaceVar}}
 }
 """);
         return sb.ToString();
-    }
-
-    private static void GenerateNestedPropertyChangeHandlers(StringBuilder sb, List<PropertyInfo> properties)
-    {
-        var collectionsNeedingHandlers = GetCollectionsNeedingEventHandlers(properties);
-
-        foreach (var collection in collectionsNeedingHandlers)
-        {
-            var propName = collection.Name;
-            var elementTypeName = GetElementTypeName(collection.FullTypeSymbol!);
-
-            sb.AppendLine($$"""
-        // Auto-generated nested property change handlers for {{propName}}
-        private void {{propName}}_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-                foreach ({{elementTypeName}} item in e.NewItems)
-                    item.PropertyChanged += {{propName}}_ItemPropertyChanged;
-            if (e.OldItems != null)
-                foreach ({{elementTypeName}} item in e.OldItems)
-                    item.PropertyChanged -= {{propName}}_ItemPropertyChanged;
-        }
-
-        private void {{propName}}_ItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            var index = {{propName}}.IndexOf(({{elementTypeName}})sender!);
-""");
-            sb.AppendLine($"            OnPropertyChanged($\"{{{propName}}}[{{index}}].{{e.PropertyName}}\");");
-            sb.AppendLine($$"""
-        }
-
-""");
-        }
-    }
-
-    private static void GenerateConstructorEventWiring(StringBuilder sb, List<PropertyInfo> properties)
-    {
-        var collectionsNeedingHandlers = GetCollectionsNeedingEventHandlers(properties);
-
-        if (collectionsNeedingHandlers.Count > 0)
-        {
-            sb.AppendLine("            // Auto-generated event wiring for nested property changes");
-            foreach (var collection in collectionsNeedingHandlers)
-            {
-                var propName = collection.Name;
-                sb.AppendLine($"            {propName}.CollectionChanged += {propName}_CollectionChanged;");
-            }
-            sb.AppendLine();
-        }
-    }
-
-    private static List<PropertyInfo> GetCollectionsNeedingEventHandlers(List<PropertyInfo> properties)
-    {
-        var result = new List<PropertyInfo>();
-        
-        foreach (var prop in properties)
-        {
-            if (IsObservableCollectionOfNotifyingElements(prop.FullTypeSymbol!))
-            {
-                result.Add(prop);
-            }
-        }
-        
-        return result;
-    }
-
-    private static bool IsObservableCollectionOfNotifyingElements(ITypeSymbol typeSymbol)
-    {
-        if (typeSymbol is not INamedTypeSymbol namedType) return false;
-        
-        // Check if it's ObservableCollection<T>
-        if (!namedType.IsGenericType) return false;
-        var genericTypeDefinition = namedType.ConstructedFrom.ToDisplayString();
-        if (genericTypeDefinition != "System.Collections.ObjectModel.ObservableCollection<T>") return false;
-        
-        // Check if T implements INotifyPropertyChanged
-        var elementType = namedType.TypeArguments[0];
-        return ImplementsINotifyPropertyChanged(elementType);
-    }
-
-    private static bool ImplementsINotifyPropertyChanged(ITypeSymbol typeSymbol)
-    {
-        if (typeSymbol is not INamedTypeSymbol namedType) return false;
-        
-        // Check all interfaces
-        var allInterfaces = namedType.AllInterfaces;
-        return allInterfaces.Any(i => i.ToDisplayString() == "System.ComponentModel.INotifyPropertyChanged");
-    }
-
-    private static string GetElementTypeName(ITypeSymbol collectionType)
-    {
-        if (collectionType is INamedTypeSymbol namedType && namedType.IsGenericType)
-        {
-            var elementType = namedType.TypeArguments[0];
-            return elementType.ToDisplayString();
-        }
-        return "object";
     }
 }

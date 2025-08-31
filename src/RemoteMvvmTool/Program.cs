@@ -181,7 +181,7 @@ namespace RemoteMvvmTool
                     string programCs = CsProjectGenerator.GenerateProgramCs(result.ViewModelName, runType, protoNamespace, serviceName, clientNamespace, result.Properties, result.Commands);
                     await File.WriteAllTextAsync(Path.Combine(projDir, "Program.cs"), programCs);
                     string clientPathProj = Path.Combine(projDir, result.ViewModelName + "RemoteClient.cs");
-                    var clientProj = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
+                    var clientProj = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace, vmNamespaceStr);
                     await File.WriteAllTextAsync(clientPathProj, clientProj);
                     var rootTypesProj = result.Properties.Select(p => p.FullTypeSymbol!)
                         .Concat(result.Commands.SelectMany(c => c.Parameters.Select(p => p.FullTypeSymbol!)));
@@ -206,7 +206,7 @@ namespace RemoteMvvmTool
                     string clientPath = Path.Combine(output, result.ViewModelName + "RemoteClient.cs");
                     if (NeedsGeneration(clientPath, vms))
                     {
-                        var client = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace);
+                        var client = ClientGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, result.Properties, result.Commands, clientNamespace, vmNamespaceStr);
                         await File.WriteAllTextAsync(clientPath, client);
                     }
                 }

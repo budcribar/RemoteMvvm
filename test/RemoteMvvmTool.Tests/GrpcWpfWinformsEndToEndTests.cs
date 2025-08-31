@@ -1222,13 +1222,17 @@ public class GrpcWpfWinformsEndToEndTests
         var conv = ConversionGenerator.Generate("Test.Protos", "Generated.ViewModels", rootTypes, compilation);
         File.WriteAllText(Path.Combine(testProjectDir, "ProtoStateConverters.cs"), conv);
 
+        // Generate client code
+        var clientCode = ClientGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, "Generated.Clients");
+        File.WriteAllText(Path.Combine(testProjectDir, name + "RemoteClient.cs"), clientCode);
+
         // Determine if we should auto-generate nested property change handlers using proper C# analysis
         var propsForAutoGeneration = ShouldAutoGenerateEventHandlers(compilation, name, props) ? props : null;
 
         var partial = ViewModelPartialGenerator.Generate(name, "Test.Protos", name + "Service", "Generated.ViewModels", "Generated.Clients", "CommunityToolkit.Mvvm.ComponentModel.ObservableObject", platform, true, propsForAutoGeneration);
         File.WriteAllText(Path.Combine(testProjectDir, name + ".Remote.g.cs"), partial);
 
-        Console.WriteLine("✅ Generated server code files");
+        Console.WriteLine("✅ Generated server and client code files");
     }
 
     private static async Task GenerateJavaScriptProtobufIfNeeded(string testProjectDir)
