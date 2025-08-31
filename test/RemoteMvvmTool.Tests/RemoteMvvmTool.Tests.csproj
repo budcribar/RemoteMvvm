@@ -13,12 +13,22 @@
 
   <ItemGroup>
     <Compile Remove="TestData\GrpcWebEndToEnd\**" />
+    <Compile Remove="TestData\Workwinforms\**" />
+    <Compile Remove="TestData\Workwpf\**" />
     <Compile Remove="TestData\Work\**" />
     <EmbeddedResource Remove="TestData\GrpcWebEndToEnd\**" />
+    <EmbeddedResource Remove="TestData\Workwinforms\**" />
+    <EmbeddedResource Remove="TestData\Workwpf\**" />
     <EmbeddedResource Remove="TestData\Work\**" />
     <None Remove="TestData\GrpcWebEndToEnd\**" />
+    <None Remove="TestData\Workwinforms\**" />
+    <None Remove="TestData\Workwpf\**" />
     <None Remove="TestData\Work\**" />
+    <Page Remove="TestData\Workwinforms\**" />
+    <Page Remove="TestData\Workwpf\**" />
     <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
+    <TypeScriptCompile Remove="TestData\Workwinforms\**" />
+    <TypeScriptCompile Remove="TestData\Workwpf\**" />
     <TypeScriptCompile Remove="TestData\Work\**" />
   </ItemGroup>
 
@@ -54,6 +64,7 @@
     <!-- WPF and Winforms references for GUI testing -->
     <PackageReference Include="System.Windows.Extensions" Version="8.0.0" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
   </ItemGroup>
 
   <ItemGroup>

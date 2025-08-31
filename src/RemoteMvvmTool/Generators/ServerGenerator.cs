@@ -30,7 +30,7 @@ public static class ServerGenerator
 
         var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ServerTemplate.tmpl");
 
-        return GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
+        var result = GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
         {
             ["<<AUTO_GENERATED_HEADER>>"] = headerSb.ToString().TrimEnd(),
             ["<<PLATFORM_USING>>"] = platformUsing,
@@ -41,6 +41,11 @@ public static class ServerGenerator
             ["<<PROPERTY_MAPPINGS>>"] = propertyMappings,
             ["<<COMMAND_METHODS>>"] = commandMethods + GeneratePingMethod(vmName, protoNs),
         });
+
+        // Inject status endpoint before app.Run()
+        result = result.Replace("app.Run();", "app.MapGet(\"/status\", () => \"Server is running.\");\n\napp.Run();");
+
+        return result;
     }
 
     private static string GeneratePropertyMappings(List<PropertyInfo> props, string vmName, string protoNs, string viewModelNamespace)

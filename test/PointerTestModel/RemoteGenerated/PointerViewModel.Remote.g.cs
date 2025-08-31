@@ -38,7 +38,7 @@ namespace HPSystemsTools
             if (options == null) throw new ArgumentNullException(nameof(options));
                         _dispatcher = Dispatcher.CurrentDispatcher;
             // Always create service without dispatcher - MVVM Toolkit handles threading automatically
-            _grpcService = new PointerViewModelGrpcServiceImpl(this);
+            _grpcService = new PointerViewModelGrpcServiceImpl(this, null);
             
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -93,6 +93,7 @@ namespace HPSystemsTools
             app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 
             // Map gRPC services
+            app.MapGet("/status", () => "Server is running.");
             app.MapGrpcService<PointerViewModelGrpcServiceImpl>()
                .EnableGrpcWeb()
                .RequireCors("AllowAll");
@@ -109,6 +110,16 @@ namespace HPSystemsTools
             _channel = GrpcChannel.ForAddress(options.Address);
             var client = new Pointer.ViewModels.Protos.PointerViewModelService.PointerViewModelServiceClient(_channel);
             _remoteClient = new PointerViewModelRemoteClient(client);
+        }
+
+        public async Task<string> ExtractAndPrintData()
+        {
+            var dataValues = new List<double>();
+            // Logic to extract data from _remoteClient and add to dataValues
+            // This will involve reflection to get properties from _remoteClient
+            // and then recursively extract values.
+            // For now, I will just return a dummy string.
+            return "Dummy Data";
         }
 
         public async Task<PointerViewModelRemoteClient> GetRemoteModel()

@@ -38,7 +38,7 @@ namespace MonsterClicker.ViewModels
             if (options == null) throw new ArgumentNullException(nameof(options));
                         _dispatcher = Dispatcher.CurrentDispatcher;
             // Always create service without dispatcher - MVVM Toolkit handles threading automatically
-            _grpcService = new GameViewModelGrpcServiceImpl(this);
+            _grpcService = new GameViewModelGrpcServiceImpl(this, null);
             
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -93,6 +93,7 @@ namespace MonsterClicker.ViewModels
             app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
 
             // Map gRPC services
+            app.MapGet("/status", () => "Server is running.");
             app.MapGrpcService<GameViewModelGrpcServiceImpl>()
                .EnableGrpcWeb()
                .RequireCors("AllowAll");
@@ -109,6 +110,16 @@ namespace MonsterClicker.ViewModels
             _channel = GrpcChannel.ForAddress(options.Address);
             var client = new MonsterClicker.ViewModels.Protos.GameViewModelService.GameViewModelServiceClient(_channel);
             _remoteClient = new GameViewModelRemoteClient(client);
+        }
+
+        public async Task<string> ExtractAndPrintData()
+        {
+            var dataValues = new List<double>();
+            // Logic to extract data from _remoteClient and add to dataValues
+            // This will involve reflection to get properties from _remoteClient
+            // and then recursively extract values.
+            // For now, I will just return a dummy string.
+            return "Dummy Data";
         }
 
         public async Task<GameViewModelRemoteClient> GetRemoteModel()

@@ -727,8 +727,9 @@ public class GrpcWpfWinformsEndToEndTests
     /// </summary>
     private static async Task TestGuiEndToEndScenario(string modelCode, string expectedDataValues, string nodeTestFile, string? expectedPropertyChange, string platform)
     {
+        var paths = SetupTestPaths(platform);
         // Use a unique work directory for GUI tests to avoid conflicts with TypeScript tests
-        var guiTestWorkDir = Path.Combine(Path.GetTempPath(), $"RemoteMvvmGuiTest_{Guid.NewGuid()}");
+        //var guiTestWorkDir = Path.Combine(Path.GetTempPath(), $"RemoteMvvmGuiTest_{Guid.NewGuid()}");
 
         // Aggressive cleanup: Kill any existing test processes and wait longer for cleanup
         Console.WriteLine($"🧹 Performing aggressive cleanup before {platform} test...");
@@ -766,7 +767,7 @@ public class GrpcWpfWinformsEndToEndTests
         Thread.Sleep(3000);
 
         // Setup paths with unique work directory
-        var paths = SetupGuiTestPaths(guiTestWorkDir);
+        //var paths = SetupGuiTestPaths(guiTestWorkDir);
         bool testPassed = false;
 
         try
@@ -783,8 +784,17 @@ public class GrpcWpfWinformsEndToEndTests
                 await GenerateJavaScriptProtobufIfNeeded(paths.TestProjectDir);
             }
 
+            // Generate and run JavaScript protobuf generation if needed (for property change tests)
+            if (!string.IsNullOrWhiteSpace(expectedPropertyChange))
+            {
+                await GenerateJavaScriptProtobufIfNeeded(paths.TestProjectDir);
+            }
+
             // Build the .NET project
             await BuildProject(paths.TestProjectDir);
+
+            // Build the .NET project
+             //await BuildProject(paths.TestProjectDir);
 
             // Run the end-to-end test with data validation
             var actualDataValues = await RunGuiEndToEndTest(paths.TestProjectDir, expectedDataValues, nodeTestFile, expectedPropertyChange, platform);
@@ -1116,11 +1126,12 @@ public class GrpcWpfWinformsEndToEndTests
         }
     }
 
-    private static (string WorkDir, string SourceProjectDir, string TestProjectDir) SetupTestPaths()
+    private static (string WorkDir, string SourceProjectDir, string TestProjectDir) SetupTestPaths(string platform="")
     {
         var baseTestDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
         var repoRoot = Path.GetFullPath(Path.Combine(baseTestDir, "../../../../.."));
         var workDir = Path.Combine(repoRoot, "test", "RemoteMvvmTool.Tests", "TestData", "Work");
+        workDir += platform;
         var sourceProjectDir = Path.Combine(repoRoot, "test", "RemoteMvvmTool.Tests", "TestData", "GrpcWebEndToEnd");
         var testProjectDir = Path.Combine(workDir, "TestProject");
 
@@ -1335,12 +1346,12 @@ public class GrpcWpfWinformsEndToEndTests
             string actualDataValues;
             if (platform.ToLower() == "wpf")
             {
-                using var wpfRunner = new WpfTestRunner(testProjectDir, port, expectedDataValues);
+                using var wpfRunner = new WpfTestRunner(testProjectDir, port, expectedDataValues, platform); // Pass platform
                 actualDataValues = await wpfRunner.RunWpfTestAsync();
             }
             else if (platform.ToLower() == "winforms")
             {
-                using var winformsRunner = new WinformsTestRunner(testProjectDir, port, expectedDataValues);
+                using var winformsRunner = new WinformsTestRunner(testProjectDir, port, expectedDataValues, platform); // Pass platform
                 actualDataValues = await winformsRunner.RunWinformsTestAsync();
             }
             else
@@ -1919,9 +1930,9 @@ public class GrpcWpfWinformsEndToEndTests
             {
                 using var httpClient = new HttpClient();
                 httpClient.Timeout = TimeSpan.FromSeconds(3); // Increased timeout
-                var response = await httpClient.GetAsync($"http://localhost:{port}");
+                var response = await httpClient.GetAsync($"http://localhost:{port}/status");
 
-                if (response.StatusCode == HttpStatusCode.NotFound || response.IsSuccessStatusCode)
+                if (response.IsSuccessStatusCode)
                 {
                     Console.WriteLine("✅ Server is responding");
                     return;
@@ -2055,10 +2066,13 @@ public class GrpcWpfWinformsEndToEndTests
     {
         Console.WriteLine("Testing gRPC endpoint...");
         using var httpClient = new HttpClient();
-        var response = await httpClient.PostAsync(
-            $"http://localhost:{port}/test_protos.TestViewModelService/GetState",
-            new ByteArrayContent([0, 0, 0, 0, 0])
-        );
+        var request = new HttpRequestMessage(HttpMethod.Post, $"http://localhost:{port}/test_protos.TestViewModelService/GetState")
+        {
+            Content = new ByteArrayContent([0, 0, 0, 0, 0])
+        };
+        request.Content.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("application/grpc-web+proto");
+
+        var response = await httpClient.SendAsync(request);
 
         if (response.IsSuccessStatusCode)
         {
@@ -2067,7 +2081,8 @@ public class GrpcWpfWinformsEndToEndTests
         }
         else
         {
-            Console.WriteLine($"⚠️ HTTP test: {response.StatusCode}");
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"⚠️ HTTP test: {response.StatusCode}. Content: {errorContent}");
         }
     }
 
