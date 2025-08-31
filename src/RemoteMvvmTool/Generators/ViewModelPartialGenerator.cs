@@ -39,7 +39,7 @@ public static class ViewModelPartialGenerator
         var dispatcherField = runTypeVar switch
         {
             "wpf" => "        private readonly Dispatcher _dispatcher;",
-            "winforms" => "        private readonly Control _dispatcher;",
+            "winforms" => "        private readonly SystemForms.Control _dispatcher;",
             _ => ""
         };
 
@@ -48,7 +48,7 @@ public static class ViewModelPartialGenerator
         {
             "wpf" => "            _dispatcher = Dispatcher.CurrentDispatcher;",
             "winforms" => $$"""
-            _dispatcher = new Control();
+            _dispatcher = new SystemForms.Control();
             _dispatcher.CreateControl();
 """,
             _ => ""
@@ -61,7 +61,7 @@ public static class ViewModelPartialGenerator
         var platformUsing = runTypeVar switch
         {
             "wpf" => "using System.Windows.Threading;",
-            "winforms" => "using System.Windows.Forms;",
+            "winforms" => "using SystemForms = System.Windows.Forms;",
             _ => ""
         };
 
@@ -117,7 +117,7 @@ namespace {{vmNamespaceVar}}
             if (options == null) throw new ArgumentNullException(nameof(options));
             {{dispatcherInit}}
             // Always create service without dispatcher - MVVM Toolkit handles threading automatically
-            _grpcService = new {{vmNameVar}}GrpcServiceImpl(this);
+            _grpcService = new {{vmNameVar}}GrpcServiceImpl(this, null);
             {{constructorEventWiring}}
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);

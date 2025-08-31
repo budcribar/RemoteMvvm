@@ -54,7 +54,7 @@ public static class CsProjectGenerator
         }
         else if (isWinForms)
         {
-            sb.AppendLine("using System.Windows.Forms;");
+            sb.AppendLine("using SystemForms = System.Windows.Forms;");
         }
         sb.AppendLine();
         sb.AppendLine($"namespace {projectName};");
@@ -175,11 +175,11 @@ public static class CsProjectGenerator
         }
         else if (isWinForms)
         {
-            sb.AppendLine("        ApplicationConfiguration.Initialize();");
-            sb.AppendLine($"        var form = new Form {{ Text = \"{projectName}\" }};");
-            sb.AppendLine("        var panel = new FlowLayoutPanel { Dock = DockStyle.Fill, AutoSize = true, FlowDirection = FlowDirection.TopDown };");
+            sb.AppendLine("        SystemForms.ApplicationConfiguration.Initialize();");
+            sb.AppendLine($"        var form = new SystemForms.Form {{ Text = \"{projectName}\" }};");
+            sb.AppendLine("        var panel = new SystemForms.FlowLayoutPanel { Dock = SystemForms.DockStyle.Fill, AutoSize = true, FlowDirection = SystemForms.FlowDirection.TopDown };");
             sb.AppendLine("        form.Controls.Add(panel);");
-            sb.AppendLine("        var status = new Label();");
+            sb.AppendLine("        var status = new SystemForms.Label();");
             sb.AppendLine($"        status.DataBindings.Add(\"Text\", vm, nameof({projectName}RemoteClient.ConnectionStatus));");
             sb.AppendLine("        panel.Controls.Add(status);");
             foreach (var p in props)
@@ -189,19 +189,19 @@ public static class CsProjectGenerator
                 bool isBool = typeStr.Contains("bool");
                 if (isBool)
                 {
-                    sb.AppendLine($"        var {camel}Check = new CheckBox {{ Text = \"{p.Name}\" }};");
-                    sb.AppendLine($"        {camel}Check.DataBindings.Add(\"Checked\", vm, nameof({projectName}RemoteClient.{p.Name}), true, DataSourceUpdateMode.Never);");
+                    sb.AppendLine($"        var {camel}Check = new SystemForms.CheckBox {{ Text = \"{p.Name}\" }};");
+                    sb.AppendLine($"        {camel}Check.DataBindings.Add(\"Checked\", vm, nameof({projectName}RemoteClient.{p.Name}), true, SystemForms.DataSourceUpdateMode.Never);");
                     if (!p.IsReadOnly)
                         sb.AppendLine($"        {camel}Check.CheckedChanged += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.Checked }}) }});");
                     sb.AppendLine($"        panel.Controls.Add({camel}Check);");
                 }
                 else
                 {
-                    sb.AppendLine($"        var {camel}Label = new Label {{ Text = \"{p.Name}\" }};");
+                    sb.AppendLine($"        var {camel}Label = new SystemForms.Label {{ Text = \"{p.Name}\" }};");
                     sb.AppendLine($"        panel.Controls.Add({camel}Label);");
                     string ro = p.IsReadOnly ? " { Width = 200, ReadOnly = true }" : " { Width = 200 }";
-                    sb.AppendLine($"        var {camel}Box = new TextBox{ro};");
-                    sb.AppendLine($"        {camel}Box.DataBindings.Add(\"Text\", vm, nameof({projectName}RemoteClient.{p.Name}), true, DataSourceUpdateMode.Never);");
+                    sb.AppendLine($"        var {camel}Box = new SystemForms.TextBox{ro};");
+                    sb.AppendLine($"        {camel}Box.DataBindings.Add(\"Text\", vm, nameof({projectName}RemoteClient.{p.Name}), true, SystemForms.DataSourceUpdateMode.Never);");
                     if (!p.IsReadOnly)
                     {
                         if (typeStr.Contains("int"))
@@ -270,11 +270,11 @@ public static class CsProjectGenerator
             }
             foreach (var c in cmds)
             {
-                sb.AppendLine($"        var btn{c.MethodName} = new Button {{ Text = \"{c.MethodName}\" }};");
+                sb.AppendLine($"        var btn{c.MethodName} = new SystemForms.Button {{ Text = \"{c.MethodName}\" }};");
                 sb.AppendLine($"        btn{c.MethodName}.Click += (_, __) => vm.{c.CommandPropertyName}.Execute(null);");
                 sb.AppendLine($"        panel.Controls.Add(btn{c.MethodName});");
             }
-            sb.AppendLine("        Application.Run(form);");
+            sb.AppendLine("        SystemForms.Application.Run(form);");
         }
         else
         {

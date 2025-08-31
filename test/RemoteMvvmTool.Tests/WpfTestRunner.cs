@@ -63,10 +63,10 @@ public class WpfTestRunner : IDisposable
                     };
 
                     // Load the generated ViewModel assembly
-                    var assemblyPath = Path.Combine(_testProjectDir, "bin", "Debug", "net8.0", "TestProject.dll");
-                    if (!File.Exists(assemblyPath))
+                    var assemblyPath = FindAssemblyPath(_testProjectDir);
+                    if (string.IsNullOrEmpty(assemblyPath) || !File.Exists(assemblyPath))
                     {
-                        throw new FileNotFoundException($"Generated assembly not found: {assemblyPath}");
+                        throw new FileNotFoundException($"Generated assembly not found in {_testProjectDir}\\bin\\Debug\\*\\TestProject.dll");
                     }
 
                     var assembly = Assembly.LoadFrom(assemblyPath);
@@ -221,7 +221,10 @@ public class WpfTestRunner : IDisposable
                 try
                 {
                     var propValue = prop.GetValue(value);
-                    ExtractValue(propValue, dataValues);
+                    if (propValue != null)
+                    {
+                        ExtractValue(propValue, dataValues);
+                    }
                 }
                 catch
                 {
@@ -229,6 +232,30 @@ public class WpfTestRunner : IDisposable
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Finds the TestProject.dll assembly in the bin/Debug directory structure
+    /// </summary>
+    private static string FindAssemblyPath(string testProjectDir)
+    {
+        var binDebugDir = Path.Combine(testProjectDir, "bin", "Debug");
+        if (!Directory.Exists(binDebugDir))
+        {
+            return null;
+        }
+
+        // Look for any subdirectory that contains TestProject.dll
+        foreach (var subDir in Directory.GetDirectories(binDebugDir))
+        {
+            var assemblyPath = Path.Combine(subDir, "TestProject.dll");
+            if (File.Exists(assemblyPath))
+            {
+                return assemblyPath;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -327,10 +354,10 @@ public class WinformsTestRunner : IDisposable
                     };
 
                     // Load the generated ViewModel assembly
-                    var assemblyPath = Path.Combine(_testProjectDir, "bin", "Debug", "net8.0", "TestProject.dll");
-                    if (!File.Exists(assemblyPath))
+                    var assemblyPath = FindAssemblyPath(_testProjectDir);
+                    if (string.IsNullOrEmpty(assemblyPath) || !File.Exists(assemblyPath))
                     {
-                        throw new FileNotFoundException($"Generated assembly not found: {assemblyPath}");
+                        throw new FileNotFoundException($"Generated assembly not found in {_testProjectDir}\\bin\\Debug\\*\\TestProject.dll");
                     }
 
                     var assembly = Assembly.LoadFrom(assemblyPath);
@@ -485,7 +512,10 @@ public class WinformsTestRunner : IDisposable
                 try
                 {
                     var propValue = prop.GetValue(value);
-                    ExtractValue(propValue, dataValues);
+                    if (propValue != null)
+                    {
+                        ExtractValue(propValue, dataValues);
+                    }
                 }
                 catch
                 {
@@ -493,6 +523,30 @@ public class WinformsTestRunner : IDisposable
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Finds the TestProject.dll assembly in the bin/Debug directory structure
+    /// </summary>
+    private static string FindAssemblyPath(string testProjectDir)
+    {
+        var binDebugDir = Path.Combine(testProjectDir, "bin", "Debug");
+        if (!Directory.Exists(binDebugDir))
+        {
+            return null;
+        }
+
+        // Look for any subdirectory that contains TestProject.dll
+        foreach (var subDir in Directory.GetDirectories(binDebugDir))
+        {
+            var assemblyPath = Path.Combine(subDir, "TestProject.dll");
+            if (File.Exists(assemblyPath))
+            {
+                return assemblyPath;
+            }
+        }
+
+        return null;
     }
 
     public void Dispose()
