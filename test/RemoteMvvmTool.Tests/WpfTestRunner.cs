@@ -80,7 +80,18 @@ public class WpfTestRunner : IDisposable
 
             process.Start();
             process.BeginOutputReadLine();
-            await process.WaitForExitAsync();
+
+            // Add timeout to prevent hanging
+            var timeoutTask = Task.Delay(30000); // 30 second timeout
+            var exitTask = process.WaitForExitAsync();
+
+            var completedTask = await Task.WhenAny(exitTask, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                Console.WriteLine("Process timed out, killing it...");
+                process.Kill();
+                throw new Exception("Test application timed out after 30 seconds");
+            }
 
             if (process.ExitCode != 0)
             {
@@ -340,7 +351,18 @@ public class WinformsTestRunner : IDisposable
 
             process.Start();
             process.BeginOutputReadLine();
-            await process.WaitForExitAsync();
+
+            // Add timeout to prevent hanging
+            var timeoutTask = Task.Delay(30000); // 30 second timeout
+            var exitTask = process.WaitForExitAsync();
+
+            var completedTask = await Task.WhenAny(exitTask, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                Console.WriteLine("Process timed out, killing it...");
+                process.Kill();
+                throw new Exception("Test application timed out after 30 seconds");
+            }
 
             if (process.ExitCode != 0)
             {

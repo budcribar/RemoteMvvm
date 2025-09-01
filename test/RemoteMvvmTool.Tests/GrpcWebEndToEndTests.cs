@@ -455,11 +455,29 @@ public class GrpcWebEndToEndTests
 
     static int GetFreePort()
     {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        int port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
+        // Avoid GUI test port ranges (6000-7999) to prevent conflicts
+        for (int port = 5000; port < 6000; port++)
+        {
+            try
+            {
+                var listener = new TcpListener(IPAddress.Loopback, port);
+                listener.Start();
+                listener.Stop();
+                return port;
+            }
+            catch (SocketException)
+            {
+                // Port is in use, try next one
+                continue;
+            }
+        }
+
+        // Fallback to any free port if 5000-5999 range is exhausted
+        var fallbackListener = new TcpListener(IPAddress.Loopback, 0);
+        fallbackListener.Start();
+        int fallbackPort = ((IPEndPoint)fallbackListener.LocalEndpoint).Port;
+        fallbackListener.Stop();
+        return fallbackPort;
     }
 
     static void CopyDirectory(string sourceDir, string destDir)
@@ -535,7 +553,7 @@ public class GrpcWebEndToEndTests
                 }
             }
 
-            // Also try to kill any processes listening on common test ports
+            // Also try to kill any processes listening on common test ports (avoiding GUI ranges 6000-7999)
             KillProcessesOnPorts(new[] { 5000, 5001, 5002, 5003, 5004, 5005 });
 
             // Give the system more time to clean up
