@@ -38,7 +38,7 @@ namespace SimpleViewModelTest.ViewModels
             if (options == null) throw new ArgumentNullException(nameof(options));
                         _dispatcher = Dispatcher.CurrentDispatcher;
             // Always create service without dispatcher - MVVM Toolkit handles threading automatically
-            _grpcService = new MainViewModelGrpcServiceImpl(this, null);
+            _grpcService = new MainViewModelGrpcServiceImpl(this);
             
             // Always use ASP.NET Core with Kestrel to support gRPC-Web
             StartAspNetCoreServer(options);
@@ -63,20 +63,20 @@ namespace SimpleViewModelTest.ViewModels
             // Register the gRPC service implementation with ASP.NET Core DI
             builder.Services.AddSingleton(_grpcService!);
 
-            // Configure Kestrel to listen on the specified port with HTTP/2 support
+            // Configure Kestrel to listen on the specified port based on UseHttps
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
-                // HTTP endpoint for compatibility (HTTP/1.1 + HTTP/2)
                 kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
                 {
-                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
-                });
-
-                // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
-                kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
-                {
-                    listenOptions.UseHttps(); // Use development certificate
-                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
+                    if (options.UseHttps)
+                    {
+                        listenOptions.UseHttps(); // Use development certificate
+                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
+                    }
+                    else
+                    {
+                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+                    }
                 });
             });
 

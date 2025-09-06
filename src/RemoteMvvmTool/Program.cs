@@ -233,6 +233,10 @@ namespace RemoteMvvmTool
                         var hasParameterlessCtor = result.ViewModelSymbol?.Constructors.Any(c => c.Parameters.Length == 0 && !c.IsImplicitlyDeclared) ?? false;
                         var partial = ViewModelPartialGenerator.Generate(result.ViewModelName, protoNamespace, serviceName, vmNamespaceStr, clientNamespace, baseClass, runType, hasParameterlessCtor, result.Properties);
                         await File.WriteAllTextAsync(partialPath, partial);
+                        // Generate equality partial for structural comparison in tests
+                        var equalityPath = Path.Combine(output, result.ViewModelName + ".Equality.g.cs");
+                        var equality = ViewModelEqualityGenerator.Generate(result.ViewModelName, vmNamespaceStr, result.Properties);
+                        await File.WriteAllTextAsync(equalityPath, equality);
                     }
                 }
 

@@ -9,42 +9,46 @@ namespace RemoteMvvmTool.Generators;
 
 public static class ViewModelPartialGenerator
 {
+    private const string HandlerSuffix = "_RemoteMvvm"; // ensure uniqueness vs. user code
+
     private static void GenerateNestedPropertyChangeHandlers(StringBuilder sb, List<PropertyInfo> properties)
     {
         var collectionsNeedingHandlers = GetCollectionsNeedingEventHandlers(properties);
+        var generatedNames = new HashSet<string>(StringComparer.Ordinal);
 
         foreach (var collection in collectionsNeedingHandlers)
         {
             var propName = collection.Name;
             var elementTypeName = GetElementTypeName(collection.FullTypeSymbol!);
+            var handlerName = propName + HandlerSuffix + "_CollectionChanged";
+            var itemHandlerName = propName + HandlerSuffix + "_ItemPropertyChanged";
+            if (!generatedNames.Add(handlerName)) continue; // already emitted handlers for this property
+            generatedNames.Add(itemHandlerName);
 
-            sb.AppendLine($$"""
-        // Auto-generated nested property change handlers for {{propName}}
-        private void {{propName}}_CollectionChanged(object? sender, NotifyCollectionChangedEventArgs e)
-        {
-            if (e.NewItems != null)
-                foreach ({{elementTypeName}} item in e.NewItems)
-                    item.PropertyChanged += {{propName}}_ItemPropertyChanged;
-            if (e.OldItems != null)
-                foreach ({{elementTypeName}} item in e.OldItems)
-                    item.PropertyChanged -= {{propName}}_ItemPropertyChanged;
-        }
-
-        private void {{propName}}_ItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            var index = {{propName}}.IndexOf(({{elementTypeName}})sender!);
-""");
-            sb.AppendLine($"            OnPropertyChanged($\"{{{propName}}}[{{index}}].{{e.PropertyName}}\");");
-            sb.AppendLine($$"""
-        }
-
-""");
+            sb.AppendLine($"        // Auto-generated nested property change handlers for {propName}");
+            sb.AppendLine($"        private void {handlerName}(object? sender, NotifyCollectionChangedEventArgs e)");
+            sb.AppendLine("        {");
+            sb.AppendLine("            if (e.NewItems != null)");
+            sb.AppendLine($"                foreach ({elementTypeName} item in e.NewItems)");
+            sb.AppendLine($"                    item.PropertyChanged += {itemHandlerName};");
+            sb.AppendLine("            if (e.OldItems != null)");
+            sb.AppendLine($"                foreach ({elementTypeName} item in e.OldItems)");
+            sb.AppendLine($"                    item.PropertyChanged -= {itemHandlerName};");
+            sb.AppendLine("        }");
+            sb.AppendLine();
+            sb.AppendLine($"        private void {itemHandlerName}(object? sender, PropertyChangedEventArgs e)");
+            sb.AppendLine("        {");
+            sb.AppendLine($"            var index = {propName}.IndexOf(({elementTypeName})sender!);");
+            sb.AppendLine($"            OnPropertyChanged(\"{propName}[{{index}}].{{e.PropertyName}}\");");
+            sb.AppendLine("        }");
+            sb.AppendLine();
         }
     }
 
     private static void GenerateConstructorEventWiring(StringBuilder sb, List<PropertyInfo> properties)
     {
         var collectionsNeedingHandlers = GetCollectionsNeedingEventHandlers(properties);
+        var wired = new HashSet<string>(StringComparer.Ordinal);
 
         if (collectionsNeedingHandlers.Count > 0)
         {
@@ -52,7 +56,10 @@ public static class ViewModelPartialGenerator
             foreach (var collection in collectionsNeedingHandlers)
             {
                 var propName = collection.Name;
-                sb.AppendLine($"            {propName}.CollectionChanged += {propName}_CollectionChanged;");
+                if (!wired.Add(propName)) continue; // avoid duplicate wiring
+                var elementTypeName = GetElementTypeName(collection.FullTypeSymbol!);
+                sb.AppendLine($"            {propName}.CollectionChanged += {propName}{HandlerSuffix}_CollectionChanged;");
+                sb.AppendLine($"            foreach ({elementTypeName} item in {propName}) item.PropertyChanged += {propName}{HandlerSuffix}_ItemPropertyChanged;");
             }
             sb.AppendLine();
         }
@@ -60,16 +67,12 @@ public static class ViewModelPartialGenerator
 
     private static List<PropertyInfo> GetCollectionsNeedingEventHandlers(List<PropertyInfo> properties)
     {
-        var result = new List<PropertyInfo>();
-
-        foreach (var prop in properties)
-        {
-            if (IsObservableCollectionOfNotifyingElements(prop.FullTypeSymbol!))
-            {
-                result.Add(prop);
-            }
-        }
-
+        // De-duplicate by property name to avoid duplicate handler generation
+        var result = properties
+            .Where(p => p.FullTypeSymbol != null && IsObservableCollectionOfNotifyingElements(p.FullTypeSymbol!))
+            .GroupBy(p => p.Name)
+            .Select(g => g.First())
+            .ToList();
         return result;
     }
 
@@ -136,7 +139,7 @@ public static class ViewModelPartialGenerator
         var dispatcherField = runTypeVar switch
         {
             "wpf" => "        private readonly Dispatcher _dispatcher;",
-            "winforms" => "        private readonly SystemForms.Control _dispatcher;",
+            "winforms" => "        private readonly Control _dispatcher;",
             _ => ""
         };
 
@@ -145,7 +148,7 @@ public static class ViewModelPartialGenerator
         {
             "wpf" => "            _dispatcher = Dispatcher.CurrentDispatcher;",
             "winforms" => $$"""
-            _dispatcher = new System.Windows.Forms.Control();
+            _dispatcher = new Control();
             _dispatcher.CreateControl();
 """,
             _ => ""
@@ -158,7 +161,7 @@ public static class ViewModelPartialGenerator
         var platformUsing = runTypeVar switch
         {
             "wpf" => "using System.Windows.Threading;",
-            "winforms" => "using SystemForms = System.Windows.Forms;",
+            "winforms" => "using System.Windows.Forms;",
             _ => ""
         };
 
@@ -177,135 +180,81 @@ public static class ViewModelPartialGenerator
             constructorEventWiring = wiringSb.ToString();
         }
 
-        sb.AppendLine($$"""
-#nullable enable
-using Grpc.Core;
-using Grpc.Net.Client;
-using {{protoNsVar}};
-using {{clientNamespaceVar}};
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
-using System.ComponentModel;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Hosting;
-using System.Diagnostics;
-{{platformUsing}}
-using PeakSWC.Mvvm.Remote;
-
-namespace {{vmNamespaceVar}}
-{
-    public partial class {{vmNameVar}} : {{baseClass}}
-    {
-        private {{vmNameVar}}GrpcServiceImpl? _grpcService;
-        {{dispatcherField}}
-        private IHost? _aspNetCoreHost;
-        private GrpcChannel? _channel;
-        private {{clientNamespaceVar}}.{{vmNameVar}}RemoteClient? _remoteClient;
-        {{nestedPropertyHandlers}}
-        public {{vmNameVar}}(ServerOptions options){{serverCtorSuffix}}
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-            {{dispatcherInit}}
-            // Always create service without dispatcher - MVVM Toolkit handles threading automatically
-            _grpcService = new {{vmNameVar}}GrpcServiceImpl(this, null);
-            {{constructorEventWiring}}
-            // Always use ASP.NET Core with Kestrel to support gRPC-Web
-            StartAspNetCoreServer(options);
-        }
-
-        private void StartAspNetCoreServer(ServerOptions options)
-        {
-            var builder = WebApplication.CreateBuilder();
-
-            // Add services to the container
-            builder.Services.AddGrpc();
-
-            // Add CORS support for gRPC-Web
-            builder.Services.AddCors(o => o.AddPolicy("AllowAll", builder =>
-            {
-                builder.AllowAnyOrigin()
-                       .AllowAnyMethod()
-                       .AllowAnyHeader()
-                       .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
-            }));
-
-            // Register the gRPC service implementation with ASP.NET Core DI
-            builder.Services.AddSingleton(_grpcService!);
-
-            // Configure Kestrel to listen on the specified port with HTTP/2 support
-            builder.WebHost.ConfigureKestrel(kestrelOptions =>
-            {
-                // HTTP endpoint for compatibility (HTTP/1.1 + HTTP/2)
-                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
-                {
-                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
-                });
-
-                // HTTPS endpoint for proper gRPC streaming (HTTP/2 only)
-                kestrelOptions.ListenLocalhost(options.Port + 1000, listenOptions =>
-                {
-                    listenOptions.UseHttps(); // Use development certificate
-                    listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http2;
-                });
-            });
-
-            // Build the application
-            var app = builder.Build();
-
-            // Configure the HTTP request pipeline
-            app.UseRouting();
-
-            // Use CORS middleware
-            app.UseCors("AllowAll");
-
-            // Enable gRPC-Web middleware
-            app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
-
-            // Map gRPC services
-            app.MapGet("/status", () => "Server is running.");
-            app.MapGrpcService<{{vmNameVar}}GrpcServiceImpl>()
-               .EnableGrpcWeb()
-               .RequireCors("AllowAll");
-
-            // Start the server
-            _aspNetCoreHost = app;
-            Task.Run(() => app.RunAsync()); // Run the server in a background thread
-        }
-
-        public {{vmNameVar}}(ClientOptions options){{clientCtorSuffix}}
-        {
-            if (options == null) throw new ArgumentNullException(nameof(options));
-            {{clientDispatcherInit}}
-            _channel = GrpcChannel.ForAddress(options.Address);
-            var client = new {{protoNsVar}}.{{serviceNameVar}}.{{serviceNameVar}}Client(_channel);
-            _remoteClient = new {{vmNameVar}}RemoteClient(client);
-        }
-
-        
-
-        public async Task<{{vmNameVar}}RemoteClient> GetRemoteModel()
-        {
-            if (_remoteClient == null) throw new InvalidOperationException("Client options not provided");
-            await _remoteClient.InitializeRemoteAsync();
-            return _remoteClient;
-        }
-
-        public void Dispose()
-        {
-            _channel?.ShutdownAsync().GetAwaiter().GetResult();
-            _aspNetCoreHost?.StopAsync().GetAwaiter().GetResult();
-            _aspNetCoreHost?.Dispose();
-        }
-    }
-}
-""");
+        sb.AppendLine("#nullable enable");
+        sb.AppendLine("using Grpc.Core;");
+        sb.AppendLine("using Grpc.Net.Client;");
+        sb.AppendLine($"using {protoNs};");
+        sb.AppendLine($"using {clientNamespace};");
+        sb.AppendLine("using System;");
+        sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Collections.ObjectModel;");
+        sb.AppendLine("using System.Collections.Specialized;");
+        sb.AppendLine("using System.ComponentModel;");
+        sb.AppendLine("using System.Linq;");
+        sb.AppendLine("using System.Threading.Tasks;");
+        sb.AppendLine("using Microsoft.AspNetCore.Builder;");
+        sb.AppendLine("using Microsoft.AspNetCore.Hosting;");
+        sb.AppendLine("using Microsoft.Extensions.DependencyInjection;");
+        sb.AppendLine("using Microsoft.Extensions.Logging;");
+        sb.AppendLine("using Microsoft.Extensions.Hosting;");
+        sb.AppendLine("using System.Diagnostics;");
+        if (!string.IsNullOrEmpty(platformUsing)) sb.AppendLine(platformUsing);
+        sb.AppendLine("using PeakSWC.Mvvm.Remote;");
+        sb.AppendLine();
+        sb.AppendLine($"namespace {vmNamespace}");
+        sb.AppendLine("{");
+        sb.AppendLine($"    public partial class {vmName} : {baseClass}");
+        sb.AppendLine("    {");
+        sb.AppendLine($"        private {vmName}GrpcServiceImpl? _grpcService;");
+        if (!string.IsNullOrEmpty(dispatcherField)) sb.AppendLine(dispatcherField);
+        sb.AppendLine("        private IHost? _aspNetCoreHost;");
+        sb.AppendLine("        private GrpcChannel? _channel;");
+        sb.AppendLine($"        private {clientNamespace}.{vmName}RemoteClient? _remoteClient;");
+        if (!string.IsNullOrEmpty(nestedPropertyHandlers)) sb.Append(nestedPropertyHandlers);
+        sb.AppendLine($"        public {vmName}(ServerOptions options){serverCtorSuffix}");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
+        sb.AppendLine($"{dispatcherInit}            _grpcService = new {vmName}GrpcServiceImpl(this);");
+        if (!string.IsNullOrEmpty(constructorEventWiring)) sb.Append(constructorEventWiring);
+        sb.AppendLine("            StartAspNetCoreServer(options);");
+        sb.AppendLine("        }");
+        sb.AppendLine("        private void StartAspNetCoreServer(ServerOptions options)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var builder = WebApplication.CreateBuilder();");
+        sb.AppendLine("            builder.Services.AddGrpc();");
+        sb.AppendLine("            builder.Services.AddCors(o => o.AddPolicy(\"AllowAll\", builder =>\n            {\n                builder.AllowAnyOrigin()\n                       .AllowAnyMethod()\n                       .AllowAnyHeader()\n                       .WithExposedHeaders(\"Grpc-Status\", \"Grpc-Message\", \"Grpc-Encoding\", \"Grpc-Accept-Encoding\");\n            }));");
+        sb.AppendLine("            builder.Services.AddSingleton(_grpcService!);");
+        sb.AppendLine("            builder.WebHost.ConfigureKestrel(kestrelOptions =>\n            {\n                kestrelOptions.ListenLocalhost(options.Port, listenOptions =>\n                {\n                    if (options.UseHttps)\n                    {\n                        listenOptions.UseHttps();\n                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;\n                    }\n                    else\n                    {\n                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;\n                    }\n                });\n            });");
+        sb.AppendLine("            var app = builder.Build();");
+        sb.AppendLine("            app.UseRouting();");
+        sb.AppendLine("            app.UseCors(\"AllowAll\");");
+        sb.AppendLine("            app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });");
+        sb.AppendLine("            app.MapGet(\"/status\", () => \"Server is running.\");");
+        sb.AppendLine($"            app.MapGrpcService<{vmName}GrpcServiceImpl>()\n               .EnableGrpcWeb()\n               .RequireCors(\"AllowAll\");");
+        sb.AppendLine("            _aspNetCoreHost = app;\n            Task.Run(() => app.RunAsync());");
+        sb.AppendLine("        }");
+        sb.AppendLine($"        public {vmName}(ClientOptions options){clientCtorSuffix}");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (options == null) throw new ArgumentNullException(nameof(options));");
+        if (!string.IsNullOrEmpty(clientDispatcherInit)) sb.AppendLine(clientDispatcherInit);
+        sb.AppendLine("            _channel = GrpcChannel.ForAddress(options.Address);");
+        sb.AppendLine($"            var client = new {protoNs}.{serviceName}.{serviceName}Client(_channel);");
+        sb.AppendLine($"            _remoteClient = new {vmName}RemoteClient(client);");
+        sb.AppendLine("        }");
+        sb.AppendLine($"        public async Task<{vmName}RemoteClient> GetRemoteModel()");
+        sb.AppendLine("        {");
+        sb.AppendLine("            if (_remoteClient == null) throw new InvalidOperationException(\"Client options not provided\");");
+        sb.AppendLine("            await _remoteClient.InitializeRemoteAsync();");
+        sb.AppendLine("            return _remoteClient;");
+        sb.AppendLine("        }");
+        sb.AppendLine("        public void Dispose()");
+        sb.AppendLine("        {");
+        sb.AppendLine("            _channel?.ShutdownAsync().GetAwaiter().GetResult();");
+        sb.AppendLine("            _aspNetCoreHost?.StopAsync().GetAwaiter().GetResult();");
+        sb.AppendLine("            _aspNetCoreHost?.Dispose();");
+        sb.AppendLine("        }");
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
         return sb.ToString();
     }
 }

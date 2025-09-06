@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using HPSystemsTools.ViewModels;
 #if WPF_DISPATCHER
 using System.Windows;
 #endif
@@ -238,9 +239,9 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                                    case nameof(CpuLoadTimeSpan):
                      if (update.NewValue!.Is(Int32Value.Descriptor)) this.CpuLoadTimeSpan = (int)update.NewValue.Unpack<Int32Value>().Value; break;
                                    case nameof(Zones):
-                                       Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for Zones with WKT Any not fully implemented or is Any."); break;
+                                       Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Unpacking for Zones with WKT Any not fully implemented or is Any."); break;
                                    case nameof(TestSettings):
-                                       Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unpacking for TestSettings with WKT Any not fully implemented or is Any."); break;
+                                       Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Unpacking for TestSettings with WKT Any not fully implemented or is Any."); break;
                                    case nameof(ShowDescription):
                     if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowDescription = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowReadme):

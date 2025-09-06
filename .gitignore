@@ -373,3 +373,6 @@ obj/
 /test/RemoteMvvmTool.Tests/TestData/GrpcWebEndToEnd/TestViewModel.cs
 /test/RemoteMvvmTool.Tests/TestData/Workwpf/TestProject
 /test/RemoteMvvmTool.Tests/TestData/Workwinforms/TestProject
+/test/RemoteMvvmTool.Tests/TestData/Workwpf/TestProject - Copy
+/test/RemoteMvvmTool.Tests/TestData/WorkSplitwpf
+/test/RemoteMvvmTool.Tests/TestData/WorkSplitwinforms

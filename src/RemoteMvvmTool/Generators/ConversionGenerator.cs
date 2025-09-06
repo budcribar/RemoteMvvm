@@ -70,6 +70,43 @@ public static class ConversionGenerator
         return false;
     }
 
+    private record ModelMember(string Name, ITypeSymbol Type, bool HasGetter, bool HasSetter);
+
+    private static List<ModelMember> GetModelMembers(INamedTypeSymbol named, Compilation compilation)
+    {
+        var members = new List<ModelMember>();
+
+        // Include real public properties
+        foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
+        {
+            if (prop.IsStatic) continue;
+            if (prop.DeclaredAccessibility != Accessibility.Public) continue;
+            var hasGet = prop.GetMethod != null;
+            var hasSet = prop.SetMethod != null && prop.SetMethod.DeclaredAccessibility == Accessibility.Public;
+            members.Add(new ModelMember(prop.Name, prop.Type, hasGet, hasSet));
+        }
+
+        // Include [ObservableProperty] backing fields as projected public properties
+        foreach (var field in Helpers.GetAllMembers(named).OfType<IFieldSymbol>())
+        {
+            if (field.IsStatic) continue;
+            // Look for CommunityToolkit ObservableProperty attribute
+            bool hasAttr = field.GetAttributes().Any(a =>
+                a.AttributeClass?.ToDisplayString() == "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute" ||
+                a.AttributeClass?.Name == "ObservablePropertyAttribute");
+            if (!hasAttr) continue;
+            // Convert backing field name (e.g. _temperature) to property name (Temperature)
+            var trimmed = field.Name.TrimStart('_');
+            if (string.IsNullOrWhiteSpace(trimmed)) continue;
+            var propName = GeneratorHelpers.ToPascalCase(trimmed);
+            // Avoid duplicates if a real property is already present
+            if (members.Any(m => m.Name == propName)) continue;
+            members.Add(new ModelMember(propName, field.Type, true, true));
+        }
+
+        return members;
+    }
+
     static void GenerateForType(ITypeSymbol type, StringBuilder sb, HashSet<string> processed, string protoNs, Compilation compilation, ref bool needsTimestamp)
     {
         if (type is null) return;
@@ -85,12 +122,10 @@ public static class ConversionGenerator
         
         // Collect all nested types that need to be generated BEFORE generating this type's methods
         var nestedTypes = new List<ITypeSymbol>();
-        foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
+        var modelMembers = GetModelMembers(named, compilation);
+        foreach (var m in modelMembers)
         {
-            if (prop.IsStatic) continue;
-            if (prop.DeclaredAccessibility != Accessibility.Public || prop.GetMethod == null) continue;
-            var propType = prop.Type;
-            
+            var propType = m.Type;
             if (GeneratorHelpers.TryGetDictionaryTypeArgs(propType, out var keyT, out var valT))
             {
                 if (valT != null && !GeneratorHelpers.IsWellKnownType(valT))
@@ -118,12 +153,11 @@ public static class ConversionGenerator
         sb.AppendLine($"    public static {protoNs}.{stateName} ToProto({fullName} model)");
         sb.AppendLine("    {");
         sb.AppendLine($"        var state = new {protoNs}.{stateName}();");
-        foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
+        foreach (var m in modelMembers)
         {
-            if (prop.IsStatic) continue;
-            if (prop.DeclaredAccessibility != Accessibility.Public || prop.GetMethod == null) continue;
-            var propType = prop.Type;
-            string propName = prop.Name;
+            var propType = m.Type;
+            string propName = m.Name;
+            if (!m.HasGetter) continue;
             if (IsEnumType(propType, compilation))
                 sb.AppendLine($"        state.{propName} = (int)model.{propName};");
             else if (IsDateTime(propType, out var propNullable))
@@ -176,12 +210,11 @@ public static class ConversionGenerator
         sb.AppendLine("    {");
         string initializer = named.TypeKind == TypeKind.Interface ? $"default({fullName})!" : $"new {fullName}()";
         sb.AppendLine($"        var model = {initializer};");
-        foreach (var prop in Helpers.GetAllMembers(named).OfType<IPropertySymbol>())
+        foreach (var m in modelMembers)
         {
-            if (prop.IsStatic) continue;
-            if (prop.DeclaredAccessibility != Accessibility.Public || prop.SetMethod == null || prop.SetMethod.DeclaredAccessibility != Accessibility.Public) continue;
-            var propType = prop.Type;
-            string propName = prop.Name;
+            if (!m.HasSetter) continue;
+            var propType = m.Type;
+            string propName = m.Name;
             if (IsEnumType(propType, compilation))
                 sb.AppendLine($"        model.{propName} = ({propType.ToDisplayString()})state.{propName};");
             else if (IsDateTime(propType, out var propNullable))

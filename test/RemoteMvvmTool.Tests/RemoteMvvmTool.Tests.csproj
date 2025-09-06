@@ -13,20 +13,30 @@
 
   <ItemGroup>
     <Compile Remove="TestData\GrpcWebEndToEnd\**" />
+    <Compile Remove="TestData\WorkSplitwpf\**" />
+    <Compile Remove="TestData\WorkSplitwinforms\**" />
     <Compile Remove="TestData\Workwinforms\**" />
     <Compile Remove="TestData\Workwpf\**" />
     <Compile Remove="TestData\Work\**" />
     <EmbeddedResource Remove="TestData\GrpcWebEndToEnd\**" />
+    <EmbeddedResource Remove="TestData\WorkSplitwpf\**" />
+    <EmbeddedResource Remove="TestData\WorkSplitwinforms\**" />
     <EmbeddedResource Remove="TestData\Workwinforms\**" />
     <EmbeddedResource Remove="TestData\Workwpf\**" />
     <EmbeddedResource Remove="TestData\Work\**" />
     <None Remove="TestData\GrpcWebEndToEnd\**" />
+    <None Remove="TestData\WorkSplitwpf\**" />
+    <None Remove="TestData\WorkSplitwinforms\**" />
     <None Remove="TestData\Workwinforms\**" />
     <None Remove="TestData\Workwpf\**" />
     <None Remove="TestData\Work\**" />
+    <Page Remove="TestData\WorkSplitwpf\**" />
+    <Page Remove="TestData\WorkSplitwinforms\**" />
     <Page Remove="TestData\Workwinforms\**" />
     <Page Remove="TestData\Workwpf\**" />
     <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
+    <TypeScriptCompile Remove="TestData\WorkSplitwpf\**" />
+    <TypeScriptCompile Remove="TestData\WorkSplitwinforms\**" />
     <TypeScriptCompile Remove="TestData\Workwinforms\**" />
     <TypeScriptCompile Remove="TestData\Workwpf\**" />
     <TypeScriptCompile Remove="TestData\Work\**" />
@@ -50,6 +60,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="xunit.skippablefact" Version="1.4.13" />
     <PackageReference Include="coverlet.collector" Version="6.0.4">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>

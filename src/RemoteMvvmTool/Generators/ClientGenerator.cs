@@ -25,19 +25,25 @@ public static class ClientGenerator
     /// <returns>The generated C# source code.</returns>
     public static string Generate(string vmName, string protoNs, string serviceName, List<PropertyInfo> props, List<CommandInfo> cmds, string? clientNamespace = null, string? vmNamespace = null)
     {
+        // Previously, Timestamp/Duration were rejected. We now support them.
+        // Keep early validation for future unsupported types if needed, but allow Timestamp/Duration.
         foreach (var p in props)
         {
             var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
-            if (wkt == "Timestamp" || wkt == "Duration")
-                throw new NotSupportedException($"Property '{p.Name}' with type '{p.TypeString}' is not supported by the client generator.");
+            if (wkt == "Unknown")
+            {
+                // Unknown types should still be convertible via ProtoStateConverters.
+            }
         }
         foreach (var cmd in cmds)
         {
             foreach (var p in cmd.Parameters)
             {
                 var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(p.FullTypeSymbol!);
-                if (wkt == "Timestamp" || wkt == "Duration")
-                    throw new NotSupportedException($"Parameter '{p.Name}' of command '{cmd.MethodName}' uses unsupported type '{p.TypeString}'.");
+                if (wkt == "Unknown")
+                {
+                    // Unknown types should still be convertible via ProtoStateConverters.
+                }
             }
         }
         int lastDot = protoNs.LastIndexOf('.');
@@ -131,6 +137,7 @@ public static class ClientGenerator
             if (type.TypeKind == TypeKind.Enum) return $"(int){expr}";
             var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
             if (wkt == "Timestamp") return $"Google.Protobuf.WellKnownTypes.Timestamp.FromDateTime({expr}.ToUniversalTime())";
+            if (wkt == "Duration") return $"Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan({expr})";
             if (!GeneratorHelpers.IsWellKnownType(type)) return $"ProtoStateConverters.ToProto({expr})";
             var typeDisplayString = type.ToDisplayString();
             return typeDisplayString switch
@@ -142,6 +149,7 @@ public static class ClientGenerator
                 "System.DateOnly" => $"{expr}.ToString()",
                 "System.TimeOnly" => $"{expr}.ToString()",
                 "nuint" or "System.UIntPtr" => $"(ulong){expr}",
+                "nint" or "System.IntPtr" => $"(long){expr}",
                 _ => expr
             };
         }
@@ -201,6 +209,7 @@ public static class ClientGenerator
             
             var wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(type);
             if (wkt == "Timestamp") return $"{expr}.ToDateTime()";
+            if (wkt == "Duration") return $"{expr}.ToTimeSpan()";
             if (!GeneratorHelpers.IsWellKnownType(type)) return $"ProtoStateConverters.FromProto({expr})";
             var typeDisplayString = type.ToDisplayString();
             return typeDisplayString switch
@@ -212,7 +221,10 @@ public static class ClientGenerator
                 "System.TimeOnly" => $"TimeOnly.Parse({expr})",
                 "System.Half" => $"(Half){expr}",
                 "nuint" or "System.UIntPtr" => $"(nuint){expr}",
+                "nint" or "System.IntPtr" => $"(nint){expr}",
                 "short" or "System.Int16" => $"(short){expr}",
+                "ushort" or "System.UInt16" => $"(ushort){expr}",
+                "sbyte" or "System.SByte" => $"(sbyte){expr}",
                 "byte" or "System.Byte" => $"(byte){expr}",
                 _ => expr
             };
@@ -384,61 +396,6 @@ public static class ClientGenerator
             commandMethods.AppendLine();
         }
 
-        var propertyUpdateCases = new StringBuilder();
-        foreach (var prop in props)
-        {
-            string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(prop.FullTypeSymbol!);
-            string csharpPropName = prop.Name;
-            propertyUpdateCases.AppendLine($"                                   case nameof({csharpPropName}):");
-            if (wkt == "StringValue")
-            {
-                var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
-                switch (typeDisplayString)
-                {
-                    case "System.Decimal" or "decimal":
-                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = decimal.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
-                        break;
-                    case "System.Char" or "char":
-                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value[0]; break;");
-                        break;
-                    case "System.Guid":
-                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = Guid.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
-                        break;
-                    case "System.DateOnly":
-                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = DateOnly.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
-                        break;
-                    case "System.TimeOnly":
-                        propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = TimeOnly.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
-                        break;
-                    default:
-                        propertyUpdateCases.AppendLine($"                 if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
-                        break;
-                }
-            }
-            else if (wkt == "Int32Value")
-                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int32Value>().Value; break;");
-            else if (wkt == "Int64Value")
-                propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(Int64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int64Value>().Value; break;");
-            else if (wkt == "UInt32Value")
-                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt32Value>().Value; break;");
-            else if (wkt == "UInt64Value")
-                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(UInt64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt64Value>().Value; break;");
-            else if (wkt == "DoubleValue")
-                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(DoubleValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<DoubleValue>().Value; break;");
-            else if (wkt == "FloatValue")
-            {
-                var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
-                if (typeDisplayString == "System.Half")
-                    propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(FloatValue.Descriptor)) this.{csharpPropName} = (Half)update.NewValue.Unpack<FloatValue>().Value; break;");
-                else
-                    propertyUpdateCases.AppendLine($"                     if (update.NewValue!.Is(FloatValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<FloatValue>().Value; break;");
-            }
-            else if (wkt == "BoolValue")
-                propertyUpdateCases.AppendLine($"                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<BoolValue>().Value; break;");
-            else
-                propertyUpdateCases.AppendLine($"                                       Debug.WriteLine($\"[ClientProxy:{vmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
-        }
-
         var result = GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
         {
             ["<<AUTO_GENERATED_HEADER>>"] = headerSb.ToString().TrimEnd(),
@@ -453,10 +410,72 @@ public static class ClientGenerator
             ["<<PROPERTY_ASSIGNMENTS_INIT>>"] = assignmentsInit,
             ["<<PROPERTY_ASSIGNMENTS_PING>>"] = assignmentsPing,
             ["<<COMMAND_METHODS>>"] = commandMethods.ToString(),
-            ["<<PROPERTY_UPDATE_CASES>>"] = propertyUpdateCases.ToString(),
+            ["<<PROPERTY_UPDATE_CASES>>"] = BuildPropertyUpdateCases(props, vmName),
         });
 
         return result;
     }
 
+    private static string BuildPropertyUpdateCases(List<PropertyInfo> props, string vmName)
+    {
+        var sb = new StringBuilder();
+        foreach (var prop in props)
+        {
+            string wkt = GeneratorHelpers.GetProtoWellKnownTypeFor(prop.FullTypeSymbol!);
+            string csharpPropName = prop.Name;
+            sb.AppendLine($"                                   case nameof({csharpPropName}):");
+            if (wkt == "StringValue")
+            {
+                var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
+                switch (typeDisplayString)
+                {
+                    case "System.Decimal" or "decimal":
+                        sb.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = decimal.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
+                    case "System.Char" or "char":
+                        sb.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value[0]; break;");
+                        break;
+                    case "System.Guid":
+                        sb.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = Guid.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
+                    case "System.DateOnly":
+                        sb.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = DateOnly.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
+                    case "System.TimeOnly":
+                        sb.AppendLine($"                     if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = TimeOnly.Parse(update.NewValue.Unpack<StringValue>().Value); break;");
+                        break;
+                    default:
+                        sb.AppendLine($"                 if (update.NewValue!.Is(StringValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<StringValue>().Value; break;");
+                        break;
+                }
+            }
+            else if (wkt == "Int32Value")
+                sb.AppendLine($"                     if (update.NewValue!.Is(Int32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int32Value>().Value; break;");
+            else if (wkt == "Int64Value")
+                sb.AppendLine($"                     if (update.NewValue!.Is(Int64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<Int64Value>().Value; break;");
+            else if (wkt == "UInt32Value")
+                sb.AppendLine($"                    if (update.NewValue!.Is(UInt32Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt32Value>().Value; break;");
+            else if (wkt == "UInt64Value")
+                sb.AppendLine($"                    if (update.NewValue!.Is(UInt64Value.Descriptor)) this.{csharpPropName} = ({prop.TypeString})update.NewValue.Unpack<UInt64Value>().Value; break;");
+            else if (wkt == "DoubleValue")
+                sb.AppendLine($"                    if (update.NewValue!.Is(DoubleValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<DoubleValue>().Value; break;");
+            else if (wkt == "FloatValue")
+            {
+                var typeDisplayString = prop.FullTypeSymbol.ToDisplayString();
+                if (typeDisplayString == "System.Half")
+                    sb.AppendLine($"                     if (update.NewValue!.Is(FloatValue.Descriptor)) this.{csharpPropName} = (Half)update.NewValue.Unpack<FloatValue>().Value; break;");
+                else
+                    sb.AppendLine($"                     if (update.NewValue!.Is(FloatValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<FloatValue>().Value; break;");
+            }
+            else if (wkt == "BoolValue")
+                sb.AppendLine($"                    if (update.NewValue!.Is(BoolValue.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<BoolValue>().Value; break;");
+            else if (wkt == "Timestamp")
+                sb.AppendLine($"                    if (update.NewValue!.Is(Timestamp.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Timestamp>().ToDateTime(); break;");
+            else if (wkt == "Duration")
+                sb.AppendLine($"                    if (update.NewValue!.Is(Duration.Descriptor)) this.{csharpPropName} = update.NewValue.Unpack<Duration>().ToTimeSpan(); break;");
+            else
+                sb.AppendLine($"                                       Debug.WriteLine(\"[ClientProxy:{vmName}] Unpacking for {prop.Name} with WKT {wkt} not fully implemented or is Any.\"); break;");
+        }
+        return sb.ToString();
+    }
 }

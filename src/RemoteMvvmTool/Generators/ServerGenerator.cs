@@ -20,13 +20,8 @@ public static class ServerGenerator
         // Generate command methods
         var commandMethods = GenerateCommandMethods(cmds, vmName, protoNs);
 
-        // Determine platform-specific using statement
-        var platformUsing = runType switch
-        {
-            "wpf" => "using System.Windows.Threading;",
-            "winforms" => "using SystemForms = System.Windows.Forms;",
-            _ => ""
-        };
+        // Server generator no longer emits platform-specific usings
+        var platformUsing = string.Empty;
 
         var template = GeneratorHelpers.LoadTemplate("RemoteMvvmTool.Resources.ServerTemplate.tmpl");
 
@@ -194,7 +189,8 @@ public static class ServerGenerator
                                 state.{{propName}}.Add(mapMsg);
                             }
                         }
-                        """);
+                        """
+                        );
                     }
                     else
                     {

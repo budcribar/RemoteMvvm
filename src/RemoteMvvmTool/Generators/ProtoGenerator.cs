@@ -22,6 +22,31 @@ public static class ProtoGenerator
         bool usesDuration = false;
         bool usesWrappers = false;
 
+        static IEnumerable<(string Name, ITypeSymbol Type)> GetModelMembers(INamedTypeSymbol type)
+        {
+            var seen = new HashSet<string>(StringComparer.Ordinal);
+            // Real public instance properties
+            foreach (var p in Helpers.GetAllMembers(type).OfType<IPropertySymbol>())
+            {
+                if (p.IsStatic || p.GetMethod == null) continue;
+                if (p.DeclaredAccessibility != Accessibility.Public) continue;
+                if (seen.Add(p.Name)) yield return (p.Name, p.Type);
+            }
+            // Backing fields with [ObservableProperty] -> project to PascalCase property
+            foreach (var f in Helpers.GetAllMembers(type).OfType<IFieldSymbol>())
+            {
+                if (f.IsStatic) continue;
+                bool hasAttr = f.GetAttributes().Any(a =>
+                    a.AttributeClass?.ToDisplayString() == "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute" ||
+                    a.AttributeClass?.Name == "ObservablePropertyAttribute");
+                if (!hasAttr) continue;
+                var trimmed = f.Name.TrimStart('_');
+                if (string.IsNullOrWhiteSpace(trimmed)) continue;
+                var propName = GeneratorHelpers.ToPascalCase(trimmed);
+                if (seen.Add(propName)) yield return (propName, f.Type);
+            }
+        }
+
         string MapProtoType(ITypeSymbol type, bool allowMessage)
         {
             if (type is IArrayTypeSymbol arrayType)
@@ -216,21 +241,18 @@ public static class ProtoGenerator
         {
             var msgType = pendingMessages.Dequeue();
 
-            List<IPropertySymbol> propsForMsg = new();
+            var members = new List<(string Name, ITypeSymbol Type)>();
             if (msgType.TypeKind != TypeKind.Error)
             {
-                propsForMsg = Helpers.GetAllMembers(msgType)
-                    .OfType<IPropertySymbol>()
-                    .Where(p => !p.IsStatic && p.GetMethod != null && p.Parameters.Length == 0)
-                    .ToList();
+                members = GetModelMembers(msgType).ToList();
             }
 
             body.AppendLine($"message {msgType.Name}State {{");
             int msgField = 1;
-            foreach (var prop in propsForMsg)
+            foreach (var (Name, Type) in members)
             {
-                string protoType = MapProtoType(prop.Type, allowMessage: true);
-                body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(prop.Name)} = {msgField++}; // Original C#: {prop.Type.ToDisplayString()} {prop.Name}");
+                string protoType = MapProtoType(Type, allowMessage: true);
+                body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(Name)} = {msgField++}; // Original C#: {Type.ToDisplayString()} {Name}");
             }
             body.AppendLine("}");
             body.AppendLine();
@@ -290,21 +312,18 @@ public static class ProtoGenerator
         {
             var msgType = pendingMessages.Dequeue();
 
-            List<IPropertySymbol> propsForMsg = new();
+            var members = new List<(string Name, ITypeSymbol Type)>();
             if (msgType.TypeKind != TypeKind.Error)
             {
-                propsForMsg = Helpers.GetAllMembers(msgType)
-                    .OfType<IPropertySymbol>()
-                    .Where(p => !p.IsStatic && p.GetMethod != null && p.Parameters.Length == 0)
-                    .ToList();
+                members = GetModelMembers(msgType).ToList();
             }
 
             body.AppendLine($"message {msgType.Name}State {{");
             int msgField = 1;
-            foreach (var prop in propsForMsg)
+            foreach (var (Name, Type) in members)
             {
-                string protoType = MapProtoType(prop.Type, allowMessage: true);
-                body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(prop.Name)} = {msgField++}; // Original C#: {prop.Type.ToDisplayString()} {prop.Name}");
+                string protoType = MapProtoType(Type, allowMessage: true);
+                body.AppendLine($"  {protoType} {GeneratorHelpers.ToSnake(Name)} = {msgField++}; // Original C#: {Type.ToDisplayString()} {Name}");
             }
             body.AppendLine("}");
             body.AppendLine();

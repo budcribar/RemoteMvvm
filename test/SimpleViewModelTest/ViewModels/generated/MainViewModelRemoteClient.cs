@@ -151,7 +151,7 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
                                switch (update.PropertyName)
                                {
                                    case nameof(Devices):
-                                       Debug.WriteLine($"[ClientProxy:MainViewModel] Unpacking for Devices with WKT Any not fully implemented or is Any."); break;
+                                       Debug.WriteLine("[ClientProxy:MainViewModel] Unpacking for Devices with WKT Any not fully implemented or is Any."); break;
                                    default: Debug.WriteLine("[ClientProxy:MainViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
                                }
                            }
