@@ -376,3 +376,5 @@ obj/
 /test/RemoteMvvmTool.Tests/TestData/Workwpf/TestProject - Copy
 /test/RemoteMvvmTool.Tests/TestData/WorkSplitwpf
 /test/RemoteMvvmTool.Tests/TestData/WorkSplitwinforms
+/test/RemoteMvvmTool.Tests/TestData/GuiBuildCache/wpf
+/test/RemoteMvvmTool.Tests/TestData/GuiBuildCache/winforms

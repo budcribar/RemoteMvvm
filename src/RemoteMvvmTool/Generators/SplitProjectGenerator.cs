@@ -6,12 +6,93 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using GrpcRemoteMvvmModelUtil;
 using System.Text.RegularExpressions;
+using System.Threading;
 
 namespace RemoteMvvmTool.Generators;
 
 public static class SplitProjectGenerator
 {
     public sealed record GeneratedSplitPaths(string BaseDir, string ServerDir, string ClientDir, string ProtoFile, string ViewModelName, string ServiceName);
+
+    private static readonly object _optionsCopyLock = new();
+
+    private static void SafeCopyWithRetry(string source, string destination, string? injectRunString = null)
+    {
+        const int MaxAttempts = 6;
+        for (int attempt = 1; attempt <= MaxAttempts; attempt++)
+        {
+            try
+            {
+                // Copy to temp first for atomic replace
+                var tempFile = destination + ".tmp_" + Guid.NewGuid().ToString("N");
+                using (var src = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+                using (var dst = new FileStream(tempFile, FileMode.Create, FileAccess.Write, FileShare.Read))
+                {
+                    src.CopyTo(dst);
+                }
+                if (injectRunString != null)
+                {
+                    // Inline modification (small file) – safe to read all
+                    var txt = File.ReadAllText(tempFile);
+                    if (!txt.Contains("RunString", StringComparison.Ordinal))
+                    {
+                        const string serverClassToken = "public class ServerOptions";
+                        int idx = txt.IndexOf(serverClassToken, StringComparison.Ordinal);
+                        if (idx >= 0)
+                        {
+                            int braceIdx = txt.IndexOf('{', idx + serverClassToken.Length);
+                            if (braceIdx >= 0)
+                            {
+                                braceIdx++;
+                                txt = txt.Insert(braceIdx, "\n        public string RunString { get; set; } = \"WPF\";\n");
+                            }
+                        }
+                        File.WriteAllText(tempFile, txt);
+                    }
+                }
+                // Replace existing file atomically
+                if (File.Exists(destination)) File.Delete(destination);
+                File.Move(tempFile, destination);
+                return; // success
+            }
+            catch (IOException) when (attempt < MaxAttempts)
+            {
+                Thread.Sleep(40 * attempt); // back-off
+            }
+            catch (UnauthorizedAccessException) when (attempt < MaxAttempts)
+            {
+                Thread.Sleep(40 * attempt);
+            }
+        }
+        // Final attempt without try-catch to surface error
+        var finalTemp = destination + ".tmp_final_" + Guid.NewGuid().ToString("N");
+        using (var src = new FileStream(source, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        using (var dst = new FileStream(finalTemp, FileMode.Create, FileAccess.Write, FileShare.Read))
+        {
+            src.CopyTo(dst);
+        }
+        if (injectRunString != null)
+        {
+            var txt = File.ReadAllText(finalTemp);
+            if (!txt.Contains("RunString", StringComparison.Ordinal))
+            {
+                const string serverClassToken = "public class ServerOptions";
+                int idx = txt.IndexOf(serverClassToken, StringComparison.Ordinal);
+                if (idx >= 0)
+                {
+                    int braceIdx = txt.IndexOf('{', idx + serverClassToken.Length);
+                    if (braceIdx >= 0)
+                    {
+                        braceIdx++;
+                        txt = txt.Insert(braceIdx, "\n        public string RunString { get; set; } = \"WPF\";\n");
+                    }
+                }
+                File.WriteAllText(finalTemp, txt);
+            }
+        }
+        if (File.Exists(destination)) File.Delete(destination);
+        File.Move(finalTemp, destination);
+    }
 
     public static GeneratedSplitPaths Generate(string baseDir, string viewModelName, List<PropertyInfo> props, List<CommandInfo> cmds, Compilation compilation, string platform, string protoNamespace = "Test.Protos")
     {
@@ -69,38 +150,22 @@ public static class SplitProjectGenerator
         void EnsureOptions(string targetDir)
         {
             string optionsPath = Path.Combine(targetDir, "GrpcRemoteOptions.cs");
-            if (optionsSource != null)
+            lock (_optionsCopyLock)
             {
-                File.Copy(optionsSource, optionsPath, true);
-                var content = File.ReadAllText(optionsPath);
-                if (!content.Contains("RunString", StringComparison.Ordinal))
+                if (optionsSource != null)
                 {
-                    const string serverClassToken = "public class ServerOptions";
-                    int idx = content.IndexOf(serverClassToken, StringComparison.Ordinal);
-                    if (idx >= 0)
+                    SafeCopyWithRetry(optionsSource, optionsPath, injectRunString: "RunString");
+                }
+                else
+                {
+                    // Write fallback with retry (rare case)
+                    const int maxAttempts = 4;
+                    for (int a = 1; a <= maxAttempts; a++)
                     {
-                        int braceIdx = content.IndexOf('{', idx + serverClassToken.Length);
-                        if (braceIdx >= 0)
-                        {
-                            braceIdx++;
-                            content = content.Insert(braceIdx, "\n        public string RunString { get; set; } = \"WPF\";\n");
-                            File.WriteAllText(optionsPath, content);
-                        }
-                        else
-                        {
-                            int lastBrace = content.LastIndexOf('}');
-                            if (lastBrace > 0)
-                            {
-                                content = content.Insert(lastBrace, "    public string RunString { get; set; } = \"WPF\";\n");
-                                File.WriteAllText(optionsPath, content);
-                            }
-                        }
+                        try { File.WriteAllText(optionsPath, fallbackOptions); break; }
+                        catch (IOException) when (a < maxAttempts) { Thread.Sleep(25 * a); }
                     }
                 }
-            }
-            else
-            {
-                File.WriteAllText(optionsPath, fallbackOptions);
             }
         }
 
@@ -148,7 +213,7 @@ public static class SplitProjectGenerator
         serverPartial = Regex.Replace(serverPartial, @"^using\s+Generated\.Clients;\s*\r?\n", string.Empty, RegexOptions.Multiline);
         serverPartial = Regex.Replace(serverPartial, @"private\s+Generated\.Clients\.[A-Za-z0-9_]+RemoteClient\?\s+_remoteClient;?\s*", string.Empty);
 
-        string clientPartial = $@"// <auto-generated>\n// Client partial extracted by SplitProjectGenerator\n// </auto-generated>\nusing System;\nusing System.Threading.Tasks;\nusing Grpc.Net.Client;\nusing Test.Protos;\nusing Generated.Clients;\nusing PeakSWC.Mvvm.Remote;\nnamespace Generated.ViewModels {{ public partial class {viewModelName} {{\n        // Client-side runtime fields added by split generator\n        private object? _dispatcher;\n        private GrpcChannel? _channel;\n        private {viewModelName}RemoteClient? _remoteClient;\n{clientCtorBlock}\n{getRemoteBlock}\n}} }}".Replace("\\n", System.Environment.NewLine);
+        string clientPartial = $@"// <auto-generated>\n// Client partial extracted by SplitProjectGenerator\n// </auto-generated>\nusing System;\nusing System.Threading.Tasks;\nusing Grpc.Net.Client;\nusing Test.Protos;\nusing Generated.Clients;\nusing PeakSWC.Mvvm.Remote;\nnamespace Generated.ViewModels {{ public partial class {viewModelName} {{\n        // Client-side runtime fields added by split generator\n        private object? _dispatcher;\n        private GrpcChannel? _channel;\n        private {viewModelName}RemoteClient? _remoteClient;\n{clientCtorBlock}\n{getRemoteBlock}\n}} }}".Replace("\\n", Environment.NewLine);
 
         // ---------------- Server project ----------------
         var serverProtoDir = Path.Combine(serverDir, "protos");

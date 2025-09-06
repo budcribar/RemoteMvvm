@@ -26,6 +26,26 @@ namespace RemoteMvvmTool.Tests;
 [Collection("GuiSequential")]
 public class GrpcWinformsEndToEndTests
 {
+    public GrpcWinformsEndToEndTests()
+    {
+        FailIfNamedGuiProcessesRunning();
+    }
+
+    private static void FailIfNamedGuiProcessesRunning()
+    {
+        var names = new[] { "ServerApp", "GuiClientApp" };
+        foreach (var name in names)
+        {
+            try
+            {
+                if (Process.GetProcessesByName(name).Length > 0)
+                    throw new InvalidOperationException($"Blocked: A leftover process '{name}' is running. Terminate it before running GUI tests.");
+            }
+            catch (PlatformNotSupportedException) { }
+            catch (Exception ex) when (ex is System.ComponentModel.Win32Exception) { }
+        }
+    }
+
     private static string LoadModelCode(string modelFileName)
     {
         var paths = SetupTestPaths();

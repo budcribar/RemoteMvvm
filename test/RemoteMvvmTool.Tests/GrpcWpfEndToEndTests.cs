@@ -26,6 +26,26 @@ namespace RemoteMvvmTool.Tests
     [Collection("GuiSequential")]
     public class GrpcWpfEndToEndTests
     {
+        public GrpcWpfEndToEndTests()
+        {
+            FailIfNamedGuiProcessesRunning();
+        }
+
+        private static void FailIfNamedGuiProcessesRunning()
+        {
+            var names = new[] { "ServerApp", "GuiClientApp" };
+            foreach (var name in names)
+            {
+                try
+                {
+                    if (Process.GetProcessesByName(name).Length > 0)
+                        throw new InvalidOperationException($"Blocked: A leftover process '{name}' is running. Please terminate it before running GUI tests.");
+                }
+                catch (PlatformNotSupportedException) { }
+                catch (Exception ex) when (ex is System.ComponentModel.Win32Exception) { }
+            }
+        }
+
         /// <summary>
         /// Helper method to load model code from external files
         /// </summary>
@@ -331,7 +351,7 @@ namespace RemoteMvvmTool.Tests
                 }
                 testPassed = true;
             }
-            finally { CleanupTestResources(paths.WorkDir, testPassed); }
+            finally { /* directory retained intentionally */ _ = testPassed; }
         }
 
         public static (string WorkDir, string SourceProjectDir, string TestProjectDir) SetupTestPaths(string platform = "")
@@ -416,25 +436,6 @@ namespace RemoteMvvmTool.Tests
             }
             catch { }
             finally { serverProcess.Dispose(); }
-        }
-
-        public static void CleanupTestResources(string workDir, bool testPassed)
-        {
-            try
-            {
-                var procs = Process.GetProcessesByName("TestProject");
-                foreach (var p in procs)
-                {
-                    try { p.Kill(entireProcessTree: true); p.WaitForExit(1000); } catch { }
-                    finally { p.Dispose(); }
-                }
-            }
-            catch { }
-            if (testPassed)
-            {
-                try { if (Directory.Exists(workDir)) Directory.Delete(workDir, true); } catch { }
-            }
-            else Console.WriteLine($"Work directory preserved: {workDir}");
         }
 
         public static async Task WaitForServerReady(int port)
