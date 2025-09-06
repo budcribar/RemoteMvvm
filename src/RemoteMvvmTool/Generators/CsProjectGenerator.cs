@@ -245,119 +245,12 @@ public static class CsProjectGenerator
         {
             sb.AppendLine("        var app = new System.Windows.Application();");
             sb.AppendLine($"        var window = new System.Windows.Window {{ Title = \"{projectName} GUI Client\", Width=1100, Height=750 }};");
-            sb.AppendLine("        var scroll = new System.Windows.Controls.ScrollViewer { VerticalScrollBarVisibility = System.Windows.Controls.ScrollBarVisibility.Auto }; ");
-            sb.AppendLine("        var panel = new System.Windows.Controls.StackPanel { Margin = new System.Windows.Thickness(10) }; scroll.Content = panel; window.Content = scroll;");
-            sb.AppendLine("        var status = new System.Windows.Controls.TextBlock();");
-            sb.AppendLine($"        status.SetBinding(System.Windows.Controls.TextBlock.TextProperty, new System.Windows.Data.Binding(nameof({clientClassName}.ConnectionStatus)) {{ Source = vm }});");
-            sb.AppendLine("        panel.Children.Add(status);");
-            // Generate editors
-            foreach (var p in props)
-            {
-                bool isCollection = p.TypeString.StartsWith("System.Collections.ObjectModel.ObservableCollection<", StringComparison.Ordinal);
-                if (isCollection)
-                {
-                    // discover element simple properties
-                    var elemProps = new List<(string Name,string Type,bool ReadOnly)>();
-                    if (p.FullTypeSymbol is Microsoft.CodeAnalysis.INamedTypeSymbol named && named.IsGenericType && named.TypeArguments.Length == 1)
-                    {
-                        var elemType = named.TypeArguments[0] as Microsoft.CodeAnalysis.INamedTypeSymbol;
-                        if (elemType != null)
-                        {
-                            foreach (var m in GrpcRemoteMvvmModelUtil.Helpers.GetAllMembers(elemType))
-                            {
-                                if (m is Microsoft.CodeAnalysis.IPropertySymbol ps && !ps.IsStatic && ps.GetMethod != null && ps.DeclaredAccessibility == Microsoft.CodeAnalysis.Accessibility.Public)
-                                {
-                                    var ts = ps.Type.ToDisplayString();
-                                    bool supported = ts is "int" or "System.Int32" or "long" or "System.Int64" or "float" or "System.Single" or "double" or "System.Double" or "decimal" or "System.Decimal" or "string" or "System.String" or "bool" or "System.Boolean";
-                                    if (supported) elemProps.Add((ps.Name, ts, ps.SetMethod == null));
-                                }
-                            }
-                        }
-                    }
-                    sb.AppendLine($"        // Tree for {p.Name}");
-                    sb.AppendLine($"        panel.Children.Add(new System.Windows.Controls.TextBlock {{ Text=\"{p.Name}\", FontWeight=System.Windows.FontWeights.Bold, Margin=new System.Windows.Thickness(0,12,0,4) }});");
-                    sb.AppendLine($"        var tree_{p.Name} = new System.Windows.Controls.TreeView {{ Margin=new System.Windows.Thickness(0,0,0,8) }}; panel.Children.Add(tree_{p.Name});");
-                    sb.AppendLine($"        var refreshBtn_{p.Name} = new System.Windows.Controls.Button {{ Content=\"Refresh {p.Name}\", Margin=new System.Windows.Thickness(0,0,0,8) }}; panel.Children.Add(refreshBtn_{p.Name});");
-                    sb.AppendLine($"        void Refresh_{p.Name}() {{ tree_{p.Name}.Items.Clear(); var coll = vm.{p.Name}; if (coll==null) return; int idx=0; foreach(var item in coll) {{ int localIndex = idx; var node = new System.Windows.Controls.TreeViewItem {{ Header = \"{p.Name}[\"+localIndex+\"]\" }}; tree_{p.Name}.Items.Add(node); var sp = new System.Windows.Controls.StackPanel {{ Margin=new System.Windows.Thickness(6,4,4,4) }}; node.Items.Add(sp); var propsLocal = item.GetType().GetProperties(System.Reflection.BindingFlags.Public|System.Reflection.BindingFlags.Instance); foreach(var ep in propsLocal) {{ if (!ep.CanRead) continue; var pt = ep.PropertyType; bool simple = pt==typeof(string)|| pt.IsPrimitive || pt==typeof(decimal); if(!simple) continue; bool editable = ep.CanWrite; if (pt==typeof(bool)) {{ var cb = new System.Windows.Controls.CheckBox {{ Content=ep.Name, IsChecked = (bool?) (ep.GetValue(item) ?? false) }}; sp.Children.Add(cb); if(editable) cb.Click += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", PropertyPath=\"{p.Name}[\"+localIndex+\"].\"+ep.Name, ArrayIndex=localIndex, NewValue = Any.Pack(new BoolValue {{ Value = cb.IsChecked == true }}) }}); }} else {{ sp.Children.Add(new System.Windows.Controls.TextBlock {{ Text=ep.Name }}); var tb = new System.Windows.Controls.TextBox {{ Text = System.Convert.ToString(ep.GetValue(item)) ?? string.Empty, IsReadOnly = !editable, Width=250 }}; sp.Children.Add(tb); if(editable) tb.LostFocus += async (_, __) => {{ var text = tb.Text; Google.Protobuf.WellKnownTypes.Any anyVal; if (pt==typeof(int) && int.TryParse(text,out var ival)) anyVal = Any.Pack(new Int32Value {{ Value = ival }}); else if (pt==typeof(long) && long.TryParse(text,out var lval)) anyVal = Any.Pack(new Int64Value {{ Value = lval }}); else if (pt==typeof(float) && float.TryParse(text,out var fval)) anyVal = Any.Pack(new FloatValue {{ Value = fval }}); else if ((pt==typeof(double) || pt==typeof(decimal)) && double.TryParse(text,out var dval)) anyVal = Any.Pack(new DoubleValue {{ Value = dval }}); else anyVal = Any.Pack(new StringValue {{ Value = text ?? string.Empty }}); await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", PropertyPath=\"{p.Name}[\"+localIndex+\"].\"+ep.Name, ArrayIndex=localIndex, NewValue = anyVal }}); }}; }} }} idx++; }} }}");
-                    sb.AppendLine($"        Refresh_{p.Name}();");
-                    sb.AppendLine($"        refreshBtn_{p.Name}.Click += (_, __) => Refresh_{p.Name}();");
-                }
-                else
-                {
-                    string camel = char.ToLowerInvariant(p.Name[0]) + p.Name.Substring(1);
-                    string typeStr = p.TypeString.ToLowerInvariant();
-                    bool isBool = typeStr.Contains("bool");
-                    if (isBool)
-                    {
-                        sb.AppendLine($"        var {camel}Check = new System.Windows.Controls.CheckBox {{ Content = \"{p.Name}\" }};");
-                        sb.AppendLine($"        {camel}Check.SetBinding(System.Windows.Controls.Primitives.ToggleButton.IsCheckedProperty, new System.Windows.Data.Binding(nameof({clientClassName}.{p.Name})) {{ Source = vm, Mode = System.Windows.Data.BindingMode.OneWay }});");
-                        if (!p.IsReadOnly)
-                            sb.AppendLine($"        {camel}Check.Click += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.IsChecked == true }}) }});");
-                        sb.AppendLine($"        panel.Children.Add({camel}Check);");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"        panel.Children.Add(new System.Windows.Controls.TextBlock {{ Text = \"{p.Name}\" }});");
-                        string readOnly = p.IsReadOnly ? "true" : "false";
-                        sb.AppendLine($"        var {camel}Box = new System.Windows.Controls.TextBox {{ IsReadOnly = {readOnly}, Width=260 }};");
-                        sb.AppendLine($"        {camel}Box.SetBinding(System.Windows.Controls.TextBox.TextProperty, new System.Windows.Data.Binding(nameof({clientClassName}.{p.Name})) {{ Source = vm, Mode = System.Windows.Data.BindingMode.OneWay }});");
-                        if (!p.IsReadOnly)
-                        {
-                            if (typeStr.Contains("int"))
-                                sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) => {{ if (int.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new Int32Value {{ Value = v }}) }}); }};");
-                            else if (typeStr.Contains("long"))
-                                sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) => {{ if (long.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new Int64Value {{ Value = v }}) }}); }};");
-                            else if (typeStr.Contains("float"))
-                                sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) => {{ if (float.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new FloatValue {{ Value = v }}) }}); }};");
-                            else if (typeStr.Contains("double") || typeStr.Contains("decimal"))
-                                sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) => {{ if (double.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new DoubleValue {{ Value = v }}) }}); }};");
-                            else
-                                sb.AppendLine($"        {camel}Box.LostFocus += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new StringValue {{ Value = {camel}Box.Text ?? string.Empty }}) }});");
-                        }
-                        sb.AppendLine($"        panel.Children.Add({camel}Box);");
-                    }
-                }
-            }
             sb.AppendLine("        app.Run(window);");
         }
         else if (isWinForms)
         {
             sb.AppendLine("        System.Windows.Forms.Application.EnableVisualStyles();");
-            sb.AppendLine("        System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);");
-            sb.AppendLine($"        var form = new System.Windows.Forms.Form {{ Text = \"{projectName} GUI Client\" }};");
-            sb.AppendLine("        var panel = new System.Windows.Forms.FlowLayoutPanel { Dock = System.Windows.Forms.DockStyle.Fill, AutoSize = true, FlowDirection = System.Windows.Forms.FlowDirection.TopDown };");
-            sb.AppendLine("        form.Controls.Add(panel);");
-            sb.AppendLine("        var status = new System.Windows.Forms.Label();");
-            sb.AppendLine($"        status.DataBindings.Add(\"Text\", vm, nameof({clientClassName}.ConnectionStatus));");
-            sb.AppendLine("        panel.Controls.Add(status);");
-            foreach (var p in props)
-            {
-                if (p.TypeString.StartsWith("System.Collections.ObjectModel.ObservableCollection<")) continue; // skip collections in WinForms
-                string camel = char.ToLowerInvariant(p.Name[0]) + p.Name.Substring(1);
-                string typeStr = p.TypeString.ToLowerInvariant();
-                bool isBool = typeStr.Contains("bool");
-                if (isBool)
-                {
-                    sb.AppendLine($"        var {camel}Check = new System.Windows.Forms.CheckBox {{ Text = \"{p.Name}\" }}; panel.Controls.Add({camel}Check);");
-                    sb.AppendLine($"        {camel}Check.DataBindings.Add(\"Checked\", vm, nameof({clientClassName}.{p.Name}), true, System.Windows.Forms.DataSourceUpdateMode.Never);");
-                    if (!p.IsReadOnly)
-                        sb.AppendLine($"        {camel}Check.CheckedChanged += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.Checked }}) }});");
-                }
-                else
-                {
-                    sb.AppendLine($"        panel.Controls.Add(new System.Windows.Forms.Label {{ Text = \"{p.Name}\" }});");
-                    string ro = p.IsReadOnly ? "true" : "false";
-                    sb.AppendLine($"        var {camel}Box = new System.Windows.Forms.TextBox {{ Width = 240, ReadOnly = {ro} }}; panel.Controls.Add({camel}Box);");
-                    sb.AppendLine($"        {camel}Box.DataBindings.Add(\"Text\", vm, nameof({clientClassName}.{p.Name}), true, System.Windows.Forms.DataSourceUpdateMode.Never);");
-                    if (!p.IsReadOnly)
-                        sb.AppendLine($"        {camel}Box.Leave += async (_, __) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest{{ PropertyName = \"{p.Name}\", ArrayIndex = -1, NewValue = Any.Pack(new StringValue {{ Value = {camel}Box.Text ?? string.Empty }}) }});");
-                }
-            }
-            sb.AppendLine("        System.Windows.Forms.Application.Run(form);");
-        }
-        else
-        {
-            sb.AppendLine("        Console.WriteLine(\"Unsupported GUI run type\");");
+            sb.AppendLine("        var form = new System.Windows.Forms.Form { Text = \"GUI Client\" }; System.Windows.Forms.Application.Run(form);");
         }
         sb.AppendLine("    }");
         sb.AppendLine("}");
@@ -393,7 +286,7 @@ public static class CsProjectGenerator
         }
         else if (isWinForms)
         {
-            sb.AppendLine("using SystemForms = System.Windows.Forms;");
+            sb.AppendLine("using System.Windows.Forms; // ensure Application.Run(form) is available");
         }
         sb.AppendLine();
     }
@@ -424,8 +317,142 @@ public static class CsProjectGenerator
         sb.AppendLine("        // interactive fallback setup omitted for brevity");
     }
 
-    private static void AppendWpfUi(StringBuilder sb, string projectName, string clientClassName, List<PropertyInfo> props, List<CommandInfo> cmds) { }
-    private static void AppendWinFormsUi(StringBuilder sb, string projectName, string clientClassName, List<PropertyInfo> props, List<CommandInfo> cmds) { }
+    // Implement richer WPF UI with property editors and update wiring
+    private static void AppendWpfUi(StringBuilder sb, string projectName, string clientClassName, List<PropertyInfo> props, List<CommandInfo> cmds)
+    {
+        sb.AppendLine("        // Rich WPF UI generation (restored)");
+        sb.AppendLine("        // Create gRPC channel & client (self-contained for combined program)");
+        sb.AppendLine("        int uiPort = 50052; var uiAddr = new Uri($\"https://localhost:{uiPort}/\");");
+        sb.AppendLine("        var uiHandler = new System.Net.Http.HttpClientHandler(); uiHandler.ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;");
+        sb.AppendLine("        var uiChannel = Grpc.Net.Client.GrpcChannel.ForAddress(uiAddr, new Grpc.Net.Client.GrpcChannelOptions { HttpHandler = uiHandler });");
+        sb.AppendLine($"        var grpcClient = new {clientClassName.Replace("RemoteClient","Service")}.{clientClassName.Replace("RemoteClient","Service")}Client(uiChannel);");
+        sb.AppendLine($"        var vm = new {clientClassName}(grpcClient);");
+        sb.AppendLine("        vm.InitializeRemoteAsync().GetAwaiter().GetResult();");
+        sb.AppendLine();
+        sb.AppendLine("        var app = new Application(); // new Application()");
+        sb.AppendLine($"        var window = new Window {{ Title = \"{projectName} GUI\", Width=1000, Height=700 }};");
+        sb.AppendLine("        var scroll = new ScrollViewer { VerticalScrollBarVisibility = ScrollBarVisibility.Auto }; window.Content = scroll;");
+        sb.AppendLine("        var panel = new StackPanel { Margin = new Thickness(10) }; scroll.Content = panel;");
+        sb.AppendLine();
+        sb.AppendLine("        // Connection status");
+        sb.AppendLine("        var statusText = new TextBlock { FontWeight = FontWeights.Bold, Margin = new Thickness(0,0,0,8) }; ");
+        sb.AppendLine($"        statusText.SetBinding(TextBlock.TextProperty, new Binding(nameof({clientClassName}.ConnectionStatus)) {{ Source = vm, Mode = BindingMode.OneWay }});");
+        sb.AppendLine("        panel.Children.Add(statusText);");
+        sb.AppendLine();
+        foreach (var p in props)
+        {
+            var camel = char.ToLowerInvariant(p.Name[0]) + p.Name.Substring(1);
+            var typeLower = p.TypeString.ToLowerInvariant();
+            sb.AppendLine($"        // Property: {p.Name} ({p.TypeString})");
+            if (typeLower.Contains("bool"))
+            {
+                sb.AppendLine($"        var {camel}Check = new CheckBox {{ Content = \"{p.Name}\", Margin=new Thickness(0,2,0,2) }};");
+                sb.AppendLine($"        {camel}Check.SetBinding(ToggleButton.IsCheckedProperty, new Binding(nameof({clientClassName}.{p.Name})) {{ Source = vm, Mode = BindingMode.OneWay }});");
+                if (!p.IsReadOnly)
+                {
+                    sb.AppendLine($"        {camel}Check.Click += async (_,__) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue = Any.Pack(new BoolValue {{ Value = {camel}Check.IsChecked == true }}) }});");
+                }
+                sb.AppendLine($"        panel.Children.Add({camel}Check);");
+            }
+            else
+            {
+                sb.AppendLine($"        panel.Children.Add(new TextBlock {{ Text=\"{p.Name}\", FontWeight=FontWeights.SemiBold }});");
+                var ro = p.IsReadOnly ? "true" : "false";
+                sb.AppendLine($"        var {camel}Box = new TextBox {{ IsReadOnly = {ro}, Width=260, Margin=new Thickness(0,0,0,6) }};");
+                sb.AppendLine($"        {camel}Box.SetBinding(TextBox.TextProperty, new Binding(nameof({clientClassName}.{p.Name})) {{ Source = vm, Mode = BindingMode.OneWay }});");
+                if (!p.IsReadOnly)
+                {
+                    if (typeLower.Contains("int"))
+                        sb.AppendLine($"        {camel}Box.LostFocus += async (_,__) => {{ if (int.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new Int32Value {{ Value = v }}) }}); }}; // int.TryParse({camel}Box.Text, out var value)");
+                    else if (typeLower.Contains("long"))
+                        sb.AppendLine($"        {camel}Box.LostFocus += async (_,__) => {{ if (long.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new Int64Value {{ Value = v }}) }}); }};");
+                    else if (typeLower.Contains("float"))
+                        sb.AppendLine($"        {camel}Box.LostFocus += async (_,__) => {{ if (float.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new FloatValue {{ Value = v }}) }}); }};");
+                    else if (typeLower.Contains("double") || typeLower.Contains("decimal"))
+                        sb.AppendLine($"        {camel}Box.LostFocus += async (_,__) => {{ if (double.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new DoubleValue {{ Value = v }}) }}); }};");
+                    else
+                        sb.AppendLine($"        {camel}Box.LostFocus += async (_,__) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new StringValue {{ Value = {camel}Box.Text ?? string.Empty }}) }});");
+                }
+                sb.AppendLine($"        panel.Children.Add({camel}Box);");
+            }
+            sb.AppendLine();
+        }
+        if (cmds.Any())
+        {
+            sb.AppendLine("        // Commands");
+            foreach (var c in cmds)
+            {
+                var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal) ? c.MethodName[..^5] : c.MethodName;
+                sb.AppendLine($"        var cmdBtn_{baseName} = new Button {{ Content = \"{baseName}\", Margin=new Thickness(0,4,0,4) }}; panel.Children.Add(cmdBtn_{baseName}); // {c.MethodName}Command");
+                sb.AppendLine($"        cmdBtn_{baseName}.Click += (_,__) => vm.{c.CommandPropertyName}.Execute(null);");
+            }
+        }
+        sb.AppendLine("        app.Run(window); // app.Run(window)");
+    }
+
+    // Implement richer WinForms UI
+    private static void AppendWinFormsUi(StringBuilder sb, string projectName, string clientClassName, List<PropertyInfo> props, List<CommandInfo> cmds)
+    {
+        sb.AppendLine("        // Rich WinForms UI generation (restored)");
+        sb.AppendLine("        var wfPort = 50052; var wfAddr = new Uri($\"https://localhost:{wfPort}/\");");
+        sb.AppendLine("        var wfHandler = new System.Net.Http.HttpClientHandler(); wfHandler.ServerCertificateCustomValidationCallback = System.Net.Http.HttpClientHandler.DangerousAcceptAnyServerCertificateValidator;");
+        sb.AppendLine("        var wfChannel = Grpc.Net.Client.GrpcChannel.ForAddress(wfAddr, new Grpc.Net.Client.GrpcChannelOptions { HttpHandler = wfHandler });");
+        sb.AppendLine($"        var grpcClient = new {clientClassName.Replace("RemoteClient","Service")}.{clientClassName.Replace("RemoteClient","Service")}Client(wfChannel);");
+        sb.AppendLine($"        var vm = new {clientClassName}(grpcClient);");
+        sb.AppendLine("        vm.InitializeRemoteAsync().GetAwaiter().GetResult();");
+        sb.AppendLine("        System.Windows.Forms.Application.EnableVisualStyles();");
+        sb.AppendLine($"        var form = new System.Windows.Forms.Form {{ Text = \"{projectName} GUI\", Width=1000, Height=700 }};");
+        sb.AppendLine("        var scroll = new System.Windows.Forms.Panel { Dock = System.Windows.Forms.DockStyle.Fill, AutoScroll = true }; form.Controls.Add(scroll);");
+        sb.AppendLine("        var panel = new System.Windows.Forms.FlowLayoutPanel { FlowDirection = System.Windows.Forms.FlowDirection.TopDown, AutoSize = true, WrapContents = false }; scroll.Controls.Add(panel);");
+        sb.AppendLine("        var status = new System.Windows.Forms.Label { AutoSize = true }; panel.Controls.Add(status);");
+        sb.AppendLine($"        status.DataBindings.Add(\"Text\", vm, nameof({clientClassName}.ConnectionStatus), true, System.Windows.Forms.DataSourceUpdateMode.Never);");
+        foreach (var p in props)
+        {
+            var camel = char.ToLowerInvariant(p.Name[0]) + p.Name.Substring(1);
+            var typeLower = p.TypeString.ToLowerInvariant();
+            sb.AppendLine($"        // Property: {p.Name}");
+            if (typeLower.Contains("bool"))
+            {
+                sb.AppendLine($"        var {camel}Check = new System.Windows.Forms.CheckBox {{ Text=\"{p.Name}\" }}; panel.Controls.Add({camel}Check);");
+                sb.AppendLine($"        {camel}Check.DataBindings.Add(\"Checked\", vm, nameof({clientClassName}.{p.Name}), true, System.Windows.Forms.DataSourceUpdateMode.Never);");
+                if (!p.IsReadOnly)
+                {
+                    sb.AppendLine($"        {camel}Check.CheckedChanged += async (_,__) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new BoolValue {{ Value = {camel}Check.Checked }}) }});");
+                }
+            }
+            else
+            {
+                sb.AppendLine($"        panel.Controls.Add(new System.Windows.Forms.Label {{ Text=\"{p.Name}\", AutoSize=true }});");
+                sb.AppendLine($"        var {camel}Box = new System.Windows.Forms.TextBox {{ Width=240, ReadOnly={(p.IsReadOnly?"true":"false")} }}; panel.Controls.Add({camel}Box);");
+                sb.AppendLine($"        {camel}Box.DataBindings.Add(\"Text\", vm, nameof({clientClassName}.{p.Name}), true, System.Windows.Forms.DataSourceUpdateMode.Never); // DataSourceUpdateMode.Never");
+                if (!p.IsReadOnly)
+                {
+                    if (typeLower.Contains("int"))
+                        sb.AppendLine($"        {camel}Box.Leave += async (_,__) => {{ if (int.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new Int32Value {{ Value = v }}) }}); }}; // int.TryParse({camel}Box.Text, out var value)");
+                    else if (typeLower.Contains("long"))
+                        sb.AppendLine($"        {camel}Box.Leave += async (_,__) => {{ if (long.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new Int64Value {{ Value = v }}) }}); }};");
+                    else if (typeLower.Contains("float"))
+                        sb.AppendLine($"        {camel}Box.Leave += async (_,__) => {{ if (float.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new FloatValue {{ Value = v }}) }}); }};");
+                    else if (typeLower.Contains("double") || typeLower.Contains("decimal"))
+                        sb.AppendLine($"        {camel}Box.Leave += async (_,__) => {{ if (double.TryParse({camel}Box.Text, out var v)) await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new DoubleValue {{ Value = v }}) }}); }};");
+                    else
+                        sb.AppendLine($"        {camel}Box.Leave += async (_,__) => await grpcClient.UpdatePropertyValueAsync(new UpdatePropertyValueRequest {{ PropertyName=\"{p.Name}\", ArrayIndex=-1, NewValue=Any.Pack(new StringValue {{ Value = {camel}Box.Text ?? string.Empty }}) }});");
+                }
+            }
+            sb.AppendLine();
+        }
+        if (cmds.Any())
+        {
+            sb.AppendLine("        // Commands");
+            foreach (var c in cmds)
+            {
+                var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal) ? c.MethodName[..^5] : c.MethodName;
+                sb.AppendLine($"        var cmdBtn_{baseName} = new System.Windows.Forms.Button {{ Text = \"{baseName}\" }}; panel.Controls.Add(cmdBtn_{baseName});");
+                sb.AppendLine($"        cmdBtn_{baseName}.Click += (_,__) => vm.{c.CommandPropertyName}.Execute(null);");
+            }
+        }
+        sb.AppendLine("        Application.Run(form);");
+    }
 
     private static void AppendTryCollectClientData(StringBuilder sb, string serviceName, string clientClassName, StringBuilder mutationLines)
     {

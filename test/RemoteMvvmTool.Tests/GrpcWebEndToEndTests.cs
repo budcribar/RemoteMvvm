@@ -280,177 +280,75 @@ public class GrpcWebEndToEndTests
 
     /// <summary>
     /// Helper method that runs a complete end-to-end test scenario with a TypeScript/JavaScript client.
-    /// This tests the entire pipeline: C# model → protobuf generation → gRPC server → JavaScript client → data validation
-    /// The validation extracts numeric data from the transferred JavaScript object and compares it against expected values.
+    /// Now optimized: reuse work directory, skip repeated npm install, direct dll exec, fast /status wait.
     /// </summary>
-    /// <param name="modelCode">Complete C# code for the ViewModel and supporting types using raw string literals</param>
-    /// <param name="expectedDataValues">Comma-separated string of expected numeric values from the transferred data, sorted</param>
     internal static async Task TestEndToEndScenario(string modelCode, string expectedDataValues, string nodeTestFile = "test-protoc.js", string? expectedPropertyChange = null)
     {
-        // Aggressive cleanup: Kill any existing test processes and wait longer for cleanup
-        Console.WriteLine("🧹 Performing aggressive cleanup before test...");
-        KillExistingTestProcesses();
-
-        // Additional cleanup: Try to kill any dotnet processes that might be test servers
-        try
-        {
-            var dotnetProcesses = Process.GetProcessesByName("dotnet");
-            foreach (var process in dotnetProcesses)
-            {
-                try
-                {
-                    if (process.Id != Environment.ProcessId && // Don't kill ourselves
-                        process.StartTime > DateTime.Now.AddMinutes(-5)) // Only kill recent processes
-                    {
-                        Console.WriteLine($"Attempting to kill dotnet process {process.Id} (started {process.StartTime})");
-                        process.Kill();
-                        process.WaitForExit(2000);
-                        Console.WriteLine($"✅ Killed dotnet process {process.Id}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Could not kill dotnet process {process.Id}: {ex.Message}");
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"⚠️ Error during dotnet process cleanup: {ex.Message}");
-        }
-
-        // Wait a bit longer for all processes to fully terminate
-        Thread.Sleep(3000);
-
-        // Setup paths
+        // Fast targeted cleanup at BEGINNING only (retain after success for manual inspection)
         var paths = SetupTestPaths();
-        bool testPassed = false;
+        PrepareWorkDirectory(paths.WorkDir, paths.SourceProjectDir, paths.TestProjectDir, modelCode);
 
+        bool testPassed = false;
         try
         {
-            // Setup work directory with the provided model
-            SetupWorkDirectoryWithModel(paths.WorkDir, paths.SourceProjectDir, paths.TestProjectDir, modelCode);
-            
-            // Analyze ViewModel and generate server code
             var (name, props, cmds) = await AnalyzeViewModelAndGenerateCode(paths.TestProjectDir);
-            
-            // Generate and run JavaScript protobuf generation if needed
             await GenerateJavaScriptProtobufIfNeeded(paths.TestProjectDir);
-            
-            // Build the .NET project
             await BuildProject(paths.TestProjectDir);
-            
-            // Run the end-to-end test with data validation
             await RunEndToEndTest(paths.TestProjectDir, expectedDataValues, nodeTestFile, expectedPropertyChange);
-            
             testPassed = true;
             Console.WriteLine("🎉 End-to-end test passed!");
         }
-        catch (Exception ex)
+        catch
         {
-            Console.WriteLine($"❌ End-to-end test failed: {ex.Message}");
-            Console.WriteLine($"📁 Debug files preserved in: {paths.WorkDir}");
+            Console.WriteLine($"📁 Debug artifacts retained in: {paths.WorkDir}");
             throw;
         }
         finally
         {
-            CleanupTestResources(paths.WorkDir, testPassed);
+            // Do NOT delete on success per user request; only log status.
+            if (testPassed)
+                Console.WriteLine($"✅ Work directory retained for inspection: {paths.WorkDir}");
         }
     }
 
-    private static void SetupWorkDirectoryWithModel(string workDir, string sourceProjectDir, string testProjectDir, string modelCode)
+    private static void PrepareWorkDirectory(string workDir, string sourceProjectDir, string testProjectDir, string modelCode)
     {
-        // Clean and setup work directory
-        if (Directory.Exists(workDir))
+        if (!Directory.Exists(workDir)) Directory.CreateDirectory(workDir);
+
+        if (!Directory.Exists(testProjectDir))
         {
-            Directory.Delete(workDir, true);
+            Console.WriteLine($"(Cold) Initializing project at {testProjectDir}");
+            CopyDirectoryExceptFile(sourceProjectDir, testProjectDir, "TestViewModel.cs");
         }
-        Directory.CreateDirectory(workDir);
-        
-        Console.WriteLine($"Setting up test project in work directory: {testProjectDir}");
-        
-        if (!Directory.Exists(sourceProjectDir))
+        else
         {
-            throw new DirectoryNotFoundException($"Source project directory not found: {sourceProjectDir}");
+            Console.WriteLine("(Warm) Reusing existing project – pruning generated artifacts");
+            PruneGeneratedArtifacts(testProjectDir);
         }
-        
-        // Copy all files from source to work directory EXCEPT TestViewModel.cs (we'll replace it)
-        CopyDirectoryExceptFile(sourceProjectDir, testProjectDir, "TestViewModel.cs");
-        
-        // Write our custom model code
-        var vmFile = Path.Combine(testProjectDir, "TestViewModel.cs");
-        File.WriteAllText(vmFile, modelCode);
-        
-        Console.WriteLine("✅ Set up work directory with custom model");
+
+        // Always overwrite model
+        File.WriteAllText(Path.Combine(testProjectDir, "TestViewModel.cs"), modelCode);
+        Console.WriteLine("✅ Model updated");
     }
 
-    private static void CopyDirectoryExceptFile(string sourceDir, string destDir, string excludeFile)
+    private static void PruneGeneratedArtifacts(string testProjectDir)
     {
-        if (!Directory.Exists(destDir))
-            Directory.CreateDirectory(destDir);
-
-        // Copy files (excluding the specified file)
-        foreach (string file in Directory.GetFiles(sourceDir))
+        void TryDelete(string p)
         {
-            var fileName = Path.GetFileName(file);
-            if (!string.Equals(fileName, excludeFile, StringComparison.OrdinalIgnoreCase))
+            try
             {
-                string destFile = Path.Combine(destDir, fileName);
-                File.Copy(file, destFile, true);
+                if (File.Exists(p)) File.Delete(p);
+                else if (Directory.Exists(p)) Directory.Delete(p, true);
             }
+            catch { }
         }
 
-        // Copy subdirectories recursively, but EXCLUDE the Models directory
-        foreach (string subDir in Directory.GetDirectories(sourceDir))
-        {
-            string subDirName = Path.GetFileName(subDir);
-            // Skip the Models directory to avoid conflicts
-            if (!string.Equals(subDirName, "Models", StringComparison.OrdinalIgnoreCase))
-            {
-                string destSubDir = Path.Combine(destDir, subDirName);
-                CopyDirectoryExceptFile(subDir, destSubDir, excludeFile);
-            }
-        }
-    }
-
-    static async Task<(string stdout, string stderr)> RunCmdAsync(string file, string args, string workDir)
-    {
-        var psi = new ProcessStartInfo(file, args)
-        {
-            WorkingDirectory = workDir,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-            StandardOutputEncoding = Encoding.UTF8,
-            StandardErrorEncoding = Encoding.UTF8,
-        };
-
-        Console.WriteLine($"Running command: {file} {args}");
-
-        var stdoutBuilder = new StringBuilder();
-        var stderrBuilder = new StringBuilder();
-
-        using var p = new Process { StartInfo = psi, EnableRaisingEvents = false };
-        p.OutputDataReceived += (s, e) => { if (e.Data != null) { Console.WriteLine(e.Data); stdoutBuilder.AppendLine(e.Data); } };
-        p.ErrorDataReceived += (s, e) => { if (e.Data != null) { Console.Error.WriteLine(e.Data); stderrBuilder.AppendLine(e.Data); } };
-
-        if (!p.Start())
-            throw new Exception($"Failed to start process: {file}");
-
-        p.BeginOutputReadLine();
-        p.BeginErrorReadLine();
-        await p.WaitForExitAsync();
-
-        var stdout = stdoutBuilder.ToString();
-        var stderr = stderrBuilder.ToString();
-
-        if (p.ExitCode != 0)
-        {
-            throw new Exception($"{file} {args} failed with exit code {p.ExitCode}.{Environment.NewLine}STDOUT:{Environment.NewLine}{stdout}{Environment.NewLine}STDERR:{Environment.NewLine}{stderr}");
-        }
-
-        return (stdout, stderr);
+        foreach (var f in Directory.GetFiles(testProjectDir, "*Service.proto", SearchOption.AllDirectories)) TryDelete(f);
+        foreach (var f in Directory.GetFiles(testProjectDir, "*GrpcServiceImpl.cs", SearchOption.TopDirectoryOnly)) TryDelete(f);
+        foreach (var f in Directory.GetFiles(testProjectDir, "*.Remote.g.cs", SearchOption.TopDirectoryOnly)) TryDelete(f);
+        TryDelete(Path.Combine(testProjectDir, "ProtoStateConverters.cs"));
+        TryDelete(Path.Combine(testProjectDir, "RemoteGenerated"));
+        Directory.CreateDirectory(Path.Combine(testProjectDir, "protos"));
     }
 
     static int GetFreePort()
@@ -480,174 +378,123 @@ public class GrpcWebEndToEndTests
         return fallbackPort;
     }
 
-    static void CopyDirectory(string sourceDir, string destDir)
+    private static async Task RunEndToEndTest(string testProjectDir, string expectedDataValues, string jsTestFileName, string? expectedPropertyChange)
     {
-        if (!Directory.Exists(destDir))
-            Directory.CreateDirectory(destDir);
+        var jsTestFile = Path.Combine(testProjectDir, jsTestFileName);
+        var packageJsonFile = Path.Combine(testProjectDir, "package.json");
+        if (!File.Exists(jsTestFile)) throw new Exception($"Node.js test file not found: {jsTestFile}");
+        if (!File.Exists(packageJsonFile)) throw new Exception($"package.json not found: {packageJsonFile}");
 
-        // Copy files
-        foreach (string file in Directory.GetFiles(sourceDir))
+        int port = GetFreePort();
+        Console.WriteLine($"Using port: {port}");
+        var serverProcess = CreateServerProcess(testProjectDir, port);
+        try
         {
-            string destFile = Path.Combine(destDir, Path.GetFileName(file));
-            File.Copy(file, destFile, true);
+            Console.WriteLine("Starting server (dll exec)...");
+            serverProcess.Start();
+            serverProcess.BeginOutputReadLine();
+            serverProcess.BeginErrorReadLine();
+            await WaitForServerReady(port); // fast /status wait
+            await TestServerEndpoint(port);
+            await TestNodeJsClient(testProjectDir, port, expectedDataValues, jsTestFileName, expectedPropertyChange);
         }
-
-        // Copy subdirectories recursively
-        foreach (string subDir in Directory.GetDirectories(sourceDir))
+        finally
         {
-            string subDirName = Path.GetFileName(subDir);
-            string destSubDir = Path.Combine(destDir, subDirName);
-            CopyDirectory(subDir, destSubDir);
+            StopServerProcess(serverProcess);
         }
     }
 
-    static void KillExistingTestProcesses()
+    private static Process CreateServerProcess(string testProjectDir, int port)
     {
-        try
+        var dll = FindBuiltDll(testProjectDir);
+        Console.WriteLine($"Launching DLL: {dll}");
+        var psi = new ProcessStartInfo
         {
-            Console.WriteLine("Checking for existing test processes...");
-
-            // Kill processes by multiple patterns to be more comprehensive
-            var processPatterns = new[] { "TestProject", "dotnet" };
-            var killedProcesses = new HashSet<int>();
-
-            foreach (var pattern in processPatterns)
-            {
-                try
-                {
-                    var processes = Process.GetProcessesByName(pattern);
-                    foreach (var process in processes)
-                    {
-                        // Skip current process and processes that are already being killed
-                        if (process.Id == Environment.ProcessId || killedProcesses.Contains(process.Id))
-                            continue;
-
-                        try
-                        {
-                            // Check if this process has command line arguments that suggest it's a test server
-                            var commandLine = GetProcessCommandLine(process);
-                            if (commandLine.Contains("run") && commandLine.Contains("--no-build") ||
-                                commandLine.Contains("TestProject") ||
-                                process.MainModule?.FileName.Contains("TestProject") == true)
-                            {
-                                Console.WriteLine($"Killing test server process {process.Id}: {process.ProcessName}");
-                                process.Kill();
-                                process.WaitForExit(3000); // Reduced wait time
-                                killedProcesses.Add(process.Id);
-                                Console.WriteLine($"✅ Process {process.Id} terminated");
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Console.WriteLine($"⚡️ Could not kill process {process.Id}: {ex.Message}");
-                        }
-                        finally
-                        {
-                            process.Dispose();
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"⚠️ Error checking {pattern} processes: {ex.Message}");
-                }
-            }
-
-            // Also try to kill any processes listening on common test ports (avoiding GUI ranges 6000-7999)
-            KillProcessesOnPorts(new[] { 5000, 5001, 5002, 5003, 5004, 5005 });
-
-            // Give the system more time to clean up
-            Thread.Sleep(2000);
-
-            Console.WriteLine("✅ Process cleanup completed");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"⚠️ Error during process cleanup: {ex.Message}");
-            // Don't fail the test for this - it's just cleanup
-        }
+            FileName = "dotnet",
+            Arguments = $"\"{dll}\" {port}",
+            WorkingDirectory = testProjectDir,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true
+        };
+        var p = new Process { StartInfo = psi };
+        p.OutputDataReceived += (_, e) => { if (e.Data != null) { Console.WriteLine($"[SERVER OUT] {e.Data}"); } };
+        p.ErrorDataReceived += (_, e) => { if (e.Data != null) { Console.WriteLine($"[SERVER ERR] {e.Data}"); } };
+        return p;
     }
 
-    private static string GetProcessCommandLine(Process process)
+    private static string FindBuiltDll(string testProjectDir)
     {
-        try
+        var csproj = Directory.GetFiles(testProjectDir, "*.csproj").Single();
+        var asmName = Path.GetFileNameWithoutExtension(csproj);
+        var binDebug = Path.Combine(testProjectDir, "bin", "Debug");
+        if (!Directory.Exists(binDebug)) throw new FileNotFoundException("Build output folder not found: " + binDebug);
+        // Search for net8* target frameworks, prefer most recent write time
+        var tfmDirs = Directory.GetDirectories(binDebug, "net8*");
+        if (tfmDirs.Length == 0)
+            throw new FileNotFoundException("No target framework directories found under " + binDebug);
+        string? best = null; DateTime bestTime = DateTime.MinValue;
+        foreach (var dir in tfmDirs)
         {
-            // Simplified approach: check if the process is dotnet and has test-related arguments
-            // by examining the process modules and main module path
-            if (process.ProcessName.Contains("dotnet") &&
-                process.MainModule?.FileName.Contains("TestProject") == true)
+            var candidate = Path.Combine(dir, asmName + ".dll");
+            if (File.Exists(candidate))
             {
-                return "dotnet run --no-build"; // Assume it's a test server
+                var write = File.GetLastWriteTimeUtc(candidate);
+                if (write > bestTime) { bestTime = write; best = candidate; }
             }
         }
-        catch
-        {
-            // Fallback: return empty string if we can't get command line
-        }
-        return "";
+        if (best == null)
+            throw new FileNotFoundException($"Could not locate built assembly {asmName}.dll in {binDebug} (looked in: {string.Join(", ", tfmDirs)})");
+        return best;
     }
 
-    private static void KillProcessesOnPorts(int[] ports)
+    private static async Task WaitForServerReady(int port)
+    {
+        Console.WriteLine("Waiting for /status (100ms poll, 10s timeout)...");
+        var deadline = DateTime.UtcNow + TimeSpan.FromSeconds(10);
+        using var http = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
+        int attempts = 0;
+        while (DateTime.UtcNow < deadline)
+        {
+            attempts++;
+            try
+            {
+                var resp = await http.GetAsync($"http://localhost:{port}/status");
+                if (resp.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"✅ /status ready after {attempts} attempts");
+                    return;
+                }
+            }
+            catch { }
+            await Task.Delay(100);
+        }
+        throw new TimeoutException("Server did not respond on /status within 10s");
+    }
+
+    private static void StopServerProcess(Process serverProcess)
     {
         try
         {
-            foreach (var port in ports)
+            if (!serverProcess.HasExited)
             {
-                // Use netstat to find processes listening on the port
-                var netstatProcess = new Process
-                {
-                    StartInfo = new ProcessStartInfo
-                    {
-                        FileName = "netstat",
-                        Arguments = $"-ano | findstr :{port}",
-                        UseShellExecute = false,
-                        RedirectStandardOutput = true,
-                        CreateNoWindow = true
-                    }
-                };
-
-                netstatProcess.Start();
-                var output = netstatProcess.StandardOutput.ReadToEnd();
-                netstatProcess.WaitForExit();
-
-                // Parse the output to find the process ID
-                var lines = output.Split('\n');
-                foreach (var line in lines)
-                {
-                    if (line.Contains($"LISTENING") || line.Contains($"ESTABLISHED"))
-                    {
-                        var parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-                        if (parts.Length >= 5)
-                        {
-                            var pidStr = parts[parts.Length - 1];
-                            if (int.TryParse(pidStr, out var pid))
-                            {
-                                try
-                                {
-                                    var process = Process.GetProcessById(pid);
-                                    if (process.ProcessName.Contains("dotnet") || process.ProcessName.Contains("TestProject"))
-                                    {
-                                        Console.WriteLine($"Killing process {pid} listening on port {port}");
-                                        process.Kill();
-                                        process.WaitForExit(2000);
-                                        Console.WriteLine($"✅ Process {pid} terminated");
-                                    }
-                                }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine($"⚡️ Could not kill process {pid} on port {port}: {ex.Message}");
-                                }
-                            }
-                        }
-                    }
-                }
+                serverProcess.Kill();
+                serverProcess.WaitForExit(2000);
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️ Error checking processes on ports: {ex.Message}");
+            Console.WriteLine($"Warning stopping server: {ex.Message}");
+        }
+        finally
+        {
+            serverProcess.Dispose();
         }
     }
+
+
+    // ================= Re-added helper methods (previously in original file) =================
 
     private static (string WorkDir, string SourceProjectDir, string TestProjectDir) SetupTestPaths()
     {
@@ -656,336 +503,147 @@ public class GrpcWebEndToEndTests
         var workDir = Path.Combine(repoRoot, "test", "RemoteMvvmTool.Tests", "TestData", "Work");
         var sourceProjectDir = Path.Combine(repoRoot, "test", "RemoteMvvmTool.Tests", "TestData", "GrpcWebEndToEnd");
         var testProjectDir = Path.Combine(workDir, "TestProject");
-        
         return (workDir, sourceProjectDir, testProjectDir);
     }
 
-    private static void SetupWorkDirectory(string workDir, string sourceProjectDir, string testProjectDir)
+    private static void CopyDirectoryExceptFile(string sourceDir, string destDir, string excludeFile)
     {
-        // Clean and setup work directory
-        if (Directory.Exists(workDir))
+        if (!Directory.Exists(destDir)) Directory.CreateDirectory(destDir);
+        foreach (var file in Directory.GetFiles(sourceDir))
         {
-            Directory.Delete(workDir, true);
+            var name = Path.GetFileName(file);
+            if (!string.Equals(name, excludeFile, StringComparison.OrdinalIgnoreCase))
+                File.Copy(file, Path.Combine(destDir, name), true);
         }
-        Directory.CreateDirectory(workDir);
-        
-        Console.WriteLine($"Copying project from: {sourceProjectDir}");
-        Console.WriteLine($"To work directory: {testProjectDir}");
-        
-        if (!Directory.Exists(sourceProjectDir))
+        foreach (var dir in Directory.GetDirectories(sourceDir))
         {
-            throw new DirectoryNotFoundException($"Source project directory not found: {sourceProjectDir}");
+            var name = Path.GetFileName(dir);
+            if (string.Equals(name, "Models", StringComparison.OrdinalIgnoreCase)) continue;
+            CopyDirectoryExceptFile(dir, Path.Combine(destDir, name), excludeFile);
         }
-        
-        // Copy all files from source to work directory
-        CopyDirectory(sourceProjectDir, testProjectDir);
-        Console.WriteLine("✅ Copied existing project to work directory");
     }
 
     private static async Task<(string Name, List<GrpcRemoteMvvmModelUtil.PropertyInfo> Props, List<GrpcRemoteMvvmModelUtil.CommandInfo> Cmds)> AnalyzeViewModelAndGenerateCode(string testProjectDir)
     {
-        // Load .NET assemblies for analysis
         var refs = new List<string>();
-        string? tpa = AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") as string;
-        if (tpa != null)
+        if (AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES") is string tpa)
         {
-            foreach (var p in tpa.Split(Path.PathSeparator))
-                if (!string.IsNullOrEmpty(p) && File.Exists(p)) refs.Add(p);
+            foreach (var p in tpa.Split(Path.PathSeparator)) if (!string.IsNullOrEmpty(p) && File.Exists(p)) refs.Add(p);
         }
-
-        // Analyze the ViewModel
         var vmFile = Path.Combine(testProjectDir, "TestViewModel.cs");
-        var (vmSymbol, name, props, cmds, compilation) = await ViewModelAnalyzer.AnalyzeAsync(
-            new[] { vmFile }, 
-            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute", 
-            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute", 
-            refs, 
+        var (_, name, props, cmds, compilation) = await ViewModelAnalyzer.AnalyzeAsync(
+            new[] { vmFile },
+            "CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute",
+            "CommunityToolkit.Mvvm.Input.RelayCommandAttribute",
+            refs,
             "CommunityToolkit.Mvvm.ComponentModel.ObservableObject");
-
-        Console.WriteLine($"Found ViewModel: {name} with {props.Count} properties and {cmds.Count} commands");
-
-        // Ensure we found properties
-        if (props.Count == 0)
-        {
-            throw new Exception("No properties found in TestViewModel. Source generators may not be running correctly.");
-        }
-
-        // Generate all server code files
+        if (props.Count == 0) throw new Exception("No properties found in TestViewModel.");
         GenerateServerCodeFiles(testProjectDir, name, props, cmds, compilation);
-        
         return (name, props, cmds);
     }
 
     private static void GenerateServerCodeFiles(string testProjectDir, string name, List<GrpcRemoteMvvmModelUtil.PropertyInfo> props, List<GrpcRemoteMvvmModelUtil.CommandInfo> cmds, Compilation compilation)
     {
-        // Generate server code
         var protoDir = Path.Combine(testProjectDir, "protos");
         Directory.CreateDirectory(protoDir);
         var protoFile = Path.Combine(protoDir, name + "Service.proto");
-        
         var proto = ProtoGenerator.Generate("Test.Protos", name + "Service", name, props, cmds, compilation);
         File.WriteAllText(protoFile, proto);
-        
         var serverCode = ServerGenerator.Generate(name, "Test.Protos", name + "Service", props, cmds, "Generated.ViewModels", "wpf");
         File.WriteAllText(Path.Combine(testProjectDir, name + "GrpcServiceImpl.cs"), serverCode);
-
         var rootTypes = props.Select(p => p.FullTypeSymbol!);
         var conv = ConversionGenerator.Generate("Test.Protos", "Generated.ViewModels", rootTypes, compilation);
         File.WriteAllText(Path.Combine(testProjectDir, "ProtoStateConverters.cs"), conv);
-
-        // Determine if we should auto-generate nested property change handlers using proper C# analysis
-        var propsForAutoGeneration = ShouldAutoGenerateEventHandlers(compilation, name, props) ? props : null;
-
-        var partial = ViewModelPartialGenerator.Generate(name, "Test.Protos", name + "Service", "Generated.ViewModels", "Generated.Clients", "CommunityToolkit.Mvvm.ComponentModel.ObservableObject", "wpf", true, propsForAutoGeneration);
+        var propsForAuto = ShouldAutoGenerateEventHandlers(compilation, name, props) ? props : null;
+        var partial = ViewModelPartialGenerator.Generate(name, "Test.Protos", name + "Service", "Generated.ViewModels", "Generated.Clients", "CommunityToolkit.Mvvm.ComponentModel.ObservableObject", "wpf", true, propsForAuto);
         File.WriteAllText(Path.Combine(testProjectDir, name + ".Remote.g.cs"), partial);
-
-        Console.WriteLine("✅ Generated server code files");
     }
 
     private static async Task GenerateJavaScriptProtobufIfNeeded(string testProjectDir)
     {
         var jsTestFile = Path.Combine(testProjectDir, "test-protoc.js");
-        if (!File.Exists(jsTestFile))
-        {
-            throw new Exception($"Node.js test file not found at: {jsTestFile}. This test requires a JavaScript client test to verify end-to-end functionality.");
-        }
-
-        Console.WriteLine("Found Node.js test file - generating JavaScript protobuf files...");
-        
-        // Install npm packages if needed
+        if (!File.Exists(jsTestFile)) throw new Exception($"Node.js test file not found at: {jsTestFile}");
         var nodeModulesDir = Path.Combine(testProjectDir, "node_modules");
-        if (!Directory.Exists(nodeModulesDir))
-        {
-            Console.WriteLine("Installing npm packages...");
-            await InstallNpmPackages(testProjectDir);
-        }
-        else
-        {
-            Console.WriteLine("✅ Node.js packages already installed");
-        }
-
-        // Generate JavaScript files using npm script
+        if (!Directory.Exists(nodeModulesDir)) await InstallNpmPackages(testProjectDir);
         await RunNpmProtocScript(testProjectDir);
-        
-        // List generated files for verification
         ListGeneratedJavaScriptFiles(testProjectDir);
-    }
-
-    private static async Task RunNpmProtocScript(string testProjectDir)
-    {
-        Console.WriteLine("Running npm protoc script to generate JavaScript protobuf files...");
-        var npmPaths = new[]
-        {
-            @"C:\Program Files\nodejs\npm.cmd",
-            "npm.cmd",
-            "npm"
-        };
-
-        foreach (var npmPath in npmPaths)
-        {
-            try
-            {
-                Console.WriteLine($"Trying npm at: {npmPath}");
-                await RunCmdAsync(npmPath, "run protoc", testProjectDir);
-                Console.WriteLine("✅ JavaScript protobuf files generated successfully");
-                return;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed with {npmPath}: {ex.Message}");
-            }
-        }
-
-        throw new Exception("Could not generate JavaScript protobuf files using npm script. Ensure Node.js is installed and npm is in PATH, or that package.json has a 'protoc' script defined.");
-    }
-
-    private static void ListGeneratedJavaScriptFiles(string testProjectDir)
-    {
-        var jsFiles = Directory.GetFiles(testProjectDir, "*_pb.js")
-            .Concat(Directory.GetFiles(testProjectDir, "*_grpc_web_pb.js"))
-            .ToArray();
-            
-        if (jsFiles.Length > 0)
-        {
-            Console.WriteLine($"✅ Found JavaScript files: {string.Join(", ", jsFiles.Select(Path.GetFileName))}");
-        }
-        else
-        {
-            throw new Exception("No JavaScript protobuf files were generated. The test requires generated JavaScript files to validate client-server communication.");
-        }
     }
 
     private static async Task BuildProject(string testProjectDir)
     {
-        Console.WriteLine("Building project...");
+        await RunCmdAsync("dotnet", "build", testProjectDir);
+    }
+
+    private static async Task TestServerEndpoint(int port)
+    {
+        using var httpClient = new HttpClient();
         try
         {
-            await RunCmdAsync("dotnet", "build", testProjectDir);
-            Console.WriteLine("✅ Project built successfully");
+            var response = await httpClient.PostAsync(
+                $"http://localhost:{port}/test_protos.TestViewModelService/GetState",
+                new ByteArrayContent(new byte[] { 0, 0, 0, 0, 0 }));
+            Console.WriteLine(response.IsSuccessStatusCode ? "✅ Server basic gRPC-Web probe OK" : $"⚠️ Probe status {response.StatusCode}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"❌ Build failed: {ex.Message}");
-            throw;
+            Console.WriteLine($"⚠️ Probe exception: {ex.Message}");
         }
     }
 
-    private static async Task RunEndToEndTest(string testProjectDir, string expectedDataValues, string jsTestFileName, string? expectedPropertyChange)
-    {
-        // Check if we have Node.js test files
-        var jsTestFile = Path.Combine(testProjectDir, jsTestFileName);
-        var packageJsonFile = Path.Combine(testProjectDir, "package.json");
-        
-        if (!File.Exists(jsTestFile))
-        {
-            throw new Exception($"Node.js test file not found at: {jsTestFile}. This test requires a JavaScript client test to verify end-to-end functionality.");
-        }
-        
-        if (!File.Exists(packageJsonFile))
-        {
-            throw new Exception($"package.json file not found at: {packageJsonFile}. This test requires Node.js package configuration for JavaScript client testing.");
-        }
-        
-        Console.WriteLine("✅ Node.js test files found - proceeding with end-to-end test");
-
-        // Get a free port and start the server
-        int port = GetFreePort();
-        Console.WriteLine($"Using port: {port}");
-
-        var serverProcess = CreateServerProcess(testProjectDir, port);
-        
-        try
-        {
-            Console.WriteLine($"Starting server: dotnet run --no-build {port}");
-            serverProcess.Start();
-            serverProcess.BeginOutputReadLine();
-            serverProcess.BeginErrorReadLine();
-
-            // Wait for server to be ready
-            await WaitForServerReady(port);
-
-            // Run tests - both are required to pass
-            await TestServerEndpoint(port);
-            await TestNodeJsClient(testProjectDir, port, expectedDataValues, jsTestFileName, expectedPropertyChange);
-        }
-        finally
-        {
-            // Stop the server
-            StopServerProcess(serverProcess);
-        }
-    }
-
+    // Original Node.js client test method restored
     private static async Task TestNodeJsClient(string testProjectDir, int port, string expectedDataValues, string jsTestFileName, string? expectedPropertyChange)
     {
-        Console.WriteLine("Testing Node.js client with data validation...");
+        var jsTestFile = Path.Combine(testProjectDir, jsTestFileName);
+        var packageJsonFile = Path.Combine(testProjectDir, "package.json");
+        if (!File.Exists(jsTestFile)) throw new Exception($"Node.js test file not found at: {jsTestFile}");
+        if (!File.Exists(packageJsonFile)) throw new Exception($"package.json file not found at: {packageJsonFile}");
 
-        // Check if required JavaScript protobuf files exist
-        var requiredFiles = new[]
+        var requiredFiles = new[] { "testviewmodelservice_pb.js", "testviewmodelservice_grpc_web_pb.js", "TestViewModelService_pb.js", "TestViewModelService_grpc_web_pb.js" };
+        var existing = requiredFiles.Where(f => File.Exists(Path.Combine(testProjectDir, f))).ToArray();
+        if (existing.Length < 2)
         {
-            "testviewmodelservice_pb.js",
-            "testviewmodelservice_grpc_web_pb.js",
-            "TestViewModelService_pb.js",
-            "TestViewModelService_grpc_web_pb.js"
-        };
-
-        var existingFiles = requiredFiles.Where(f => File.Exists(Path.Combine(testProjectDir, f))).ToArray();
-
-        if (existingFiles.Length < 2)
-        {
-            var foundFilesList = Directory.GetFiles(testProjectDir, "*.js").Select(Path.GetFileName).ToArray();
-            throw new Exception($"Missing required JavaScript protobuf files for Node.js test. " +
-                               $"Required files (at least 2): {string.Join(", ", requiredFiles)}. " +
-                               $"Found .js files: {string.Join(", ", foundFilesList)}. " +
-                               $"Ensure JavaScriptprotobuf generation completed successfully.");
+            var found = string.Join(",", Directory.GetFiles(testProjectDir, "*.js").Select(Path.GetFileName));
+            throw new Exception($"Missing JS protobuf files. Found: {found}");
         }
 
-        Console.WriteLine($"✅ Found required files: {string.Join(", ", existingFiles)}");
-
-        // Try different node executable locations
-        var nodePaths = new[]
-        {
-            @"C:\Program Files\nodejs\node.exe",
-            "node.exe",
-            "node"
-        };
-
-        bool testSuccess = false;
-        string? actualOutput = null;
-        string? lastError = null;
-
+        var nodePaths = new[] { @"C:\\Program Files\\nodejs\\node.exe", "node.exe", "node" };
+        string? combinedOutput = null; string? lastError = null; bool success = false;
         foreach (var nodePath in nodePaths)
         {
             try
             {
-                Console.WriteLine($"Running Node.js test with: {nodePath}");
                 var (stdout, stderr) = await RunCmdAsync(nodePath, $"{jsTestFileName} {port}", testProjectDir);
-
-                // Combine both STDOUT and STDERR for comprehensive parsing
-                actualOutput = stdout + "\n" + stderr;
-
-                // Check for success in either STDOUT or STDERR
-                if (actualOutput.Contains("Test passed") || actualOutput.Contains("✅ Test passed"))
+                combinedOutput = stdout + "\n" + stderr;
+                if (combinedOutput.Contains("Test passed") || combinedOutput.Contains("✅ Test passed"))
                 {
                     bool dataValid = true;
                     if (!string.IsNullOrWhiteSpace(expectedDataValues))
                     {
-                        var actualDataValues = ExtractNumericDataFromOutput(actualOutput);
-                        dataValid = ValidateDataValues(actualDataValues, expectedDataValues);
-                        if (!dataValid)
-                        {
-                            lastError = $"Node.js test passed but data validation failed. Expected: [{expectedDataValues}], Actual:[{actualDataValues}]";
-                            Console.WriteLine($"⚠️ {lastError}");
-                        }
-                        else
-                        {
-                            Console.WriteLine("✅ Node.js client test passed - data validation successful");
-                            Console.WriteLine($"Expected data: [{expectedDataValues}], Actual data: [{actualDataValues}]");
-                        }
+                        var actualValues = ExtractNumericDataFromOutput(combinedOutput);
+                        dataValid = ValidateDataValues(actualValues, expectedDataValues);
+                        if (!dataValid) lastError = $"Data mismatch. Expected [{expectedDataValues}]";
                     }
-
-                    bool propertyValid = true;
+                    bool propValid = true;
                     if (!string.IsNullOrEmpty(expectedPropertyChange))
                     {
-                        propertyValid = ValidatePropertyChange(actualOutput, expectedPropertyChange);
-                        if (!propertyValid)
-                        {
-                            lastError = $"Property change validation failed. Expected: [{expectedPropertyChange}]";
-                            Console.WriteLine($"⚠️ {lastError}");
-                        }
-                        else
-                        {
-                            Console.WriteLine("✅ Property change validation successful");
-                            Console.WriteLine($"Expected property change: [{expectedPropertyChange}]");
-                        }
+                        propValid = ValidatePropertyChange(combinedOutput, expectedPropertyChange);
+                        if (!propValid) lastError = $"Property change mismatch. Expected [{expectedPropertyChange}]";
                     }
-
-                    if (dataValid && propertyValid)
-                    {
-                        testSuccess = true;
-                        break;
-                    }
+                    if (dataValid && propValid) { success = true; break; }
                 }
                 else
                 {
-                    lastError = $"Node.js test ran but didn't find 'Test passed' message in combined output. Combined output: {actualOutput.Substring(0, Math.Min(500, actualOutput.Length))}";
-                    Console.WriteLine($"⚠️ {lastError}");
+                    lastError = "Did not find success marker";
                 }
             }
             catch (Exception ex)
             {
-                lastError = $"Failed to run Node.js test with {nodePath}: {ex.Message}";
-                Console.WriteLine(lastError);
+                lastError = ex.Message;
             }
         }
-
-        if (!testSuccess)
+        if (!success)
         {
-            var outputLength = actualOutput?.Length ?? 0;
-            var truncatedOutput = outputLength > 500 ? actualOutput!.Substring(0, 500) : actualOutput ?? "";
-            throw new Exception($"Node.js client test failed. {lastError ?? "No Node.js executable found or all attempts failed."} " +
-                               $"Expected data values: [{expectedDataValues}]. " +
-                               $"Expected property change: [{expectedPropertyChange ?? "none"}]. " +
-                               $"Combined output: [{truncatedOutput}...]");
+            throw new Exception($"Node client test failed: {lastError}. Output (trunc): {combinedOutput?.Substring(0, Math.Min(400, combinedOutput.Length))}");
         }
     }
 
@@ -1359,236 +1017,6 @@ public class GrpcWebEndToEndTests
         return string.Equals(actual, expected, StringComparison.OrdinalIgnoreCase);
     }
 
-    static async Task InstallNpmPackages(string projectDir)
-    {
-        var npmPaths = new[]
-        {
-            @"C:\Program Files\nodejs\npm.cmd",
-            "npm.cmd",
-            "npm"
-        };
-
-        foreach (var npmPath in npmPaths)
-        {
-            try
-            {
-                Console.WriteLine($"Trying npm at: {npmPath}");
-                await RunCmdAsync(npmPath, "install", projectDir);
-                Console.WriteLine("✅ npm install completed successfully");
-                return;
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Failed with {npmPath}: {ex.Message}");
-            }
-        }
-
-        throw new Exception("Could not find npm executable or npm install failed. Ensure Node.js is installed and npm is in PATH.");
-    }
-
-    private static Process CreateServerProcess(string testProjectDir, int port)
-    {
-        var process = new Process
-        {
-            StartInfo = new ProcessStartInfo
-            {
-                FileName = "dotnet",
-                Arguments = $"run --no-build {port}",
-                WorkingDirectory = testProjectDir,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true
-            }
-        };
-
-        // Capture server output for debugging
-        process.OutputDataReceived += (sender, args) => 
-        {
-            if (!string.IsNullOrEmpty(args.Data))
-            {
-                Console.WriteLine($"[SERVER OUT] {args.Data}");
-                // Also write to test output
-                Debug.WriteLine($"[SERVER OUT] {args.Data}");
-            }
-        };
-        
-        process.ErrorDataReceived += (sender, args) => 
-        {
-            if (!string.IsNullOrEmpty(args.Data))
-            {
-                Console.WriteLine($"[SERVER ERR] {args.Data}");
-                // Also write to test output  
-                Debug.WriteLine($"[SERVER ERR] {args.Data}");
-            }
-        };
-
-        return process;
-    }
-
-    private static async Task WaitForServerReady(int port)
-    {
-        Console.WriteLine("Waiting for server to start...");
-        var lastException = (Exception?)null;
-
-        for (int i = 0; i < 45; i++) // Increased from 30 to 45 attempts
-        {
-            try
-            {
-                using var httpClient = new HttpClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(3); // Increased timeout
-                var response = await httpClient.GetAsync($"http://localhost:{port}");
-
-                if (response.StatusCode == HttpStatusCode.NotFound || response.IsSuccessStatusCode)
-                {
-                    Console.WriteLine("✅ Server is responding");
-                    return;
-                }
-                else
-                {
-                    Console.WriteLine($"Server responded with status {response.StatusCode}, attempt {i + 1}/45...");
-                }
-            }
-            catch (Exception ex)
-            {
-                lastException = ex;
-                Console.WriteLine($"Server not ready yet, attempt {i + 1}/45... ({ex.Message})");
-
-                // On every 10th attempt, check if there are any conflicting processes
-                if ((i + 1) % 10 == 0)
-                {
-                    Console.WriteLine("🔍 Checking for conflicting processes...");
-                    try
-                    {
-                        // Check if port is in use
-                        var netstatProcess = new Process
-                        {
-                            StartInfo = new ProcessStartInfo
-                            {
-                                FileName = "netstat",
-                                Arguments = $"-ano | findstr :{port}",
-                                UseShellExecute = false,
-                                RedirectStandardOutput = true,
-                                CreateNoWindow = true
-                            }
-                        };
-
-                        netstatProcess.Start();
-                        var output = netstatProcess.StandardOutput.ReadToEnd();
-                        netstatProcess.WaitForExit();
-
-                        if (!string.IsNullOrWhiteSpace(output))
-                        {
-                            Console.WriteLine($"⚠️ Port {port} is in use by:");
-                            Console.WriteLine(output);
-                        }
-                        else
-                        {
-                            Console.WriteLine($"✅ Port {port} appears to be free");
-                        }
-                    }
-                    catch (Exception netstatEx)
-                    {
-                        Console.WriteLine($"⚠️ Could not check port status: {netstatEx.Message}");
-                    }
-                }
-            }
-
-            await Task.Delay(1500); // Slightly longer delay between attempts
-        }
-
-        // If we get here, the server failed to start
-        var errorMsg = $"Server failed to start within 67.5 seconds (45 attempts). Last error: {lastException?.Message ?? "Unknown error"}";
-
-        // Try to get more diagnostic information
-        try
-        {
-            var testProcesses = Process.GetProcessesByName("TestProject");
-            if (testProcesses.Length > 0)
-            {
-                errorMsg += $"\nFound {testProcesses.Length} TestProject processes still running.";
-                foreach (var proc in testProcesses)
-                {
-                    errorMsg += $"\n  - Process {proc.Id}: {proc.ProcessName} (CPU: {proc.TotalProcessorTime})";
-                }
-            }
-            else
-            {
-                errorMsg += "\nNo TestProject processes found.";
-            }
-        }
-        catch (Exception ex)
-        {
-            errorMsg += $"\nCould not check for running processes: {ex.Message}";
-        }
-
-        throw new Exception(errorMsg);
-    }
-
-    private static void StopServerProcess(Process serverProcess)
-    {
-        try
-        {
-            if (!serverProcess.HasExited)
-            {
-                Console.WriteLine("Stopping server...");
-                serverProcess.Kill();
-                serverProcess.WaitForExit(5000);
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Warning: Could not stop server: {ex.Message}");
-        }
-        finally
-        {
-            serverProcess.Dispose();
-            // Additional cleanup - ensure no TestProject processes are left running
-            KillExistingTestProcesses();
-        }
-    }
-
-    private static void CleanupTestResources(string workDir, bool testPassed)
-    {
-        if (testPassed)
-        {
-            Console.WriteLine("✅ Cleaning up work directory");
-            try 
-            { 
-                if (Directory.Exists(workDir))
-                    Directory.Delete(workDir, true); 
-            } 
-            catch (Exception ex)
-            { 
-                Console.WriteLine($"⚠️ Could not clean work directory: {ex.Message}");
-            }
-        }
-        else
-        {
-            Console.WriteLine($"🔍 Work directory preserved for debugging: {workDir}");
-        }
-    }
-
-    private static async Task TestServerEndpoint(int port)
-    {
-        Console.WriteLine("Testing gRPC endpoint...");
-        using var httpClient = new HttpClient();
-        var response = await httpClient.PostAsync(
-            $"http://localhost:{port}/test_protos.TestViewModelService/GetState",
-            new ByteArrayContent([0, 0, 0, 0, 0])
-        );
-        
-        if (response.IsSuccessStatusCode)
-        {
-            var responseBytes = await response.Content.ReadAsByteArrayAsync();
-            Console.WriteLine($"✅ Server responded with {responseBytes.Length} bytes");
-        }
-        else
-        {
-            Console.WriteLine($"⚠️ HTTP test: {response.StatusCode}");
-        }
-    }
-
     [Fact]
     public async Task EnumMappings_Generation_Test()
     {
@@ -1760,5 +1188,56 @@ public class GrpcWebEndToEndTests
         // Check all interfaces
         var allInterfaces = namedType.AllInterfaces;
         return allInterfaces.Any(i => i.ToDisplayString() == "System.ComponentModel.INotifyPropertyChanged");
+    }
+
+    private static async Task<(string stdout, string stderr)> RunCmdAsync(string file, string args, string workDir)
+    {
+        var psi = new ProcessStartInfo(file, args)
+        {
+            WorkingDirectory = workDir,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            StandardOutputEncoding = Encoding.UTF8,
+            StandardErrorEncoding = Encoding.UTF8
+        };
+        var sbOut = new StringBuilder();
+        var sbErr = new StringBuilder();
+        using var p = new Process { StartInfo = psi };
+        p.OutputDataReceived += (_, e) => { if (e.Data != null) { Console.WriteLine(e.Data); sbOut.AppendLine(e.Data); } };
+        p.ErrorDataReceived +=  (_, e) => { if (e.Data != null) { Console.WriteLine(e.Data); sbErr.AppendLine(e.Data); } };
+        if (!p.Start()) throw new Exception($"Failed to start {file}");
+        p.BeginOutputReadLine();
+        p.BeginErrorReadLine();
+        await p.WaitForExitAsync();
+        if (p.ExitCode != 0) throw new Exception($"Command {file} {args} failed: {sbErr}");
+        return (sbOut.ToString(), sbErr.ToString());
+    }
+
+    private static async Task InstallNpmPackages(string projectDir)
+    {
+        var npmPaths = new[] { @"C:\\Program Files\\nodejs\\npm.cmd", "npm.cmd", "npm" };
+        foreach (var path in npmPaths)
+        {
+            try { await RunCmdAsync(path, "install", projectDir); return; } catch { }
+        }
+        throw new Exception("npm install failed (no npm found)");
+    }
+
+    private static async Task RunNpmProtocScript(string projectDir)
+    {
+        var npmPaths = new[] { @"C:\\Program Files\\nodejs\\npm.cmd", "npm.cmd", "npm" };
+        foreach (var path in npmPaths)
+        {
+            try { await RunCmdAsync(path, "run protoc", projectDir); return; } catch { }
+        }
+        throw new Exception("npm protoc script failed");
+    }
+
+    private static void ListGeneratedJavaScriptFiles(string testProjectDir)
+    {
+        var jsFiles = Directory.GetFiles(testProjectDir, "*_pb.js").Concat(Directory.GetFiles(testProjectDir, "*_grpc_web_pb.js")).ToArray();
+        Console.WriteLine(jsFiles.Length > 0 ? $"✅ JS generated: {string.Join(",", jsFiles.Select(Path.GetFileName))}" : "⚠️ No JS protobuf output");
     }
 }
