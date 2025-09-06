@@ -7,8 +7,8 @@
     <ToolCommandName>remotemvvm</ToolCommandName>
     <PackageId>RemoteMvvm</PackageId>
     <Version>0.0.1</Version>
-	  <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-	    <Authors>Bud Cribar</Authors>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Bud Cribar</Authors>
     <Description>A command line tool for generating gRPC remote MVVM proxies and server implementations.</Description>
     <PackageTags>sourcegenerator;mvvm;grpc;roslyn;automation;PeakSWC</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
@@ -17,9 +17,22 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-	  <PackageOutputPath>$(MSBuildThisFileDirectory)publish\</PackageOutputPath>
+    <PackageOutputPath>$(MSBuildThisFileDirectory)publish\</PackageOutputPath>
     <!-- Suppress missing XML doc warnings for generator classes since they're internal implementation -->
     <NoWarn>$(NoWarn);CS1591</NoWarn>
+
+    <!-- Deterministic / reproducible build settings -->
+    <Deterministic>true</Deterministic>
+    <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
+    <DebugType>portable</DebugType>
+    <DebugSymbols>true</DebugSymbols>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <!-- Stable version metadata (avoid timestamp noise) -->
+    <AssemblyVersion>0.0.1.0</AssemblyVersion>
+    <FileVersion>0.0.1.0</FileVersion>
+    <InformationalVersion>0.0.1+deterministic</InformationalVersion>
+    <!-- Normalize path mapping inside PDB for determinism -->
+    <PathMap>$(MSBuildProjectDirectory)=/src/RemoteMvvmTool</PathMap>
   </PropertyGroup>
   <ItemGroup>
     <None Remove="Resources\ClientTemplate.tmpl" />

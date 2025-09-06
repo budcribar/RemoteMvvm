@@ -17,6 +17,14 @@ namespace RemoteMvvmTool.Tests
             return Path.Combine(repoRoot, "test", "RemoteMvvmTool.Tests", "TestData", "GuiBuildCache", platform);
         }
 
+        private static string GetWorkSplitRoot(string platform)
+        {
+            var baseTestDir = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!;
+            var repoRoot = Path.GetFullPath(Path.Combine(baseTestDir, "../../../../.."));
+            // Split harness uses WorkSplit<platform>
+            return Path.Combine(repoRoot, "test", "RemoteMvvmTool.Tests", "TestData", "WorkSplit" + platform);
+        }
+
         private static int CountCacheBuildDirs(string platform)
         {
             var root = GetCachePlatformRoot(platform);
@@ -78,15 +86,19 @@ namespace RemoteMvvmTool.Tests
             {
                 if (uniquePlatform != null)
                 {
+                    // Always delete both cache and split work dirs to prevent contaminating later solution builds.
                     try
                     {
                         var cacheRoot = GetCachePlatformRoot(uniquePlatform);
                         if (Directory.Exists(cacheRoot)) Directory.Delete(cacheRoot, true);
                     }
-                    catch
+                    catch { }
+                    try
                     {
-                        // Swallow cleanup failures so test result focuses on assertions
+                        var workSplitRoot = GetWorkSplitRoot(uniquePlatform);
+                        if (Directory.Exists(workSplitRoot)) Directory.Delete(workSplitRoot, true);
                     }
+                    catch { }
                 }
             }
         }

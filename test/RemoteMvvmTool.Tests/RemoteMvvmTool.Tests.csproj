@@ -16,6 +16,7 @@
     <Compile Remove="TestData\GuiBuildCache\**" />
     <Compile Remove="TestData\WorkSplitwpf\**" />
     <Compile Remove="TestData\WorkSplitwinforms\**" />
+    <Compile Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
     <Compile Remove="TestData\Workwinforms\**" />
     <Compile Remove="TestData\Workwpf\**" />
     <Compile Remove="TestData\Work\**" />
@@ -23,6 +24,7 @@
     <EmbeddedResource Remove="TestData\GuiBuildCache\**" />
     <EmbeddedResource Remove="TestData\WorkSplitwpf\**" />
     <EmbeddedResource Remove="TestData\WorkSplitwinforms\**" />
+    <EmbeddedResource Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
     <EmbeddedResource Remove="TestData\Workwinforms\**" />
     <EmbeddedResource Remove="TestData\Workwpf\**" />
     <EmbeddedResource Remove="TestData\Work\**" />
@@ -30,18 +32,21 @@
     <None Remove="TestData\GuiBuildCache\**" />
     <None Remove="TestData\WorkSplitwpf\**" />
     <None Remove="TestData\WorkSplitwinforms\**" />
+    <None Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
     <None Remove="TestData\Workwinforms\**" />
     <None Remove="TestData\Workwpf\**" />
     <None Remove="TestData\Work\**" />
     <Page Remove="TestData\GuiBuildCache\**" />
     <Page Remove="TestData\WorkSplitwpf\**" />
     <Page Remove="TestData\WorkSplitwinforms\**" />
+    <Page Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
     <Page Remove="TestData\Workwinforms\**" />
     <Page Remove="TestData\Workwpf\**" />
     <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
     <TypeScriptCompile Remove="TestData\GuiBuildCache\**" />
     <TypeScriptCompile Remove="TestData\WorkSplitwpf\**" />
     <TypeScriptCompile Remove="TestData\WorkSplitwinforms\**" />
+    <TypeScriptCompile Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
     <TypeScriptCompile Remove="TestData\Workwinforms\**" />
     <TypeScriptCompile Remove="TestData\Workwpf\**" />
     <TypeScriptCompile Remove="TestData\Work\**" />
