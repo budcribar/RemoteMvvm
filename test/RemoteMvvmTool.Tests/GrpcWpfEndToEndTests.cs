@@ -87,7 +87,7 @@ namespace RemoteMvvmTool.Tests
             var modelCode = LoadModelCode("ThermalZoneViewModel");
             var expectedDataValues = "1,2,42,43";
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, expectedDataValues, "Split ThermalZone initial");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, expectedDataValues, "Split ThermalZone initial");
             ctx.MarkTestPassed();
         }
 
@@ -97,7 +97,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("NestedPropertyChangeModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,1,2", "Split initial state");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,1,2", "Split initial state");
             await ctx.Client.UpdateTemperatureAsync(55);
             await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,55", "After Temperature=55 (split)");
             await ctx.Client.ZoneList(1).UpdateTemperatureAsync(54);
@@ -111,7 +111,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("SimpleStringPropertyModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,42,44", "Split initial string state");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,42,44", "Split initial string state");
             await ctx.Client.UpdateMessageAsync("TestValue123");
             await ctx.Client.UpdateCounterAsync(100);
             await ModelVerifier.VerifyModelAsync(ctx.Client, "1,100,123", "Split after updates");
@@ -124,7 +124,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("TwoWayPrimitiveTypesModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,3.140000104904175,6.28,123,4000000000,9876543210", "Split primitive initial");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,3.140000104904175,6.28,123,4000000000,9876543210", "Split primitive initial");
             await ctx.Client.UpdateEnabledAsync(false);
             await ModelVerifier.VerifyModelAsync(ctx.Client, "0,3.140000104904175,6.28,123,4000000000,9876543210", "Split after bool update");
             ctx.MarkTestPassed();
@@ -136,7 +136,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("ServerOnlyPrimitiveTypesModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "-2,1,1.5,2,4,8,9,20", "Split server-only primitives");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "-2,1,1.5,2,4,8,9,20", "Split server-only primitives");
             ctx.MarkTestPassed();
         }
 
@@ -146,7 +146,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("DictionaryWithEnumModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,3,4,5,6,7", "Split enum dictionary initial");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2,3,4,5,6,7", "Split enum dictionary initial");
             ctx.MarkTestPassed();
         }
 
@@ -156,7 +156,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("ComplexDataTypesModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2.5,15,20,100,200,300", "Split complex types initial");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2.5,15,20,100,200,300", "Split complex types initial");
             await ctx.Client.UpdatePlayerLevelAsync(25);
             await ctx.Client.UpdateHasBonusAsync(false);
             await ctx.Client.UpdateBonusMultiplierAsync(3.5);
@@ -170,7 +170,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("ListOfDictionariesModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,3,42,55,60,75,78,85,88,92", "Split list of dictionaries");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,3,42,55,60,75,78,85,88,92", "Split list of dictionaries");
             ctx.MarkTestPassed();
         }
 
@@ -180,7 +180,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("DictionaryOfListsModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "3,8.7,10.5,15.2,87.3,95.5,99.9,100", "Split dictionary of lists");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "3,8.7,10.5,15.2,87.3,95.5,99.9,100", "Split dictionary of lists");
             ctx.MarkTestPassed();
         }
 
@@ -203,14 +203,14 @@ namespace RemoteMvvmTool.Tests
             await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,25,150,200,1500,750000.75,3000000.25,5000000.5,946684800", "Split nested custom objects");
             ctx.MarkTestPassed();
         }
-
+        
         [SkippableFact]
         public async Task EmptyCollectionsAndNullEdgeCases_Wpf_EndToEnd_Test()
         {
             SkipIfNoGui();
             var modelCode = LoadModelCode("EmptyCollectionsAndNullEdgeCasesModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,3,4,7,42,999", "Split empty/null edge cases");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2,3,4,7,42,999", "Split empty/null edge cases");
             ctx.MarkTestPassed();
         }
 
@@ -220,7 +220,7 @@ namespace RemoteMvvmTool.Tests
             SkipIfNoGui();
             var modelCode = LoadModelCode("MemoryAndByteArrayTypesModel");
             using var ctx = await SplitTestContext.CreateAsync(modelCode, "wpf");
-            await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,3,4,8,9,10,16,20,30,32,50,64,100,128,150,200,255", "Split memory/byte arrays");
+            await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2,3,4,8,9,10,16,20,30,32,50,64,100,128,150,200,255", "Split memory/byte arrays");
             ctx.MarkTestPassed();
         }
 
