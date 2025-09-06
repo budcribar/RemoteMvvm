@@ -55,6 +55,8 @@
 		<None Remove="RemoteGenerated\tsProject\**" />
 		<Page Remove="RemoteGenerated\tsProject\**" />
 		<Compile Remove="PointerViewModel.cs" />
+		<Compile Remove="RemoteGenerated\GrpcRemoteOptions.cs" />
+		<Compile Remove="RemoteGenerated\PointerViewModel.Equality.g.cs" />
 		<Compile Remove="RemoteGenerated\PointerViewModel.Remote.g.cs" />
 		<Compile Remove="RemoteGenerated\PointerViewModelGrpcServiceImpl.cs" />
 		<Compile Remove="RemoteGenerated\PointerViewModelRemoteClient.cs" />

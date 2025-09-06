@@ -294,22 +294,24 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                 return response;
             }
 
+            // Detect leaf element update inside a collection (Collection[index].Prop)
+            bool isLeafElementUpdate = propertyPath.Contains("]." + finalPropertyName, StringComparison.Ordinal);
+
             // Store old value for undo/history
             var oldValue = propertyInfo.GetValue(target);
             if (oldValue != null) response.OldValue = PackToAny(oldValue);
             
-            // Handle collection indexing
-            if (!string.IsNullOrEmpty(request.CollectionKey) || request.ArrayIndex > -1)
+            // Only treat as collection update when modifying the collection itself (not element property)
+            if (!isLeafElementUpdate && (!string.IsNullOrEmpty(request.CollectionKey) || (request.ArrayIndex > -1 && propertyPath.Equals(request.PropertyName, StringComparison.OrdinalIgnoreCase))))
+            {
                 response = HandleCollectionUpdate(target, propertyInfo, request);
+            }
             else
             {
-                // Direct property assignment - thread-safe approach
                 var convertedValue = ConvertAnyToTargetType(request.NewValue, propertyInfo.PropertyType);
                 if (convertedValue.Success)
                 {
                     Debug.WriteLine($"[GrpcService:GameViewModel] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
-                    
-                    // Set the property value - PropertyChanged events will be handled naturally by the property setter
                     propertyInfo.SetValue(target, convertedValue.Value);
                     response.Success = true;
                 }
@@ -371,7 +373,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             response.Success = true;
             Debug.WriteLine($"[GrpcService:GameViewModel] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'");
         }
-        // Handle list/array updates
+        // Handle list/array element replacement updates
         else if (collection is System.Collections.IList list && request.ArrayIndex > -1)
         {
             if (request.ArrayIndex >= list.Count)

@@ -28,30 +28,20 @@ namespace SimpleViewModelTest.ViewModels
     public partial class MainViewModel : CommunityToolkit.Mvvm.ComponentModel.ObservableObject, IDisposable
     {
         private MainViewModelGrpcServiceImpl? _grpcService;
-                private readonly Dispatcher _dispatcher;
+        private readonly Dispatcher _dispatcher;
         private IHost? _aspNetCoreHost;
         private GrpcChannel? _channel;
         private SimpleViewModelTest.ViewModels.RemoteClients.MainViewModelRemoteClient? _remoteClient;
-        
         public MainViewModel(ServerOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-                        _dispatcher = Dispatcher.CurrentDispatcher;
-            // Always create service without dispatcher - MVVM Toolkit handles threading automatically
-            _grpcService = new MainViewModelGrpcServiceImpl(this);
-            
-            // Always use ASP.NET Core with Kestrel to support gRPC-Web
+            _dispatcher = Dispatcher.CurrentDispatcher;            _grpcService = new MainViewModelGrpcServiceImpl(this);
             StartAspNetCoreServer(options);
         }
-
         private void StartAspNetCoreServer(ServerOptions options)
         {
             var builder = WebApplication.CreateBuilder();
-
-            // Add services to the container
             builder.Services.AddGrpc();
-
-            // Add CORS support for gRPC-Web
             builder.Services.AddCors(o => o.AddPolicy("AllowAll", builder =>
             {
                 builder.AllowAnyOrigin()
@@ -59,18 +49,14 @@ namespace SimpleViewModelTest.ViewModels
                        .AllowAnyHeader()
                        .WithExposedHeaders("Grpc-Status", "Grpc-Message", "Grpc-Encoding", "Grpc-Accept-Encoding");
             }));
-
-            // Register the gRPC service implementation with ASP.NET Core DI
             builder.Services.AddSingleton(_grpcService!);
-
-            // Configure Kestrel to listen on the specified port based on UseHttps
             builder.WebHost.ConfigureKestrel(kestrelOptions =>
             {
                 kestrelOptions.ListenLocalhost(options.Port, listenOptions =>
                 {
                     if (options.UseHttps)
                     {
-                        listenOptions.UseHttps(); // Use development certificate
+                        listenOptions.UseHttps();
                         listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                     }
                     else
@@ -79,48 +65,31 @@ namespace SimpleViewModelTest.ViewModels
                     }
                 });
             });
-
-            // Build the application
             var app = builder.Build();
-
-            // Configure the HTTP request pipeline
             app.UseRouting();
-
-            // Use CORS middleware
             app.UseCors("AllowAll");
-
-            // Enable gRPC-Web middleware
             app.UseGrpcWeb(new GrpcWebOptions { DefaultEnabled = true });
-
-            // Map gRPC services
             app.MapGet("/status", () => "Server is running.");
             app.MapGrpcService<MainViewModelGrpcServiceImpl>()
                .EnableGrpcWeb()
                .RequireCors("AllowAll");
-
-            // Start the server
             _aspNetCoreHost = app;
-            Task.Run(() => app.RunAsync()); // Run the server in a background thread
+            Task.Run(() => app.RunAsync());
         }
-
         public MainViewModel(ClientOptions options)
         {
             if (options == null) throw new ArgumentNullException(nameof(options));
-                        _dispatcher = null!;
+            _dispatcher = null!;
             _channel = GrpcChannel.ForAddress(options.Address);
             var client = new Generated.Protos.MainViewModelService.MainViewModelServiceClient(_channel);
             _remoteClient = new MainViewModelRemoteClient(client);
         }
-
-        
-
         public async Task<MainViewModelRemoteClient> GetRemoteModel()
         {
             if (_remoteClient == null) throw new InvalidOperationException("Client options not provided");
             await _remoteClient.InitializeRemoteAsync();
             return _remoteClient;
         }
-
         public void Dispose()
         {
             _channel?.ShutdownAsync().GetAwaiter().GetResult();

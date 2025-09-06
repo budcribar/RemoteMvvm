@@ -23,6 +23,7 @@ namespace RemoteMvvmTool.Tests;
 /// End-to-end tests for WinForms clients that replicate the functionality of GrpcWebEndToEndTests.
 /// These tests verify that WinForms clients can connect to gRPC servers and properly receive/synchronize data.
 /// </summary>
+[Collection("GuiSequential")]
 public class GrpcWinformsEndToEndTests
 {
     private static string LoadModelCode(string modelFileName)
