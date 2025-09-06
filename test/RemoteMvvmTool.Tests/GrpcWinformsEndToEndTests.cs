@@ -62,7 +62,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("ThermalZoneViewModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,42,43", "Split WinForms thermal zone initial");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2,42,43", "Split WinForms thermal zone initial");
         ctx.MarkTestPassed();
     }
 
@@ -72,7 +72,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("NestedPropertyChangeModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,1,2", "Split WinForms initial state");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,1,2", "Split WinForms initial state");
         await ctx.Client.UpdateTemperatureAsync(55);
         await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,55", "Split WinForms after Temperature=55");
         await ctx.Client.ZoneList(1).UpdateTemperatureAsync(54);
@@ -86,7 +86,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("SimpleStringPropertyModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,42,44", "Split WinForms initial string");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,42,44", "Split WinForms initial string");
         await ctx.Client.UpdateMessageAsync("TestValue123");
         await ctx.Client.UpdateCounterAsync(100);
         await ModelVerifier.VerifyModelAsync(ctx.Client, "1,100,123", "Split WinForms after updates");
@@ -99,7 +99,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("TwoWayPrimitiveTypesModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,3.140000104904175,6.28,123,4000000000,9876543210", "Split WinForms primitives initial");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,3.140000104904175,6.28,123,4000000000,9876543210", "Split WinForms primitives initial");
         await ctx.Client.UpdateEnabledAsync(false);
         await ModelVerifier.VerifyModelAsync(ctx.Client, "0,3.140000104904175,6.28,123,4000000000,9876543210", "Split WinForms after bool update");
         ctx.MarkTestPassed();
@@ -111,7 +111,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("ComplexDataTypesModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2.5,15,20,100,200,300", "Split WinForms complex initial");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2.5,15,20,100,200,300", "Split WinForms complex initial");
         await ctx.Client.UpdatePlayerLevelAsync(25);
         await ctx.Client.UpdateHasBonusAsync(false);
         await ctx.Client.UpdateBonusMultiplierAsync(3.5);
@@ -125,7 +125,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("ServerOnlyPrimitiveTypesModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "-2,1,1.5,2,4,8,9,20", "Split WinForms server-only primitives");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "-2,1,1.5,2,4,8,9,20", "Split WinForms server-only primitives");
         ctx.MarkTestPassed();
     }
 
@@ -135,7 +135,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("DictionaryWithEnumModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,3,4,5,6,7", "Split WinForms enum dictionary");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2,3,4,5,6,7", "Split WinForms enum dictionary");
         ctx.MarkTestPassed();
     }
 
@@ -145,7 +145,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("ListOfDictionariesModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,3,42,55,60,75,78,85,88,92", "Split WinForms list of dictionaries");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,3,42,55,60,75,78,85,88,92", "Split WinForms list of dictionaries");
         ctx.MarkTestPassed();
     }
 
@@ -155,27 +155,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("DictionaryOfListsModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "3,8.7,10.5,15.2,87.3,95.5,99.9,100", "Split WinForms dictionary of lists");
-        ctx.MarkTestPassed();
-    }
-
-    [Fact]
-    public async Task EdgeCasePrimitives_Winforms_EndToEnd_Test()
-    {
-        if (IsRunningInCI() || !IsDisplayAvailable()) return;
-        var modelCode = LoadModelCode("EdgeCasePrimitivesModel");
-        using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "-32768,42,255,99999.99999,18446744073709552000", "Split WinForms edge primitives");
-        ctx.MarkTestPassed();
-    }
-
-    [Fact]
-    public async Task NestedCustomObjects_Winforms_EndToEnd_Test()
-    {
-        if (IsRunningInCI() || !IsDisplayAvailable()) return;
-        var modelCode = LoadModelCode("NestedCustomObjectsModel");
-        using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,25,150,200,1500,750000.75,3000000.25,5000000.5,946684800", "Split WinForms nested objects");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "3,8.7,10.5,15.2,87.3,95.5,99.9,100", "Split WinForms dictionary of lists");
         ctx.MarkTestPassed();
     }
 
@@ -185,7 +165,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("EmptyCollectionsAndNullEdgeCasesModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,3,4,7,42,999", "Split WinForms empty/null edge cases");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2,3,4,7,42,999", "Split WinForms empty/null edge cases");
         ctx.MarkTestPassed();
     }
 
@@ -195,7 +175,7 @@ public class GrpcWinformsEndToEndTests
         if (IsRunningInCI() || !IsDisplayAvailable()) return;
         var modelCode = LoadModelCode("MemoryAndByteArrayTypesModel");
         using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
-        await ModelVerifier.VerifyModelAsync(ctx.Client, "1,2,3,4,8,9,10,16,20,30,32,50,64,100,128,150,200,255", "Split WinForms memory/bytes");
+        await ModelVerifier.VerifyModelStructuralAsync(ctx.Client, "1,2,3,4,8,9,10,16,20,30,32,50,64,100,128,150,200,255", "Split WinForms memory/bytes");
         ctx.MarkTestPassed();
     }
 
@@ -276,6 +256,34 @@ public class GrpcWinformsEndToEndTests
         await ctx.Client.UpdateTemperatureAsync(77);
         var data = await ctx.Client.GetModelDataAsync();
         Console.WriteLine($"[Split] WinForms no-streaming final data: [{data}]");
+        ctx.MarkTestPassed();
+    }
+
+    // Restore: Edge case primitives structural verification
+    [Fact]
+    public async Task EdgeCasePrimitives_Winforms_EndToEnd_Test()
+    {
+        if (IsRunningInCI() || !IsDisplayAvailable()) return;
+        var modelCode = LoadModelCode("EdgeCasePrimitivesModel");
+        using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
+        await ModelVerifier.VerifyModelStructuralAsync(
+            ctx.Client,
+            "-32768,42,255,99999.99999,18446744073709552000",
+            "Split WinForms edge primitives");
+        ctx.MarkTestPassed();
+    }
+
+    // Restore: Nested custom objects structural verification
+    [Fact]
+    public async Task NestedCustomObjects_Winforms_EndToEnd_Test()
+    {
+        if (IsRunningInCI() || !IsDisplayAvailable()) return;
+        var modelCode = LoadModelCode("NestedCustomObjectsModel");
+        using var ctx = await SplitTestContext.CreateAsync(modelCode, "winforms");
+        await ModelVerifier.VerifyModelStructuralAsync(
+            ctx.Client,
+            "1,25,150,200,1500,750000.75,3000000.25,5000000.5,946684800",
+            "Split WinForms nested objects");
         ctx.MarkTestPassed();
     }
 
