@@ -62,7 +62,23 @@ public static class ClientGenerator
             propertyDecls.AppendLine($"        public {prop.TypeString} {prop.Name}");
             propertyDecls.AppendLine("        {");
             propertyDecls.AppendLine($"            get => {backingFieldName};");
-            propertyDecls.AppendLine($"            private set => SetProperty(ref {backingFieldName}, value);");
+            
+            // For read-only properties, keep private setter
+            if (prop.IsReadOnly || IsCollectionType(prop) || IsComplexType(prop))
+            {
+                propertyDecls.AppendLine($"            private set => SetProperty(ref {backingFieldName}, value);");
+            }
+            else
+            {
+                // For writable properties, add public setter that triggers server update
+                propertyDecls.AppendLine("            set");
+                propertyDecls.AppendLine("            {");
+                propertyDecls.AppendLine($"                if (SetProperty(ref {backingFieldName}, value) && _isInitialized)");
+                propertyDecls.AppendLine("                {");
+                propertyDecls.AppendLine($"                    _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
+                propertyDecls.AppendLine("                }");
+                propertyDecls.AppendLine("            }");
+            }
             propertyDecls.AppendLine("        }");
             propertyDecls.AppendLine();
         }
@@ -414,6 +430,34 @@ public static class ClientGenerator
         });
 
         return result;
+    }
+
+    private static bool IsCollectionType(PropertyInfo prop)
+    {
+        var typeString = prop.TypeString.ToLowerInvariant();
+        return typeString.Contains("observablecollection") || 
+               typeString.Contains("list<") || 
+               typeString.Contains("dictionary<") || 
+               typeString.EndsWith("[]") || 
+               typeString.Contains("icollection") || 
+               typeString.Contains("ienumerable");
+    }
+
+    private static bool IsComplexType(PropertyInfo prop)
+    {
+        // Consider a type complex if it's not a well-known primitive type
+        var typeString = prop.TypeString.ToLowerInvariant();
+        return !typeString.Contains("string") && 
+               !typeString.Contains("int") && 
+               !typeString.Contains("bool") && 
+               !typeString.Contains("double") && 
+               !typeString.Contains("float") && 
+               !typeString.Contains("decimal") && 
+               !typeString.Contains("long") && 
+               !typeString.Contains("byte") && 
+               !typeString.Contains("guid") && 
+               !typeString.Contains("datetime") &&
+               !IsCollectionType(prop);
     }
 
     private static string BuildPropertyUpdateCases(List<PropertyInfo> props, string vmName)

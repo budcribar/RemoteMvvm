@@ -40,56 +40,104 @@ namespace MonsterClicker.ViewModels.RemoteClients
         public string MonsterName
         {
             get => _monsterName;
-            private set => SetProperty(ref _monsterName, value);
+            set
+            {
+                if (SetProperty(ref _monsterName, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("MonsterName", value);
+                }
+            }
         }
 
         private int _monsterMaxHealth = default!;
         public int MonsterMaxHealth
         {
             get => _monsterMaxHealth;
-            private set => SetProperty(ref _monsterMaxHealth, value);
+            set
+            {
+                if (SetProperty(ref _monsterMaxHealth, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("MonsterMaxHealth", value);
+                }
+            }
         }
 
         private int _monsterCurrentHealth = default!;
         public int MonsterCurrentHealth
         {
             get => _monsterCurrentHealth;
-            private set => SetProperty(ref _monsterCurrentHealth, value);
+            set
+            {
+                if (SetProperty(ref _monsterCurrentHealth, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("MonsterCurrentHealth", value);
+                }
+            }
         }
 
         private int _playerDamage = default!;
         public int PlayerDamage
         {
             get => _playerDamage;
-            private set => SetProperty(ref _playerDamage, value);
+            set
+            {
+                if (SetProperty(ref _playerDamage, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("PlayerDamage", value);
+                }
+            }
         }
 
         private string _gameMessage = default!;
         public string GameMessage
         {
             get => _gameMessage;
-            private set => SetProperty(ref _gameMessage, value);
+            set
+            {
+                if (SetProperty(ref _gameMessage, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("GameMessage", value);
+                }
+            }
         }
 
         private bool _isMonsterDefeated = default!;
         public bool IsMonsterDefeated
         {
             get => _isMonsterDefeated;
-            private set => SetProperty(ref _isMonsterDefeated, value);
+            set
+            {
+                if (SetProperty(ref _isMonsterDefeated, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("IsMonsterDefeated", value);
+                }
+            }
         }
 
         private bool _canUseSpecialAttack = default!;
         public bool CanUseSpecialAttack
         {
             get => _canUseSpecialAttack;
-            private set => SetProperty(ref _canUseSpecialAttack, value);
+            set
+            {
+                if (SetProperty(ref _canUseSpecialAttack, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("CanUseSpecialAttack", value);
+                }
+            }
         }
 
         private bool _isSpecialAttackOnCooldown = default!;
         public bool IsSpecialAttackOnCooldown
         {
             get => _isSpecialAttackOnCooldown;
-            private set => SetProperty(ref _isSpecialAttackOnCooldown, value);
+            set
+            {
+                if (SetProperty(ref _isSpecialAttackOnCooldown, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("IsSpecialAttackOnCooldown", value);
+                }
+            }
         }
 
         public IRelayCommand AttackMonsterCommand { get; }
@@ -102,6 +150,73 @@ namespace MonsterClicker.ViewModels.RemoteClients
             AttackMonsterCommand = new RelayCommand(RemoteExecute_AttackMonster);
             SpecialAttackCommand = new AsyncRelayCommand(RemoteExecute_SpecialAttackAsync);
             ResetGameCommand = new RelayCommand(RemoteExecute_ResetGame);
+        }
+
+        /// <summary>
+        /// Updates a property value on the server. Called automatically when bindable properties are changed locally.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to update</param>
+        /// <param name="value">The new value to set</param>
+        public async Task UpdatePropertyValueAsync(string propertyName, object? value)
+        {
+            if (!_isInitialized || _isDisposed)
+            {
+                Debug.WriteLine($"[ClientProxy:GameViewModel] UpdatePropertyValueAsync for {propertyName} skipped - not initialized or disposed");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Updating server property {propertyName} = {value}");
+                var request = new MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest
+                {
+                    PropertyName = propertyName,
+                    ArrayIndex = -1,
+                    NewValue = PackValueToAny(value)
+                };
+
+                var response = await _grpcClient.UpdatePropertyValueAsync(request, cancellationToken: _cts.Token);
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Property {propertyName} updated successfully on server");
+            }
+            catch (RpcException ex)
+            {
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Error updating property {propertyName}: {ex.Status.StatusCode} - {ex.Status.Detail}");
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Property update {propertyName} cancelled");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Unexpected error updating property {propertyName}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Packs a .NET value into a protobuf Any message for transmission to the server.
+        /// </summary>
+        private static Any PackValueToAny(object? value)
+        {
+            return value switch
+            {
+                null => Any.Pack(new StringValue { Value = "" }),
+                string s => Any.Pack(new StringValue { Value = s }),
+                int i => Any.Pack(new Int32Value { Value = i }),
+                long l => Any.Pack(new Int64Value { Value = l }),
+                uint ui => Any.Pack(new UInt32Value { Value = ui }),
+                ulong ul => Any.Pack(new UInt64Value { Value = ul }),
+                float f => Any.Pack(new FloatValue { Value = f }),
+                double d => Any.Pack(new DoubleValue { Value = d }),
+                bool b => Any.Pack(new BoolValue { Value = b }),
+                DateTime dt => Any.Pack(Timestamp.FromDateTime(dt.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dt, DateTimeKind.Utc) : dt.ToUniversalTime())),
+                DateTimeOffset dto => Any.Pack(Timestamp.FromDateTime(dto.UtcDateTime)),
+                TimeSpan ts => Any.Pack(Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(ts)),
+                Guid g => Any.Pack(new StringValue { Value = g.ToString() }),
+                decimal dec => Any.Pack(new StringValue { Value = dec.ToString() }),
+                char c => Any.Pack(new StringValue { Value = c.ToString() }),
+                System.Enum e => Any.Pack(new Int32Value { Value = Convert.ToInt32(e) }),
+                _ => Any.Pack(new StringValue { Value = value?.ToString() ?? "" })
+            };
         }
 
         private async Task StartPingLoopAsync()

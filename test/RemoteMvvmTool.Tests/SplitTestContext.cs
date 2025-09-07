@@ -72,6 +72,30 @@ public sealed class SplitTestContext : IDisposable
         var cached = await GetOrBuildAsync(modelCode, platform);
         CopyDirectoryRecursive(cached.ServerDir, paths.ServerDir);
         CopyDirectoryRecursive(cached.ClientDir, paths.ClientDir);
+
+        // Simplest patch: emit combined solution + launch into transient work dir
+        try
+        {
+            var sln = CsProjectGenerator.GenerateSolutionXml("ServerApp/ServerApp.csproj", "GuiClientApp/GuiClientApp.csproj");
+            File.WriteAllText(Path.Combine(paths.WorkDir, "ClientServer.slnx"), sln);
+            var launch = """
+[
+  {
+    "Name": "ClientAndServer",
+    "Projects": [
+      { "Path": "GuiClientApp\\GuiClientApp.csproj", "Action": "Start" },
+      { "Path": "ServerApp\\ServerApp.csproj", "Action": "Start" }
+    ]
+  }
+]
+""";
+            File.WriteAllText(Path.Combine(paths.WorkDir, "ClientServer.slnLaunch.user"), launch);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[SplitTestContext] Failed to emit transient work solution: " + ex.Message);
+        }
+
         var port = GetFreePort(6000, 6500);
         var serverProcess = StartServer(paths.ServerDir, port);
         await WaitForServerReadyHttps(port);

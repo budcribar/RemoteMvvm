@@ -39,7 +39,7 @@ namespace RemoteMvvmTool
         public static async Task<int> Main(string[] args)
         {
             Environment.ExitCode = 0;
-            var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts,tsproject,csproject");
+            var generateOption = new Option<string>("--generate", () => "all", "Comma separated list of outputs: proto,server,client,ts,tsproject,csproject,cssolution");
             var outputOption = new Option<string>("--output", () => "generated", "Output directory for generated code files");
             var protoOutputOption = new Option<string>("--protoOutput", () => "protos", "Directory for generated .proto file");
             var vmArgument = new Argument<List<string>>("viewmodels", "ViewModel .cs files") { Arity = ArgumentArity.OneOrMore };
@@ -67,7 +67,7 @@ namespace RemoteMvvmTool
                 bool genServer = gens.Contains("server") || gens.Contains("all");
                 bool genClient = gens.Contains("client") || gens.Contains("all");
                 bool genTsProject = gens.Contains("tsproject");
-                bool genCsProject = gens.Contains("csproject");
+                bool genCsProject = gens.Contains("csproject") || gens.Contains("cssolution"); // alias
                 bool genTs = gens.Contains("ts") || gens.Contains("all") || gens.Contains("tsclient") || genTsProject;
 
                 var baseDir = Environment.CurrentDirectory;
@@ -177,7 +177,9 @@ namespace RemoteMvvmTool
                     string projDir = Path.Combine(output, "csProject");
                     Directory.CreateDirectory(projDir);
                     string csProj = CsProjectGenerator.GenerateCsProj(result.ViewModelName, serviceName, runType);
-                    await File.WriteAllTextAsync(Path.Combine(projDir, result.ViewModelName + ".csproj"), csProj);
+                    string csprojFileName = result.ViewModelName + ".csproj";
+                    string csprojPath = Path.Combine(projDir, csprojFileName);
+                    await File.WriteAllTextAsync(csprojPath, csProj);
                     string programCs = CsProjectGenerator.GenerateProgramCs(result.ViewModelName, runType, protoNamespace, serviceName, clientNamespace, result.Properties, result.Commands);
                     await File.WriteAllTextAsync(Path.Combine(projDir, "Program.cs"), programCs);
                     string clientPathProj = Path.Combine(projDir, result.ViewModelName + "RemoteClient.cs");
@@ -191,6 +193,19 @@ namespace RemoteMvvmTool
                     Directory.CreateDirectory(protoDirProj);
                     var protoTextProj = ProtoGenerator.Generate(protoNamespace, serviceName, result.ViewModelName, result.Properties, result.Commands, result.Compilation);
                     await File.WriteAllTextAsync(Path.Combine(protoDirProj, serviceName + ".proto"), protoTextProj);
+
+                    // WinForms rich UI helper file (mirrors WPF experience) if requested
+                    if (string.Equals(runType, "winforms", StringComparison.OrdinalIgnoreCase))
+                    {
+                        var winFormsGui = CsProjectGenerator.GenerateWinFormsGui(result.ViewModelName, serviceName, result.ViewModelName + "RemoteClient", result.Properties, result.Commands);
+                        await File.WriteAllTextAsync(Path.Combine(projDir, "WinFormsGui.cs"), winFormsGui);
+                    }
+
+                    // .slnx + launch
+                    var slnx = CsProjectGenerator.GenerateSingleProjectSolutionXml(csprojFileName);
+                    await File.WriteAllTextAsync(Path.Combine(projDir, result.ViewModelName + ".slnx"), slnx);
+                    var launchUser = CsProjectGenerator.GenerateSingleProjectLaunchUser(csprojFileName);
+                    await File.WriteAllTextAsync(Path.Combine(projDir, result.ViewModelName + ".slnLaunch.user"), launchUser);
                 }
                 if (genServer)
                 {

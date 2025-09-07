@@ -47,21 +47,39 @@ namespace HPSystemsTools.ViewModels.RemoteClients
         public int CpuTemperatureThreshold
         {
             get => _cpuTemperatureThreshold;
-            private set => SetProperty(ref _cpuTemperatureThreshold, value);
+            set
+            {
+                if (SetProperty(ref _cpuTemperatureThreshold, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("CpuTemperatureThreshold", value);
+                }
+            }
         }
 
         private int _cpuLoadThreshold = default!;
         public int CpuLoadThreshold
         {
             get => _cpuLoadThreshold;
-            private set => SetProperty(ref _cpuLoadThreshold, value);
+            set
+            {
+                if (SetProperty(ref _cpuLoadThreshold, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("CpuLoadThreshold", value);
+                }
+            }
         }
 
         private int _cpuLoadTimeSpan = default!;
         public int CpuLoadTimeSpan
         {
             get => _cpuLoadTimeSpan;
-            private set => SetProperty(ref _cpuLoadTimeSpan, value);
+            set
+            {
+                if (SetProperty(ref _cpuLoadTimeSpan, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("CpuLoadTimeSpan", value);
+                }
+            }
         }
 
         private HPSystemsTools.ViewModels.ZoneCollection _zones = default!;
@@ -82,14 +100,26 @@ namespace HPSystemsTools.ViewModels.RemoteClients
         public bool ShowDescription
         {
             get => _showDescription;
-            private set => SetProperty(ref _showDescription, value);
+            set
+            {
+                if (SetProperty(ref _showDescription, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowDescription", value);
+                }
+            }
         }
 
         private bool _showReadme = default!;
         public bool ShowReadme
         {
             get => _showReadme;
-            private set => SetProperty(ref _showReadme, value);
+            set
+            {
+                if (SetProperty(ref _showReadme, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowReadme", value);
+                }
+            }
         }
 
         public IRelayCommand<HPSystemsTools.Models.ThermalStateEnum> StateChangedCommand { get; }
@@ -100,6 +130,73 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
             StateChangedCommand = new RelayCommand<HPSystemsTools.Models.ThermalStateEnum>(RemoteExecute_StateChanged);
             CancelTestCommand = new RelayCommand(RemoteExecute_CancelTest);
+        }
+
+        /// <summary>
+        /// Updates a property value on the server. Called automatically when bindable properties are changed locally.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to update</param>
+        /// <param name="value">The new value to set</param>
+        public async Task UpdatePropertyValueAsync(string propertyName, object? value)
+        {
+            if (!_isInitialized || _isDisposed)
+            {
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] UpdatePropertyValueAsync for {propertyName} skipped - not initialized or disposed");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Updating server property {propertyName} = {value}");
+                var request = new Generated.Protos.UpdatePropertyValueRequest
+                {
+                    PropertyName = propertyName,
+                    ArrayIndex = -1,
+                    NewValue = PackValueToAny(value)
+                };
+
+                var response = await _grpcClient.UpdatePropertyValueAsync(request, cancellationToken: _cts.Token);
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Property {propertyName} updated successfully on server");
+            }
+            catch (RpcException ex)
+            {
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Error updating property {propertyName}: {ex.Status.StatusCode} - {ex.Status.Detail}");
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Property update {propertyName} cancelled");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unexpected error updating property {propertyName}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Packs a .NET value into a protobuf Any message for transmission to the server.
+        /// </summary>
+        private static Any PackValueToAny(object? value)
+        {
+            return value switch
+            {
+                null => Any.Pack(new StringValue { Value = "" }),
+                string s => Any.Pack(new StringValue { Value = s }),
+                int i => Any.Pack(new Int32Value { Value = i }),
+                long l => Any.Pack(new Int64Value { Value = l }),
+                uint ui => Any.Pack(new UInt32Value { Value = ui }),
+                ulong ul => Any.Pack(new UInt64Value { Value = ul }),
+                float f => Any.Pack(new FloatValue { Value = f }),
+                double d => Any.Pack(new DoubleValue { Value = d }),
+                bool b => Any.Pack(new BoolValue { Value = b }),
+                DateTime dt => Any.Pack(Timestamp.FromDateTime(dt.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dt, DateTimeKind.Utc) : dt.ToUniversalTime())),
+                DateTimeOffset dto => Any.Pack(Timestamp.FromDateTime(dto.UtcDateTime)),
+                TimeSpan ts => Any.Pack(Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(ts)),
+                Guid g => Any.Pack(new StringValue { Value = g.ToString() }),
+                decimal dec => Any.Pack(new StringValue { Value = dec.ToString() }),
+                char c => Any.Pack(new StringValue { Value = c.ToString() }),
+                System.Enum e => Any.Pack(new Int32Value { Value = Convert.ToInt32(e) }),
+                _ => Any.Pack(new StringValue { Value = value?.ToString() ?? "" })
+            };
         }
 
         private async Task StartPingLoopAsync()

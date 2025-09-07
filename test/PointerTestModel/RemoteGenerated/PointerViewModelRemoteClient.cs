@@ -40,98 +40,182 @@ namespace HPSystemsTools.RemoteClients
         public bool Show
         {
             get => _show;
-            private set => SetProperty(ref _show, value);
+            set
+            {
+                if (SetProperty(ref _show, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("Show", value);
+                }
+            }
         }
 
         private bool _showSpinner = default!;
         public bool ShowSpinner
         {
             get => _showSpinner;
-            private set => SetProperty(ref _showSpinner, value);
+            set
+            {
+                if (SetProperty(ref _showSpinner, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowSpinner", value);
+                }
+            }
         }
 
         private int _clicksToPass = default!;
         public int ClicksToPass
         {
             get => _clicksToPass;
-            private set => SetProperty(ref _clicksToPass, value);
+            set
+            {
+                if (SetProperty(ref _clicksToPass, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ClicksToPass", value);
+                }
+            }
         }
 
         private bool _is3Btn = default!;
         public bool Is3Btn
         {
             get => _is3Btn;
-            private set => SetProperty(ref _is3Btn, value);
+            set
+            {
+                if (SetProperty(ref _is3Btn, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("Is3Btn", value);
+                }
+            }
         }
 
         private int _testTimeoutSec = default!;
         public int TestTimeoutSec
         {
             get => _testTimeoutSec;
-            private set => SetProperty(ref _testTimeoutSec, value);
+            set
+            {
+                if (SetProperty(ref _testTimeoutSec, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("TestTimeoutSec", value);
+                }
+            }
         }
 
         private string _instructions = default!;
         public string Instructions
         {
             get => _instructions;
-            private set => SetProperty(ref _instructions, value);
+            set
+            {
+                if (SetProperty(ref _instructions, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("Instructions", value);
+                }
+            }
         }
 
         private bool _showCursorTest = default!;
         public bool ShowCursorTest
         {
             get => _showCursorTest;
-            private set => SetProperty(ref _showCursorTest, value);
+            set
+            {
+                if (SetProperty(ref _showCursorTest, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowCursorTest", value);
+                }
+            }
         }
 
         private bool _showConfigSelection = default!;
         public bool ShowConfigSelection
         {
             get => _showConfigSelection;
-            private set => SetProperty(ref _showConfigSelection, value);
+            set
+            {
+                if (SetProperty(ref _showConfigSelection, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowConfigSelection", value);
+                }
+            }
         }
 
         private bool _showClickInstructions = default!;
         public bool ShowClickInstructions
         {
             get => _showClickInstructions;
-            private set => SetProperty(ref _showClickInstructions, value);
+            set
+            {
+                if (SetProperty(ref _showClickInstructions, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowClickInstructions", value);
+                }
+            }
         }
 
         private bool _showTimer = default!;
         public bool ShowTimer
         {
             get => _showTimer;
-            private set => SetProperty(ref _showTimer, value);
+            set
+            {
+                if (SetProperty(ref _showTimer, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowTimer", value);
+                }
+            }
         }
 
         private bool _showBottom = default!;
         public bool ShowBottom
         {
             get => _showBottom;
-            private set => SetProperty(ref _showBottom, value);
+            set
+            {
+                if (SetProperty(ref _showBottom, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("ShowBottom", value);
+                }
+            }
         }
 
         private string _timerText = default!;
         public string TimerText
         {
             get => _timerText;
-            private set => SetProperty(ref _timerText, value);
+            set
+            {
+                if (SetProperty(ref _timerText, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("TimerText", value);
+                }
+            }
         }
 
         private string _selectedDevice = default!;
         public string SelectedDevice
         {
             get => _selectedDevice;
-            private set => SetProperty(ref _selectedDevice, value);
+            set
+            {
+                if (SetProperty(ref _selectedDevice, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("SelectedDevice", value);
+                }
+            }
         }
 
         private int _lastClickCount = default!;
         public int LastClickCount
         {
             get => _lastClickCount;
-            private set => SetProperty(ref _lastClickCount, value);
+            set
+            {
+                if (SetProperty(ref _lastClickCount, value) && _isInitialized)
+                {
+                    _ = UpdatePropertyValueAsync("LastClickCount", value);
+                }
+            }
         }
 
         public IRelayCommand InitializeCommand { get; }
@@ -156,6 +240,73 @@ namespace HPSystemsTools.RemoteClients
             ResetClicksCommand = new RelayCommand(RemoteExecute_ResetClicks);
             CancelTestCommand = new RelayCommand(RemoteExecute_CancelTest);
             FinishTestCommand = new RelayCommand(RemoteExecute_FinishTest);
+        }
+
+        /// <summary>
+        /// Updates a property value on the server. Called automatically when bindable properties are changed locally.
+        /// </summary>
+        /// <param name="propertyName">The name of the property to update</param>
+        /// <param name="value">The new value to set</param>
+        public async Task UpdatePropertyValueAsync(string propertyName, object? value)
+        {
+            if (!_isInitialized || _isDisposed)
+            {
+                Debug.WriteLine($"[ClientProxy:PointerViewModel] UpdatePropertyValueAsync for {propertyName} skipped - not initialized or disposed");
+                return;
+            }
+
+            try
+            {
+                Debug.WriteLine($"[ClientProxy:PointerViewModel] Updating server property {propertyName} = {value}");
+                var request = new Pointer.ViewModels.Protos.UpdatePropertyValueRequest
+                {
+                    PropertyName = propertyName,
+                    ArrayIndex = -1,
+                    NewValue = PackValueToAny(value)
+                };
+
+                var response = await _grpcClient.UpdatePropertyValueAsync(request, cancellationToken: _cts.Token);
+                Debug.WriteLine($"[ClientProxy:PointerViewModel] Property {propertyName} updated successfully on server");
+            }
+            catch (RpcException ex)
+            {
+                Debug.WriteLine($"[ClientProxy:PointerViewModel] Error updating property {propertyName}: {ex.Status.StatusCode} - {ex.Status.Detail}");
+            }
+            catch (OperationCanceledException)
+            {
+                Debug.WriteLine($"[ClientProxy:PointerViewModel] Property update {propertyName} cancelled");
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine($"[ClientProxy:PointerViewModel] Unexpected error updating property {propertyName}: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Packs a .NET value into a protobuf Any message for transmission to the server.
+        /// </summary>
+        private static Any PackValueToAny(object? value)
+        {
+            return value switch
+            {
+                null => Any.Pack(new StringValue { Value = "" }),
+                string s => Any.Pack(new StringValue { Value = s }),
+                int i => Any.Pack(new Int32Value { Value = i }),
+                long l => Any.Pack(new Int64Value { Value = l }),
+                uint ui => Any.Pack(new UInt32Value { Value = ui }),
+                ulong ul => Any.Pack(new UInt64Value { Value = ul }),
+                float f => Any.Pack(new FloatValue { Value = f }),
+                double d => Any.Pack(new DoubleValue { Value = d }),
+                bool b => Any.Pack(new BoolValue { Value = b }),
+                DateTime dt => Any.Pack(Timestamp.FromDateTime(dt.Kind == DateTimeKind.Unspecified ? DateTime.SpecifyKind(dt, DateTimeKind.Utc) : dt.ToUniversalTime())),
+                DateTimeOffset dto => Any.Pack(Timestamp.FromDateTime(dto.UtcDateTime)),
+                TimeSpan ts => Any.Pack(Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(ts)),
+                Guid g => Any.Pack(new StringValue { Value = g.ToString() }),
+                decimal dec => Any.Pack(new StringValue { Value = dec.ToString() }),
+                char c => Any.Pack(new StringValue { Value = c.ToString() }),
+                System.Enum e => Any.Pack(new Int32Value { Value = Convert.ToInt32(e) }),
+                _ => Any.Pack(new StringValue { Value = value?.ToString() ?? "" })
+            };
         }
 
         private async Task StartPingLoopAsync()
