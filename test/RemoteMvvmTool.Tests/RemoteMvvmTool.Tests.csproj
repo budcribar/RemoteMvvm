@@ -12,52 +12,14 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="TestData\GrpcWebEndToEnd\**" />
-    <Compile Remove="TestData\GuiBuildCache\**" />
-    <Compile Remove="TestData\WorkSplitwpf\**" />
-    <Compile Remove="TestData\WorkSplitwinforms\**" />
-    <Compile Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
-    <Compile Remove="TestData\Workwinforms\**" />
-    <Compile Remove="TestData\Workwpf\**" />
-    <Compile Remove="TestData\Work\**" />
-    <EmbeddedResource Remove="TestData\GrpcWebEndToEnd\**" />
-    <EmbeddedResource Remove="TestData\GuiBuildCache\**" />
-    <EmbeddedResource Remove="TestData\WorkSplitwpf\**" />
-    <EmbeddedResource Remove="TestData\WorkSplitwinforms\**" />
-    <EmbeddedResource Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
-    <EmbeddedResource Remove="TestData\Workwinforms\**" />
-    <EmbeddedResource Remove="TestData\Workwpf\**" />
-    <EmbeddedResource Remove="TestData\Work\**" />
-    <None Remove="TestData\GrpcWebEndToEnd\**" />
-    <None Remove="TestData\GuiBuildCache\**" />
-    <None Remove="TestData\WorkSplitwpf\**" />
-    <None Remove="TestData\WorkSplitwinforms\**" />
-    <None Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
-    <None Remove="TestData\Workwinforms\**" />
-    <None Remove="TestData\Workwpf\**" />
-    <None Remove="TestData\Work\**" />
-    <Page Remove="TestData\GuiBuildCache\**" />
-    <Page Remove="TestData\WorkSplitwpf\**" />
-    <Page Remove="TestData\WorkSplitwinforms\**" />
-    <Page Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
-    <Page Remove="TestData\Workwinforms\**" />
-    <Page Remove="TestData\Workwpf\**" />
-    <TypeScriptCompile Remove="TestData\GrpcWebEndToEnd\**" />
-    <TypeScriptCompile Remove="TestData\GuiBuildCache\**" />
-    <TypeScriptCompile Remove="TestData\WorkSplitwpf\**" />
-    <TypeScriptCompile Remove="TestData\WorkSplitwinforms\**" />
-    <TypeScriptCompile Remove="TestData\WorkSplitwpf_cachetest_fa0b7186\**" />
-    <TypeScriptCompile Remove="TestData\Workwinforms\**" />
-    <TypeScriptCompile Remove="TestData\Workwpf\**" />
-    <TypeScriptCompile Remove="TestData\Work\**" />
+    <Compile Remove="TestData\**" />
+    <EmbeddedResource Remove="TestData\**" />
+    <None Remove="TestData\**" />
+    <Page Remove="TestData\**" />
+    <TypeScriptCompile Remove="TestData\**" />
   </ItemGroup>
 
   <!-- Include model files as content (not compiled) so they can be read at runtime -->
-  <ItemGroup>
-    <None Include="TestData\GrpcWebEndToEnd\Models\*.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
@@ -94,23 +56,6 @@
 
   <ItemGroup>
     <Protobuf Include="Protos/Dummy.proto" GrpcServices="Both" ProtoRoot="Protos" Access="Public" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="TestData\GrpcWebEndToEnd\test-add-operation.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-basic-connectivity.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-deadlock-fix.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-nested-update-no-streaming.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-property-change-no-streaming.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-simple-update.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-hybrid.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-manual.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-polling.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-pure.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-subscribe-simple.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-update-property.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-update-simple.js" />
-    <None Include="TestData\GrpcWebEndToEnd\test-nested-update.js" />
   </ItemGroup>
 
 </Project>

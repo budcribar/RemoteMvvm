@@ -38,8 +38,46 @@ namespace RemoteMvvmTool.Tests
             {
                 try
                 {
-                    if (Process.GetProcessesByName(name).Length > 0)
-                        throw new InvalidOperationException($"Blocked: A leftover process '{name}' is running. Please terminate it before running GUI tests.");
+                    var processes = Process.GetProcessesByName(name);
+                    if (processes.Length > 0)
+                    {
+                        Console.WriteLine($"[GrpcWpfEndToEndTests] Found {processes.Length} leftover {name} process(es). Attempting cleanup...");
+                        
+                        // Attempt to kill leftover processes
+                        foreach (var process in processes)
+                        {
+                            try
+                            {
+                                if (!process.HasExited)
+                                {
+                                    Console.WriteLine($"[GrpcWpfEndToEndTests] Killing leftover process: {name} (PID: {process.Id})");
+                                    process.Kill(entireProcessTree: true);
+                                    process.WaitForExit(2000);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[GrpcWpfEndToEndTests] Failed to kill {name}: {ex.Message}");
+                            }
+                            finally
+                            {
+                                try { process.Dispose(); } catch { }
+                            }
+                        }
+                        
+                        // Wait a moment for cleanup to complete
+                        System.Threading.Thread.Sleep(500);
+                        
+                        // Double-check if any are still running
+                        var remainingProcesses = Process.GetProcessesByName(name);
+                        if (remainingProcesses.Length > 0)
+                        {
+                            foreach (var p in remainingProcesses) { try { p.Dispose(); } catch { } }
+                            throw new InvalidOperationException($"Blocked: Unable to cleanup leftover process '{name}'. Please manually terminate it before running GUI tests.");
+                        }
+                        
+                        Console.WriteLine($"[GrpcWpfEndToEndTests] Successfully cleaned up leftover {name} processes.");
+                    }
                 }
                 catch (PlatformNotSupportedException) { }
                 catch (Exception ex) when (ex is System.ComponentModel.Win32Exception) { }

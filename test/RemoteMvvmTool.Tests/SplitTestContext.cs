@@ -42,8 +42,46 @@ public sealed class SplitTestContext : IDisposable
         {
             try
             {
-                if (Process.GetProcessesByName(n).Length > 0)
-                    throw new InvalidOperationException($"Blocked: A leftover process '{n}' is running. Terminate it before running split GUI tests.");
+                var processes = Process.GetProcessesByName(n);
+                if (processes.Length > 0)
+                {
+                    Console.WriteLine($"[SplitTestContext] Found {processes.Length} leftover {n} process(es). Attempting cleanup...");
+                    
+                    // Attempt to kill leftover processes
+                    foreach (var process in processes)
+                    {
+                        try
+                        {
+                            if (!process.HasExited)
+                            {
+                                Console.WriteLine($"[SplitTestContext] Killing leftover process: {n} (PID: {process.Id})");
+                                process.Kill(entireProcessTree: true);
+                                process.WaitForExit(2000);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[SplitTestContext] Failed to kill {n}: {ex.Message}");
+                        }
+                        finally
+                        {
+                            try { process.Dispose(); } catch { }
+                        }
+                    }
+                    
+                    // Wait a moment for cleanup to complete
+                    System.Threading.Thread.Sleep(500);
+                    
+                    // Double-check if any are still running
+                    var remainingProcesses = Process.GetProcessesByName(n);
+                    if (remainingProcesses.Length > 0)
+                    {
+                        foreach (var p in remainingProcesses) { try { p.Dispose(); } catch { } }
+                        throw new InvalidOperationException($"Blocked: Unable to cleanup leftover process '{n}'. Please manually terminate it before running split GUI tests.");
+                    }
+                    
+                    Console.WriteLine($"[SplitTestContext] Successfully cleaned up leftover {n} processes.");
+                }
             }
             catch (PlatformNotSupportedException) { }
             catch (Exception ex) when (ex is System.ComponentModel.Win32Exception) { }
@@ -60,7 +98,7 @@ public sealed class SplitTestContext : IDisposable
     private static string ComputeGeneratorAssemblyHash(){ try { var asm = typeof(SplitProjectGenerator).Assembly; var path = asm.Location; if (!File.Exists(path)) return "NO_ASM_FILE"; using var sha=SHA256.Create(); using var fs=File.OpenRead(path); return Convert.ToHexString(sha.ComputeHash(fs)); } catch { return "GEN_HASH_ERROR"; } }
     private static void EnsureEnvironmentSignatureConsistent(string cacheRoot){ try { Directory.CreateDirectory(cacheRoot); var sigFile=Path.Combine(cacheRoot,"env.sig"); var existing=File.Exists(sigFile)?File.ReadAllText(sigFile):null; if(!string.Equals(existing,_envSignature,StringComparison.Ordinal)){ foreach(var d in Directory.GetDirectories(cacheRoot,"h_*")){ try{Directory.Delete(d,true);}catch{}} File.WriteAllText(sigFile,_envSignature); Console.WriteLine("[GuiBuildCache] Purged due to generator assembly change."); } } catch(Exception ex){ Console.WriteLine($"[GuiBuildCache] Signature check warning: {ex.Message}"); } }
     private static async Task<CachedBuild> GetOrBuildAsync(string modelCode,string platform){ if(IsCacheDisabled()) return await BuildFreshAsync(modelCode,platform); var key=ComputeHash(modelCode+"|"+platform+"|"+_envSignature); return await _buildCache.GetOrAdd(key,_=>BuildFreshAsync(modelCode,platform,key)); }
-    private static async Task<CachedBuild> BuildFreshAsync(string modelCode,string platform,string? hash=null){ var baseTestDir=Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!; var repoRoot=Path.GetFullPath(Path.Combine(baseTestDir,"../../../../..")); var cacheRoot=Path.Combine(repoRoot,"test","RemoteMvvmTool.Tests","TestData","GuiBuildCache",platform); EnsureEnvironmentSignatureConsistent(cacheRoot); Directory.CreateDirectory(cacheRoot); hash ??= ComputeHash(modelCode+"|"+platform+"|"+_envSignature); var buildDir=Path.Combine(cacheRoot,"h_"+hash); var serverDir=Path.Combine(buildDir,"ServerApp"); var clientDir=Path.Combine(buildDir,"GuiClientApp"); if(Directory.Exists(clientDir)&&Directory.GetFiles(clientDir,"GuiClientApp.dll",SearchOption.AllDirectories).Any()){ var inferred=InferViewModelName(buildDir)??"TestViewModel"; return new CachedBuild(hash,platform,buildDir,serverDir,clientDir,inferred);} Directory.CreateDirectory(buildDir); var modelPath=Path.Combine(buildDir,"TestViewModel.cs"); File.WriteAllText(modelPath,modelCode); var refs=CollectTrustedPlatformAssemblies(); var (_,vmName,props,cmds,comp)=await ViewModelAnalyzer.AnalyzeAsync(new[]{modelPath},"CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute","CommunityToolkit.Mvvm.Input.RelayCommandAttribute",refs,"CommunityToolkit.Mvvm.ComponentModel.ObservableObject"); SplitProjectGenerator.Generate(buildDir,vmName,props,cmds,comp,platform,"Test.Protos"); await RunCmdInternal("dotnet","build --nologo",serverDir); await RunCmdInternal("dotnet","build --nologo",clientDir); return new CachedBuild(hash,platform,buildDir,serverDir,clientDir,vmName);}    
+    private static async Task<CachedBuild> BuildFreshAsync(string modelCode,string platform,string? hash=null){ var baseTestDir=Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!; var repoRoot=Path.GetFullPath(Path.Combine(baseTestDir,"../../../../..")); var cacheRoot=Path.Combine(repoRoot,"test","RemoteMvvmTool.Tests","TestData","GuiBuildCache",platform); EnsureEnvironmentSignatureConsistent(cacheRoot); Directory.CreateDirectory(cacheRoot); hash ??= ComputeHash(modelCode+"|"+platform+"|"+_envSignature); var buildDir=Path.Combine(cacheRoot,"h_"+hash); var serverDir=Path.Combine(buildDir,"ServerApp"); var clientDir=Path.Combine(buildDir,"GuiClientApp"); if(Directory.Exists(clientDir)&&Directory.GetFiles(clientDir,"GuiClientApp.dll",SearchOption.AllDirectories).Any()){ var inferred=InferViewModelName(buildDir)??"TestViewModel"; return new CachedBuild(hash,platform,buildDir,serverDir,clientDir,inferred);} Directory.CreateDirectory(buildDir); var modelPath=Path.Combine(buildDir,"TestViewModel.cs"); File.WriteAllText(modelPath,modelCode); var refs=CollectTrustedPlatformAssemblies(); var (_,vmName,props,cmds,comp)=await ViewModelAnalyzer.AnalyzeAsync(new[]{modelPath},"CommunityToolkit.Mvvm.ComponentModel.ObservablePropertyAttribute","CommunityToolkit.Mvvm.Input.RelayCommandAttribute",refs,"CommunityToolkit.Mvvm.ComponentModel.ObservableObject"); SplitProjectGenerator.Generate(buildDir,vmName,props,cmds,comp,platform,"Test.Protos",false); await RunCmdInternal("dotnet","build --nologo",serverDir); await RunCmdInternal("dotnet","build --nologo",clientDir); return new CachedBuild(hash,platform,buildDir,serverDir,clientDir,vmName);}    
     private static string? InferViewModelName(string buildDir){ try{ var file=Directory.GetFiles(buildDir,"*TestClient.cs",SearchOption.AllDirectories).FirstOrDefault(); if(file!=null){ var name=Path.GetFileNameWithoutExtension(file); if(name.EndsWith("TestClient",StringComparison.Ordinal)) return name.Substring(0,name.Length-"TestClient".Length);} }catch{} return null; }
     private static void CopyDirectoryRecursive(string sourceDir, string destDir){ foreach(var dir in Directory.GetDirectories(sourceDir,"*",SearchOption.AllDirectories)){ var rel=dir.Substring(sourceDir.Length).TrimStart(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar); Directory.CreateDirectory(Path.Combine(destDir,rel)); } foreach(var file in Directory.GetFiles(sourceDir,"*",SearchOption.AllDirectories)){ var rel=file.Substring(sourceDir.Length).TrimStart(Path.DirectorySeparatorChar,Path.AltDirectorySeparatorChar); var target=Path.Combine(destDir,rel); Directory.CreateDirectory(Path.GetDirectoryName(target)!); File.Copy(file,target,true);} }
 
@@ -116,6 +154,8 @@ public sealed class SplitTestContext : IDisposable
         try
         {
             try { _client?.Dispose(); } catch { }
+            
+            // Enhanced process cleanup to handle both dotnet run and the actual ServerApp/GuiClientApp processes
             try
             {
                 if (!_serverProcess.HasExited)
@@ -126,11 +166,48 @@ public sealed class SplitTestContext : IDisposable
             }
             catch { }
             _serverProcess.Dispose();
+            
+            // Additional cleanup: Kill any leftover ServerApp and GuiClientApp processes by name
+            KillProcessesByName("ServerApp");
+            KillProcessesByName("GuiClientApp");
+            
             Console.WriteLine($"[SplitHarness] Work dir retained (passed={_testPassed}): {_workDir}");
         }
         catch (Exception ex)
         {
             Console.WriteLine($"[SplitHarness] Cleanup error: {ex.Message}");
+        }
+    }
+
+    private static void KillProcessesByName(string processName)
+    {
+        try
+        {
+            var processes = Process.GetProcessesByName(processName);
+            foreach (var process in processes)
+            {
+                try
+                {
+                    if (!process.HasExited)
+                    {
+                        Console.WriteLine($"[SplitHarness] Killing leftover process: {processName} (PID: {process.Id})");
+                        process.Kill(entireProcessTree: true);
+                        process.WaitForExit(2000);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[SplitHarness] Failed to kill {processName}: {ex.Message}");
+                }
+                finally
+                {
+                    try { process.Dispose(); } catch { }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[SplitHarness] Error getting processes by name {processName}: {ex.Message}");
         }
     }
 
