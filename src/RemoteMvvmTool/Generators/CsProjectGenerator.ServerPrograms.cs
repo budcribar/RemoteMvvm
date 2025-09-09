@@ -228,31 +228,30 @@ public static partial class CsProjectGenerator
             sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(System.Windows.Forms.SizeType.Percent, 100));");
             sb.AppendLine();
             
-            // Add simple property display controls - using PropertyDiscoveryUtility analysis
+            // Add simple property display controls - using PropertyDiscoveryUtility structured data
             var analysis = PropertyDiscoveryUtility.AnalyzeProperties(props);
             var displayProps = analysis.SimpleProperties.Concat(analysis.BooleanProperties)
                                       .Concat(analysis.EnumProperties).Take(5);
                                       
             foreach (var prop in displayProps)
             {
+                var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {prop.Name.ToLower()}Label = new Label {{ Text = \"{prop.Name}:\", AutoSize = true }};");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}Label = new Label {{ Text = \"{prop.Name}:\", AutoSize = true }};");
                 
-                // Handle property value display properly using PropertyDiscoveryUtility logic
-                if (IsNonNullableValueType(prop.TypeString) || 
-                    PropertyDiscoveryUtility.AnalyzeProperties(new List<PropertyInfo> { prop }).BooleanProperties.Any() ||
-                    PropertyDiscoveryUtility.AnalyzeProperties(new List<PropertyInfo> { prop }).EnumProperties.Any())
+                // Use metadata for proper value display handling
+                if (metadata.IsNonNullableValueType)
                 {
-                    sb.AppendLine($"                    var {prop.Name.ToLower()}Value = new Label {{ Text = vm.{prop.Name}.ToString(), AutoSize = true, ForeColor = Color.Blue }};");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = new Label {{ Text = vm.{metadata.SafePropertyAccess}.ToString(), AutoSize = true, ForeColor = Color.Blue }};");
                 }
                 else
                 {
-                    sb.AppendLine($"                    var {prop.Name.ToLower()}Value = new Label {{ Text = vm.{prop.Name}?.ToString() ?? \"<null>\", AutoSize = true, ForeColor = Color.Blue }};");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = new Label {{ Text = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\", AutoSize = true, ForeColor = Color.Blue }};");
                 }
                 
-                sb.AppendLine($"                    flow.Controls.Add({prop.Name.ToLower()}Label);");
-                sb.AppendLine($"                    flow.Controls.Add({prop.Name.ToLower()}Value);");
+                sb.AppendLine($"                    flow.Controls.Add({metadata.SafeVariableName}Label);");
+                sb.AppendLine($"                    flow.Controls.Add({metadata.SafeVariableName}Value);");
                 sb.AppendLine("                }");
                 sb.AppendLine("                catch { }");
             }
@@ -385,28 +384,28 @@ public static partial class CsProjectGenerator
             
             foreach (var prop in analysis.SimpleProperties)
             {
-                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
                 
-                // Handle value types vs reference types correctly
-                if (IsNonNullableValueType(prop.TypeString))
+                // Use metadata for proper null handling
+                if (metadata.IsNonNullableValueType)
                 {
-                    sb.AppendLine($"                    var {safeVarName}Value = vm.{prop.Name}.ToString();");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}.ToString();");
                 }
                 else
                 {
-                    sb.AppendLine($"                    var {safeVarName}Value = vm.{prop.Name}?.ToString() ?? \"<null>\";");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\";");
                 }
                 
-                sb.AppendLine($"                    var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + {safeVarName}Value);");
-                sb.AppendLine($"                    {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsSimpleProperty = true }};");
-                sb.AppendLine($"                    simplePropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {metadata.SafeVariableName}Value);");
+                sb.AppendLine($"                    {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsSimpleProperty = true }};");
+                sb.AppendLine($"                    simplePropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                }");
                 sb.AppendLine("                catch");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                    simplePropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    simplePropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
                 sb.AppendLine("                }");
             }
         }
@@ -426,17 +425,17 @@ public static partial class CsProjectGenerator
             
             foreach (var prop in analysis.BooleanProperties)
             {
-                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + vm.{prop.Name}.ToString());");
-                sb.AppendLine($"                    {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsBooleanProperty = true }};");
-                sb.AppendLine($"                    boolPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + vm.{metadata.SafePropertyAccess}.ToString());");
+                sb.AppendLine($"                    {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsBooleanProperty = true }};");
+                sb.AppendLine($"                    boolPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                }");
                 sb.AppendLine("                catch");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                    boolPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    boolPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
                 sb.AppendLine("                }");
             }
         }
@@ -456,32 +455,27 @@ public static partial class CsProjectGenerator
             
             foreach (var prop in analysis.CollectionProperties)
             {
-                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    if (vm.{prop.Name} != null)");
+                sb.AppendLine($"                    if (vm.{metadata.SafePropertyAccess} != null)");
                 sb.AppendLine("                    {");
                 
-                // Use .Length for arrays, .Count for other collections (same logic as PropertyDiscoveryUtility)
-                var isArrayType = prop.TypeString.EndsWith("[]") || 
-                                 prop.TypeString.EndsWith("Byte[]") || 
-                                 prop.TypeString.Contains("[]");
-                var countProperty = isArrayType ? "Length" : "Count";
-                
-                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} [\" + vm.{prop.Name}.{countProperty} + \" items]\");");
-                sb.AppendLine($"                        {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsCollectionProperty = true }};");
-                sb.AppendLine($"                        collectionPropsNode.Nodes.Add({safeVarName}Node);");
+                // Use metadata for correct count property
+                sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [\" + vm.{metadata.SafePropertyAccess}.{metadata.CountProperty} + \" items]\");");
+                sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsCollectionProperty = true }};");
+                sb.AppendLine($"                        collectionPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                    }");
                 sb.AppendLine("                    else");
                 sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} [null]\");");
-                sb.AppendLine($"                        collectionPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [null]\");");
+                sb.AppendLine($"                        collectionPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                    }");
                 sb.AppendLine("                }");
                 sb.AppendLine("                catch");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                    collectionPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    collectionPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
                 sb.AppendLine("                }");
             }
         }
@@ -501,26 +495,26 @@ public static partial class CsProjectGenerator
             
             foreach (var prop in analysis.ComplexProperties)
             {
-                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    if (vm.{prop.Name} != null)");
+                sb.AppendLine($"                    if (vm.{metadata.SafePropertyAccess} != null)");
                 sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {safeVarName}TypeName = vm.{prop.Name}.GetType().Name;");
-                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} (\" + {safeVarName}TypeName + \")\");");
-                sb.AppendLine($"                        {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm.{prop.Name}, IsComplexProperty = true }};");
-                sb.AppendLine($"                        complexPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine($"                        var {metadata.SafeVariableName}TypeName = vm.{metadata.SafePropertyAccess}.GetType().Name;");
+                sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} (\" + {metadata.SafeVariableName}TypeName + \")\");");
+                sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm.{metadata.SafePropertyAccess}, IsComplexProperty = true }};");
+                sb.AppendLine($"                        complexPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                    }");
                 sb.AppendLine("                    else");
                 sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} [null]\");");
-                sb.AppendLine($"                        complexPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [null]\");");
+                sb.AppendLine($"                        complexPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                    }");
                 sb.AppendLine("                }");
                 sb.AppendLine("                catch");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                    complexPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    complexPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
                 sb.AppendLine("                }");
             }
         }
@@ -540,17 +534,17 @@ public static partial class CsProjectGenerator
             
             foreach (var prop in analysis.EnumProperties)
             {
-                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + vm.{prop.Name}.ToString());");
-                sb.AppendLine($"                    {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsEnumProperty = true }};");
-                sb.AppendLine($"                    enumPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + vm.{metadata.SafePropertyAccess}.ToString());");
+                sb.AppendLine($"                    {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsEnumProperty = true }};");
+                sb.AppendLine($"                    enumPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                }");
                 sb.AppendLine("                catch");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                    enumPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine($"                    var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    enumPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
                 sb.AppendLine("                }");
             }
         }
@@ -625,30 +619,5 @@ public static partial class CsProjectGenerator
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
-    }
-    
-    private static bool IsNonNullableValueType(string typeString)
-    {
-        // Handle basic value types that cannot use null-conditional operator
-        if (typeString == "int" || typeString == "double" || typeString == "float" ||
-            typeString == "decimal" || typeString == "long" || typeString == "short" ||
-            typeString == "byte" || typeString == "sbyte" || typeString == "uint" ||
-            typeString == "ulong" || typeString == "ushort" || typeString == "nuint" ||
-            typeString == "nint" || typeString == "char" || typeString == "bool" ||
-            typeString == "DateTime" || typeString == "DateOnly" || typeString == "TimeOnly" ||
-            typeString == "Guid" || typeString == "TimeSpan" || typeString == "Half")
-        {
-            return true;
-        }
-        
-        // Handle Memory<T>, Span<T> and all their variants (these are value types/structs)
-        if (typeString.StartsWith("Memory<") || typeString.StartsWith("ReadOnlyMemory<") ||
-            typeString.StartsWith("Span<") || typeString.StartsWith("ReadOnlySpan<") ||
-            typeString.Contains("Memory<") || typeString.Contains("Span<"))
-        {
-            return true;
-        }
-        
-        return false;
     }
 }

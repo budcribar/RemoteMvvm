@@ -21,30 +21,40 @@ public static class PropertyDiscoveryUtility
         
         foreach (var prop in props)
         {
+            // Generate metadata for each property
+            var metadata = AnalyzePropertyMetadata(prop);
+            analysis.SetMetadata(prop, metadata);
+            
             if (IsMemoryType(prop.TypeString))
             {
                 // Memory<T> and similar types should be treated as simple properties for UI purposes
                 analysis.SimpleProperties.Add(prop);
+                metadata.TypeCategory = "Simple";
             }
             else if (IsCollectionType(prop.TypeString))
             {
                 analysis.CollectionProperties.Add(prop);
+                metadata.TypeCategory = "Collection";
             }
             else if (IsBooleanType(prop.TypeString))
             {
                 analysis.BooleanProperties.Add(prop);
+                metadata.TypeCategory = "Boolean";
             }
             else if (IsEnumType(prop.TypeString))
             {
                 analysis.EnumProperties.Add(prop);
+                metadata.TypeCategory = "Enum";
             }
             else if (IsComplexType(prop.TypeString))
             {
                 analysis.ComplexProperties.Add(prop);
+                metadata.TypeCategory = "Complex";
             }
             else
             {
                 analysis.SimpleProperties.Add(prop);
+                metadata.TypeCategory = "Simple";
             }
         }
         
@@ -52,355 +62,102 @@ public static class PropertyDiscoveryUtility
     }
 
     /// <summary>
-    /// Generates a complete dynamic TreeView setup based on discovered properties
+    /// Analyzes metadata for a single property
     /// </summary>
-    public static string GenerateTreeViewForProperties(List<PropertyInfo> props, string viewModelVarName = "vm", string context = "")
+    public static PropertyMetadata AnalyzePropertyMetadata(PropertyInfo prop)
     {
-        var analysis = AnalyzeProperties(props);
-        var rootNodeText = string.IsNullOrEmpty(context) ? "ViewModel Properties" : $"{context} ViewModel Properties";
-        
-        var sb = new StringBuilder();
-        sb.AppendLine("                var tree = new TreeView { Dock = DockStyle.Fill, HideSelection = false };");
-        sb.AppendLine("                split.Panel1.Controls.Add(tree);");
-        sb.AppendLine();
-        
-        // Generate tree control buttons
-        sb.Append(GenerateTreeControlButtons());
-        sb.AppendLine();
-        
-        // Generate tree loading method based on actual properties
-        sb.Append(GeneratePropertySpecificTreeLoader(analysis, viewModelVarName, rootNodeText));
-        sb.AppendLine();
-        
-        // Generate property change monitoring - but make it safe for insertion inside try blocks
-        sb.Append(GeneratePropertyChangeMonitoring(viewModelVarName));
-        
-        return sb.ToString();
+        var metadata = new PropertyMetadata
+        {
+            SafeVariableName = MakeSafeVariableName(prop.Name.ToLower()),
+            SafePropertyAccess = MakeSafePropertyAccess(prop.Name),
+            DisplayName = prop.Name
+        };
+
+        // Determine if this is a non-nullable value type (including enums)
+        metadata.IsNonNullableValueType = IsNonNullableValueType(prop.TypeString) || IsEnumType(prop.TypeString);
+        metadata.RequiresNullCheck = !metadata.IsNonNullableValueType;
+
+        // Determine count property for collections
+        metadata.IsArrayType = prop.TypeString.EndsWith("[]") || 
+                              prop.TypeString.EndsWith("Byte[]") || 
+                              prop.TypeString.Contains("[]");
+        metadata.CountProperty = metadata.IsArrayType ? "Length" : "Count";
+
+        // Set UI hints
+        metadata.UIHints = GetUIHints(prop);
+
+        return metadata;
     }
 
     /// <summary>
-    /// Generates a tree loading method tailored to the specific properties found
+    /// Gets UI hints for a property
     /// </summary>
-    private static string GeneratePropertySpecificTreeLoader(PropertyAnalysis analysis, string viewModelVarName, string rootNodeText)
+    public static UIHints GetUIHints(PropertyInfo prop)
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("                // Property-specific tree building function");
-        sb.AppendLine("                void LoadTree()");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    try");
-        sb.AppendLine("                    {");
-        sb.AppendLine("                        tree.BeginUpdate();");
-        sb.AppendLine("                        tree.Nodes.Clear();");
-        sb.AppendLine("                        ");
-        
-        // Only create root node if we have properties to display
-        var hasAnyProperties = analysis.SimpleProperties.Any() || 
-                              analysis.BooleanProperties.Any() ||
-                              analysis.CollectionProperties.Any() ||
-                              analysis.ComplexProperties.Any() || 
-                              analysis.EnumProperties.Any();
-        
-        if (hasAnyProperties)
+        var hints = new UIHints
         {
-            sb.AppendLine($"                        var rootNode = new TreeNode(\"{rootNodeText}\");");
-            sb.AppendLine("                        tree.Nodes.Add(rootNode);");
-            sb.AppendLine("                        ");
-        }
-        
-        // Add nodes for each property category - only if they have properties
-        if (analysis.SimpleProperties.Any())
+            IsReadOnlyRecommended = prop.IsReadOnly
+        };
+
+        if (IsBooleanType(prop.TypeString))
         {
-            sb.AppendLine("                        // Simple properties");
-            var simpleNode = "simplePropsNode";
-            sb.AppendLine($"                        var {simpleNode} = new TreeNode(\"Simple Properties\");");
-            if (hasAnyProperties)
-            {
-                sb.AppendLine($"                        rootNode.Nodes.Add({simpleNode});");
-            }
-            else
-            {
-                sb.AppendLine($"                        tree.Nodes.Add({simpleNode});");
-            }
-            
-            foreach (var prop in analysis.SimpleProperties)
-            {
-                var safeVarName = MakeSafeVariableName(prop.Name.ToLower());
-                var safePropAccess = MakeSafePropertyAccess(prop.Name);
-                
-                sb.AppendLine($"                        try");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}Value = {viewModelVarName}.{safePropAccess}?.ToString() ?? \"<null>\";");
-                sb.AppendLine($"                            var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + {safeVarName}Value);");
-                
-                // Use raw string literal just for object initializer to avoid brace escaping issues
-                var objectInit = $$"""new PropertyNodeInfo { PropertyName = "{{prop.Name}}", Object = {{viewModelVarName}}, IsSimpleProperty = true }""";
-                sb.AppendLine($"                            {safeVarName}Node.Tag = {objectInit};");
-                
-                sb.AppendLine($"                            {simpleNode}.Nodes.Add({safeVarName}Node);");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                        catch (Exception ex)");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                            {simpleNode}.Nodes.Add({safeVarName}ErrorNode);");
-                sb.AppendLine("                        }");
-            }
+            hints.DefaultControlType = "CheckBox";
         }
-        
-        if (analysis.BooleanProperties.Any())
+        else if (IsEnumType(prop.TypeString))
         {
-            sb.AppendLine("                        // Boolean properties");
-            var boolNode = "boolPropsNode";
-            sb.AppendLine($"                        var {boolNode} = new TreeNode(\"Boolean Properties\");");
-            if (hasAnyProperties)
-            {
-                sb.AppendLine($"                        rootNode.Nodes.Add({boolNode});");
-            }
-            else
-            {
-                sb.AppendLine($"                        tree.Nodes.Add({boolNode});");
-            }
-            
-            foreach (var prop in analysis.BooleanProperties)
-            {
-                var safeVarName = MakeSafeVariableName(prop.Name.ToLower());
-                var safePropAccess = MakeSafePropertyAccess(prop.Name);
-                
-                sb.AppendLine($"                        try");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + {viewModelVarName}.{safePropAccess});");
-                
-                var objectInit = $$"""new PropertyNodeInfo { PropertyName = "{{prop.Name}}", Object = {{viewModelVarName}}, IsBooleanProperty = true }""";
-                sb.AppendLine($"                            {safeVarName}Node.Tag = {objectInit};");
-                
-                sb.AppendLine($"                            {boolNode}.Nodes.Add({safeVarName}Node);");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                        catch (Exception ex)");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                            {boolNode}.Nodes.Add({safeVarName}ErrorNode);");
-                sb.AppendLine("                        }");
-            }
+            hints.DefaultControlType = "ComboBox";
         }
-        
-        if (analysis.CollectionProperties.Any())
+        else if (IsCollectionType(prop.TypeString))
         {
-            sb.AppendLine("                        // Collection properties");
-            var collectionNode = "collectionPropsNode";
-            sb.AppendLine($"                        var {collectionNode} = new TreeNode(\"Collections\");");
-            if (hasAnyProperties)
-            {
-                sb.AppendLine($"                        rootNode.Nodes.Add({collectionNode});");
-            }
-            else
-            {
-                sb.AppendLine($"                        tree.Nodes.Add({collectionNode});");
-            }
-            
-            foreach (var prop in analysis.CollectionProperties)
-            {
-                var safeVarName = MakeSafeVariableName(prop.Name.ToLower());
-                var safePropAccess = MakeSafePropertyAccess(prop.Name);
-                
-                sb.AppendLine($"                        try");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            if ({viewModelVarName}.{safePropAccess} != null)");
-                sb.AppendLine("                            {");
-                
-                // Use .Length for arrays, .Count for other collections
-                var isArrayType = prop.TypeString.EndsWith("[]") || 
-                                 prop.TypeString.EndsWith("Byte[]") || 
-                                 prop.TypeString.Contains("[]");
-                var countProperty = isArrayType ? "Length" : "Count";
-                sb.AppendLine($"                                var {safeVarName}Node = new TreeNode(\"{prop.Name} [\" + {viewModelVarName}.{safePropAccess}.{countProperty} + \" items]\");");
-                
-                var objectInit = $$"""new PropertyNodeInfo { PropertyName = "{{prop.Name}}", Object = {{viewModelVarName}}, IsCollectionProperty = true }""";
-                sb.AppendLine($"                                {safeVarName}Node.Tag = {objectInit};");
-                
-                sb.AppendLine($"                                {collectionNode}.Nodes.Add({safeVarName}Node);");
-                sb.AppendLine("                                ");
-                sb.AppendLine($"                                // Add individual items");
-                sb.AppendLine($"                                int idx = 0;");
-                sb.AppendLine($"                                foreach (var item in {viewModelVarName}.{safePropAccess})");
-                sb.AppendLine("                                {");
-                sb.AppendLine("                                    var itemTypeName = item?.GetType().Name ?? \"null\";");
-                sb.AppendLine("                                    var itemNode = new TreeNode(\"[\" + idx + \"] \" + itemTypeName);");
-                
-                var itemObjectInit = """new PropertyNodeInfo { PropertyName = "[" + idx + "]", Object = item, IsCollectionItem = true, CollectionIndex = idx }""";
-                sb.AppendLine($"                                    itemNode.Tag = {itemObjectInit};");
-                
-                sb.AppendLine($"                                    {safeVarName}Node.Nodes.Add(itemNode);");
-                sb.AppendLine("                                    idx++;");
-                sb.AppendLine("                                }");
-                sb.AppendLine("                            }");
-                sb.AppendLine("                            else");
-                sb.AppendLine("                            {");
-                sb.AppendLine($"                                var {safeVarName}Node = new TreeNode(\"{prop.Name} [null]\");");
-                sb.AppendLine($"                                {collectionNode}.Nodes.Add({safeVarName}Node);");
-                sb.AppendLine("                            }");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                        catch (Exception ex)");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                            {collectionNode}.Nodes.Add({safeVarName}ErrorNode);");
-                sb.AppendLine("                        }");
-            }
+            hints.DefaultControlType = "TreeView";
+            hints.ShowInPropertyEditor = false; // Collections better shown in tree
         }
-        
-        if (analysis.ComplexProperties.Any())
+        else if (IsComplexType(prop.TypeString))
         {
-            sb.AppendLine("                        // Complex properties (nested objects)");
-            var complexNode = "complexPropsNode";
-            sb.AppendLine($"                        var {complexNode} = new TreeNode(\"Complex Properties\");");
-            if (hasAnyProperties)
-            {
-                sb.AppendLine($"                        rootNode.Nodes.Add({complexNode});");
-            }
-            else
-            {
-                sb.AppendLine($"                        tree.Nodes.Add({complexNode});");
-            }
-            
-            foreach (var prop in analysis.ComplexProperties)
-            {
-                var safeVarName = MakeSafeVariableName(prop.Name.ToLower());
-                var safePropAccess = MakeSafePropertyAccess(prop.Name);
-                
-                sb.AppendLine($"                        try");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            if ({viewModelVarName}.{safePropAccess} != null)");
-                sb.AppendLine("                            {");
-                sb.AppendLine($"                                var {safeVarName}TypeName = {viewModelVarName}.{safePropAccess}.GetType().Name;");
-                sb.AppendLine($"                                var {safeVarName}Node = new TreeNode(\"{prop.Name} (\" + {safeVarName}TypeName + \")\");");
-                
-                var objectInit = $$"""new PropertyNodeInfo { PropertyName = "{{prop.Name}}", Object = {{viewModelVarName}}.{{safePropAccess}}, IsComplexProperty = true }""";
-                sb.AppendLine($"                                {safeVarName}Node.Tag = {objectInit};");
-                
-                sb.AppendLine($"                                {complexNode}.Nodes.Add({safeVarName}Node);");
-                sb.AppendLine("                            }");
-                sb.AppendLine("                            else");
-                sb.AppendLine("                            {");
-                sb.AppendLine($"                                var {safeVarName}Node = new TreeNode(\"{prop.Name} [null]\");");
-                sb.AppendLine($"                                {complexNode}.Nodes.Add({safeVarName}Node);");
-                sb.AppendLine("                            }");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                        catch (Exception ex)");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                            {complexNode}.Nodes.Add({safeVarName}ErrorNode);");
-                sb.AppendLine("                        }");
-            }
+            hints.DefaultControlType = "TreeView";
+            hints.ShowInPropertyEditor = false; // Complex objects better shown in tree
         }
-        
-        if (analysis.EnumProperties.Any())
+        else
         {
-            sb.AppendLine("                        // Enum properties");
-            var enumNode = "enumPropsNode";
-            sb.AppendLine($"                        var {enumNode} = new TreeNode(\"Enum Properties\");");
-            if (hasAnyProperties)
-            {
-                sb.AppendLine($"                        rootNode.Nodes.Add({enumNode});");
-            }
-            else
-            {
-                sb.AppendLine($"                        tree.Nodes.Add({enumNode});");
-            }
-            
-            foreach (var prop in analysis.EnumProperties)
-            {
-                var safeVarName = MakeSafeVariableName(prop.Name.ToLower());
-                var safePropAccess = MakeSafePropertyAccess(prop.Name);
-                
-                sb.AppendLine($"                        try");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + {viewModelVarName}.{safePropAccess});");
-                
-                var objectInit = $$"""new PropertyNodeInfo { PropertyName = "{{prop.Name}}", Object = {{viewModelVarName}}, IsEnumProperty = true }""";
-                sb.AppendLine($"                            {safeVarName}Node.Tag = {objectInit};");
-                
-                sb.AppendLine($"                            {enumNode}.Nodes.Add({safeVarName}Node);");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                        catch (Exception ex)");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                            {enumNode}.Nodes.Add({safeVarName}ErrorNode);");
-                sb.AppendLine("                        }");
-            }
+            hints.DefaultControlType = "TextBox";
         }
-        
-        sb.AppendLine("                        ");
-        
-        // Only expand root node if it exists
-        if (hasAnyProperties)
+
+        // Memory types should be read-only in UI
+        if (IsMemoryType(prop.TypeString))
         {
-            sb.AppendLine("                        rootNode.Expand();");
+            hints.IsReadOnlyRecommended = true;
+            hints.DisplayFormat = "Hex";
         }
-        sb.AppendLine("                    }");
-        sb.AppendLine("                    catch (Exception ex)");
-        sb.AppendLine("                    {");
-        sb.AppendLine("                        // Handle any errors in tree loading");
-        sb.AppendLine("                        tree.Nodes.Clear();");
-        sb.AppendLine("                        tree.Nodes.Add(new TreeNode(\"Error loading properties: \" + ex.Message));");
-        sb.AppendLine("                    }");
-        sb.AppendLine("                    finally");
-        sb.AppendLine("                    {");
-        sb.AppendLine("                        tree.EndUpdate();");
-        sb.AppendLine("                    }");
-        sb.AppendLine("                }");
-        sb.AppendLine();
-        sb.AppendLine("                // Property node information class");
-        sb.AppendLine("                class PropertyNodeInfo");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    public string PropertyName { get; set; } = string.Empty;");
-        sb.AppendLine("                    public object? Object { get; set; }");
-        sb.AppendLine("                    public bool IsSimpleProperty { get; set; }");
-        sb.AppendLine("                    public bool IsBooleanProperty { get; set; }");
-        sb.AppendLine("                    public bool IsEnumProperty { get; set; }");
-        sb.AppendLine("                    public bool IsCollectionProperty { get; set; }");
-        sb.AppendLine("                    public bool IsComplexProperty { get; set; }");
-        sb.AppendLine("                    public bool IsCollectionItem { get; set; }");
-        sb.AppendLine("                    public int CollectionIndex { get; set; }");
-        sb.AppendLine("                }");
-        sb.AppendLine();
-        sb.AppendLine("                // Load initial tree");
-        sb.AppendLine("                LoadTree();");
-        
-        return sb.ToString();
+
+        return hints;
     }
 
     /// <summary>
-    /// Generates property editor UI based on specific properties found
+    /// Checks if a type string represents a non-nullable value type
     /// </summary>
-    public static string GeneratePropertyEditor(List<PropertyInfo> props, string context = "")
+    public static bool IsNonNullableValueType(string typeString)
     {
-        var analysis = AnalyzeProperties(props);
-        var sb = new StringBuilder();
+        // Handle basic value types that cannot use null-conditional operator
+        if (typeString == "int" || typeString == "double" || typeString == "float" ||
+            typeString == "decimal" || typeString == "long" || typeString == "short" ||
+            typeString == "byte" || typeString == "sbyte" || typeString == "uint" ||
+            typeString == "ulong" || typeString == "ushort" || typeString == "nuint" ||
+            typeString == "nint" || typeString == "char" || typeString == "bool" ||
+            typeString == "DateTime" || typeString == "DateOnly" || typeString == "TimeOnly" ||
+            typeString == "Guid" || typeString == "TimeSpan" || typeString == "Half")
+        {
+            return true;
+        }
         
-        sb.AppendLine("                var detailGroup = new GroupBox");
-        sb.AppendLine("                {");
-        sb.AppendLine($"                    Text = \"Property Details ({context})\",");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
-        sb.AppendLine("                    Padding = new Padding(10),");
-        sb.AppendLine("                    Width = 350");
-        sb.AppendLine("                };");
-        sb.AppendLine("                flow.Controls.Add(detailGroup);");
-        sb.AppendLine();
+        // Handle Memory<T>, Span<T> and all their variants (these are value types/structs)
+        if (typeString.StartsWith("Memory<") || typeString.StartsWith("ReadOnlyMemory<") ||
+            typeString.StartsWith("Span<") || typeString.StartsWith("ReadOnlySpan<") ||
+            typeString.Contains("Memory<") || typeString.Contains("Span<"))
+        {
+            return true;
+        }
         
-        sb.AppendLine("                var detailLayout = new TableLayoutPanel");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    ColumnCount = 2,");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    Width = 320");
-        sb.AppendLine("                };");
-        sb.AppendLine("                detailGroup.Controls.Add(detailLayout);");
-        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(System.Windows.Forms.SizeType.AutoSize));");
-        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(System.Windows.Forms.SizeType.Percent, 100));");
-        sb.AppendLine();
-        
-        // Generate specific property editors based on what was found
-        sb.Append(GenerateSpecificPropertyEditors(analysis));
-        
-        return sb.ToString();
+        return false;
     }
 
     private static bool IsCollectionType(string typeString)
@@ -485,237 +242,6 @@ public static class PropertyDiscoveryUtility
     }
 
     /// <summary>
-    /// Generates property editors tailored to the specific properties found
-    /// </summary>
-    private static string GenerateSpecificPropertyEditors(PropertyAnalysis analysis)
-    {
-        var sb = new StringBuilder();
-        
-        sb.AppendLine("                PropertyNodeInfo? currentSelectedNode = null;");
-        sb.AppendLine("                var propertyControls = new List<Control>();");
-        sb.AppendLine();
-        sb.AppendLine("                void ClearPropertyEditor()");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    foreach (var control in propertyControls)");
-        sb.AppendLine("                    {");
-        sb.AppendLine("                        detailLayout.Controls.Remove(control);");
-        sb.AppendLine("                        control.Dispose();");
-        sb.AppendLine("                    }");
-        sb.AppendLine("                    propertyControls.Clear();");
-        sb.AppendLine("                    detailLayout.RowCount = 0;");
-        sb.AppendLine("                }");
-        sb.AppendLine();
-        sb.AppendLine("                void ShowPropertyEditor(PropertyNodeInfo nodeInfo)");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    ClearPropertyEditor();");
-        sb.AppendLine("                    currentSelectedNode = nodeInfo;");
-        sb.AppendLine("                    ");
-        sb.AppendLine("                    if (nodeInfo?.Object == null) return;");
-        sb.AppendLine("                    ");
-        sb.AppendLine("                    int row = 0;");
-        sb.AppendLine("                    ");
-        sb.AppendLine("                    // Show property name");
-        sb.AppendLine("                    var nameLabel = new Label { Text = \"Property:\", AutoSize = true, Font = new Font(Font, FontStyle.Bold) };");
-        sb.AppendLine("                    var nameValue = new Label { Text = nodeInfo.PropertyName, AutoSize = true };");
-        sb.AppendLine("                    detailLayout.Controls.Add(nameLabel, 0, row);");
-        sb.AppendLine("                    detailLayout.Controls.Add(nameValue, 1, row);");
-        sb.AppendLine("                    propertyControls.Add(nameLabel);");
-        sb.AppendLine("                    propertyControls.Add(nameValue);");
-        sb.AppendLine("                    row++;");
-        sb.AppendLine("                    ");
-        
-        // Generate specific editors for each property type
-        if (analysis.BooleanProperties.Any())
-        {
-            sb.AppendLine("                    // Boolean property editor");
-            sb.AppendLine("                    if (nodeInfo.IsBooleanProperty)");
-            sb.AppendLine("                    {");
-            foreach (var prop in analysis.BooleanProperties)
-            {
-                var enabled = prop.IsReadOnly ? "false" : "true";
-                
-                sb.AppendLine($"                        if (nodeInfo.PropertyName == \"{prop.Name}\")");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var checkbox = new CheckBox {{ Text = \"Value\", Enabled = {enabled} }};");
-                
-                if (prop.IsReadOnly)
-                {
-                    sb.AppendLine($"                            checkbox.Checked = vm.{prop.Name};");
-                }
-                else
-                {
-                    sb.AppendLine("                            try");
-                    sb.AppendLine("                            {");
-                    sb.AppendLine($"                                checkbox.DataBindings.Add(\"Checked\", vm, \"{prop.Name}\", false, DataSourceUpdateMode.OnPropertyChanged);");
-                    sb.AppendLine("                            }");
-                    sb.AppendLine("                            catch { }");
-                }
-                
-                sb.AppendLine("                            detailLayout.Controls.Add(new Label { Text = \"Value:\" }, 0, row);");
-                sb.AppendLine("                            detailLayout.Controls.Add(checkbox, 1, row);");
-                sb.AppendLine("                            propertyControls.Add(checkbox);");
-                sb.AppendLine("                            row++;");
-                sb.AppendLine("                        }");
-            }
-            sb.AppendLine("                    }");
-        }
-        
-        if (analysis.SimpleProperties.Any())
-        {
-            sb.AppendLine("                    // Simple property editor");
-            sb.AppendLine("                    if (nodeInfo.IsSimpleProperty)");
-            sb.AppendLine("                    {");
-            foreach (var prop in analysis.SimpleProperties)
-            {
-                var readOnly = prop.IsReadOnly ? "true" : "false";
-                
-                sb.AppendLine($"                        if (nodeInfo.PropertyName == \"{prop.Name}\")");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var textBox = new TextBox {{ Width = 150, ReadOnly = {readOnly} }};");
-                
-                if (prop.IsReadOnly)
-                {
-                    sb.AppendLine($"                            textBox.Text = vm.{prop.Name}?.ToString() ?? string.Empty;");
-                }
-                else
-                {
-                    sb.AppendLine("                            try");
-                    sb.AppendLine("                            {");
-                    sb.AppendLine($"                                textBox.DataBindings.Add(\"Text\", vm, \"{prop.Name}\", false, DataSourceUpdateMode.OnPropertyChanged);");
-                    sb.AppendLine("                            }");
-                    sb.AppendLine("                            catch { }");
-                }
-                
-                sb.AppendLine("                            detailLayout.Controls.Add(new Label { Text = \"Value:\" }, 0, row);");
-                sb.AppendLine("                            detailLayout.Controls.Add(textBox, 1, row);");
-                sb.AppendLine("                            propertyControls.Add(textBox);");
-                sb.AppendLine("                            row++;");
-                sb.AppendLine("                        }");
-            }
-            sb.AppendLine("                    }");
-        }
-        
-        if (analysis.EnumProperties.Any())
-        {
-            sb.AppendLine("                    // Enum property editor");
-            sb.AppendLine("                    if (nodeInfo.IsEnumProperty)");
-            sb.AppendLine("                    {");
-            foreach (var prop in analysis.EnumProperties)
-            {
-                var enabled = prop.IsReadOnly ? "false" : "true";
-                
-                sb.AppendLine($"                        if (nodeInfo.PropertyName == \"{prop.Name}\")");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var comboBox = new ComboBox {{ Width = 150, DropDownStyle = ComboBoxStyle.DropDownList, Enabled = {enabled} }};");
-                sb.AppendLine("                            try");
-                sb.AppendLine("                            {");
-                sb.AppendLine($"                                var enumType = vm.{prop.Name}.GetType();");
-                sb.AppendLine("                                comboBox.DataSource = Enum.GetValues(enumType);");
-                
-                if (!prop.IsReadOnly)
-                {
-                    sb.AppendLine($"                                comboBox.DataBindings.Add(\"SelectedItem\", vm, \"{prop.Name}\", false, DataSourceUpdateMode.OnPropertyChanged);");
-                }
-                else
-                {
-                    sb.AppendLine($"                                comboBox.SelectedItem = vm.{prop.Name};");
-                }
-                
-                sb.AppendLine("                            }");
-                sb.AppendLine("                            catch { }");
-                sb.AppendLine("                            detailLayout.Controls.Add(new Label { Text = \"Value:\" }, 0, row);");
-                sb.AppendLine("                            detailLayout.Controls.Add(comboBox, 1, row);");
-                sb.AppendLine("                            propertyControls.Add(comboBox);");
-                sb.AppendLine("                            row++;");
-                sb.AppendLine("                        }");
-            }
-            sb.AppendLine("                    }");
-        }
-        
-        if (analysis.ComplexProperties.Any())
-        {
-            sb.AppendLine("                    // Complex property editor");
-            sb.AppendLine("                    if (nodeInfo.IsComplexProperty)");
-            sb.AppendLine("                    {");
-            sb.AppendLine("                        var infoLabel = new Label { Text = \"Complex Object\", AutoSize = true, Font = new Font(Font, FontStyle.Bold) };");
-            sb.AppendLine("                        detailLayout.Controls.Add(new Label { Text = \"Type:\" }, 0, row);");
-            sb.AppendLine("                        detailLayout.Controls.Add(infoLabel, 1, row);");
-            sb.AppendLine("                        propertyControls.Add(infoLabel);");
-            sb.AppendLine("                        row++;");
-            sb.AppendLine("                        ");
-            sb.AppendLine("                        var expandLabel = new Label { Text = \"(Expand tree node to see properties)\", ForeColor = Color.Gray, AutoSize = true };");
-            sb.AppendLine("                        detailLayout.Controls.Add(new Label { Text = \"\" }, 0, row);");
-            sb.AppendLine("                        detailLayout.Controls.Add(expandLabel, 1, row);");
-            sb.AppendLine("                        propertyControls.Add(expandLabel);");
-            sb.AppendLine("                        row++;");
-            sb.AppendLine("                    }");
-        }
-        
-        sb.AppendLine("                    ");
-        sb.AppendLine("                    detailLayout.RowCount = row;");
-        sb.AppendLine("                }");
-        sb.AppendLine();
-        sb.AppendLine("                // Tree selection event");
-        sb.AppendLine("                tree.AfterSelect += (_, e) =>");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    if (e.Node?.Tag is PropertyNodeInfo nodeInfo)");
-        sb.AppendLine("                    {");
-        sb.AppendLine("                        ShowPropertyEditor(nodeInfo);");
-        sb.AppendLine("                    }");
-        sb.AppendLine("                    else");
-        sb.AppendLine("                    {");
-        sb.AppendLine("                        ClearPropertyEditor();");
-        sb.AppendLine("                    }");
-        sb.AppendLine("                };");
-        
-        return sb.ToString();
-    }
-
-    private static string GenerateTreeControlButtons()
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine("                // Add tree view control buttons");
-        sb.AppendLine("                var treeButtonsPanel = new FlowLayoutPanel");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Height = 35,");
-        sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
-        sb.AppendLine("                    AutoSize = false,");
-        sb.AppendLine("                    Dock = DockStyle.Bottom");
-        sb.AppendLine("                };");
-        sb.AppendLine("                split.Panel1.Controls.Add(treeButtonsPanel);");
-        sb.AppendLine();
-        sb.AppendLine("                var refreshBtn = new Button { Text = \"Refresh\", Width = 70, Height = 25 };");
-        sb.AppendLine("                var expandBtn = new Button { Text = \"Expand All\", Width = 80, Height = 25 };");
-        sb.AppendLine("                var collapseBtn = new Button { Text = \"Collapse\", Width = 70, Height = 25 };");
-        sb.AppendLine("                ");
-        sb.AppendLine("                treeButtonsPanel.Controls.Add(refreshBtn);");
-        sb.AppendLine("                treeButtonsPanel.Controls.Add(expandBtn);");
-        sb.AppendLine("                treeButtonsPanel.Controls.Add(collapseBtn);");
-        sb.AppendLine();
-        sb.AppendLine("                // Wire up events");
-        sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
-        sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
-        sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
-        return sb.ToString();
-    }
-
-    private static string GeneratePropertyChangeMonitoring(string viewModelVarName)
-    {
-        var sb = new StringBuilder();
-        sb.AppendLine();
-        sb.AppendLine("                // Property change monitoring");
-        sb.AppendLine($"                if ({viewModelVarName} is INotifyPropertyChanged inpc)");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    inpc.PropertyChanged += (_, e) =>");
-        sb.AppendLine("                    {");
-        sb.AppendLine("                        try { LoadTree(); }");
-        sb.AppendLine("                        catch { }");
-        sb.AppendLine("                    };");
-        sb.AppendLine("                }");
-        return sb.ToString();
-    }
-
-    /// <summary>
     /// Makes a variable name safe by avoiding C# keywords and ensuring valid identifier format
     /// </summary>
     public static string MakeSafeVariableName(string name)
@@ -791,4 +317,51 @@ public class PropertyAnalysis
     public List<PropertyInfo> EnumProperties { get; } = new();
     public List<PropertyInfo> CollectionProperties { get; } = new();
     public List<PropertyInfo> ComplexProperties { get; } = new(); // Classes with properties
+    
+    // Add metadata for better code generation
+    private readonly Dictionary<string, PropertyMetadata> _metadata = new();
+    
+    public PropertyMetadata GetMetadata(PropertyInfo prop)
+    {
+        if (!_metadata.TryGetValue(prop.Name, out var metadata))
+        {
+            metadata = PropertyDiscoveryUtility.AnalyzePropertyMetadata(prop);
+            _metadata[prop.Name] = metadata;
+        }
+        return metadata;
+    }
+    
+    public void SetMetadata(PropertyInfo prop, PropertyMetadata metadata)
+    {
+        _metadata[prop.Name] = metadata;
+    }
+}
+
+/// <summary>
+/// Contains metadata about a property for code generation
+/// </summary>
+public class PropertyMetadata
+{
+    public string SafeVariableName { get; set; } = string.Empty;
+    public string SafePropertyAccess { get; set; } = string.Empty;
+    public string CountProperty { get; set; } = "Count"; // "Length" or "Count"
+    public bool IsNonNullableValueType { get; set; }
+    public string DisplayName { get; set; } = string.Empty;
+    public bool RequiresNullCheck { get; set; } = true;
+    public UIHints UIHints { get; set; } = new();
+    public bool IsArrayType { get; set; }
+    public string TypeCategory { get; set; } = "Simple"; // Simple, Boolean, Enum, Collection, Complex
+}
+
+/// <summary>
+/// UI generation hints for properties
+/// </summary>
+public class UIHints
+{
+    public bool SupportsDataBinding { get; set; } = true;
+    public string DefaultControlType { get; set; } = "TextBox"; // "TextBox", "CheckBox", "ComboBox"
+    public bool IsReadOnlyRecommended { get; set; }
+    public string DisplayFormat { get; set; } = string.Empty;
+    public bool ShowInTreeView { get; set; } = true;
+    public bool ShowInPropertyEditor { get; set; } = true;
 }
