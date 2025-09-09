@@ -72,7 +72,7 @@ public static class PropertyDiscoveryUtility
         sb.Append(GeneratePropertySpecificTreeLoader(analysis, viewModelVarName, rootNodeText));
         sb.AppendLine();
         
-        // Generate property change monitoring
+        // Generate property change monitoring - but make it safe for insertion inside try blocks
         sb.Append(GeneratePropertyChangeMonitoring(viewModelVarName));
         
         return sb.ToString();
@@ -95,8 +95,8 @@ public static class PropertyDiscoveryUtility
         
         // Only create root node if we have properties to display
         var hasAnyProperties = analysis.SimpleProperties.Any() || 
-                              analysis.BooleanProperties.Any() || 
-                              analysis.CollectionProperties.Any() || 
+                              analysis.BooleanProperties.Any() ||
+                              analysis.CollectionProperties.Any() ||
                               analysis.ComplexProperties.Any() || 
                               analysis.EnumProperties.Any();
         
@@ -205,7 +205,13 @@ public static class PropertyDiscoveryUtility
                 sb.AppendLine("                        {");
                 sb.AppendLine($"                            if ({viewModelVarName}.{safePropAccess} != null)");
                 sb.AppendLine("                            {");
-                sb.AppendLine($"                                var {safeVarName}Node = new TreeNode(\"{prop.Name} [\" + {viewModelVarName}.{safePropAccess}.Count + \" items]\");");
+                
+                // Use .Length for arrays, .Count for other collections
+                var isArrayType = prop.TypeString.EndsWith("[]") || 
+                                 prop.TypeString.EndsWith("Byte[]") || 
+                                 prop.TypeString.Contains("[]");
+                var countProperty = isArrayType ? "Length" : "Count";
+                sb.AppendLine($"                                var {safeVarName}Node = new TreeNode(\"{prop.Name} [\" + {viewModelVarName}.{safePropAccess}.{countProperty} + \" items]\");");
                 
                 var objectInit = $$"""new PropertyNodeInfo { PropertyName = "{{prop.Name}}", Object = {{viewModelVarName}}, IsCollectionProperty = true }""";
                 sb.AppendLine($"                                {safeVarName}Node.Tag = {objectInit};");
@@ -328,7 +334,6 @@ public static class PropertyDiscoveryUtility
         {
             sb.AppendLine("                        rootNode.Expand();");
         }
-        
         sb.AppendLine("                    }");
         sb.AppendLine("                    catch (Exception ex)");
         sb.AppendLine("                    {");
@@ -713,7 +718,7 @@ public static class PropertyDiscoveryUtility
     /// <summary>
     /// Makes a variable name safe by avoiding C# keywords and ensuring valid identifier format
     /// </summary>
-    private static string MakeSafeVariableName(string name)
+    public static string MakeSafeVariableName(string name)
     {
         // Handle C# keywords
         var keywords = new HashSet<string>

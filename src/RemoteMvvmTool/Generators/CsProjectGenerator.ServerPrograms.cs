@@ -70,11 +70,33 @@ public static partial class CsProjectGenerator
             sb.AppendLine("using System.Windows.Forms;");
             sb.AppendLine("using System.ComponentModel;");
             sb.AppendLine("using System.Linq;");
+            sb.AppendLine("using System.Collections.Generic;");
+            sb.AppendLine("using System.Drawing;");
         }
         
         sb.AppendLine();
         sb.AppendLine("namespace ServerApp");
         sb.AppendLine("{");
+        
+        // Generate PropertyNodeInfo class at namespace level for WinForms
+        if (isWinForms)
+        {
+            sb.AppendLine("    // Property node information class");
+            sb.AppendLine("    public class PropertyNodeInfo");
+            sb.AppendLine("    {");
+            sb.AppendLine("        public string PropertyName { get; set; } = string.Empty;");
+            sb.AppendLine("        public object? Object { get; set; }");
+            sb.AppendLine("        public bool IsSimpleProperty { get; set; }");
+            sb.AppendLine("        public bool IsBooleanProperty { get; set; }");
+            sb.AppendLine("        public bool IsEnumProperty { get; set; }");
+            sb.AppendLine("        public bool IsCollectionProperty { get; set; }");
+            sb.AppendLine("        public bool IsComplexProperty { get; set; }");
+            sb.AppendLine("        public bool IsCollectionItem { get; set; }");
+            sb.AppendLine("        public int CollectionIndex { get; set; }");
+            sb.AppendLine("    }");
+            sb.AppendLine();
+        }
+        
         sb.AppendLine("    public class Program");
         sb.AppendLine("    {");
         sb.AppendLine("        [STAThread]");
@@ -120,68 +142,128 @@ public static partial class CsProjectGenerator
             sb.AppendLine("                statusLbl.Text = \"Server Status: Running\";");
             sb.AppendLine();
             
-            // Generate simple tree view (left panel) - inline simple approach
-            sb.AppendLine("                // Tree view for properties");
+            // Generate inline TreeView setup without methods/classes that can't be in try blocks
+            sb.AppendLine("                // TreeView setup");
             sb.AppendLine("                var tree = new TreeView { Dock = DockStyle.Fill, HideSelection = false };");
             sb.AppendLine("                split.Panel1.Controls.Add(tree);");
             sb.AppendLine();
-            sb.AppendLine("                // Simple property display");
-            sb.AppendLine("                var rootNode = new TreeNode(\"Server Model Properties\");");
-            sb.AppendLine("                tree.Nodes.Add(rootNode);");
             
-            // Add simple property nodes - use simple indexing to avoid naming conflicts
-            int propIndex = 0;
-            foreach (var prop in props.Take(5)) // Limit to first 5 properties to avoid complexity
+            // Generate tree control buttons
+            sb.AppendLine("                // Add tree view control buttons");
+            sb.AppendLine("                var treeButtonsPanel = new FlowLayoutPanel");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    Height = 35,");
+            sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
+            sb.AppendLine("                    AutoSize = false,");
+            sb.AppendLine("                    Dock = DockStyle.Bottom");
+            sb.AppendLine("                };");
+            sb.AppendLine("                split.Panel1.Controls.Add(treeButtonsPanel);");
+            sb.AppendLine();
+            sb.AppendLine("                var refreshBtn = new Button { Text = \"Refresh\", Width = 70, Height = 25 };");
+            sb.AppendLine("                var expandBtn = new Button { Text = \"Expand All\", Width = 80, Height = 25 };");
+            sb.AppendLine("                var collapseBtn = new Button { Text = \"Collapse\", Width = 70, Height = 25 };");
+            sb.AppendLine("                treeButtonsPanel.Controls.Add(refreshBtn);");
+            sb.AppendLine("                treeButtonsPanel.Controls.Add(expandBtn);");
+            sb.AppendLine("                treeButtonsPanel.Controls.Add(collapseBtn);");
+            sb.AppendLine();
+            
+            // Call separate method for tree loading
+            sb.AppendLine("                LoadServerTree(tree, vm);");
+            sb.AppendLine();
+            
+            // Wire up events to call the method
+            sb.AppendLine("                refreshBtn.Click += (_, __) => LoadServerTree(tree, vm);");
+            sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
+            sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
+            sb.AppendLine();
+            
+            // Property change monitoring
+            sb.AppendLine("                // Property change monitoring");
+            sb.AppendLine("                if (vm is INotifyPropertyChanged inpc)");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    inpc.PropertyChanged += (_, e) =>");
+            sb.AppendLine("                    {");
+            sb.AppendLine("                        try { LoadServerTree(tree, vm); }");
+            sb.AppendLine("                        catch { }");
+            sb.AppendLine("                    };");
+            sb.AppendLine("                }");
+            sb.AppendLine();
+            
+            // Generate property editor (right panel)
+            sb.AppendLine("                // Right panel for property details");
+            sb.AppendLine("                var rightPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };");
+            sb.AppendLine("                split.Panel2.Controls.Add(rightPanel);");
+            sb.AppendLine();
+            sb.AppendLine("                var flow = new FlowLayoutPanel");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    Dock = DockStyle.Top,");
+            sb.AppendLine("                    AutoSize = true,");
+            sb.AppendLine("                    FlowDirection = FlowDirection.TopDown,");
+            sb.AppendLine("                    WrapContents = false");
+            sb.AppendLine("                };");
+            sb.AppendLine("                rightPanel.Controls.Add(flow);");
+            sb.AppendLine();
+            
+            sb.AppendLine("                var serverLabel = new Label { Text = \"Server Properties\", Font = new System.Drawing.Font(\"Segoe UI\", 12, System.Drawing.FontStyle.Bold), AutoSize = true };");
+            sb.AppendLine("                flow.Controls.Add(serverLabel);");
+            sb.AppendLine();
+            sb.AppendLine("                var detailGroup = new GroupBox");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    Text = \"Property Details (Server)\",");
+            sb.AppendLine("                    AutoSize = true,");
+            sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
+            sb.AppendLine("                    Padding = new Padding(10)," );
+            sb.AppendLine("                    Width = 350");
+            sb.AppendLine("                };");
+            sb.AppendLine("                flow.Controls.Add(detailGroup);");
+            sb.AppendLine();
+            sb.AppendLine("                var detailLayout = new TableLayoutPanel");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    ColumnCount = 2,");
+            sb.AppendLine("                    AutoSize = true,");
+            sb.AppendLine("                    Width = 320");
+            sb.AppendLine("                };");
+            sb.AppendLine("                detailGroup.Controls.Add(detailLayout);");
+            sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(System.Windows.Forms.SizeType.AutoSize));");
+            sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(System.Windows.Forms.SizeType.Percent, 100));");
+            sb.AppendLine();
+            
+            // Add simple property display controls - using PropertyDiscoveryUtility analysis
+            var analysis = PropertyDiscoveryUtility.AnalyzeProperties(props);
+            var displayProps = analysis.SimpleProperties.Concat(analysis.BooleanProperties)
+                                      .Concat(analysis.EnumProperties).Take(5);
+                                      
+            foreach (var prop in displayProps)
             {
-                sb.AppendLine($"                try");
+                sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                // Use simple ToString() without null-conditional operator to avoid issues with value types
-                sb.AppendLine($"                    var prop{propIndex}Value = vm.{prop.Name}.ToString();");
-                sb.AppendLine($"                    var prop{propIndex}Node = new TreeNode(\"{prop.Name}: \" + prop{propIndex}Value);");
-                sb.AppendLine($"                    rootNode.Nodes.Add(prop{propIndex}Node);");
+                sb.AppendLine($"                    var {prop.Name.ToLower()}Label = new Label {{ Text = \"{prop.Name}:\", AutoSize = true }};");
+                
+                // Handle property value display properly using PropertyDiscoveryUtility logic
+                if (IsNonNullableValueType(prop.TypeString) || 
+                    PropertyDiscoveryUtility.AnalyzeProperties(new List<PropertyInfo> { prop }).BooleanProperties.Any() ||
+                    PropertyDiscoveryUtility.AnalyzeProperties(new List<PropertyInfo> { prop }).EnumProperties.Any())
+                {
+                    sb.AppendLine($"                    var {prop.Name.ToLower()}Value = new Label {{ Text = vm.{prop.Name}.ToString(), AutoSize = true, ForeColor = Color.Blue }};");
+                }
+                else
+                {
+                    sb.AppendLine($"                    var {prop.Name.ToLower()}Value = new Label {{ Text = vm.{prop.Name}?.ToString() ?? \"<null>\", AutoSize = true, ForeColor = Color.Blue }};");
+                }
+                
+                sb.AppendLine($"                    flow.Controls.Add({prop.Name.ToLower()}Label);");
+                sb.AppendLine($"                    flow.Controls.Add({prop.Name.ToLower()}Value);");
                 sb.AppendLine("                }");
-                sb.AppendLine("                catch (Exception ex)");
-                sb.AppendLine("                {");
-                sb.AppendLine($"                    var prop{propIndex}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-                sb.AppendLine($"                    rootNode.Nodes.Add(prop{propIndex}ErrorNode);");
-                sb.AppendLine("                }");
-                propIndex++;
+                sb.AppendLine("                catch { }");
             }
             
-            sb.AppendLine("                rootNode.Expand();");
-            sb.AppendLine();
-            
-            // Use PropertyDiscoveryUtility for comprehensive property handling
-            var treeViewCode = PropertyDiscoveryUtility.GenerateTreeViewForProperties(props, "vm", "Server");
-            // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
-            var adjustedTreeViewCode = treeViewCode.Replace("                ", "            ");
-            sb.Append(adjustedTreeViewCode);
-            
-            // Generate simple property editor (right panel)
-            sb.AppendLine("            // Right panel for property details");
-            sb.AppendLine("            var rightPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };");
-            sb.AppendLine("            split.Panel2.Controls.Add(rightPanel);");
-            sb.AppendLine();
-            sb.AppendLine("            var flow = new FlowLayoutPanel");
-            sb.AppendLine("            {");
-            sb.AppendLine("                Dock = DockStyle.Top,");
-            sb.AppendLine("                AutoSize = true,");
-            sb.AppendLine("                FlowDirection = FlowDirection.TopDown,");
-            sb.AppendLine("                WrapContents = false");
-            sb.AppendLine("            };");
-            sb.AppendLine("            rightPanel.Controls.Add(flow);");
-            sb.AppendLine();
-            
-            sb.AppendLine("            var serverLabel = new Label { Text = \"Server Properties\", Font = new System.Drawing.Font(\"Segoe UI\", 12, System.Drawing.FontStyle.Bold), AutoSize = true };");
-            sb.AppendLine("            flow.Controls.Add(serverLabel);");
-            
-            // Use PropertyDiscoveryUtility for comprehensive property editor
-            var editorCode = PropertyDiscoveryUtility.GeneratePropertyEditor(props, "Server");
-            // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
-            var adjustedEditorCode = editorCode.Replace("                ", "            ");
-            sb.Append(adjustedEditorCode);
+            // Tree selection event to call separate method
+            sb.AppendLine("                tree.AfterSelect += (_, e) =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    ShowServerPropertyEditor(e.Node?.Tag as PropertyNodeInfo, detailLayout, vm);");
+            sb.AppendLine("                };");
 
-            // Generate commands section if any commands exist - use simple indexing
+            // Generate commands section if any commands exist
             if (cmds.Any())
             {
                 sb.AppendLine();
@@ -246,145 +328,284 @@ public static partial class CsProjectGenerator
         sb.AppendLine("                Console.WriteLine(\"SERVER_ERROR_END\");");
         sb.AppendLine("            }");
         sb.AppendLine("        }");
+        
+        // Generate separate methods for TreeView operations to avoid try block issues
+        if (isWinForms)
+        {
+            sb.AppendLine();
+            GenerateServerTreeLoadingMethod(sb, props, modelName);
+            sb.AppendLine();
+            GenerateServerPropertyEditorMethod(sb, props);
+        }
+        
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
     }
-
-    private static void GenerateServerWinFormsCode(StringBuilder sb, string projectName, List<PropertyInfo> props, List<CommandInfo> cmds)
+    
+    private static void GenerateServerTreeLoadingMethod(StringBuilder sb, List<PropertyInfo> props, string modelName)
     {
-        sb.AppendLine("                Application.EnableVisualStyles();");
-        sb.AppendLine($"                var form = new Form");
-        sb.AppendLine("                {");
-        sb.AppendLine($"                    Text = \"Server GUI - {projectName}\",");
-        sb.AppendLine("                    Width = 1150,");
-        sb.AppendLine("                    Height = 780,");
-        sb.AppendLine("                    StartPosition = FormStartPosition.CenterScreen");
-        sb.AppendLine("                };");
-        sb.AppendLine();
-        sb.AppendLine("                var split = new SplitContainer { Dock = DockStyle.Fill, SplitterDistance = 400 };");
-        sb.AppendLine("                form.Controls.Add(split);");
-        sb.AppendLine();
-        sb.AppendLine("                var statusStrip = new StatusStrip();");
-        sb.AppendLine("                var statusLbl = new ToolStripStatusLabel();");
-        sb.AppendLine("                statusStrip.Items.Add(statusLbl);");
-        sb.AppendLine("                form.Controls.Add(statusStrip);");
-        sb.AppendLine("                statusStrip.Dock = DockStyle.Bottom;");
-        sb.AppendLine("                statusLbl.Text = \"Server Status: Running\";");
-        sb.AppendLine();
+        var analysis = PropertyDiscoveryUtility.AnalyzeProperties(props);
         
-        // Generate simple tree view (left panel) - inline simple approach
-        sb.AppendLine("                // Tree view for properties");
-        sb.AppendLine("                var tree = new TreeView { Dock = DockStyle.Fill, HideSelection = false };");
-        sb.AppendLine("                split.Panel1.Controls.Add(tree);");
-        sb.AppendLine();
-        sb.AppendLine("                // Simple property display");
-        sb.AppendLine("                var rootNode = new TreeNode(\"Server Model Properties\");");
-        sb.AppendLine("                tree.Nodes.Add(rootNode);");
+        sb.AppendLine($"        private static void LoadServerTree(TreeView tree, {modelName} vm)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            try");
+        sb.AppendLine("            {");
+        sb.AppendLine("                tree.BeginUpdate();");
+        sb.AppendLine("                tree.Nodes.Clear();");
+        sb.AppendLine("                ");
         
-        // Add simple property nodes - use simple indexing to avoid naming conflicts
-        int propIndex = 0;
-        foreach (var prop in props.Take(5)) // Limit to first 5 properties to avoid complexity
+        // Only create root node if we have properties to display
+        var hasAnyProperties = analysis.SimpleProperties.Any() || 
+                              analysis.BooleanProperties.Any() || 
+                              analysis.CollectionProperties.Any() || 
+                              analysis.ComplexProperties.Any() || 
+                              analysis.EnumProperties.Any();
+        
+        if (hasAnyProperties)
         {
-            sb.AppendLine($"                try");
-            sb.AppendLine("                {");
-            // Use simple ToString() without null-conditional operator to avoid issues with value types
-            sb.AppendLine($"                    var prop{propIndex}Value = vm.{prop.Name}.ToString();");
-            sb.AppendLine($"                    var prop{propIndex}Node = new TreeNode(\"{prop.Name}: \" + prop{propIndex}Value);");
-            sb.AppendLine($"                    rootNode.Nodes.Add(prop{propIndex}Node);");
-            sb.AppendLine("                }");
-            sb.AppendLine("                catch (Exception ex)");
-            sb.AppendLine("                {");
-            sb.AppendLine($"                    var prop{propIndex}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
-            sb.AppendLine($"                    rootNode.Nodes.Add(prop{propIndex}ErrorNode);");
-            sb.AppendLine("                }");
-            propIndex++;
+            sb.AppendLine("                var rootNode = new TreeNode(\"Server ViewModel Properties\");");
+            sb.AppendLine("                tree.Nodes.Add(rootNode);");
+            sb.AppendLine("                ");
         }
         
-        sb.AppendLine("                rootNode.Expand();");
-        sb.AppendLine();
-        
-        // Use PropertyDiscoveryUtility for comprehensive property handling
-        var treeViewCode = PropertyDiscoveryUtility.GenerateTreeViewForProperties(props, "vm", "Server");
-        // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
-        var adjustedTreeViewCode = treeViewCode.Replace("                ", "            ");
-        sb.Append(adjustedTreeViewCode);
-        
-        // Generate simple property editor (right panel)
-        sb.AppendLine("                // Right panel for property details");
-        sb.AppendLine("                var rightPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };");
-        sb.AppendLine("                split.Panel2.Controls.Add(rightPanel);");
-        sb.AppendLine();
-        sb.AppendLine("                var flow = new FlowLayoutPanel");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Dock = DockStyle.Top,");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    FlowDirection = FlowDirection.TopDown,");
-        sb.AppendLine("                    WrapContents = false");
-        sb.AppendLine("                };");
-        sb.AppendLine("                rightPanel.Controls.Add(flow);");
-        sb.AppendLine();
-        
-        sb.AppendLine("                var serverLabel = new Label { Text = \"Server Properties\", Font = new System.Drawing.Font(\"Segoe UI\", 12, System.Drawing.FontStyle.Bold), AutoSize = true };");
-        sb.AppendLine("                flow.Controls.Add(serverLabel);");
-        
-        // Use PropertyDiscoveryUtility for comprehensive property editor
-        var editorCode = PropertyDiscoveryUtility.GeneratePropertyEditor(props, "Server");
-        // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
-        var adjustedEditorCode = editorCode.Replace("                ", "            ");
-        sb.Append(adjustedEditorCode);
-
-        // Generate commands section if any commands exist - use simple indexing
-        if (cmds.Any())
+        // Generate property categories using PropertyDiscoveryUtility analysis
+        if (analysis.SimpleProperties.Any())
         {
-            sb.AppendLine();
-            sb.AppendLine("                var cmdGroup = new GroupBox");
-            sb.AppendLine("                {");
-            sb.AppendLine("                    Text = \"Server Commands\",");
-            sb.AppendLine("                    AutoSize = true,");
-            sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
-            sb.AppendLine("                    Padding = new Padding(10)");
-            sb.AppendLine("                };");
-            sb.AppendLine("                flow.Controls.Add(cmdGroup);");
-            sb.AppendLine();
-            sb.AppendLine("                var cmdFlow = new FlowLayoutPanel");
-            sb.AppendLine("                {");
-            sb.AppendLine("                    Dock = DockStyle.Top,");
-            sb.AppendLine("                    AutoSize = true,");
-            sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
-            sb.AppendLine("                    WrapContents = true");
-            sb.AppendLine("                };");
-            sb.AppendLine("                cmdGroup.Controls.Add(cmdFlow);");
-            
-            int cmdIndex = 0;
-            foreach (var c in cmds)
+            sb.AppendLine("                // Simple properties");
+            sb.AppendLine("                var simplePropsNode = new TreeNode(\"Simple Properties\");");
+            if (hasAnyProperties)
             {
-                var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal) ? c.MethodName[..^5] : c.MethodName;
-                sb.AppendLine();
-                sb.AppendLine($"                var btn{cmdIndex} = new Button");
+                sb.AppendLine("                rootNode.Nodes.Add(simplePropsNode);");
+            }
+            else
+            {
+                sb.AppendLine("                tree.Nodes.Add(simplePropsNode);");
+            }
+            
+            foreach (var prop in analysis.SimpleProperties)
+            {
+                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    Text = \"{baseName}\",");
-                sb.AppendLine("                    Width = 140,");
-                sb.AppendLine("                    Height = 30");
-                sb.AppendLine("                };");
-                sb.AppendLine($"                btn{cmdIndex}.Click += (_, __) =>");
+                
+                // Handle value types vs reference types correctly
+                if (IsNonNullableValueType(prop.TypeString))
+                {
+                    sb.AppendLine($"                    var {safeVarName}Value = vm.{prop.Name}.ToString();");
+                }
+                else
+                {
+                    sb.AppendLine($"                    var {safeVarName}Value = vm.{prop.Name}?.ToString() ?? \"<null>\";");
+                }
+                
+                sb.AppendLine($"                    var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + {safeVarName}Value);");
+                sb.AppendLine($"                    {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsSimpleProperty = true }};");
+                sb.AppendLine($"                    simplePropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine("                }");
+                sb.AppendLine("                catch");
                 sb.AppendLine("                {");
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        vm.{c.CommandPropertyName}?.Execute(null);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        System.Windows.Forms.MessageBox.Show($\"Error executing {baseName}: {{ex.Message}}\", \"Server Command Error\", System.Windows.Forms.MessageBoxButtons.OK, System.Windows.Forms.MessageBoxIcon.Warning);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                };");
-                sb.AppendLine($"                cmdFlow.Controls.Add(btn{cmdIndex});");
-                cmdIndex++;
+                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    simplePropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine("                }");
             }
         }
         
+        if (analysis.BooleanProperties.Any())
+        {
+            sb.AppendLine("                // Boolean properties");
+            sb.AppendLine("                var boolPropsNode = new TreeNode(\"Boolean Properties\");");
+            if (hasAnyProperties)
+            {
+                sb.AppendLine("                rootNode.Nodes.Add(boolPropsNode);");
+            }
+            else
+            {
+                sb.AppendLine("                tree.Nodes.Add(boolPropsNode);");
+            }
+            
+            foreach (var prop in analysis.BooleanProperties)
+            {
+                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                sb.AppendLine("                try");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + vm.{prop.Name}.ToString());");
+                sb.AppendLine($"                    {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsBooleanProperty = true }};");
+                sb.AppendLine($"                    boolPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine("                }");
+                sb.AppendLine("                catch");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    boolPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine("                }");
+            }
+        }
+        
+        if (analysis.CollectionProperties.Any())
+        {
+            sb.AppendLine("                // Collection properties");
+            sb.AppendLine("                var collectionPropsNode = new TreeNode(\"Collections\");");
+            if (hasAnyProperties)
+            {
+                sb.AppendLine("                rootNode.Nodes.Add(collectionPropsNode);");
+            }
+            else
+            {
+                sb.AppendLine("                tree.Nodes.Add(collectionPropsNode);");
+            }
+            
+            foreach (var prop in analysis.CollectionProperties)
+            {
+                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                sb.AppendLine("                try");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    if (vm.{prop.Name} != null)");
+                sb.AppendLine("                    {");
+                
+                // Use .Length for arrays, .Count for other collections (same logic as PropertyDiscoveryUtility)
+                var isArrayType = prop.TypeString.EndsWith("[]") || 
+                                 prop.TypeString.EndsWith("Byte[]") || 
+                                 prop.TypeString.Contains("[]");
+                var countProperty = isArrayType ? "Length" : "Count";
+                
+                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} [\" + vm.{prop.Name}.{countProperty} + \" items]\");");
+                sb.AppendLine($"                        {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsCollectionProperty = true }};");
+                sb.AppendLine($"                        collectionPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                    else");
+                sb.AppendLine("                    {");
+                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} [null]\");");
+                sb.AppendLine($"                        collectionPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                }");
+                sb.AppendLine("                catch");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    collectionPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine("                }");
+            }
+        }
+        
+        if (analysis.ComplexProperties.Any())
+        {
+            sb.AppendLine("                // Complex properties (nested objects)");
+            sb.AppendLine("                var complexPropsNode = new TreeNode(\"Complex Properties\");");
+            if (hasAnyProperties)
+            {
+                sb.AppendLine("                rootNode.Nodes.Add(complexPropsNode);");
+            }
+            else
+            {
+                sb.AppendLine("                tree.Nodes.Add(complexPropsNode);");
+            }
+            
+            foreach (var prop in analysis.ComplexProperties)
+            {
+                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                sb.AppendLine("                try");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    if (vm.{prop.Name} != null)");
+                sb.AppendLine("                    {");
+                sb.AppendLine($"                        var {safeVarName}TypeName = vm.{prop.Name}.GetType().Name;");
+                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} (\" + {safeVarName}TypeName + \")\");");
+                sb.AppendLine($"                        {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm.{prop.Name}, IsComplexProperty = true }};");
+                sb.AppendLine($"                        complexPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                    else");
+                sb.AppendLine("                    {");
+                sb.AppendLine($"                        var {safeVarName}Node = new TreeNode(\"{prop.Name} [null]\");");
+                sb.AppendLine($"                        complexPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine("                    }");
+                sb.AppendLine("                }");
+                sb.AppendLine("                catch");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    complexPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine("                }");
+            }
+        }
+        
+        if (analysis.EnumProperties.Any())
+        {
+            sb.AppendLine("                // Enum properties");
+            sb.AppendLine("                var enumPropsNode = new TreeNode(\"Enum Properties\");");
+            if (hasAnyProperties)
+            {
+                sb.AppendLine("                rootNode.Nodes.Add(enumPropsNode);");
+            }
+            else
+            {
+                sb.AppendLine("                tree.Nodes.Add(enumPropsNode);");
+            }
+            
+            foreach (var prop in analysis.EnumProperties)
+            {
+                var safeVarName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower());
+                sb.AppendLine("                try");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    var {safeVarName}Node = new TreeNode(\"{prop.Name}: \" + vm.{prop.Name}.ToString());");
+                sb.AppendLine($"                    {safeVarName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsEnumProperty = true }};");
+                sb.AppendLine($"                    enumPropsNode.Nodes.Add({safeVarName}Node);");
+                sb.AppendLine("                }");
+                sb.AppendLine("                catch");
+                sb.AppendLine("                {");
+                sb.AppendLine($"                    var {safeVarName}ErrorNode = new TreeNode(\"{prop.Name}: <error>\");");
+                sb.AppendLine($"                    enumPropsNode.Nodes.Add({safeVarName}ErrorNode);");
+                sb.AppendLine("                }");
+            }
+        }
+        
+        if (hasAnyProperties)
+        {
+            sb.AppendLine("                rootNode.Expand();");
+        }
+        
+        sb.AppendLine("            }");
+        sb.AppendLine("            catch (Exception ex)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                tree.Nodes.Clear();");
+        sb.AppendLine("                tree.Nodes.Add(new TreeNode(\"Error loading properties: \" + ex.Message));");
+        sb.AppendLine("            }");
+        sb.AppendLine("            finally");
+        sb.AppendLine("            {");
+        sb.AppendLine("                tree.EndUpdate();");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+    }
+    
+    private static void GenerateServerPropertyEditorMethod(StringBuilder sb, List<PropertyInfo> props)
+    {
+        var analysis = PropertyDiscoveryUtility.AnalyzeProperties(props);
+        
+        sb.AppendLine("        private static void ShowServerPropertyEditor(PropertyNodeInfo? nodeInfo, TableLayoutPanel detailLayout, object vm)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            // Clear existing controls");
+        sb.AppendLine("            foreach (Control control in detailLayout.Controls.OfType<Control>().ToArray())");
+        sb.AppendLine("            {");
+        sb.AppendLine("                detailLayout.Controls.Remove(control);");
+        sb.AppendLine("                control.Dispose();");
+        sb.AppendLine("            }");
+        sb.AppendLine("            detailLayout.RowCount = 0;");
         sb.AppendLine();
-        sb.AppendLine("                Application.Run(form);");
+        sb.AppendLine("            if (nodeInfo?.Object == null) return;");
+        sb.AppendLine();
+        sb.AppendLine("            int row = 0;");
+        sb.AppendLine();
+        sb.AppendLine("            // Show property name");
+        sb.AppendLine("            var nameLabel = new Label { Text = \"Property:\", AutoSize = true, Font = new Font(\"Segoe UI\", 9, FontStyle.Bold) };");
+        sb.AppendLine("            var nameValue = new Label { Text = nodeInfo.PropertyName, AutoSize = true };");
+        sb.AppendLine("            detailLayout.Controls.Add(nameLabel, 0, row);");
+        sb.AppendLine("            detailLayout.Controls.Add(nameValue, 1, row);");
+        sb.AppendLine("            row++;");
+        sb.AppendLine();
+        sb.AppendLine("            // Show property info based on type");
+        sb.AppendLine("            var infoLabel = new Label { Text = \"Server Property\", AutoSize = true };");
+        sb.AppendLine("            detailLayout.Controls.Add(new Label { Text = \"Type:\" }, 0, row);");
+        sb.AppendLine("            detailLayout.Controls.Add(infoLabel, 1, row);");
+        sb.AppendLine("            row++;");
+        sb.AppendLine();
+        sb.AppendLine("            detailLayout.RowCount = row;");
+        sb.AppendLine("        }");
     }
 
     public static string GenerateProgramCs(string projectName, string runType, string protoNs, string serviceName, string clientNs, List<PropertyInfo> props, List<CommandInfo> cmds)
@@ -404,5 +625,30 @@ public static partial class CsProjectGenerator
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
+    }
+    
+    private static bool IsNonNullableValueType(string typeString)
+    {
+        // Handle basic value types that cannot use null-conditional operator
+        if (typeString == "int" || typeString == "double" || typeString == "float" ||
+            typeString == "decimal" || typeString == "long" || typeString == "short" ||
+            typeString == "byte" || typeString == "sbyte" || typeString == "uint" ||
+            typeString == "ulong" || typeString == "ushort" || typeString == "nuint" ||
+            typeString == "nint" || typeString == "char" || typeString == "bool" ||
+            typeString == "DateTime" || typeString == "DateOnly" || typeString == "TimeOnly" ||
+            typeString == "Guid" || typeString == "TimeSpan" || typeString == "Half")
+        {
+            return true;
+        }
+        
+        // Handle Memory<T>, Span<T> and all their variants (these are value types/structs)
+        if (typeString.StartsWith("Memory<") || typeString.StartsWith("ReadOnlyMemory<") ||
+            typeString.StartsWith("Span<") || typeString.StartsWith("ReadOnlySpan<") ||
+            typeString.Contains("Memory<") || typeString.Contains("Span<"))
+        {
+            return true;
+        }
+        
+        return false;
     }
 }
