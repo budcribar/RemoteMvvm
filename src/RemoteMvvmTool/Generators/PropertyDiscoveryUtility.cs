@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GrpcRemoteMvvmModelUtil;
+using Microsoft.CodeAnalysis;
 
 namespace RemoteMvvmTool.Generators;
 
 /// <summary>
 /// Utility class for discovering properties at generation time and generating appropriate UI code
-/// based on the actual properties found in the view model
+/// based on the actual properties found in the view model using Roslyn compiler analysis
 /// </summary>
 public static class PropertyDiscoveryUtility
 {
@@ -25,28 +26,28 @@ public static class PropertyDiscoveryUtility
             var metadata = AnalyzePropertyMetadata(prop);
             analysis.SetMetadata(prop, metadata);
             
-            if (IsMemoryType(prop.TypeString))
+            if (IsMemoryType(prop))
             {
                 // Memory<T> and similar types should be treated as simple properties for UI purposes
                 analysis.SimpleProperties.Add(prop);
                 metadata.TypeCategory = "Simple";
             }
-            else if (IsCollectionType(prop.TypeString))
+            else if (IsCollectionType(prop))
             {
                 analysis.CollectionProperties.Add(prop);
                 metadata.TypeCategory = "Collection";
             }
-            else if (IsBooleanType(prop.TypeString))
+            else if (IsBooleanType(prop))
             {
                 analysis.BooleanProperties.Add(prop);
                 metadata.TypeCategory = "Boolean";
             }
-            else if (IsEnumType(prop.TypeString))
+            else if (IsEnumType(prop))
             {
                 analysis.EnumProperties.Add(prop);
                 metadata.TypeCategory = "Enum";
             }
-            else if (IsComplexType(prop.TypeString))
+            else if (IsComplexType(prop))
             {
                 analysis.ComplexProperties.Add(prop);
                 metadata.TypeCategory = "Complex";
@@ -62,7 +63,7 @@ public static class PropertyDiscoveryUtility
     }
 
     /// <summary>
-    /// Analyzes metadata for a single property
+    /// Analyzes metadata for a single property using Roslyn type information
     /// </summary>
     public static PropertyMetadata AnalyzePropertyMetadata(PropertyInfo prop)
     {
@@ -73,14 +74,12 @@ public static class PropertyDiscoveryUtility
             DisplayName = prop.Name
         };
 
-        // Determine if this is a non-nullable value type (including enums)
-        metadata.IsNonNullableValueType = IsNonNullableValueType(prop.TypeString) || IsEnumType(prop.TypeString);
+        // Determine if this is a non-nullable value type using Roslyn analysis
+        metadata.IsNonNullableValueType = IsNonNullableValueType(prop);
         metadata.RequiresNullCheck = !metadata.IsNonNullableValueType;
 
-        // Determine count property for collections
-        metadata.IsArrayType = prop.TypeString.EndsWith("[]") || 
-                              prop.TypeString.EndsWith("Byte[]") || 
-                              prop.TypeString.Contains("[]");
+        // Determine count property for collections using Roslyn analysis
+        metadata.IsArrayType = IsArrayType(prop);
         metadata.CountProperty = metadata.IsArrayType ? "Length" : "Count";
 
         // Set UI hints
@@ -90,7 +89,7 @@ public static class PropertyDiscoveryUtility
     }
 
     /// <summary>
-    /// Gets UI hints for a property
+    /// Gets UI hints for a property using Roslyn type information
     /// </summary>
     public static UIHints GetUIHints(PropertyInfo prop)
     {
@@ -99,20 +98,20 @@ public static class PropertyDiscoveryUtility
             IsReadOnlyRecommended = prop.IsReadOnly
         };
 
-        if (IsBooleanType(prop.TypeString))
+        if (IsBooleanType(prop))
         {
             hints.DefaultControlType = "CheckBox";
         }
-        else if (IsEnumType(prop.TypeString))
+        else if (IsEnumType(prop))
         {
             hints.DefaultControlType = "ComboBox";
         }
-        else if (IsCollectionType(prop.TypeString))
+        else if (IsCollectionType(prop))
         {
             hints.DefaultControlType = "TreeView";
             hints.ShowInPropertyEditor = false; // Collections better shown in tree
         }
-        else if (IsComplexType(prop.TypeString))
+        else if (IsComplexType(prop))
         {
             hints.DefaultControlType = "TreeView";
             hints.ShowInPropertyEditor = false; // Complex objects better shown in tree
@@ -123,7 +122,7 @@ public static class PropertyDiscoveryUtility
         }
 
         // Memory types should be read-only in UI
-        if (IsMemoryType(prop.TypeString))
+        if (IsMemoryType(prop))
         {
             hints.IsReadOnlyRecommended = true;
             hints.DisplayFormat = "Hex";
@@ -133,112 +132,208 @@ public static class PropertyDiscoveryUtility
     }
 
     /// <summary>
-    /// Checks if a type string represents a non-nullable value type
+    /// Checks if a property represents a non-nullable value type using Roslyn analysis
     /// </summary>
-    public static bool IsNonNullableValueType(string typeString)
+    public static bool IsNonNullableValueType(PropertyInfo prop)
     {
-        // Handle basic value types that cannot use null-conditional operator
-        if (typeString == "int" || typeString == "double" || typeString == "float" ||
-            typeString == "decimal" || typeString == "long" || typeString == "short" ||
-            typeString == "byte" || typeString == "sbyte" || typeString == "uint" ||
-            typeString == "ulong" || typeString == "ushort" || typeString == "nuint" ||
-            typeString == "nint" || typeString == "char" || typeString == "bool" ||
-            typeString == "DateTime" || typeString == "DateOnly" || typeString == "TimeOnly" ||
-            typeString == "Guid" || typeString == "TimeSpan" || typeString == "Half")
+        // Use Roslyn's definitive type analysis instead of string guessing
+        if (!prop.FullTypeSymbol.IsValueType)
+        {
+            return false; // Reference types are never non-nullable value types
+        }
+        
+        // For value types, check if it's not a nullable value type (e.g., int? is nullable)
+        if (prop.FullTypeSymbol is INamedTypeSymbol namedType && 
+            namedType.IsGenericType && 
+            namedType.ConstructedFrom?.SpecialType == SpecialType.System_Nullable_T)
+        {
+            return false; // This is a nullable value type like int?, bool?, etc.
+        }
+        
+        // It's a non-nullable value type (int, bool, DateTime, Guid, Memory<T>, etc.)
+        return true;
+    }
+
+    /// <summary>
+    /// Checks if a property represents an array type using Roslyn analysis
+    /// </summary>
+    public static bool IsArrayType(PropertyInfo prop)
+    {
+        // Use Roslyn's definitive type analysis
+        return prop.FullTypeSymbol.TypeKind == TypeKind.Array;
+    }
+
+    /// <summary>
+    /// Checks if a property represents a collection type using Roslyn analysis
+    /// </summary>
+    private static bool IsCollectionType(PropertyInfo prop)
+    {
+        // String is technically an IEnumerable, but we don't treat it as a collection for UI purposes
+        if (prop.FullTypeSymbol.SpecialType == SpecialType.System_String)
+        {
+            return false;
+        }
+
+        // Check for arrays first
+        if (prop.FullTypeSymbol.TypeKind == TypeKind.Array)
         {
             return true;
         }
+
+        // Check if the type implements IEnumerable (covers lists, collections, etc.)
+        // Note: We need to check both the non-generic and generic versions
+        var allInterfaces = prop.FullTypeSymbol.AllInterfaces;
         
-        // Handle Memory<T>, Span<T> and all their variants (these are value types/structs)
-        if (typeString.StartsWith("Memory<") || typeString.StartsWith("ReadOnlyMemory<") ||
-            typeString.StartsWith("Span<") || typeString.StartsWith("ReadOnlySpan<") ||
-            typeString.Contains("Memory<") || typeString.Contains("Span<"))
+        if (allInterfaces.Any(i => 
+            i.MetadataName == "IEnumerable" ||     // System.Collections.IEnumerable
+            i.MetadataName == "IEnumerable`1" ||   // System.Collections.Generic.IEnumerable<T>
+            i.MetadataName == "ICollection`1" ||   // System.Collections.Generic.ICollection<T>
+            i.MetadataName == "IList`1"))          // System.Collections.Generic.IList<T>
         {
             return true;
+        }
+
+        // Fallback: Check for well-known collection types by name
+        // This helps when interface resolution fails in test environments
+        var typeName = prop.FullTypeSymbol.MetadataName;
+        var namespaceName = prop.FullTypeSymbol.ContainingNamespace?.ToDisplayString();
+        
+        if (namespaceName == "System.Collections.Generic")
+        {
+            return typeName.StartsWith("List`1") ||
+                   typeName.StartsWith("IList`1") ||
+                   typeName.StartsWith("ICollection`1") ||
+                   typeName.StartsWith("IEnumerable`1") ||
+                   typeName.StartsWith("Dictionary`2") ||
+                   typeName.StartsWith("IDictionary`2") ||
+                   typeName.StartsWith("HashSet`1") ||
+                   typeName.StartsWith("ISet`1");
+        }
+        
+        if (namespaceName == "System.Collections.ObjectModel")
+        {
+            return typeName.StartsWith("ObservableCollection`1") ||
+                   typeName.StartsWith("Collection`1") ||
+                   typeName.StartsWith("ReadOnlyCollection`1");
         }
         
         return false;
     }
 
-    private static bool IsCollectionType(string typeString)
+    /// <summary>
+    /// Checks if a property represents a boolean type using Roslyn analysis
+    /// </summary>
+    private static bool IsBooleanType(PropertyInfo prop)
     {
-        return typeString.Contains("ObservableCollection") || 
-               typeString.Contains("List<") || 
-               typeString.Contains("IEnumerable<") ||
-               typeString.Contains("ICollection<") ||
-               typeString.Contains("Dictionary<") ||
-               typeString.Contains("IDictionary<") ||
-               typeString.Contains("IList<") ||
-               typeString.Contains("HashSet<") ||
-               typeString.Contains("ISet<") ||
-               typeString.Contains("Collection<") ||
-               typeString.EndsWith("[]"); // Arrays
+        // Use Roslyn's definitive type analysis
+        return prop.FullTypeSymbol.SpecialType == SpecialType.System_Boolean ||
+               (prop.FullTypeSymbol is INamedTypeSymbol namedType && 
+                namedType.IsGenericType && 
+                namedType.ConstructedFrom?.SpecialType == SpecialType.System_Nullable_T &&
+                namedType.TypeArguments.FirstOrDefault()?.SpecialType == SpecialType.System_Boolean);
     }
 
-    private static bool IsBooleanType(string typeString)
+    /// <summary>
+    /// Checks if a property represents an enum type using Roslyn analysis
+    /// </summary>
+    private static bool IsEnumType(PropertyInfo prop)
     {
-        return typeString == "bool" || typeString == "bool?";
-    }
-
-    private static bool IsEnumType(string typeString)
-    {
-        // Enhanced enum detection
-        // Check for common enum patterns and known enum types
-        if (typeString.Contains("Enum") && typeString.Contains("."))
-            return true;
-            
-        // Check for nullable enum
-        if (typeString.EndsWith("?") && !typeString.StartsWith("bool") && 
-            !typeString.StartsWith("int") && !typeString.StartsWith("string") &&
-            !typeString.StartsWith("double") && !typeString.StartsWith("float") &&
-            !typeString.StartsWith("decimal") && !typeString.StartsWith("DateTime"))
+        // Use Roslyn's definitive type analysis - much more reliable than string patterns
+        if (prop.FullTypeSymbol.TypeKind == TypeKind.Enum)
         {
-            var baseType = typeString.TrimEnd('?');
-            // Could be an enum if it's not a known primitive
-            return !IsPrimitiveTypeName(baseType);
-        }
-        
-        // Check for common enum naming patterns
-        if (typeString.EndsWith("Type") || typeString.EndsWith("Kind") || 
-            typeString.EndsWith("Status") || typeString.EndsWith("State") ||
-            typeString.EndsWith("Mode") || typeString.EndsWith("Option"))
             return true;
-            
+        }
+
+        // Check for nullable enum (Enum?)
+        if (prop.FullTypeSymbol is INamedTypeSymbol namedType && 
+            namedType.IsGenericType && 
+            namedType.ConstructedFrom?.SpecialType == SpecialType.System_Nullable_T)
+        {
+            var underlyingType = namedType.TypeArguments.FirstOrDefault();
+            return underlyingType?.TypeKind == TypeKind.Enum;
+        }
+
         return false;
     }
 
-    private static bool IsPrimitiveTypeName(string typeName)
+    /// <summary>
+    /// Checks if a property represents a primitive type using Roslyn analysis
+    /// </summary>
+    private static bool IsPrimitiveType(PropertyInfo prop)
     {
-        return typeName == "string" || typeName == "int" || typeName == "long" ||
-               typeName == "double" || typeName == "float" || typeName == "decimal" ||
-               typeName == "bool" || typeName == "char" || typeName == "byte" ||
-               typeName == "sbyte" || typeName == "short" || typeName == "ushort" ||
-               typeName == "uint" || typeName == "ulong" || typeName == "nuint" || 
-               typeName == "nint" || typeName == "DateTime" || typeName == "DateOnly" || 
-               typeName == "TimeOnly" || typeName == "Guid" || typeName == "TimeSpan" ||
-               typeName == "Half" || // .NET 5+ half-precision float
-               typeName.EndsWith("[]") || // Arrays are primitive-like for our purposes
-               IsMemoryType(typeName) || // Memory<T> types are primitive-like for our purposes
-               (typeName.EndsWith("?") && IsPrimitiveTypeName(typeName.TrimEnd('?'))); // Nullable primitives
+        // Use Roslyn's SpecialType enumeration for definitive primitive type detection
+        var specialType = prop.FullTypeSymbol.SpecialType;
+        
+        return specialType == SpecialType.System_Boolean ||
+               specialType == SpecialType.System_Char ||
+               specialType == SpecialType.System_SByte ||
+               specialType == SpecialType.System_Byte ||
+               specialType == SpecialType.System_Int16 ||
+               specialType == SpecialType.System_UInt16 ||
+               specialType == SpecialType.System_Int32 ||
+               specialType == SpecialType.System_UInt32 ||
+               specialType == SpecialType.System_Int64 ||
+               specialType == SpecialType.System_UInt64 ||
+               specialType == SpecialType.System_Decimal ||
+               specialType == SpecialType.System_Single ||
+               specialType == SpecialType.System_Double ||
+               specialType == SpecialType.System_String ||
+               specialType == SpecialType.System_DateTime ||
+               IsWellKnownValueType(prop) ||
+               IsMemoryType(prop);
     }
 
-    private static bool IsComplexType(string typeString)
+    /// <summary>
+    /// Checks for well-known value types that don't have SpecialType entries
+    /// </summary>
+    private static bool IsWellKnownValueType(PropertyInfo prop)
+    {
+        var typeName = prop.FullTypeSymbol.MetadataName;
+        var namespaceName = prop.FullTypeSymbol.ContainingNamespace?.ToDisplayString();
+        
+        return namespaceName == "System" && (
+            typeName == "Guid" ||
+            typeName == "TimeSpan" ||
+            typeName == "DateOnly" ||
+            typeName == "TimeOnly" ||
+            typeName == "Half" ||
+            typeName == "IntPtr" ||
+            typeName == "UIntPtr" ||
+            typeName.StartsWith("Memory`1") ||
+            typeName.StartsWith("ReadOnlyMemory`1") ||
+            typeName.StartsWith("Span`1") ||
+            typeName.StartsWith("ReadOnlySpan`1"));
+    }
+
+    /// <summary>
+    /// Checks if a property represents a complex type using Roslyn analysis
+    /// </summary>
+    private static bool IsComplexType(PropertyInfo prop)
     {
         // A type is complex if it's not primitive, not collection, not enum, and not boolean
-        return !IsPrimitiveTypeName(typeString) && 
-               !IsCollectionType(typeString) && 
-               !IsBooleanType(typeString) && 
-               !IsEnumType(typeString) &&
-               (!typeString.EndsWith("?") || // Handle nullable complex types
-               (typeString.EndsWith("?") && !IsPrimitiveTypeName(typeString.TrimEnd('?'))));
+        return !IsPrimitiveType(prop) && 
+               !IsCollectionType(prop) && 
+               !IsBooleanType(prop) && 
+               !IsEnumType(prop) &&
+               prop.FullTypeSymbol.TypeKind == TypeKind.Class;
     }
 
-    private static bool IsMemoryType(string typeString)
+    /// <summary>
+    /// Checks if a property represents a Memory or Span type using Roslyn analysis
+    /// </summary>
+    private static bool IsMemoryType(PropertyInfo prop)
     {
-        return typeString.Contains("Memory<") || 
-               typeString.Contains("ReadOnlyMemory<") ||
-               typeString.Contains("Span<") ||
-               typeString.Contains("ReadOnlySpan<");
+        if (prop.FullTypeSymbol is not INamedTypeSymbol namedType)
+            return false;
+            
+        var typeName = namedType.MetadataName;
+        var namespaceName = namedType.ContainingNamespace?.ToDisplayString();
+        
+        return namespaceName == "System" && (
+            typeName.StartsWith("Memory`1") ||
+            typeName.StartsWith("ReadOnlyMemory`1") ||
+            typeName.StartsWith("Span`1") ||
+            typeName.StartsWith("ReadOnlySpan`1"));
     }
 
     /// <summary>

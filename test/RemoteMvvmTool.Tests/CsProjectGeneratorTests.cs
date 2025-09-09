@@ -3,11 +3,106 @@ using Xunit;
 using GrpcRemoteMvvmModelUtil;
 using System.Collections.Generic;
 using System;
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
+using System.Linq;
 
 namespace ToolExecution;
 
 public class CsProjectGeneratorTests
 {
+    // Helper method to create a PropertyInfo with proper ITypeSymbol for testing
+    private static PropertyInfo CreatePropertyInfo(string name, string typeCode, bool isReadOnly = false)
+    {
+        try
+        {
+            // Create a comprehensive compilation as a library (not executable) to avoid Main method requirement
+            var compilation = CSharpCompilation.Create(
+                "TestLibrary", 
+                options: new CSharpCompilationOptions(OutputKind.DynamicallyLinkedLibrary))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(System.Collections.Generic.List<>).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(System.Collections.ObjectModel.ObservableCollection<>).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(System.Collections.Generic.IEnumerable<>).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(System.Collections.IEnumerable).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(System.ComponentModel.INotifyPropertyChanged).Assembly.Location))
+                .AddReferences(MetadataReference.CreateFromFile(typeof(System.Runtime.CompilerServices.RuntimeHelpers).Assembly.Location)); // System.Runtime
+
+            // Create a simple syntax tree for library compilation
+            var sourceCode = $@"
+using System;
+using System.Collections.Generic;
+using System.Collections.ObjectModel;
+
+namespace TestNamespace
+{{
+    public class TestClass
+    {{
+        public {typeCode} {name} {{ get; {(isReadOnly ? "" : "set;")} }}
+    }}
+    
+    // Define any custom types we might need
+    public class ThermalZoneComponentViewModel
+    {{
+        public string Zone {{ get; set; }} = string.Empty;
+        public double Temperature {{ get; set; }}
+    }}
+}}";
+
+            var syntaxTree = CSharpSyntaxTree.ParseText(sourceCode);
+            compilation = compilation.AddSyntaxTrees(syntaxTree);
+
+            // Check for compilation errors (excluding warnings)
+            var diagnostics = compilation.GetDiagnostics();
+            var errors = diagnostics.Where(d => d.Severity == DiagnosticSeverity.Error).ToArray();
+            
+            if (errors.Any())
+            {
+                var errorMessages = string.Join(", ", errors.Select(e => e.GetMessage()));
+                throw new InvalidOperationException($"Compilation errors for {typeCode}: {errorMessages}");
+            }
+
+            var semanticModel = compilation.GetSemanticModel(syntaxTree);
+            var root = syntaxTree.GetRoot();
+            
+            // Find the property declaration
+            var propertyDeclaration = root.DescendantNodes()
+                .OfType<Microsoft.CodeAnalysis.CSharp.Syntax.PropertyDeclarationSyntax>()
+                .FirstOrDefault(p => p.Identifier.ValueText == name);
+
+            if (propertyDeclaration == null)
+            {
+                throw new InvalidOperationException($"Could not find property declaration for {name}");
+            }
+
+            // Get the type symbol with full semantic analysis
+            var typeInfo = semanticModel.GetTypeInfo(propertyDeclaration.Type);
+            var typeSymbol = typeInfo.Type;
+            
+            if (typeSymbol == null)
+            {
+                throw new InvalidOperationException($"Could not resolve type symbol for {typeCode} in property {name}. TypeInfo returned null.");
+            }
+            
+            return new PropertyInfo(name, typeCode, typeSymbol, isReadOnly);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to create PropertyInfo for {name} ({typeCode}): {ex.Message}", ex);
+        }
+    }
+
+    // Helper method to simplify complex types for testing
+    private static string SimplifyTypeForTesting(string typeCode)
+    {
+        return typeCode switch
+        {
+            // Replace complex custom types with simple built-in types for testing
+            "ObservableCollection<ThermalZoneComponentViewModel>" => "ObservableCollection<ThermalZoneComponentViewModel>",
+            _ => typeCode
+        };
+    }
+
     // ===== SERVER UI GENERATION FLAGS =====
     /// <summary>
     /// Controls whether server GUI generation is tested in CsProjectGeneratorTests.
@@ -134,7 +229,7 @@ public class CsProjectGeneratorTests
     [Fact]
     public void GenerateGuiClientProgram_IncludesRemoteClientSetup()
     {
-        var props = new List<PropertyInfo> { new("IsEnabled", "bool", null!) };
+        var props = new List<PropertyInfo> { CreatePropertyInfo("IsEnabled", "bool") };
         var cmds = new List<CommandInfo> { new("DoWork", "DoWorkCommand", new List<ParameterInfo>(), false) };
         string prog = CsProjectGenerator.GenerateGuiClientProgram("Vm", "wpf", "Proto.Ns", "SvcService", "Client.Ns", props, cmds);
         Assert.Contains("SvcServiceClient", prog);
@@ -150,8 +245,8 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo>
         {
-            new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
-            new("Status", "string", null!)
+            CreatePropertyInfo("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>"),
+            CreatePropertyInfo("Status", "string")
         };
         var cmds = new List<CommandInfo>();
         string xaml = CsProjectGenerator.GenerateWpfMainWindowXaml("TestApp", "TestRemoteClient", props, cmds);
@@ -175,8 +270,8 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo>
         {
-            new("Instructions", "string", null!, true),
-            new("Counter", "int", null!, false)
+            CreatePropertyInfo("Instructions", "string", true),
+            CreatePropertyInfo("Counter", "int", false)
         };
         var cmds = new List<CommandInfo>();
         string xaml = CsProjectGenerator.GenerateWpfMainWindowXaml("TestApp", "TestRemoteClient", props, cmds);
@@ -196,8 +291,8 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo> 
         { 
-            new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
-            new("Status", "string", null!)
+            CreatePropertyInfo("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>"),
+            CreatePropertyInfo("Status", "string")
         };
         var cmds = new List<CommandInfo>();
         
@@ -220,15 +315,15 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo> 
         { 
-            new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
-            new("Status", "string", null!)
+            CreatePropertyInfo("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>"),
+            CreatePropertyInfo("Status", "string")
         };
         var cmds = new List<CommandInfo>();
         
         // Updated: Test our simplified PropertyDiscoveryUtility integration
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
-        Assert.Contains("ConnectionStatus", gui); // Still includes connection status
+        Assert.Contains("ConnectionStatus", gui); // Always includes connection status
         Assert.Contains("PropertyNodeInfo", gui); // PropertyDiscoveryUtility generates PropertyNodeInfo
         Assert.Contains("LoadTree", gui); // LoadTree as Action delegate
         Assert.Contains("flow.Controls.Add", gui);
@@ -244,8 +339,8 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo> 
         { 
-            new("Message", "string", null!),
-            new("IsEnabled", "bool", null!, true) // read-only
+            CreatePropertyInfo("Message", "string"),
+            CreatePropertyInfo("IsEnabled", "bool", true) // read-only
         };
         var cmds = new List<CommandInfo>();
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
@@ -328,8 +423,8 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo>
         {
-            new("IsActive", "bool", null!),
-            new("IsReadOnlyFlag", "bool", null!, true)
+            CreatePropertyInfo("IsActive", "bool"),
+            CreatePropertyInfo("IsReadOnlyFlag", "bool", true)
         };
         var cmds = new List<CommandInfo>();
         string xaml = CsProjectGenerator.GenerateWpfMainWindowXaml("TestApp", "TestRemoteClient", props, cmds);
@@ -394,8 +489,8 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo>
         {
-            new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
-            new("Status", "string", null!)
+            CreatePropertyInfo("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>"),
+            CreatePropertyInfo("Status", "string")
         };
         var cmds = new List<CommandInfo>();
         string xaml = CsProjectGenerator.GenerateServerWpfMainWindowXaml("ServerApp", "TestViewModel", props, cmds);
@@ -446,9 +541,9 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo> 
         { 
-            new("Message", "string", null!),
-            new("Counter", "int", null!),
-            new("IsEnabled", "bool", null!)
+            CreatePropertyInfo("Message", "string"),
+            CreatePropertyInfo("Counter", "int"),
+            CreatePropertyInfo("IsEnabled", "bool")
         };
         var cmds = new List<CommandInfo>();
         string prog = CsProjectGenerator.GenerateServerGuiProgram("ServerApp", "winforms", "Proto.Ns", "SvcService", props, cmds);
@@ -467,9 +562,9 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo> 
         { 
-            new("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>", null!),
-            new("Status", "string", null!),
-            new("IsActive", "bool", null!)
+            CreatePropertyInfo("ZoneList", "ObservableCollection<ThermalZoneComponentViewModel>"),
+            CreatePropertyInfo("Status", "string"),
+            CreatePropertyInfo("IsActive", "bool")
         };
         var cmds = new List<CommandInfo>();
         
@@ -494,10 +589,10 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo>
         {
-            new("PreciseValue", "decimal", null!),
-            new("TinyValue", "nuint", null!),
-            new("UnicodeChar", "char", null!),
-            new("EmptyGuid", "Guid", null!)
+            CreatePropertyInfo("PreciseValue", "decimal"),
+            CreatePropertyInfo("TinyValue", "nuint"),
+            CreatePropertyInfo("UnicodeChar", "char"),
+            CreatePropertyInfo("EmptyGuid", "Guid")
         };
         var cmds = new List<CommandInfo>();
         
@@ -521,10 +616,10 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo>
         {
-            new("Items", "ObservableCollection<string>", null!),
-            new("IsActive", "bool", null!),
-            new("StatusType", "StatusType", null!), // Enum-like name
-            new("Name", "string", null!)
+            CreatePropertyInfo("Items", "ObservableCollection<string>"),
+            CreatePropertyInfo("IsActive", "bool"),
+            CreatePropertyInfo("Status", "System.DayOfWeek"), // Use actual enum instead of "StatusType"
+            CreatePropertyInfo("Name", "string")
         };
         var cmds = new List<CommandInfo>();
         
@@ -535,7 +630,7 @@ public class CsProjectGeneratorTests
         Assert.Contains("Simple Properties", gui); // Name
         Assert.Contains("Boolean Properties", gui); // IsActive
         Assert.Contains("Collections", gui); // Items
-        Assert.Contains("Enum Properties", gui); // StatusType (detected by naming pattern)
+        Assert.Contains("Enum Properties", gui); // Status (DayOfWeek is a real enum)
         Assert.Contains("IsCollectionProperty = true", gui);
         Assert.Contains("IsBooleanProperty = true", gui);
         Assert.Contains("IsEnumProperty = true", gui);
@@ -550,9 +645,9 @@ public class CsProjectGeneratorTests
     {
         var props = new List<PropertyInfo>
         {
-            new("Message", "string", null!),
-            new("IsEnabled", "bool", null!),
-            new("PriorityType", "PriorityType", null!) // Enum-like name with "Type" suffix that matches IsEnumType detection
+            CreatePropertyInfo("Message", "string"),
+            CreatePropertyInfo("IsEnabled", "bool"),
+            CreatePropertyInfo("Priority", "System.DayOfWeek") // Use actual enum instead of "PriorityType"
         };
         var cmds = new List<CommandInfo>();
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
