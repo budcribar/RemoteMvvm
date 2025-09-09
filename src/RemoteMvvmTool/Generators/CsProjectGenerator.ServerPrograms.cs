@@ -120,7 +120,7 @@ public static partial class CsProjectGenerator
             sb.AppendLine("                statusLbl.Text = \"Server Status: Running\";");
             sb.AppendLine();
             
-            // Generate simple tree view (left panel) - use PropertyDiscoveryUtility for comprehensive property handling
+            // Generate simple tree view (left panel) - inline simple approach
             sb.AppendLine("                // Tree view for properties");
             sb.AppendLine("                var tree = new TreeView { Dock = DockStyle.Fill, HideSelection = false };");
             sb.AppendLine("                split.Panel1.Controls.Add(tree);");
@@ -135,7 +135,8 @@ public static partial class CsProjectGenerator
             {
                 sb.AppendLine($"                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var prop{propIndex}Value = vm.{prop.Name}?.ToString() ?? \"<null>\";");
+                // Use simple ToString() without null-conditional operator to avoid issues with value types
+                sb.AppendLine($"                    var prop{propIndex}Value = vm.{prop.Name}.ToString();");
                 sb.AppendLine($"                    var prop{propIndex}Node = new TreeNode(\"{prop.Name}: \" + prop{propIndex}Value);");
                 sb.AppendLine($"                    rootNode.Nodes.Add(prop{propIndex}Node);");
                 sb.AppendLine("                }");
@@ -150,26 +151,35 @@ public static partial class CsProjectGenerator
             sb.AppendLine("                rootNode.Expand();");
             sb.AppendLine();
             
+            // Use PropertyDiscoveryUtility for comprehensive property handling
+            var treeViewCode = PropertyDiscoveryUtility.GenerateTreeViewForProperties(props, "vm", "Server");
+            // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
+            var adjustedTreeViewCode = treeViewCode.Replace("                ", "            ");
+            sb.Append(adjustedTreeViewCode);
+            
             // Generate simple property editor (right panel)
-            sb.AppendLine("                // Right panel for property details");
-            sb.AppendLine("                var rightPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };");
-            sb.AppendLine("                split.Panel2.Controls.Add(rightPanel);");
+            sb.AppendLine("            // Right panel for property details");
+            sb.AppendLine("            var rightPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };");
+            sb.AppendLine("            split.Panel2.Controls.Add(rightPanel);");
             sb.AppendLine();
-            sb.AppendLine("                var flow = new FlowLayoutPanel");
-            sb.AppendLine("                {");
-            sb.AppendLine("                    Dock = DockStyle.Top,");
-            sb.AppendLine("                    AutoSize = true,");
-            sb.AppendLine("                    FlowDirection = FlowDirection.TopDown,");
-            sb.AppendLine("                    WrapContents = false");
-            sb.AppendLine("                };");
-            sb.AppendLine("                rightPanel.Controls.Add(flow);");
+            sb.AppendLine("            var flow = new FlowLayoutPanel");
+            sb.AppendLine("            {");
+            sb.AppendLine("                Dock = DockStyle.Top,");
+            sb.AppendLine("                AutoSize = true,");
+            sb.AppendLine("                FlowDirection = FlowDirection.TopDown,");
+            sb.AppendLine("                WrapContents = false");
+            sb.AppendLine("            };");
+            sb.AppendLine("            rightPanel.Controls.Add(flow);");
             sb.AppendLine();
             
-            sb.AppendLine("                var serverLabel = new Label { Text = \"Server Properties\", Font = new System.Drawing.Font(\"Segoe UI\", 12, System.Drawing.FontStyle.Bold), AutoSize = true };");
-            sb.AppendLine("                flow.Controls.Add(serverLabel);");
+            sb.AppendLine("            var serverLabel = new Label { Text = \"Server Properties\", Font = new System.Drawing.Font(\"Segoe UI\", 12, System.Drawing.FontStyle.Bold), AutoSize = true };");
+            sb.AppendLine("            flow.Controls.Add(serverLabel);");
             
             // Use PropertyDiscoveryUtility for comprehensive property editor
-            sb.Append(PropertyDiscoveryUtility.GeneratePropertyEditor(props, "Server"));
+            var editorCode = PropertyDiscoveryUtility.GeneratePropertyEditor(props, "Server");
+            // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
+            var adjustedEditorCode = editorCode.Replace("                ", "            ");
+            sb.Append(adjustedEditorCode);
 
             // Generate commands section if any commands exist - use simple indexing
             if (cmds.Any())
@@ -263,7 +273,7 @@ public static partial class CsProjectGenerator
         sb.AppendLine("                statusLbl.Text = \"Server Status: Running\";");
         sb.AppendLine();
         
-        // Generate simple tree view (left panel) - use PropertyDiscoveryUtility for comprehensive property handling
+        // Generate simple tree view (left panel) - inline simple approach
         sb.AppendLine("                // Tree view for properties");
         sb.AppendLine("                var tree = new TreeView { Dock = DockStyle.Fill, HideSelection = false };");
         sb.AppendLine("                split.Panel1.Controls.Add(tree);");
@@ -278,7 +288,8 @@ public static partial class CsProjectGenerator
         {
             sb.AppendLine($"                try");
             sb.AppendLine("                {");
-            sb.AppendLine($"                    var prop{propIndex}Value = vm.{prop.Name}?.ToString() ?? \"<null>\";");
+            // Use simple ToString() without null-conditional operator to avoid issues with value types
+            sb.AppendLine($"                    var prop{propIndex}Value = vm.{prop.Name}.ToString();");
             sb.AppendLine($"                    var prop{propIndex}Node = new TreeNode(\"{prop.Name}: \" + prop{propIndex}Value);");
             sb.AppendLine($"                    rootNode.Nodes.Add(prop{propIndex}Node);");
             sb.AppendLine("                }");
@@ -292,6 +303,12 @@ public static partial class CsProjectGenerator
         
         sb.AppendLine("                rootNode.Expand();");
         sb.AppendLine();
+        
+        // Use PropertyDiscoveryUtility for comprehensive property handling
+        var treeViewCode = PropertyDiscoveryUtility.GenerateTreeViewForProperties(props, "vm", "Server");
+        // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
+        var adjustedTreeViewCode = treeViewCode.Replace("                ", "            ");
+        sb.Append(adjustedTreeViewCode);
         
         // Generate simple property editor (right panel)
         sb.AppendLine("                // Right panel for property details");
@@ -312,7 +329,10 @@ public static partial class CsProjectGenerator
         sb.AppendLine("                flow.Controls.Add(serverLabel);");
         
         // Use PropertyDiscoveryUtility for comprehensive property editor
-        sb.Append(PropertyDiscoveryUtility.GeneratePropertyEditor(props, "Server"));
+        var editorCode = PropertyDiscoveryUtility.GeneratePropertyEditor(props, "Server");
+        // Adjust indentation from PropertyDiscoveryUtility (16 spaces) to our level (12 spaces)
+        var adjustedEditorCode = editorCode.Replace("                ", "            ");
+        sb.Append(adjustedEditorCode);
 
         // Generate commands section if any commands exist - use simple indexing
         if (cmds.Any())

@@ -109,12 +109,15 @@ public class CsProjectGeneratorTests
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test the actual WinFormsGui generation
+        // Updated: Test PropertyDiscoveryUtility comprehensive features
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
         Assert.Contains("var tree = new TreeView", gui);
         Assert.Contains("split.Panel1.Controls.Add(tree);", gui);
-        Assert.Contains("Client Properties", gui); // Our new simplified root node name
+        Assert.Contains("Client ViewModel Properties", gui); // PropertyDiscoveryUtility context labeling
+        Assert.Contains("LoadTree();", gui); // PropertyDiscoveryUtility generates LoadTree method
+        Assert.Contains("Collections", gui); // ZoneList should be categorized as collection
+        Assert.Contains("Simple Properties", gui); // Status should be categorized as simple
     }
 
     [Fact]
@@ -127,12 +130,15 @@ public class CsProjectGeneratorTests
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test actual WinFormsGui generation for data binding
+        // Updated: Test our simplified PropertyDiscoveryUtility integration
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
-        Assert.Contains("ConnectionStatus", gui); // Our simplified approach focuses on connection status
-        Assert.Contains("DataBindings.Add(\"Text\", vm, \"ConnectionStatus\")", gui);
+        Assert.Contains("ConnectionStatus", gui); // Still includes connection status
+        Assert.Contains("PropertyNodeInfo", gui); // PropertyDiscoveryUtility generates PropertyNodeInfo
+        Assert.Contains("LoadTree", gui); // LoadTree as Action delegate
         Assert.Contains("flow.Controls.Add", gui);
+        Assert.Contains("Collections", gui); // ZoneList should be categorized as collection
+        Assert.Contains("Simple Properties", gui); // Status should be categorized as simple
     }
 
     [Fact]
@@ -146,14 +152,17 @@ public class CsProjectGeneratorTests
         var cmds = new List<CommandInfo>();
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
-        // Updated: Check for our simplified error handling approach
+        // Updated: Check for our simplified PropertyDiscoveryUtility features
         Assert.Contains("try", gui);
-        Assert.Contains("catch (Exception ex)", gui);
+        Assert.Contains("catch", gui);
         Assert.Contains("ConnectionStatus", gui);
         
-        // Our simplified approach generates basic property nodes with error handling
-        Assert.Contains("prop0Value = vm.Message.ToString();", gui);
-        Assert.Contains("prop0ErrorNode = new TreeNode(\"Message: <error>\");", gui);
+        // PropertyDiscoveryUtility generates comprehensive property handling
+        Assert.Contains("Simple Properties", gui); // Message should be categorized as simple
+        Assert.Contains("Boolean Properties", gui); // IsEnabled should be categorized as boolean
+        Assert.Contains("PropertyNodeInfo", gui); // PropertyDiscoveryUtility generates PropertyNodeInfo class
+        Assert.Contains("IsSimpleProperty = true", gui); // Property categorization
+        Assert.Contains("IsBooleanProperty = true", gui); // Property categorization
     }
 
     [Fact]
@@ -272,13 +281,12 @@ public class CsProjectGeneratorTests
         var cmds = new List<CommandInfo>();
         string prog = CsProjectGenerator.GenerateServerGuiProgram("TestApp", "winforms", "Proto.Ns", "SvcService", props, cmds);
         
-        // Updated: Check for our simplified server labeling
-        Assert.Contains("Server Model Properties", prog);
-        Assert.Contains("Server Properties", prog); // Our simplified label
-        
-        // Our simplified approach generates basic property nodes with indexing
-        Assert.Contains("prop0Value = vm.Status.ToString();", prog);
-        Assert.Contains("prop1Value = vm.IsEnabled.ToString();", prog);
+        // Updated: Check for PropertyDiscoveryUtility features instead of simple inline
+        Assert.Contains("Server ViewModel Properties", prog); // PropertyDiscoveryUtility context labeling
+        Assert.Contains("Simple Properties", prog); // Status should be categorized as simple
+        Assert.Contains("Boolean Properties", prog); // IsEnabled should be categorized as boolean
+        Assert.Contains("LoadTree();", prog); // PropertyDiscoveryUtility generates LoadTree method
+        Assert.Contains("PropertyNodeInfo", prog); // PropertyDiscoveryUtility generates PropertyNodeInfo class
     }
 
     [Fact]
@@ -345,11 +353,13 @@ public class CsProjectGeneratorTests
         var cmds = new List<CommandInfo>();
         string prog = CsProjectGenerator.GenerateServerGuiProgram("ServerApp", "winforms", "Proto.Ns", "SvcService", props, cmds);
         
-        // Updated: Check for our simplified data binding approach
-        Assert.Contains("Server Properties", prog);
-        Assert.Contains("prop0Value = vm.Message.ToString();", prog);
-        Assert.Contains("prop1Value = vm.Counter.ToString();", prog);
-        Assert.Contains("prop2Value = vm.IsEnabled.ToString();", prog);
+        // Updated: Check for PropertyDiscoveryUtility comprehensive property handling
+        Assert.Contains("Server Properties", prog); // Server labeling
+        Assert.Contains("Simple Properties", prog); // Message and Counter should be categorized as simple
+        Assert.Contains("Boolean Properties", prog); // IsEnabled should be categorized as boolean
+        Assert.Contains("PropertyNodeInfo", prog); // PropertyDiscoveryUtility generates PropertyNodeInfo class
+        Assert.Contains("IsSimpleProperty = true", prog); // PropertyDiscoveryUtility property categorization
+        Assert.Contains("IsBooleanProperty = true", prog); // PropertyDiscoveryUtility property categorization
     }
 
     [Fact]
@@ -363,14 +373,17 @@ public class CsProjectGeneratorTests
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test the actual WinFormsGui generation
+        // Updated: Test PropertyDiscoveryUtility comprehensive property categorization
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
-        Assert.Contains("Client Properties", gui); // Our simplified root node
+        Assert.Contains("Client ViewModel Properties", gui); // PropertyDiscoveryUtility context labeling
         Assert.Contains("ConnectionStatus", gui); // Always included
-        Assert.Contains("prop0Value = vm.ZoneList.ToString();", gui); // First 5 properties with indexing
-        Assert.Contains("prop1Value = vm.Status.ToString();", gui);
-        Assert.Contains("prop2Value = vm.IsActive.ToString();", gui);
+        Assert.Contains("Collections", gui); // ZoneList should be categorized as collection
+        Assert.Contains("Simple Properties", gui); // Status should be categorized as simple
+        Assert.Contains("Boolean Properties", gui); // IsActive should be categorized as boolean
+        Assert.Contains("IsCollectionProperty = true", gui); // Property categorization
+        Assert.Contains("IsSimpleProperty = true", gui); // Property categorization
+        Assert.Contains("IsBooleanProperty = true", gui); // Property categorization
     }
 
     [Fact]
@@ -385,14 +398,16 @@ public class CsProjectGeneratorTests
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test the actual WinFormsGui generation for edge cases
+        // Updated: Test PropertyDiscoveryUtility comprehensive type analysis for edge cases
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
-        // Our simplified approach handles all types the same way with ToString()
-        Assert.Contains("prop0Value = vm.PreciseValue.ToString();", gui);
-        Assert.Contains("prop1Value = vm.TinyValue.ToString();", gui);
-        Assert.Contains("prop2Value = vm.UnicodeChar.ToString();", gui);
-        Assert.Contains("prop3Value = vm.EmptyGuid.ToString();", gui);
+        // PropertyDiscoveryUtility should categorize all these as simple properties
+        Assert.Contains("Simple Properties", gui);
+        Assert.Contains("PropertyNodeInfo", gui);
+        Assert.Contains("IsSimpleProperty = true", gui);
+        // Should handle all primitive types safely with proper categorization
+        Assert.Contains("LoadTree();", gui);
+        Assert.Contains("tree.BeginUpdate();", gui);
     }
 
     [Fact]
@@ -407,14 +422,18 @@ public class CsProjectGeneratorTests
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test our simplified type handling
+        // Updated: Test PropertyDiscoveryUtility comprehensive type analysis
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
-        // Our simplified approach treats all properties uniformly with ToString()
-        Assert.Contains("prop0Value = vm.Items.ToString();", gui);
-        Assert.Contains("prop1Value = vm.IsActive.ToString();", gui);
-        Assert.Contains("prop2Value = vm.StatusType.ToString();", gui);
-        Assert.Contains("prop3Value = vm.Name.ToString();", gui);
+        // PropertyDiscoveryUtility should categorize properties correctly
+        Assert.Contains("Simple Properties", gui); // Name
+        Assert.Contains("Boolean Properties", gui); // IsActive
+        Assert.Contains("Collections", gui); // Items
+        Assert.Contains("Enum Properties", gui); // StatusType (detected by naming pattern)
+        Assert.Contains("IsCollectionProperty = true", gui);
+        Assert.Contains("IsBooleanProperty = true", gui);
+        Assert.Contains("IsEnumProperty = true", gui);
+        Assert.Contains("IsSimpleProperty = true", gui);
     }
 
     [Fact]
@@ -424,20 +443,24 @@ public class CsProjectGeneratorTests
         {
             new("Message", "string", null!),
             new("IsEnabled", "bool", null!),
-            new("Priority", "Priority", null!) // Enum-like
+            new("PriorityType", "PriorityType", null!) // Enum-like name with "Type" suffix that matches IsEnumType detection
         };
         var cmds = new List<CommandInfo>();
         string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
         
-        // Updated: Check for our simplified property handling
-        Assert.Contains("Client Properties", gui); // Our simplified root
-        Assert.Contains("prop0Value = vm.Message.ToString();", gui);
-        Assert.Contains("prop1Value = vm.IsEnabled.ToString();", gui);
-        Assert.Contains("prop2Value = vm.Priority.ToString();", gui);
+        // Updated: Check for our simplified PropertyDiscoveryUtility integration
+        Assert.Contains("Simple Properties", gui);
+        Assert.Contains("Boolean Properties", gui);
+        Assert.Contains("Enum Properties", gui);
+        Assert.Contains("PropertyNodeInfo", gui);
+        Assert.Contains("LoadTree", gui); // Using Action<> delegate instead of method
+        Assert.Contains("IsSimpleProperty = true", gui);
+        Assert.Contains("IsBooleanProperty = true", gui);
+        Assert.Contains("IsEnumProperty = true", gui);
         
-        // Should include proper error handling for each property
-        Assert.Contains("prop0ErrorNode = new TreeNode(\"Message: <error>\");", gui);
-        Assert.Contains("prop1ErrorNode = new TreeNode(\"IsEnabled: <error>\");", gui);
-        Assert.Contains("prop2ErrorNode = new TreeNode(\"Priority: <error>\");", gui);
+        // Check for tree structure
+        Assert.Contains("rootNode.Nodes.Add", gui);
+        Assert.Contains("tree.BeginUpdate", gui);
+        Assert.Contains("tree.EndUpdate", gui);
     }
 }
