@@ -420,7 +420,7 @@ namespace RemoteMvvmTool.Tests
             return (workDir, sourceProjectDir, testProjectDir);
         }
 
-        public static void SetupWorkDirectoryWithModel(string workDir, string sourceProjectDir, string testProjectDir, string modelCode)
+        private static void SetupWorkDirectoryWithModel(string workDir, string sourceProjectDir, string testProjectDir, string modelCode)
         {
             if (Directory.Exists(workDir)) Directory.Delete(workDir, true);
             Directory.CreateDirectory(workDir);
@@ -444,7 +444,7 @@ namespace RemoteMvvmTool.Tests
             return (name, props, cmds);
         }
 
-        public static async Task BuildProject(string testProjectDir)
+        private static async Task BuildProject(string testProjectDir)
         {
             await RunCmdAsync("dotnet", "build", testProjectDir);
         }
@@ -479,7 +479,7 @@ namespace RemoteMvvmTool.Tests
             return process;
         }
 
-        public static void StopServerProcess(Process serverProcess)
+        private static void StopServerProcess(Process serverProcess)
         {
             try
             {
@@ -494,7 +494,7 @@ namespace RemoteMvvmTool.Tests
             finally { serverProcess.Dispose(); }
         }
 
-        public static async Task WaitForServerReady(int port)
+        private static async Task WaitForServerReady(int port)
         {
             for (int i = 0; i < 30; i++)
             {
@@ -511,7 +511,7 @@ namespace RemoteMvvmTool.Tests
             throw new Exception("Server failed to start in time");
         }
 
-        public static async Task TestServerEndpoint(int port)
+        private static async Task TestServerEndpoint(int port)
         {
             using var httpClient = new HttpClient(new HttpClientHandler { ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator });
             var req = new HttpRequestMessage(HttpMethod.Post, $"https://localhost:{port}/test_protos.TestViewModelService/GetState")

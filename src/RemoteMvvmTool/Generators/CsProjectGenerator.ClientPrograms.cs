@@ -85,7 +85,7 @@ public static partial class CsProjectGenerator
     // ---------------- WinForms Helper Generator ----------------
     public static string GenerateWinFormsGui(string projectName, string serviceName, string clientClassName, List<PropertyInfo> props, List<CommandInfo> cmds)
     {
-        // Use PropertyDiscoveryUtility for structured data analysis
+        // Analyze properties for hierarchical UI generation using legacy analysis since the hierarchical analysis may be causing issues
         var analysis = PropertyDiscoveryUtility.AnalyzeProperties(props);
         
         var sb = new StringBuilder();
@@ -103,10 +103,11 @@ public static partial class CsProjectGenerator
         sb.AppendLine("{");
         
         // Generate PropertyNodeInfo class first (outside of the WinFormsGui class)
-        sb.AppendLine("    // Property node information class");
+        sb.AppendLine("    // Property node information class for UI binding");
         sb.AppendLine("    class PropertyNodeInfo");
         sb.AppendLine("    {");
         sb.AppendLine("        public string PropertyName { get; set; } = string.Empty;");
+        sb.AppendLine("        public string PropertyPath { get; set; } = string.Empty;");
         sb.AppendLine("        public object? Object { get; set; }");
         sb.AppendLine("        public bool IsSimpleProperty { get; set; }");
         sb.AppendLine("        public bool IsBooleanProperty { get; set; }");
@@ -115,6 +116,7 @@ public static partial class CsProjectGenerator
         sb.AppendLine("        public bool IsComplexProperty { get; set; }");
         sb.AppendLine("        public bool IsCollectionItem { get; set; }");
         sb.AppendLine("        public int CollectionIndex { get; set; }");
+        sb.AppendLine("        public int Depth { get; set; }");
         sb.AppendLine("    }");
         sb.AppendLine();
         
@@ -136,8 +138,8 @@ public static partial class CsProjectGenerator
         sb.AppendLine("            statusLbl.Text = \"Ready\";");
         sb.AppendLine();
         
-        // Generate tree setup using structured data
-        sb.AppendLine("            // Tree view for client properties");
+        // Generate tree setup using legacy analysis to avoid syntax issues
+        sb.AppendLine("            // Tree view for client properties using property analysis");
         sb.AppendLine("            var tree = new TreeView { Dock = DockStyle.Fill, HideSelection = false };");
         sb.AppendLine("            split.Panel1.Controls.Add(tree);");
         sb.AppendLine();
@@ -161,8 +163,8 @@ public static partial class CsProjectGenerator
         sb.AppendLine("            treeButtonsPanel.Controls.Add(collapseBtn);");
         sb.AppendLine();
         
-        // Generate the LoadTree method using structured data
-        sb.AppendLine("            // Property loading method using structured data");
+        // Generate the LoadTree method using simple property categorization to avoid syntax errors
+        sb.AppendLine("            // Property loading method using legacy property analysis");
         sb.AppendLine("            Action LoadTree = () =>");
         sb.AppendLine("            {");
         sb.AppendLine("                try");
@@ -172,8 +174,12 @@ public static partial class CsProjectGenerator
         sb.AppendLine("                    var rootNode = new TreeNode(\"Client ViewModel Properties\");");
         sb.AppendLine("                    tree.Nodes.Add(rootNode);");
         
-        // Generate property categorization using structured data
-        GeneratePropertyCategories(sb, analysis, "vm");
+        // Generate property sections using the legacy analysis approach
+        GenerateSimplePropertySection(sb, analysis.SimpleProperties, "vm");
+        GenerateBooleanPropertySection(sb, analysis.BooleanProperties, "vm");
+        GenerateEnumPropertySection(sb, analysis.EnumProperties, "vm");
+        GenerateCollectionPropertySection(sb, analysis.CollectionProperties, "vm");
+        GenerateComplexPropertySection(sb, analysis.ComplexProperties, "vm");
         
         sb.AppendLine("                    rootNode.Expand();");
         sb.AppendLine("                }");
@@ -288,147 +294,251 @@ public static partial class CsProjectGenerator
         return sb.ToString();
     }
 
-    // Helper method to generate property categories using structured data
-    private static void GeneratePropertyCategories(StringBuilder sb, PropertyAnalysis analysis, string viewModelVarName)
+    // Generate property sections using safe legacy approach
+    private static void GenerateSimplePropertySection(StringBuilder sb, List<PropertyInfo> properties, string viewModelVarName)
     {
-        // Generate simple properties using structured metadata
-        if (analysis.SimpleProperties.Any())
+        if (!properties.Any()) return;
+        
+        sb.AppendLine("                    // Simple Properties");
+        sb.AppendLine("                    var simplePropsNode = new TreeNode(\"Simple Properties\");");
+        sb.AppendLine("                    rootNode.Nodes.Add(simplePropsNode);");
+        
+        foreach (var prop in properties)
         {
-            sb.AppendLine("                    var simplePropsNode = new TreeNode(\"Simple Properties\");");
-            sb.AppendLine("                    rootNode.Nodes.Add(simplePropsNode);");
-            foreach (var prop in analysis.SimpleProperties)
+            var metadata = PropertyDiscoveryUtility.AnalyzePropertyMetadata(prop);
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            
+            if (metadata.IsNonNullableValueType)
             {
-                var metadata = analysis.GetMetadata(prop);
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
+                sb.AppendLine($"                        var {metadata.SafeVariableName}Value = {viewModelVarName}.{metadata.SafePropertyAccess}.ToString();");
+            }
+            else
+            {
+                sb.AppendLine($"                        var {metadata.SafeVariableName}Value = {viewModelVarName}.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\";");
+            }
+            
+            sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {metadata.SafeVariableName}Value);");
+            sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", PropertyPath = \"{prop.Name}\", Object = {viewModelVarName}, IsSimpleProperty = true }};");
+            sb.AppendLine($"                        simplePropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
+            sb.AppendLine($"                        simplePropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
+            sb.AppendLine("                    }");
+        }
+    }
+    
+    private static void GenerateBooleanPropertySection(StringBuilder sb, List<PropertyInfo> properties, string viewModelVarName)
+    {
+        if (!properties.Any()) return;
+        
+        sb.AppendLine("                    // Boolean Properties");
+        sb.AppendLine("                    var boolPropsNode = new TreeNode(\"Boolean Properties\");");
+        sb.AppendLine("                    rootNode.Nodes.Add(boolPropsNode);");
+        
+        foreach (var prop in properties)
+        {
+            var metadata = PropertyDiscoveryUtility.AnalyzePropertyMetadata(prop);
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {viewModelVarName}.{metadata.SafePropertyAccess}.ToString());");
+            sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", PropertyPath = \"{prop.Name}\", Object = {viewModelVarName}, IsBooleanProperty = true }};");
+            sb.AppendLine($"                        boolPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
+            sb.AppendLine($"                        boolPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
+            sb.AppendLine("                    }");
+        }
+    }
+    
+    private static void GenerateEnumPropertySection(StringBuilder sb, List<PropertyInfo> properties, string viewModelVarName)
+    {
+        if (!properties.Any()) return;
+        
+        sb.AppendLine("                    // Enum Properties");
+        sb.AppendLine("                    var enumPropsNode = new TreeNode(\"Enum Properties\");");
+        sb.AppendLine("                    rootNode.Nodes.Add(enumPropsNode);");
+        
+        foreach (var prop in properties)
+        {
+            var metadata = PropertyDiscoveryUtility.AnalyzePropertyMetadata(prop);
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {viewModelVarName}.{metadata.SafePropertyAccess}.ToString());");
+            sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", PropertyPath = \"{prop.Name}\", Object = {viewModelVarName}, IsEnumProperty = true }};");
+            sb.AppendLine($"                        enumPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
+            sb.AppendLine($"                        enumPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
+            sb.AppendLine("                    }");
+        }
+    }
+    
+    private static void GenerateCollectionPropertySection(StringBuilder sb, List<PropertyInfo> properties, string viewModelVarName)
+    {
+        if (!properties.Any()) return;
+        
+        sb.AppendLine("                    // Collections");
+        sb.AppendLine("                    var collPropsNode = new TreeNode(\"Collections\");");
+        sb.AppendLine("                    rootNode.Nodes.Add(collPropsNode);");
+        
+        foreach (var prop in properties)
+        {
+            var metadata = PropertyDiscoveryUtility.AnalyzePropertyMetadata(prop);
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        if ({viewModelVarName}.{metadata.SafePropertyAccess} != null)");
+            sb.AppendLine("                        {");
+            
+            // Use safe collection access without array syntax issues
+            sb.AppendLine($"                            var {metadata.SafeVariableName}Count = {viewModelVarName}.{metadata.SafePropertyAccess}.{metadata.CountProperty};");
+            sb.AppendLine($"                            var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [\" + {metadata.SafeVariableName}Count + \" items]\");");
+            sb.AppendLine($"                            {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", PropertyPath = \"{prop.Name}\", Object = {viewModelVarName}, IsCollectionProperty = true }};");
+            sb.AppendLine($"                            collPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
+            
+            // Check collection type more carefully
+            bool isDictionaryItself = (prop.TypeString.Contains("Dictionary<") || 
+                                     prop.TypeString.Contains("IDictionary<")) &&
+                                     !prop.TypeString.Contains("List<") &&
+                                     !prop.TypeString.Contains("IEnumerable<") &&
+                                     !prop.TypeString.Contains("Collection<");
+                                   
+            bool isKeyValuePairCollection = prop.TypeString.Contains("KeyValuePair<");
+            
+            bool isCollectionOfDictionaries = (prop.TypeString.Contains("List<Dictionary<") ||
+                                              prop.TypeString.Contains("IEnumerable<Dictionary<") ||
+                                              prop.TypeString.Contains("Collection<Dictionary<"));
+            
+            // Add sample items if collection is not empty (with proper type handling)
+            sb.AppendLine($"                            if ({metadata.SafeVariableName}Count > 0)");
+            sb.AppendLine("                            {");
+            
+            if (isDictionaryItself)
+            {
+                // For Dictionary<K,V> itself, FirstOrDefault returns KeyValuePair<K,V>
+                sb.AppendLine($"                                var {metadata.SafeVariableName}FirstEntry = {viewModelVarName}.{metadata.SafePropertyAccess}.FirstOrDefault();");
+                sb.AppendLine($"                                var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Entry]: \" + {metadata.SafeVariableName}FirstEntry.Key + \" -> \" + {metadata.SafeVariableName}FirstEntry.Value);");
+                sb.AppendLine($"                                {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+            }
+            else if (isCollectionOfDictionaries)
+            {
+                // For List<Dictionary<K,V>>, FirstOrDefault returns Dictionary<K,V>, then we get its first KeyValuePair
+                sb.AppendLine($"                                var {metadata.SafeVariableName}FirstDict = {viewModelVarName}.{metadata.SafePropertyAccess}.FirstOrDefault();");
+                sb.AppendLine($"                                if ({metadata.SafeVariableName}FirstDict != null && {metadata.SafeVariableName}FirstDict.Count > 0)");
+                sb.AppendLine("                                {");
+                sb.AppendLine($"                                    var {metadata.SafeVariableName}FirstEntry = {metadata.SafeVariableName}FirstDict.FirstOrDefault();");
+                sb.AppendLine($"                                    var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Dict Entry]: \" + {metadata.SafeVariableName}FirstEntry.Key + \" -> \" + {metadata.SafeVariableName}FirstEntry.Value);");
+                sb.AppendLine($"                                    {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                sb.AppendLine("                                }");
+            }
+            else if (isKeyValuePairCollection)
+            {
+                // For collections of KeyValuePair, FirstOrDefault returns KeyValuePair<K,V>
+                sb.AppendLine($"                                var {metadata.SafeVariableName}FirstEntry = {viewModelVarName}.{metadata.SafePropertyAccess}.FirstOrDefault();");
+                sb.AppendLine($"                                var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Entry]: \" + {metadata.SafeVariableName}FirstEntry.Key + \" -> \" + {metadata.SafeVariableName}FirstEntry.Value);");
+                sb.AppendLine($"                                {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+            }
+            else if (metadata.IsArrayType)
+            {
+                // For arrays, access first element safely
+                sb.AppendLine($"                                var {metadata.SafeVariableName}FirstItem = {viewModelVarName}.{metadata.SafePropertyAccess}[0];");
+                sb.AppendLine($"                                if ({metadata.SafeVariableName}FirstItem != null)");
+                sb.AppendLine("                                {");
+                sb.AppendLine($"                                    var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Item]: \" + {metadata.SafeVariableName}FirstItem.ToString());");
+                sb.AppendLine($"                                    {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                sb.AppendLine("                                }");
+            }
+            else
+            {
+                // For other collections, use LINQ FirstOrDefault
+                sb.AppendLine($"                                var {metadata.SafeVariableName}FirstItem = {viewModelVarName}.{metadata.SafePropertyAccess}.FirstOrDefault();");
                 
-                // Use metadata for proper null handling
-                if (metadata.IsNonNullableValueType)
+                // Check if the collection contains KeyValuePair (which is a struct and can't be null)
+                bool isKeyValuePairType = prop.TypeString.Contains("KeyValuePair<");
+                if (isKeyValuePairType)
                 {
-                    sb.AppendLine($"                        var {metadata.SafeVariableName}Value = {viewModelVarName}.{metadata.SafePropertyAccess}.ToString();");
+                    // For KeyValuePair structs, check if collection has items instead of null check
+                    sb.AppendLine($"                                if ({viewModelVarName}.{metadata.SafePropertyAccess}.{metadata.CountProperty} > 0)");
+                    sb.AppendLine("                                {");
+                    sb.AppendLine($"                                    var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Item]: \" + {metadata.SafeVariableName}FirstItem.ToString());");
+                    sb.AppendLine($"                                    {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                    sb.AppendLine("                                }");
                 }
                 else
                 {
-                    sb.AppendLine($"                        var {metadata.SafeVariableName}Value = {viewModelVarName}.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\";");
+                    // For reference types or non-KeyValuePair structs, use appropriate check
+                    bool mightBeReferenceType = !prop.TypeString.Contains("<int>") && !prop.TypeString.Contains("<double>") && 
+                                               !prop.TypeString.Contains("<float>") && !prop.TypeString.Contains("<bool>") &&
+                                               !prop.TypeString.Contains("<decimal>") && !prop.TypeString.Contains("<Guid>") &&
+                                               !prop.TypeString.Contains("<DateTime>");
+                    if (mightBeReferenceType)
+                    {
+                        // For reference types, use null check
+                        sb.AppendLine($"                                if ({metadata.SafeVariableName}FirstItem != null)");
+                        sb.AppendLine("                                {");
+                        sb.AppendLine($"                                    var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Item]: \" + {metadata.SafeVariableName}FirstItem.ToString());");
+                        sb.AppendLine($"                                    {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                        sb.AppendLine("                                }");
+                    }
+                    else
+                    {
+                        // For value type collections, use count check instead
+                        sb.AppendLine($"                                if ({viewModelVarName}.{metadata.SafePropertyAccess}.{metadata.CountProperty} > 0)");
+                        sb.AppendLine("                                {");
+                        sb.AppendLine($"                                    var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Item]: \" + {metadata.SafeVariableName}FirstItem.ToString());");
+                        sb.AppendLine($"                                    {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                        sb.AppendLine("                                }");
+                    }
                 }
-                
-                sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {metadata.SafeVariableName}Value);");
-                sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = {viewModelVarName}, IsSimpleProperty = true }};");
-                sb.AppendLine($"                        simplePropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
-                sb.AppendLine($"                        simplePropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
-                sb.AppendLine("                    }");
             }
+            
+            sb.AppendLine("                            }");
+            sb.AppendLine("                        }");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
+            sb.AppendLine($"                        collPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
+            sb.AppendLine("                    }");
         }
+    }
+    
+    private static void GenerateComplexPropertySection(StringBuilder sb, List<PropertyInfo> properties, string viewModelVarName)
+    {
+        if (!properties.Any()) return;
         
-        // Generate boolean properties using structured metadata
-        if (analysis.BooleanProperties.Any())
-        {
-            sb.AppendLine("                    var boolPropsNode = new TreeNode(\"Boolean Properties\");");
-            sb.AppendLine("                    rootNode.Nodes.Add(boolPropsNode);");
-            foreach (var prop in analysis.BooleanProperties)
-            {
-                var metadata = analysis.GetMetadata(prop);
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {viewModelVarName}.{metadata.SafePropertyAccess}.ToString());");
-                sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = {viewModelVarName}, IsBooleanProperty = true }};");
-                sb.AppendLine($"                        boolPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
-                sb.AppendLine($"                        boolPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
-                sb.AppendLine("                    }");
-            }
-        }
+        sb.AppendLine("                    // Complex Properties");
+        sb.AppendLine("                    var complexPropsNode = new TreeNode(\"Complex Properties\");");
+        sb.AppendLine("                    rootNode.Nodes.Add(complexPropsNode);");
         
-        // Generate collection properties using structured metadata
-        if (analysis.CollectionProperties.Any())
+        foreach (var prop in properties)
         {
-            sb.AppendLine("                    var collectionPropsNode = new TreeNode(\"Collections\");");
-            sb.AppendLine("                    rootNode.Nodes.Add(collectionPropsNode);");
-            foreach (var prop in analysis.CollectionProperties)
-            {
-                var metadata = analysis.GetMetadata(prop);
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        if ({viewModelVarName}.{metadata.SafePropertyAccess} != null)");
-                sb.AppendLine("                        {");
-                
-                // Use metadata for correct count property (.Length for arrays, .Count for others)
-                sb.AppendLine($"                            var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [\" + {viewModelVarName}.{metadata.SafePropertyAccess}.{metadata.CountProperty} + \" items]\");");
-                sb.AppendLine($"                            {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = {viewModelVarName}, IsCollectionProperty = true }};");
-                sb.AppendLine($"                            collectionPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                        else");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [null]\");");
-                sb.AppendLine($"                            collectionPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
-                sb.AppendLine($"                        collectionPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
-                sb.AppendLine("                    }");
-            }
-        }
-        
-        // Generate enum properties using structured metadata
-        if (analysis.EnumProperties.Any())
-        {
-            sb.AppendLine("                    var enumPropsNode = new TreeNode(\"Enum Properties\");");
-            sb.AppendLine("                    rootNode.Nodes.Add(enumPropsNode);");
-            foreach (var prop in analysis.EnumProperties)
-            {
-                var metadata = analysis.GetMetadata(prop);
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {viewModelVarName}.{metadata.SafePropertyAccess}.ToString());");
-                sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = {viewModelVarName}, IsEnumProperty = true }};");
-                sb.AppendLine($"                        enumPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
-                sb.AppendLine($"                        enumPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
-                sb.AppendLine("                    }");
-            }
-        }
-        
-        // Generate complex properties using structured metadata
-        if (analysis.ComplexProperties.Any())
-        {
-            sb.AppendLine("                    var complexPropsNode = new TreeNode(\"Complex Properties\");");
-            sb.AppendLine("                    rootNode.Nodes.Add(complexPropsNode);");
-            foreach (var prop in analysis.ComplexProperties)
-            {
-                var metadata = analysis.GetMetadata(prop);
-                sb.AppendLine("                    try");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        if ({viewModelVarName}.{metadata.SafePropertyAccess} != null)");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {metadata.SafeVariableName}TypeName = {viewModelVarName}.{metadata.SafePropertyAccess}.GetType().Name;");
-                sb.AppendLine($"                            var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} (\" + {metadata.SafeVariableName}TypeName + \")\");");
-                sb.AppendLine($"                            {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = {viewModelVarName}.{metadata.SafePropertyAccess}, IsComplexProperty = true }};");
-                sb.AppendLine($"                            complexPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                        else");
-                sb.AppendLine("                        {");
-                sb.AppendLine($"                            var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [null]\");");
-                sb.AppendLine($"                            complexPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
-                sb.AppendLine("                        }");
-                sb.AppendLine("                    }");
-                sb.AppendLine("                    catch (Exception ex)");
-                sb.AppendLine("                    {");
-                sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
-                sb.AppendLine($"                        complexPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
-                sb.AppendLine("                    }");
-            }
+            var metadata = PropertyDiscoveryUtility.AnalyzePropertyMetadata(prop);
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        if ({viewModelVarName}.{metadata.SafePropertyAccess} != null)");
+            sb.AppendLine("                        {");
+            sb.AppendLine($"                            var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}\");");
+            sb.AppendLine($"                            {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", PropertyPath = \"{prop.Name}\", Object = {viewModelVarName}.{metadata.SafePropertyAccess}, IsComplexProperty = true }};");
+            sb.AppendLine($"                            complexPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
+            sb.AppendLine("                        }");
+            sb.AppendLine("                        else");
+            sb.AppendLine("                        {");
+            sb.AppendLine($"                            var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [null]\");");
+            sb.AppendLine($"                            complexPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
+            sb.AppendLine("                        }");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        var {metadata.SafeVariableName}ErrorNode = new TreeNode(\"{prop.Name}: <error - \" + ex.GetType().Name + \">\");");
+            sb.AppendLine($"                        complexPropsNode.Nodes.Add({metadata.SafeVariableName}ErrorNode);");
+            sb.AppendLine("                    }");
         }
     }
 }

@@ -240,14 +240,15 @@ public static partial class CsProjectGenerator
                 sb.AppendLine("                {");
                 sb.AppendLine($"                    var {metadata.SafeVariableName}Label = new Label {{ Text = \"{prop.Name}:\", AutoSize = true }};");
                 
-                // Use metadata for proper value display handling
-                if (metadata.IsNonNullableValueType)
+                // Use direct Roslyn type checking to avoid metadata issues
+                bool isNullable = PropertyDiscoveryUtility.IsNonNullableValueType(prop) == false;
+                if (isNullable)
                 {
-                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = new Label {{ Text = vm.{metadata.SafePropertyAccess}.ToString(), AutoSize = true, ForeColor = Color.Blue }};");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = new Label {{ Text = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\", AutoSize = true, ForeColor = Color.Blue }};");
                 }
                 else
                 {
-                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = new Label {{ Text = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\", AutoSize = true, ForeColor = Color.Blue }};");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = new Label {{ Text = vm.{metadata.SafePropertyAccess}.ToString(), AutoSize = true, ForeColor = Color.Blue }};");
                 }
                 
                 sb.AppendLine($"                    flow.Controls.Add({metadata.SafeVariableName}Label);");
@@ -389,13 +390,13 @@ public static partial class CsProjectGenerator
                 sb.AppendLine("                {");
                 
                 // Use metadata for proper null handling
-                if (metadata.IsNonNullableValueType)
+                if (metadata.RequiresNullCheck && !metadata.IsNonNullableValueType)
                 {
-                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}.ToString();");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\";");
                 }
                 else
                 {
-                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\";");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}.ToString();");
                 }
                 
                 sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {metadata.SafeVariableName}Value);");
@@ -428,7 +429,18 @@ public static partial class CsProjectGenerator
                 var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + vm.{metadata.SafePropertyAccess}.ToString());");
+                
+                // Use metadata for proper null handling even for booleans (e.g., bool?)
+                if (metadata.RequiresNullCheck && !metadata.IsNonNullableValueType)
+                {
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\";");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {metadata.SafeVariableName}Value);");
+                }
+                else
+                {
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + vm.{metadata.SafePropertyAccess}.ToString());");
+                }
+                
                 sb.AppendLine($"                    {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsBooleanProperty = true }};");
                 sb.AppendLine($"                    boolPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                }");
@@ -465,6 +477,95 @@ public static partial class CsProjectGenerator
                 sb.AppendLine($"                        var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name} [\" + vm.{metadata.SafePropertyAccess}.{metadata.CountProperty} + \" items]\");");
                 sb.AppendLine($"                        {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsCollectionProperty = true }};");
                 sb.AppendLine($"                        collectionPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
+                
+                // Check collection type more carefully
+                bool isDictionaryItself = (prop.TypeString.Contains("Dictionary<") || 
+                                         prop.TypeString.Contains("IDictionary<")) &&
+                                         !prop.TypeString.Contains("List<") &&
+                                         !prop.TypeString.Contains("IEnumerable<") &&
+                                         !prop.TypeString.Contains("Collection<");
+                                   
+                bool isKeyValuePairCollection = prop.TypeString.Contains("KeyValuePair<");
+                
+                bool isCollectionOfDictionaries = (prop.TypeString.Contains("List<Dictionary<") ||
+                                                  prop.TypeString.Contains("IEnumerable<Dictionary<") ||
+                                                  prop.TypeString.Contains("Collection<Dictionary<"));
+                
+                // Add sample display for non-empty collections
+                sb.AppendLine($"                        if (vm.{metadata.SafePropertyAccess}.{metadata.CountProperty} > 0)");
+                sb.AppendLine("                        {");
+                
+                if (isDictionaryItself)
+                {
+                    // For Dictionary<K,V> itself, FirstOrDefault returns KeyValuePair<K,V>
+                    sb.AppendLine($"                            var {metadata.SafeVariableName}FirstEntry = vm.{metadata.SafePropertyAccess}.FirstOrDefault();");
+                    sb.AppendLine($"                            var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Entry]: \" + {metadata.SafeVariableName}FirstEntry.Key + \" -> \" + {metadata.SafeVariableName}FirstEntry.Value);");
+                    sb.AppendLine($"                            {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                }
+                else if (isCollectionOfDictionaries)
+                {
+                    // For List<Dictionary<K,V>>, FirstOrDefault returns Dictionary<K,V>, then we get its first KeyValuePair
+                    sb.AppendLine($"                            var {metadata.SafeVariableName}FirstDict = vm.{metadata.SafePropertyAccess}.FirstOrDefault();");
+                    sb.AppendLine($"                            if ({metadata.SafeVariableName}FirstDict != null && {metadata.SafeVariableName}FirstDict.Count > 0)");
+                    sb.AppendLine("                            {");
+                    sb.AppendLine($"                                var {metadata.SafeVariableName}FirstEntry = {metadata.SafeVariableName}FirstDict.FirstOrDefault();");
+                    sb.AppendLine($"                                var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Dict Entry]: \" + {metadata.SafeVariableName}FirstEntry.Key + \" -> \" + {metadata.SafeVariableName}FirstEntry.Value);");
+                    sb.AppendLine($"                                {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                    sb.AppendLine("                            }");
+                }
+                else if (isKeyValuePairCollection)
+                {
+                    // For collections of KeyValuePair, FirstOrDefault returns KeyValuePair<K,V>
+                    sb.AppendLine($"                            var {metadata.SafeVariableName}FirstEntry = vm.{metadata.SafePropertyAccess}.FirstOrDefault();");
+                    sb.AppendLine($"                            var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Entry]: \" + {metadata.SafeVariableName}FirstEntry.Key + \" -> \" + {metadata.SafeVariableName}FirstEntry.Value);");
+                    sb.AppendLine($"                            {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                }
+                else
+                {
+                    // For other collections, show first item safely
+                    sb.AppendLine($"                            var {metadata.SafeVariableName}FirstItem = vm.{metadata.SafePropertyAccess}.FirstOrDefault();");
+                    
+                    // Check if the collection contains KeyValuePair (which is a struct and can't be null)
+                    bool isKeyValuePairType = prop.TypeString.Contains("KeyValuePair<");
+                    if (isKeyValuePairType)
+                    {
+                        // For KeyValuePair structs, check if collection has items instead of null check
+                        sb.AppendLine($"                            if (vm.{metadata.SafePropertyAccess}.{metadata.CountProperty} > 0)");
+                        sb.AppendLine("                            {");
+                        sb.AppendLine($"                                var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Item]: \" + {metadata.SafeVariableName}FirstItem.ToString());");
+                        sb.AppendLine($"                                {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                        sb.AppendLine("                            }");
+                    }
+                    else
+                    {
+                        // For reference types or non-KeyValuePair structs, use null check where appropriate
+                        // Note: For value types like int, Guid, etc., FirstOrDefault() returns default(T) which is never null
+                        // Only use null check for reference types
+                        bool mightBeReferenceType = !prop.TypeString.Contains("<int>") && !prop.TypeString.Contains("<double>") && 
+                                                   !prop.TypeString.Contains("<float>") && !prop.TypeString.Contains("<bool>") &&
+                                                   !prop.TypeString.Contains("<decimal>") && !prop.TypeString.Contains("<Guid>") &&
+                                                   !prop.TypeString.Contains("<DateTime>");
+                        if (mightBeReferenceType)
+                        {
+                            sb.AppendLine($"                            if ({metadata.SafeVariableName}FirstItem != null)");
+                            sb.AppendLine("                            {");
+                            sb.AppendLine($"                                var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Item]: \" + {metadata.SafeVariableName}FirstItem.ToString());");
+                            sb.AppendLine($"                                {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                            sb.AppendLine("                            }");
+                        }
+                        else
+                        {
+                            // For value type collections, use count check instead
+                            sb.AppendLine($"                            if (vm.{metadata.SafePropertyAccess}.{metadata.CountProperty} > 0)");
+                            sb.AppendLine("                            {");
+                            sb.AppendLine($"                                var {metadata.SafeVariableName}SampleNode = new TreeNode(\"[Sample Item]: \" + {metadata.SafeVariableName}FirstItem.ToString());");
+                            sb.AppendLine($"                                {metadata.SafeVariableName}Node.Nodes.Add({metadata.SafeVariableName}SampleNode);");
+                            sb.AppendLine("                            }");
+                        }
+                    }
+                }
+                
+                sb.AppendLine("                        }");
                 sb.AppendLine("                    }");
                 sb.AppendLine("                    else");
                 sb.AppendLine("                    {");
@@ -537,7 +638,18 @@ public static partial class CsProjectGenerator
                 var metadata = analysis.GetMetadata(prop);
                 sb.AppendLine("                try");
                 sb.AppendLine("                {");
-                sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + vm.{metadata.SafePropertyAccess}.ToString());");
+                
+                // Use metadata for proper null handling even for enums (e.g., MyEnum?)
+                if (metadata.RequiresNullCheck && !metadata.IsNonNullableValueType)
+                {
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Value = vm.{metadata.SafePropertyAccess}?.ToString() ?? \"<null>\";");
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + {metadata.SafeVariableName}Value);");
+                }
+                else
+                {
+                    sb.AppendLine($"                    var {metadata.SafeVariableName}Node = new TreeNode(\"{prop.Name}: \" + vm.{metadata.SafePropertyAccess}.ToString());");
+                }
+                
                 sb.AppendLine($"                    {metadata.SafeVariableName}Node.Tag = new PropertyNodeInfo {{ PropertyName = \"{prop.Name}\", Object = vm, IsEnumProperty = true }};");
                 sb.AppendLine($"                    enumPropsNode.Nodes.Add({metadata.SafeVariableName}Node);");
                 sb.AppendLine("                }");

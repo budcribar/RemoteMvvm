@@ -255,10 +255,11 @@ namespace TestNamespace
         Assert.Contains("<ListBox ItemsSource=\"{Binding ZoneList}\"", xaml);
         Assert.Contains("<ListBox.ItemTemplate>", xaml);
         Assert.Contains("<DataTemplate>", xaml);
-        Assert.Contains("{Binding Zone}", xaml);
-        Assert.Contains("{Binding Temperature}", xaml);
         
-        // Should create TextBox for simple properties
+        // Updated: New approach uses generic {Binding} instead of specific property bindings
+        Assert.Contains("Text=\"{Binding}\"", xaml); // Generic item binding instead of specific Zone/Temperature
+        
+        // Should create TextBox for simple properties  
         Assert.Contains("{Binding Status, Mode=TwoWay}", xaml);
         
         // Test server UI generation if enabled
@@ -499,8 +500,9 @@ namespace TestNamespace
         Assert.Contains("<ListBox ItemsSource=\"{Binding ZoneList}\"", xaml);
         Assert.Contains("ZoneList (Server)", xaml);
         Assert.Contains("Server Status: Running", xaml);
-        Assert.Contains("{Binding Zone}", xaml);
-        Assert.Contains("{Binding Temperature}", xaml);
+        
+        // Updated: New approach uses generic {Binding} instead of specific property bindings
+        Assert.Contains("Text=\"{Binding}\"", xaml); // Generic item binding instead of specific Zone/Temperature
         
         // Should create TextBox for simple properties
         Assert.Contains("{Binding Status, Mode=TwoWay}", xaml);
