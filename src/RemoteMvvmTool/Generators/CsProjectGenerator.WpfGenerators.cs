@@ -204,8 +204,8 @@ namespace GuiClientApp
     public partial class MainWindow : Window
     {
         private readonly object _viewModel;
-        private readonly System.Threading.Timer? _updateTimer;
         private readonly HashSet<object> _visitedObjects = new();
+        private readonly HashSet<string> _expandedPaths = new();
 
         public MainWindow(object vm) 
         { 
@@ -218,7 +218,7 @@ namespace GuiClientApp
             ExpandAllBtn.Click += (_, __) => ExpandAll();
             CollapseAllBtn.Click += (_, __) => CollapseAll();
             
-            // Set up property change monitoring
+            // Set up property change monitoring - rely on server notifications instead of periodic polling
             if (_viewModel is INotifyPropertyChanged inpc)
             {
                 inpc.PropertyChanged += (_, e) => 
@@ -226,12 +226,6 @@ namespace GuiClientApp
                     Dispatcher.BeginInvoke(() => RefreshProperties());
                 };
             }
-            
-            // Set up periodic refresh for tree view
-            _updateTimer = new System.Threading.Timer(_ => 
-            {
-                Dispatcher.BeginInvoke(() => RefreshProperties());
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3));
             
             // Wire up tree selection changed
             PropertyTreeView.SelectedItemChanged += (_, e) => UpdatePropertyDetails();
@@ -252,8 +246,98 @@ namespace GuiClientApp
             }
         }
 
+        private string GetTreePath(TreeViewItem item)
+        {
+            var path = new List<string>();
+            var current = item;
+            
+            while (current != null)
+            {
+                if (current.Header?.ToString() is string header)
+                {
+                    // Extract property name from header (format: "PropertyName: value")
+                    var propertyName = header.Split(':')[0].Trim();
+                    path.Insert(0, propertyName);
+                }
+                current = ItemsControl.ItemsControlFromItemContainer(current) as TreeViewItem;
+            }
+            
+            return path.Count > 0 ? string.Join("/", path) : string.Empty;
+        }
+
+        private void AttachTreeViewItemEvents(TreeViewItem item)
+        {
+            item.Expanded += (sender, e) =>
+            {
+                if (sender is TreeViewItem expandedItem)
+                {
+                    var path = GetTreePath(expandedItem);
+                    if (!string.IsNullOrEmpty(path))
+                        _expandedPaths.Add(path);
+                }
+                e.Handled = true; // Prevent event bubbling
+            };
+            
+            item.Collapsed += (sender, e) =>
+            {
+                if (sender is TreeViewItem collapsedItem)
+                {
+                    var path = GetTreePath(collapsedItem);
+                    if (!string.IsNullOrEmpty(path))
+                        _expandedPaths.Remove(path);
+                }
+                e.Handled = true; // Prevent event bubbling
+            };
+
+            // Recursively attach events to child items
+            foreach (TreeViewItem childItem in item.Items.OfType<TreeViewItem>())
+            {
+                AttachTreeViewItemEvents(childItem);
+            }
+        }
+
+        private void RestoreExpandedState(ItemsControl container)
+        {
+            foreach (TreeViewItem item in container.Items.OfType<TreeViewItem>())
+            {
+                var itemPath = GetTreePath(item);
+                if (!string.IsNullOrEmpty(itemPath) && _expandedPaths.Contains(itemPath))
+                {
+                    item.IsExpanded = true;
+                }
+                
+                // Recursively restore child items
+                if (item.Items.Count > 0)
+                {
+                    RestoreExpandedState(item);
+                }
+            }
+        }
+
+        private void StoreCurrentExpandedState(ItemsControl container)
+        {
+            foreach (TreeViewItem item in container.Items.OfType<TreeViewItem>())
+            {
+                if (item.IsExpanded)
+                {
+                    var path = GetTreePath(item);
+                    if (!string.IsNullOrEmpty(path))
+                        _expandedPaths.Add(path);
+                }
+                
+                // Recursively store child items
+                if (item.Items.Count > 0)
+                {
+                    StoreCurrentExpandedState(item);
+                }
+            }
+        }
+
         private void LoadPropertyTree()
         {
+            // Store current expanded state before clearing
+            StoreCurrentExpandedState(PropertyTreeView);
+            
             PropertyTreeView.Items.Clear();
             _visitedObjects.Clear(); // Reset cycle detection
             
@@ -273,19 +357,30 @@ namespace GuiClientApp
                     {
                         var propItem = CreatePropertyTreeItem(prop, _viewModel, 0);
                         if (propItem != null)
+                        {
                             rootItem.Items.Add(propItem);
+                            AttachTreeViewItemEvents(propItem);
+                        }
                     }
                     catch
                     {
                         var errorItem = new TreeViewItem { Header = $"{prop.Name}: <error>" };
                         rootItem.Items.Add(errorItem);
+                        AttachTreeViewItemEvents(errorItem);
                     }
                 }
+                
+                // Attach events to root item
+                AttachTreeViewItemEvents(rootItem);
+                
+                // Restore expanded state after rebuilding tree - use lower priority to ensure tree is built first
+                Dispatcher.BeginInvoke(() => RestoreExpandedState(PropertyTreeView), System.Windows.Threading.DispatcherPriority.Background);
             }
             catch (Exception ex)
             {
                 var errorItem = new TreeViewItem { Header = $"Error loading properties: {ex.Message}" };
                 rootItem.Items.Add(errorItem);
+                AttachTreeViewItemEvents(errorItem);
             }
         }
 
@@ -363,10 +458,14 @@ namespace GuiClientApp
                                     {
                                         var childItem = CreatePropertyTreeItem(itemProp, item, depth + 1);
                                         if (childItem != null)
+                                        {
                                             itemNode.Items.Add(childItem);
+                                            AttachTreeViewItemEvents(childItem);
+                                        }
                                     }
                         
                                     propItem.Items.Add(itemNode);
+                                    AttachTreeViewItemEvents(itemNode);
                                     itemIndex++;
                                 }
                             }
@@ -383,7 +482,10 @@ namespace GuiClientApp
                             {
                                 var childItem = CreatePropertyTreeItem(childProp, value, depth + 1);
                                 if (childItem != null)
+                                {
                                     propItem.Items.Add(childItem);
+                                    AttachTreeViewItemEvents(childItem);
+                                }
                             }
                         }
                         
@@ -516,12 +618,6 @@ namespace GuiClientApp
                 ExpandCollapseAll(item, expand);
             }
         }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _updateTimer?.Dispose();
-            base.OnClosed(e);
-        }
     }
 }
 """;
@@ -612,73 +708,6 @@ namespace GuiClientApp
         sb.AppendLine("        </GroupBox>");
         sb.AppendLine();
         
-        // Generate key properties display using legacy property analysis
-        var keyProperties = analysis.SimpleProperties.Concat(analysis.BooleanProperties)
-            .Take(6);
-            
-        if (keyProperties.Any())
-        {
-            sb.AppendLine("        <GroupBox Header=\"Key Server Properties\" Margin=\"0,0,0,15\">");
-            sb.AppendLine("          <StackPanel>");
-            
-            foreach (var prop in keyProperties)
-            {
-                var metadata = analysis.GetMetadata(prop);
-                
-                if (analysis.BooleanProperties.Contains(prop))
-                {
-                    if (prop.IsReadOnly)
-                    {
-                        sb.AppendLine($"          <TextBlock Text=\"{prop.Name}: {{Binding {metadata.SafePropertyAccess}, Mode=OneWay}}\" Margin=\"0,2,0,2\"/>");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"          <CheckBox Content=\"{prop.Name} (Server)\" IsChecked=\"{{Binding {metadata.SafePropertyAccess}, Mode=TwoWay}}\" Margin=\"0,2,0,2\"/>");
-                    }
-                }
-                else
-                {
-                    if (prop.IsReadOnly)
-                    {
-                        sb.AppendLine($"          <TextBlock Text=\"{prop.Name}\" FontWeight=\"SemiBold\" Margin=\"0,6,0,0\"/>");
-                        sb.AppendLine($"          <TextBlock Text=\"{{Binding {metadata.SafePropertyAccess}, Mode=OneWay}}\" Margin=\"0,0,0,4\" TextWrapping=\"Wrap\"/>");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"          <TextBlock Text=\"{prop.Name} (Server)\" FontWeight=\"SemiBold\" Margin=\"0,6,0,0\"/>");
-                        sb.AppendLine($"          <TextBox Text=\"{{Binding {metadata.SafePropertyAccess}, Mode=TwoWay}}\" Margin=\"0,0,0,4\"/>");
-                    }
-                }
-            }
-            
-            sb.AppendLine("          </StackPanel>");
-            sb.AppendLine("        </GroupBox>");
-        }
-        
-        // Generate collections display using legacy property analysis
-        var collectionProperties = analysis.CollectionProperties.Take(3);
-            
-        foreach (var prop in collectionProperties)
-        {
-            var metadata = analysis.GetMetadata(prop);
-            
-            sb.AppendLine($"        <GroupBox Header=\"{prop.Name} (Server)\" Margin=\"0,0,0,15\">");
-            sb.AppendLine($"          <ListBox ItemsSource=\"{{Binding {metadata.SafePropertyAccess}}}\" MaxHeight=\"200\">");
-            sb.AppendLine("            <ListBox.ItemTemplate>");
-            sb.AppendLine("              <DataTemplate>");
-            sb.AppendLine("                <StackPanel Orientation=\"Horizontal\" Margin=\"2\">");
-            
-            // Generate generic property displays for collection items
-            sb.AppendLine("                  <TextBlock Text=\"Item: \" FontWeight=\"SemiBold\"/>");
-            sb.AppendLine("                  <TextBlock Text=\"{Binding}\" Margin=\"0,0,8,0\"/>");
-            
-            sb.AppendLine("                </StackPanel>");
-            sb.AppendLine("              </DataTemplate>");
-            sb.AppendLine("            </ListBox.ItemTemplate>");
-            sb.AppendLine("          </ListBox>");
-            sb.AppendLine("        </GroupBox>");
-        }
-        
         // Commands section if commands exist
         if (cmds.Any())
         {
@@ -715,8 +744,8 @@ namespace ServerApp
     public partial class MainWindow : Window 
     { 
         private readonly object _viewModel;
-        private readonly System.Threading.Timer? _updateTimer;
         private readonly HashSet<object> _visitedObjects = new();
+        private readonly HashSet<string> _expandedPaths = new();
 
         public MainWindow(object vm) 
         { 
@@ -729,7 +758,7 @@ namespace ServerApp
             ExpandAllBtn.Click += (_, __) => ExpandAll();
             CollapseAllBtn.Click += (_, __) => CollapseAll();
             
-            // Set up property change monitoring
+            // Set up property change monitoring - rely on server notifications instead of periodic polling
             if (_viewModel is INotifyPropertyChanged inpc)
             {
                 inpc.PropertyChanged += (_, e) => 
@@ -742,15 +771,8 @@ namespace ServerApp
                 };
             }
             
-            // Set up periodic refresh for server tree view
-            _updateTimer = new System.Threading.Timer(_ => 
-            {
-                Dispatcher.BeginInvoke(() => 
-                {
-                    RefreshProperties();
-                    UpdateServerStatus();
-                });
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(3));
+            // Wire up tree selection changed
+            PropertyTreeView.SelectedItemChanged += (_, e) => UpdatePropertyDetails();
             
             // Initial load
             Loaded += (_, __) => 
@@ -772,8 +794,98 @@ namespace ServerApp
             }
         }
 
+        private string GetTreePath(TreeViewItem item)
+        {
+            var path = new List<string>();
+            var current = item;
+            
+            while (current != null)
+            {
+                if (current.Header?.ToString() is string header)
+                {
+                    // Extract property name from header (format: "PropertyName: value")
+                    var propertyName = header.Split(':')[0].Trim();
+                    path.Insert(0, propertyName);
+                }
+                current = ItemsControl.ItemsControlFromItemContainer(current) as TreeViewItem;
+            }
+            
+            return path.Count > 0 ? string.Join("/", path) : string.Empty;
+        }
+
+        private void AttachTreeViewItemEvents(TreeViewItem item)
+        {
+            item.Expanded += (sender, e) =>
+            {
+                if (sender is TreeViewItem expandedItem)
+                {
+                    var path = GetTreePath(expandedItem);
+                    if (!string.IsNullOrEmpty(path))
+                        _expandedPaths.Add(path);
+                }
+                e.Handled = true; // Prevent event bubbling
+            };
+            
+            item.Collapsed += (sender, e) =>
+            {
+                if (sender is TreeViewItem collapsedItem)
+                {
+                    var path = GetTreePath(collapsedItem);
+                    if (!string.IsNullOrEmpty(path))
+                        _expandedPaths.Remove(path);
+                }
+                e.Handled = true; // Prevent event bubbling
+            };
+
+            // Recursively attach events to child items
+            foreach (TreeViewItem childItem in item.Items.OfType<TreeViewItem>())
+            {
+                AttachTreeViewItemEvents(childItem);
+            }
+        }
+
+        private void RestoreExpandedState(ItemsControl container)
+        {
+            foreach (TreeViewItem item in container.Items.OfType<TreeViewItem>())
+            {
+                var itemPath = GetTreePath(item);
+                if (!string.IsNullOrEmpty(itemPath) && _expandedPaths.Contains(itemPath))
+                {
+                    item.IsExpanded = true;
+                }
+                
+                // Recursively restore child items
+                if (item.Items.Count > 0)
+                {
+                    RestoreExpandedState(item);
+                }
+            }
+        }
+
+        private void StoreCurrentExpandedState(ItemsControl container)
+        {
+            foreach (TreeViewItem item in container.Items.OfType<TreeViewItem>())
+            {
+                if (item.IsExpanded)
+                {
+                    var path = GetTreePath(item);
+                    if (!string.IsNullOrEmpty(path))
+                        _expandedPaths.Add(path);
+                }
+                
+                // Recursively store child items
+                if (item.Items.Count > 0)
+                {
+                    StoreCurrentExpandedState(item);
+                }
+            }
+        }
+
         private void LoadPropertyTree()
         {
+            // Store current expanded state before clearing
+            StoreCurrentExpandedState(PropertyTreeView);
+            
             PropertyTreeView.Items.Clear();
             _visitedObjects.Clear(); // Reset cycle detection
             
@@ -801,11 +913,18 @@ namespace ServerApp
                         rootItem.Items.Add(errorItem);
                     }
                 }
+                
+                // Attach events to root item
+                AttachTreeViewItemEvents(rootItem);
+                
+                // Restore expanded state after rebuilding tree - use lower priority to ensure tree is built first
+                Dispatcher.BeginInvoke(() => RestoreExpandedState(PropertyTreeView), System.Windows.Threading.DispatcherPriority.Background);
             }
             catch (Exception ex)
             {
                 var errorItem = new TreeViewItem { Header = $"Error loading server properties: {ex.Message}" };
                 rootItem.Items.Add(errorItem);
+                AttachTreeViewItemEvents(errorItem);
             }
         }
 
@@ -867,25 +986,32 @@ namespace ServerApp
                                 {
                                     if (itemIndex >= 3) break; // Limit to first 3 items
                                     
-                                    var itemProperties = item.GetType().GetProperties()
+                                    var itemProperties = item?.GetType().GetProperties()
                                         .Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
                                         .Take(5)
                                         .ToList();
                         
                                     var itemNode = new TreeViewItem 
                                     { 
-                                        Header = $"[{itemIndex}] {item.GetType().Name}",
+                                        Header = $"[{itemIndex}] {item?.GetType().Name ?? "null"}",
                                         Tag = new { Property = (System.Reflection.PropertyInfo?)null, Value = item, Object = item }
                                     };
                         
-                                    foreach (var itemProp in itemProperties)
+                                    if (itemProperties != null)
                                     {
-                                        var childItem = CreatePropertyTreeItem(itemProp, item, depth + 1);
-                                        if (childItem != null)
-                                            itemNode.Items.Add(childItem);
+                                        foreach (var itemProp in itemProperties)
+                                        {
+                                            var childItem = CreatePropertyTreeItem(itemProp, item!, depth + 1);
+                                            if (childItem != null)
+                                            {
+                                                itemNode.Items.Add(childItem);
+                                                AttachTreeViewItemEvents(childItem);
+                                            }
+                                        }
                                     }
                         
                                     propItem.Items.Add(itemNode);
+                                    AttachTreeViewItemEvents(itemNode);
                                     itemIndex++;
                                 }
                             }
@@ -902,7 +1028,10 @@ namespace ServerApp
                             {
                                 var childItem = CreatePropertyTreeItem(childProp, value, depth + 1);
                                 if (childItem != null)
+                                {
                                     propItem.Items.Add(childItem);
+                                    AttachTreeViewItemEvents(childItem);
+                                }
                             }
                         }
                         
@@ -940,6 +1069,13 @@ namespace ServerApp
         {
             return type != typeof(string) && 
                    typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
+        }
+
+        private void UpdatePropertyDetails()
+        {
+            // For server, we don't have PropertyDetailsPanel in XAML, so this is a no-op
+            // The server XAML doesn't include the PropertyDetailsPanel like the client does
+            // This method exists to prevent compilation errors when referenced in event handlers
         }
 
         private void UpdateServerStatus()
@@ -984,12 +1120,6 @@ namespace ServerApp
                 item.IsExpanded = expand;
                 ExpandCollapseAll(item, expand);
             }
-        }
-
-        protected override void OnClosed(EventArgs e)
-        {
-            _updateTimer?.Dispose();
-            base.OnClosed(e);
         }
     }
 }
