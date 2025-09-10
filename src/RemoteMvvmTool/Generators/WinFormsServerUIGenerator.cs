@@ -1,0 +1,489 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using GrpcRemoteMvvmModelUtil;
+
+namespace RemoteMvvmTool.Generators;
+
+/// <summary>
+/// WinForms-specific server UI generator that produces hierarchical property display like WPF
+/// </summary>
+public class WinFormsServerUIGenerator : UIGeneratorBase
+{
+    public WinFormsServerUIGenerator(string projectName, string modelName, List<PropertyInfo> properties, List<CommandInfo> commands)
+        : base(projectName, modelName, properties, commands, "Server")
+    {
+    }
+
+    public override string GenerateProgram(string protoNs, string serviceName)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("using System;");
+        sb.AppendLine("using System.Threading;");
+        sb.AppendLine("using PeakSWC.Mvvm.Remote;");
+        sb.AppendLine($"using {protoNs};");
+        sb.AppendLine("using Generated.ViewModels;");
+        sb.AppendLine("using System.Windows.Forms;");
+        sb.AppendLine("using System.ComponentModel;");
+        sb.AppendLine("using System.Linq;");
+        sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Drawing;");
+        sb.AppendLine();
+        sb.AppendLine("namespace ServerApp");
+        sb.AppendLine("{");
+        sb.AppendLine("    " + GeneratePropertyNodeInfoClass().Replace("\n", "\n    "));
+        sb.AppendLine();
+        sb.AppendLine("    public class Program");
+        sb.AppendLine("    {");
+        sb.AppendLine("        [STAThread]");
+        sb.AppendLine("        public static void Main(string[] args)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            int port = 50052;");
+        sb.AppendLine("            if (args.Length > 0 && int.TryParse(args[0], out var p)) port = p;");
+        sb.AppendLine();
+        sb.AppendLine("            try");
+        sb.AppendLine("            {");
+        sb.AppendLine("                Console.WriteLine($\"Starting server with GUI on port {port}...\");");
+        sb.AppendLine("                var serverOptions = new ServerOptions { Port = port, UseHttps = true };");
+        sb.AppendLine($"                var vm = new {ModelName}(serverOptions);");
+        sb.AppendLine("                Console.WriteLine($\"Server ready on port {port}\");");
+        sb.AppendLine();
+        sb.AppendLine("                Application.EnableVisualStyles();");
+        sb.AppendLine($"                var form = new Form");
+        sb.AppendLine("                {");
+        sb.AppendLine($"                    Text = \"Server GUI - {ProjectName}\",");
+        sb.AppendLine("                    Width = 1150,");
+        sb.AppendLine("                    Height = 780,");
+        sb.AppendLine("                    StartPosition = FormStartPosition.CenterScreen");
+        sb.AppendLine("                };");
+        sb.AppendLine();
+        
+        // Generate the two-panel layout like WPF
+        sb.AppendLine("                var split = new SplitContainer { Dock = DockStyle.Fill, SplitterDistance = 500 };");
+        sb.AppendLine("                form.Controls.Add(split);");
+        sb.AppendLine();
+        
+        // Generate status strip
+        sb.AppendLine("                var statusStrip = new StatusStrip();");
+        sb.AppendLine("                var statusLbl = new ToolStripStatusLabel();");
+        sb.AppendLine("                statusStrip.Items.Add(statusLbl);");
+        sb.AppendLine("                form.Controls.Add(statusStrip);");
+        sb.AppendLine("                statusStrip.Dock = DockStyle.Bottom;");
+        sb.AppendLine("                statusLbl.Text = \"Server Status: Running\";");
+        sb.AppendLine();
+        
+        // Generate TreeView structure
+        sb.Append(GenerateTreeViewStructure());
+        sb.AppendLine();
+        
+        // Generate property details panel
+        sb.Append(GeneratePropertyDetailsPanel());
+        sb.AppendLine();
+        
+        // Generate command buttons
+        sb.Append(GenerateCommandButtons());
+        sb.AppendLine();
+        
+        // Generate hierarchical tree loading using framework-agnostic approach
+        sb.Append("        " + GenerateFrameworkAgnosticTreeLogic("tree", "vm").Replace("\n", "\n        "));
+        sb.AppendLine();
+        sb.AppendLine("            // Load initial tree");
+        sb.AppendLine("            LoadTree();");
+        sb.AppendLine();
+        
+        // Generate property change monitoring
+        sb.Append(GeneratePropertyChangeMonitoring());
+        sb.AppendLine();
+        
+        sb.AppendLine("                Application.Run(form);");
+        sb.AppendLine("            }");
+        sb.AppendLine("            catch (Exception ex)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                Console.WriteLine(\"SERVER_ERROR_START\");");
+        sb.AppendLine("                Console.WriteLine(ex);");
+        sb.AppendLine("                Console.WriteLine(\"SERVER_ERROR_END\");");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+
+        // Generate property editor method
+        sb.AppendLine();
+        sb.AppendLine("        private static void ShowServerPropertyEditor(PropertyNodeInfo? nodeInfo, TableLayoutPanel detailLayout, object vm)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            // Clear existing controls");
+        sb.AppendLine("            foreach (Control control in detailLayout.Controls.OfType<Control>().ToArray())");
+        sb.AppendLine("            {");
+        sb.AppendLine("                detailLayout.Controls.Remove(control);");
+        sb.AppendLine("                control.Dispose();");
+        sb.AppendLine("            }");
+        sb.AppendLine("            detailLayout.RowCount = 0;");
+        sb.AppendLine();
+        sb.AppendLine("            if (nodeInfo?.Object == null) return;");
+        sb.AppendLine();
+        sb.AppendLine("            int row = 0;");
+        sb.AppendLine();
+        sb.AppendLine("            // Show property name");
+        sb.AppendLine("            var nameLabel = new Label { Text = \"Property:\", AutoSize = true, Font = new Font(\"Segoe UI\", 9, FontStyle.Bold) };");
+        sb.AppendLine("            var nameValue = new Label { Text = nodeInfo.PropertyName, AutoSize = true };");
+        sb.AppendLine("            detailLayout.Controls.Add(nameLabel, 0, row);");
+        sb.AppendLine("            detailLayout.Controls.Add(nameValue, 1, row);");
+        sb.AppendLine("            row++;");
+        sb.AppendLine();
+        sb.AppendLine("            // Show property type info");
+        sb.AppendLine("            var typeLabel = new Label { Text = \"Type:\", AutoSize = true };");
+        sb.AppendLine("            var typeInfo = \"Unknown\";");
+        sb.AppendLine("            if (nodeInfo.IsSimpleProperty) typeInfo = \"Simple Property\";");
+        sb.AppendLine("            else if (nodeInfo.IsBooleanProperty) typeInfo = \"Boolean Property\";");
+        sb.AppendLine("            else if (nodeInfo.IsEnumProperty) typeInfo = \"Enum Property\";");
+        sb.AppendLine("            else if (nodeInfo.IsCollectionProperty) typeInfo = \"Collection Property\";");
+        sb.AppendLine("            else if (nodeInfo.IsComplexProperty) typeInfo = \"Complex Property\";");
+        sb.AppendLine("            var typeValue = new Label { Text = typeInfo, AutoSize = true, ForeColor = Color.Blue };");
+        sb.AppendLine("            detailLayout.Controls.Add(typeLabel, 0, row);");
+        sb.AppendLine("            detailLayout.Controls.Add(typeValue, 1, row);");
+        sb.AppendLine("            row++;");
+        sb.AppendLine();
+        sb.AppendLine("            detailLayout.RowCount = row;");
+        sb.AppendLine("        }");
+        
+        sb.AppendLine("    }");
+        sb.AppendLine("}");
+        return sb.ToString();
+    }
+
+    protected override string GenerateTreeViewStructure()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("                // Left panel - TreeView with hierarchical property structure (like WPF)");
+        sb.AppendLine("                var leftPanel = new Panel { Dock = DockStyle.Fill };");
+        sb.AppendLine("                split.Panel1.Controls.Add(leftPanel);");
+        sb.AppendLine();
+        sb.AppendLine("                var treeLabel = new Label");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Text = \"Server ViewModel Properties\",");
+        sb.AppendLine("                    Font = new Font(\"Segoe UI\", 12, FontStyle.Bold),");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    Dock = DockStyle.Top,");
+        sb.AppendLine("                    Padding = new Padding(10, 10, 10, 5)");
+        sb.AppendLine("                };");
+        sb.AppendLine("                leftPanel.Controls.Add(treeLabel);");
+        sb.AppendLine();
+        sb.AppendLine("                // Tree control buttons (like WPF)");
+        sb.AppendLine("                var treeButtonsPanel = new FlowLayoutPanel");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Height = 35,");
+        sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
+        sb.AppendLine("                    AutoSize = false,");
+        sb.AppendLine("                    Dock = DockStyle.Bottom,");
+        sb.AppendLine("                    Padding = new Padding(10, 5, 10, 5)");
+        sb.AppendLine("                };");
+        sb.AppendLine("                leftPanel.Controls.Add(treeButtonsPanel);");
+        sb.AppendLine();
+        sb.AppendLine("                var refreshBtn = new Button { Text = \"Refresh\", Width = 70, Height = 25 };");
+        sb.AppendLine("                var expandBtn = new Button { Text = \"Expand All\", Width = 80, Height = 25 };");
+        sb.AppendLine("                var collapseBtn = new Button { Text = \"Collapse\", Width = 70, Height = 25 };");
+        sb.AppendLine("                treeButtonsPanel.Controls.Add(refreshBtn);");
+        sb.AppendLine("                treeButtonsPanel.Controls.Add(expandBtn);");
+        sb.AppendLine("                treeButtonsPanel.Controls.Add(collapseBtn);");
+        sb.AppendLine();
+        sb.AppendLine("                // TreeView with hierarchical display");
+        sb.AppendLine("                var tree = new TreeView");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Dock = DockStyle.Fill,");
+        sb.AppendLine("                    HideSelection = false,");
+        sb.AppendLine("                    ShowLines = true,");
+        sb.AppendLine("                    ShowPlusMinus = true,");
+        sb.AppendLine("                    ShowRootLines = true");
+        sb.AppendLine("                };");
+        sb.AppendLine("                leftPanel.Controls.Add(tree);");
+        sb.AppendLine();
+        sb.AppendLine("                // Wire up button events");
+        sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
+        sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
+        sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
+        return sb.ToString();
+    }
+
+    protected override string GeneratePropertyDetailsPanel()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("                // Right panel - Property details (like WPF)");
+        sb.AppendLine("                var rightPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };");
+        sb.AppendLine("                split.Panel2.Controls.Add(rightPanel);");
+        sb.AppendLine();
+        sb.AppendLine("                var flow = new FlowLayoutPanel");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Dock = DockStyle.Top,");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    FlowDirection = FlowDirection.TopDown,");
+        sb.AppendLine("                    WrapContents = false,");
+        sb.AppendLine("                    Padding = new Padding(10)");
+        sb.AppendLine("                };");
+        sb.AppendLine("                rightPanel.Controls.Add(flow);");
+        sb.AppendLine();
+        sb.AppendLine("                var serverLabel = new Label");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Text = \"Server Properties\",");
+        sb.AppendLine("                    Font = new Font(\"Segoe UI\", 12, FontStyle.Bold),");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    ForeColor = Color.Blue");
+        sb.AppendLine("                };");
+        sb.AppendLine("                flow.Controls.Add(serverLabel);");
+        sb.AppendLine();
+        sb.AppendLine("                var statusLabel = new Label");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Text = \"Server Status: Running\",");
+        sb.AppendLine("                    Font = new Font(\"Segoe UI\", 10, FontStyle.Regular),");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    ForeColor = Color.Green");
+        sb.AppendLine("                };");
+        sb.AppendLine("                flow.Controls.Add(statusLabel);");
+        sb.AppendLine();
+        sb.AppendLine("                var detailGroup = new GroupBox");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Text = \"Property Details (Server)\",");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
+        sb.AppendLine("                    Padding = new Padding(10),");
+        sb.AppendLine("                    Width = 350");
+        sb.AppendLine("                };");
+        sb.AppendLine("                flow.Controls.Add(detailGroup);");
+        sb.AppendLine();
+        sb.AppendLine("                var detailLayout = new TableLayoutPanel");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    ColumnCount = 2,");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    Width = 320");
+        sb.AppendLine("                };");
+        sb.AppendLine("                detailGroup.Controls.Add(detailLayout);");
+        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));");
+        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));");
+        sb.AppendLine();
+        sb.AppendLine("                // Tree selection event to update property details");
+        sb.AppendLine("                tree.AfterSelect += (_, e) =>");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    ShowServerPropertyEditor(e.Node?.Tag as PropertyNodeInfo, detailLayout, vm);");
+        sb.AppendLine("                };");
+        return sb.ToString();
+    }
+
+    protected override string GenerateCommandButtons()
+    {
+        if (!Commands.Any()) return "";
+        
+        var sb = new StringBuilder();
+        sb.AppendLine("                // Server Commands section (like WPF)");
+        sb.AppendLine("                var cmdGroup = new GroupBox");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Text = \"Server Commands\",");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
+        sb.AppendLine("                    Padding = new Padding(10)");
+        sb.AppendLine("                };");
+        sb.AppendLine("                flow.Controls.Add(cmdGroup);");
+        sb.AppendLine();
+        sb.AppendLine("                var cmdFlow = new FlowLayoutPanel");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Dock = DockStyle.Top,");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
+        sb.AppendLine("                    WrapContents = true");
+        sb.AppendLine("                };");
+        sb.AppendLine("                cmdGroup.Controls.Add(cmdFlow);");
+        
+        int cmdIndex = 0;
+        foreach (var c in Commands)
+        {
+            var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal) ? c.MethodName[..^5] : c.MethodName;
+            sb.AppendLine();
+            sb.AppendLine($"                var btn{cmdIndex} = new Button");
+            sb.AppendLine("                {");
+            sb.AppendLine($"                    Text = \"{baseName}\",");
+            sb.AppendLine("                    Width = 120,");
+            sb.AppendLine("                    Height = 30,");
+            sb.AppendLine("                    Margin = new Padding(0, 0, 10, 10)");
+            sb.AppendLine("                };");
+            sb.AppendLine($"                btn{cmdIndex}.Click += (_, __) =>");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    try");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        vm.{c.CommandPropertyName}?.Execute(null);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                    catch (Exception ex)");
+            sb.AppendLine("                    {");
+            sb.AppendLine($"                        MessageBox.Show($\"Error executing {baseName}: {{ex.Message}}\", \"Server Command Error\", MessageBoxButtons.OK, MessageBoxIcon.Warning);");
+            sb.AppendLine("                    }");
+            sb.AppendLine("                };");
+            sb.AppendLine($"                cmdFlow.Controls.Add(btn{cmdIndex});");
+            cmdIndex++;
+        }
+        
+        return sb.ToString();
+    }
+
+    protected override string GeneratePropertyChangeMonitoring()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("                // Property change monitoring (like WPF)");
+        sb.AppendLine("                if (vm is INotifyPropertyChanged inpc)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    inpc.PropertyChanged += (_, e) =>");
+        sb.AppendLine("                    {");
+        sb.AppendLine("                        try { LoadTree(); }");
+        sb.AppendLine("                        catch { }");
+        sb.AppendLine("                    };");
+        sb.AppendLine("                }");
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// Convert framework-agnostic tree commands to WinForms-specific C# code
+    /// </summary>
+    protected override string ConvertTreeCommandsToFrameworkCode(List<TreeCommand> commands)
+    {
+        var sb = new StringBuilder();
+        var indentLevel = 0;
+        
+        foreach (var command in commands)
+        {
+            var indent = new string(' ', indentLevel * 4);
+            
+            switch (command.Type)
+            {
+                case TreeCommandType.BeginFunction:
+                    sb.AppendLine($"{indent}void {command.Parameters[0]}()");
+                    sb.AppendLine($"{indent}{{");
+                    indentLevel++;
+                    break;
+                    
+                case TreeCommandType.EndFunction:
+                    indentLevel--;
+                    sb.AppendLine($"{indent}}}");
+                    break;
+                    
+                case TreeCommandType.Comment:
+                    sb.AppendLine($"{indent}// {command.Parameters[0]}");
+                    break;
+                    
+                case TreeCommandType.TryBegin:
+                    sb.AppendLine($"{indent}try");
+                    sb.AppendLine($"{indent}{{");
+                    indentLevel++;
+                    break;
+                    
+                case TreeCommandType.TryEnd:
+                    indentLevel--;
+                    sb.AppendLine($"{indent}}}");
+                    break;
+                    
+                case TreeCommandType.CatchBegin:
+                    sb.AppendLine($"{indent}catch (Exception ex)");
+                    sb.AppendLine($"{indent}{{");
+                    indentLevel++;
+                    break;
+                    
+                case TreeCommandType.CatchEnd:
+                    indentLevel--;
+                    sb.AppendLine($"{indent}}}");
+                    break;
+                    
+                case TreeCommandType.FinallyBegin:
+                    sb.AppendLine($"{indent}finally");
+                    sb.AppendLine($"{indent}{{");
+                    indentLevel++;
+                    break;
+                    
+                case TreeCommandType.FinallyEnd:
+                    indentLevel--;
+                    sb.AppendLine($"{indent}}}");
+                    break;
+                    
+                case TreeCommandType.BeginUpdate:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}.BeginUpdate();");
+                    break;
+                    
+                case TreeCommandType.EndUpdate:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}.EndUpdate();");
+                    break;
+                    
+                case TreeCommandType.Clear:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}.Nodes.Clear();");
+                    break;
+                    
+                case TreeCommandType.CreateNode:
+                    sb.AppendLine($"{indent}var {command.Parameters[0]} = new TreeNode({command.Parameters[1]});");
+                    break;
+                    
+                case TreeCommandType.AddToTree:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}.Nodes.Add({command.Parameters[1]});");
+                    break;
+                    
+                case TreeCommandType.AddChildNode:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}.Nodes.Add({command.Parameters[1]});");
+                    break;
+                    
+                case TreeCommandType.ExpandNode:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}.Expand();");
+                    break;
+                    
+                case TreeCommandType.SetNodeTag:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}.Tag = new PropertyNodeInfo {{ PropertyName = {command.Parameters[1]}, Object = {command.Parameters[2]}, {command.Parameters[3]} }};");
+                    break;
+                    
+                case TreeCommandType.AssignValue:
+                    sb.AppendLine($"{indent}var {command.Parameters[0]} = {command.Parameters[1]};");
+                    break;
+                    
+                case TreeCommandType.IfNotNull:
+                    sb.AppendLine($"{indent}if ({command.Parameters[0]} != null)");
+                    sb.AppendLine($"{indent}{{");
+                    indentLevel++;
+                    break;
+                    
+                case TreeCommandType.Else:
+                    indentLevel--;
+                    sb.AppendLine($"{indent}}}");
+                    sb.AppendLine($"{indent}else");
+                    sb.AppendLine($"{indent}{{");
+                    indentLevel++;
+                    break;
+                    
+                case TreeCommandType.EndIf:
+                    indentLevel--;
+                    sb.AppendLine($"{indent}}}");
+                    break;
+                    
+                case TreeCommandType.ForEach:
+                    sb.AppendLine($"{indent}foreach (var {command.Parameters[0]} in {command.Parameters[1]})");
+                    sb.AppendLine($"{indent}{{");
+                    indentLevel++;
+                    break;
+                    
+                case TreeCommandType.EndForEach:
+                    indentLevel--;
+                    sb.AppendLine($"{indent}}}");
+                    break;
+                    
+                case TreeCommandType.IfBreak:
+                    sb.AppendLine($"{indent}if ({command.Parameters[0]}) break; // {command.Parameters[1]}");
+                    break;
+                    
+                case TreeCommandType.Increment:
+                    sb.AppendLine($"{indent}{command.Parameters[0]}++;");
+                    break;
+            }
+        }
+        
+        return sb.ToString();
+    }
+
+    // WinForms-specific tree operations
+    protected override string GenerateTreeBeginUpdate(string treeVariableName) => $"{treeVariableName}.BeginUpdate();";
+    protected override string GenerateTreeEndUpdate(string treeVariableName) => $"{treeVariableName}.EndUpdate();";
+    protected override string GenerateTreeClear(string treeVariableName) => $"{treeVariableName}.Nodes.Clear();";
+    protected override string GenerateCreateTreeNode(string text) => $"new TreeNode({text})";
+    protected override string GenerateAddTreeNode(string treeVariableName, string nodeVariableName) => $"{treeVariableName}.Nodes.Add({nodeVariableName});";
+    protected override string GenerateAddChildTreeNode(string parentNodeVariableName, string childNodeVariableName) => $"{parentNodeVariableName}.Nodes.Add({childNodeVariableName});";
+    protected override string GenerateExpandTreeNode(string nodeVariableName) => $"{nodeVariableName}.Expand();";
+    protected override string GenerateSetTreeNodeTag(string nodeVariableName, string propertyName, string objectReference, string additionalProperties) =>
+        $"{nodeVariableName}.Tag = new PropertyNodeInfo {{ PropertyName = {propertyName}, Object = {objectReference}, {additionalProperties} }};";
+}

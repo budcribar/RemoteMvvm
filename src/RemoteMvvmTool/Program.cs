@@ -197,7 +197,8 @@ namespace RemoteMvvmTool
                     // WinForms rich UI helper file (mirrors WPF experience) if requested
                     if (string.Equals(runType, "winforms", StringComparison.OrdinalIgnoreCase))
                     {
-                        var winFormsGui = CsProjectGenerator.GenerateWinFormsGui(result.ViewModelName, serviceName, result.ViewModelName + "RemoteClient", result.Properties, result.Commands);
+                        var winFormsGenerator = new WinFormsClientUIGenerator(result.ViewModelName, serviceName, result.Properties, result.Commands, result.ViewModelName + "RemoteClient", "Generated.Clients");
+                        var winFormsGui = winFormsGenerator.GenerateProgram(protoNs, serviceName + "Service");
                         await File.WriteAllTextAsync(Path.Combine(projDir, "WinFormsGui.cs"), winFormsGui);
                     }
 

@@ -8,13 +8,13 @@ using Microsoft.CodeAnalysis;
 namespace RemoteMvvmTool.Generators;
 
 /// <summary>
-/// Utility class for discovering properties at generation time and generating appropriate UI code
-/// based on the actual properties found in the view model using Roslyn compiler analysis
+/// Utility class for discovering and analyzing properties using Roslyn compiler analysis.
+/// Focuses on property categorization and metadata generation for UI frameworks.
 /// </summary>
 public static class PropertyDiscoveryUtility
 {
     /// <summary>
-    /// Analyzes a list of properties and categorizes them for UI generation
+    /// Analyzes a list of properties and categorizes them for UI generation using advanced Roslyn analysis
     /// </summary>
     public static PropertyAnalysis AnalyzeProperties(List<PropertyInfo> props)
     {
@@ -22,7 +22,7 @@ public static class PropertyDiscoveryUtility
         
         foreach (var prop in props)
         {
-            // Generate metadata for each property
+            // Generate metadata for each property using Roslyn analysis
             var metadata = AnalyzePropertyMetadata(prop);
             analysis.SetMetadata(prop, metadata);
             
@@ -63,7 +63,7 @@ public static class PropertyDiscoveryUtility
     }
 
     /// <summary>
-    /// Analyzes metadata for a single property using Roslyn type information
+    /// Analyzes metadata for a single property using advanced Roslyn type analysis
     /// </summary>
     public static PropertyMetadata AnalyzePropertyMetadata(PropertyInfo prop)
     {
@@ -82,14 +82,14 @@ public static class PropertyDiscoveryUtility
         metadata.IsArrayType = IsArrayType(prop);
         metadata.CountProperty = metadata.IsArrayType ? "Length" : "Count";
 
-        // Set UI hints
+        // Set UI hints using Roslyn analysis
         metadata.UIHints = GetUIHints(prop);
 
         return metadata;
     }
 
     /// <summary>
-    /// Gets UI hints for a property using Roslyn type information
+    /// Gets UI hints for a property using Roslyn type analysis
     /// </summary>
     public static UIHints GetUIHints(PropertyInfo prop)
     {
@@ -193,8 +193,7 @@ public static class PropertyDiscoveryUtility
             return true;
         }
 
-        // Fallback: Check for well-known collection types by name
-        // This helps when interface resolution fails in test environments
+        // Fallback: Check for well-known collection types by name for robustness
         var typeName = prop.FullTypeSymbol.MetadataName;
         var namespaceName = prop.FullTypeSymbol.ContainingNamespace?.ToDisplayString();
         
@@ -369,7 +368,7 @@ public static class PropertyDiscoveryUtility
     /// <summary>
     /// Makes a property access safe by ensuring valid identifier format
     /// </summary>
-    private static string MakeSafePropertyAccess(string propertyName)
+    public static string MakeSafePropertyAccess(string propertyName)
     {
         // For property access, we don't need the @ prefix, just ensure it's a valid identifier
         if (string.IsNullOrWhiteSpace(propertyName))
@@ -414,38 +413,54 @@ public class PropertyAnalysis
     public List<PropertyInfo> ComplexProperties { get; } = new(); // Classes with properties
     
     // Add metadata for better code generation
-    private readonly Dictionary<string, PropertyMetadata> _metadata = new();
-    
+    private readonly Dictionary<PropertyInfo, PropertyMetadata> _metadata = new();
+
+    /// <summary>
+    /// Gets metadata for a property including safe access names
+    /// </summary>
     public PropertyMetadata GetMetadata(PropertyInfo prop)
     {
-        if (!_metadata.TryGetValue(prop.Name, out var metadata))
-        {
-            metadata = PropertyDiscoveryUtility.AnalyzePropertyMetadata(prop);
-            _metadata[prop.Name] = metadata;
-        }
-        return metadata;
+        return _metadata.TryGetValue(prop, out var existing) ? existing : 
+            new PropertyMetadata
+            {
+                SafePropertyAccess = PropertyDiscoveryUtility.MakeSafePropertyAccess(prop.Name),
+                SafeVariableName = PropertyDiscoveryUtility.MakeSafeVariableName(prop.Name.ToLower()),
+                IsSimple = SimpleProperties.Contains(prop),
+                IsBoolean = BooleanProperties.Contains(prop),
+                IsEnum = EnumProperties.Contains(prop),
+                IsCollection = CollectionProperties.Contains(prop),
+                IsComplex = ComplexProperties.Contains(prop)
+            };
     }
-    
+
+    /// <summary>
+    /// Sets metadata for a property
+    /// </summary>
     public void SetMetadata(PropertyInfo prop, PropertyMetadata metadata)
     {
-        _metadata[prop.Name] = metadata;
+        _metadata[prop] = metadata;
     }
 }
 
 /// <summary>
-/// Contains metadata about a property for code generation
+/// Metadata about a property for UI generation
 /// </summary>
 public class PropertyMetadata
 {
     public string SafeVariableName { get; set; } = string.Empty;
     public string SafePropertyAccess { get; set; } = string.Empty;
-    public string CountProperty { get; set; } = "Count"; // "Length" or "Count"
-    public bool IsNonNullableValueType { get; set; }
+    public bool IsSimple { get; set; }
+    public bool IsBoolean { get; set; }
+    public bool IsEnum { get; set; }
+    public bool IsCollection { get; set; }
+    public bool IsComplex { get; set; }
     public string DisplayName { get; set; } = string.Empty;
+    public bool IsNonNullableValueType { get; set; }
     public bool RequiresNullCheck { get; set; } = true;
-    public UIHints UIHints { get; set; } = new();
     public bool IsArrayType { get; set; }
+    public string CountProperty { get; set; } = "Count"; // "Length" or "Count"
     public string TypeCategory { get; set; } = "Simple"; // Simple, Boolean, Enum, Collection, Complex
+    public UIHints UIHints { get; set; } = new();
 }
 
 /// <summary>

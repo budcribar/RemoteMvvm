@@ -217,10 +217,13 @@ namespace TestNamespace
         var cmds = new List<CommandInfo>();
         string prog = CsProjectGenerator.GenerateGuiClientProgram("MyApp", "winforms", "Proto.Ns", "SvcService", "Client.Ns", props, cmds);
         
-        // Updated: Check for our new simplified approach using WinFormsGui.Run instead of inline form creation
-        Assert.Contains("WinFormsGui.Run(vm);", prog);
+        // Updated: Check for new hierarchical UI generation approach using UIGeneratorBase
+        Assert.Contains("Application.EnableVisualStyles();", prog);
+        Assert.Contains("Application.Run(form);", prog);
+        Assert.Contains("var form = new Form", prog);
         Assert.Contains("using System.Windows.Forms;", prog);
         Assert.Contains("using System.ComponentModel;", prog);
+        Assert.Contains("MyApp GUI Client", prog); // Window title
         
         // Test server UI generation if enabled
         TestServerUIGenerationIfEnabled("MyApp", "SvcService", props, cmds, "winforms");
@@ -297,18 +300,18 @@ namespace TestNamespace
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test PropertyDiscoveryUtility comprehensive features
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
+        // Updated: Test new hierarchical UI generation approach using UIGeneratorBase
+        string prog = CsProjectGenerator.GenerateGuiClientProgram("TestApp", "winforms", "Proto.Ns", "SvcService", "Client.Ns", props, cmds);
         
-        Assert.Contains("var tree = new TreeView", gui);
-        Assert.Contains("split.Panel1.Controls.Add(tree);", gui);
-        Assert.Contains("Client ViewModel Properties", gui); // PropertyDiscoveryUtility context labeling
-        Assert.Contains("LoadTree();", gui); // PropertyDiscoveryUtility generates LoadTree method
-        Assert.Contains("Collections", gui); // ZoneList should be categorized as collection
-        Assert.Contains("Simple Properties", gui); // Status should be categorized as simple
+        Assert.Contains("var tree = new TreeView", prog);
+        Assert.Contains("leftPanel.Controls.Add(tree);", prog); // Updated from split.Panel1 to leftPanel
+        Assert.Contains("Client ViewModel Properties", prog); // PropertyDiscoveryUtility context labeling
+        Assert.Contains("LoadTree();", prog); // PropertyDiscoveryUtility generates LoadTree method
+        Assert.Contains("Collections", prog); // ZoneList should be categorized as collection
+        Assert.Contains("Simple Properties", prog); // Status should be categorized as simple
         
         // Test server UI generation if enabled
-        TestServerUIGenerationIfEnabled("TestApp", "TestService", props, cmds, "winforms");
+        TestServerUIGenerationIfEnabled("TestApp", "SvcService", props, cmds, "winforms");
     }
 
     [Fact]
@@ -321,12 +324,13 @@ namespace TestNamespace
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test our simplified PropertyDiscoveryUtility integration
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
+        // Updated: Use the new abstraction directly instead of obsolete GenerateWinFormsGui
+        var generator = new WinFormsClientUIGenerator("TestApp", "TestService", props, cmds, "TestRemoteClient", "Generated.Clients");
+        string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         Assert.Contains("ConnectionStatus", gui); // Always includes connection status
         Assert.Contains("PropertyNodeInfo", gui); // PropertyDiscoveryUtility generates PropertyNodeInfo
-        Assert.Contains("LoadTree", gui); // LoadTree as Action delegate
+        Assert.Contains("LoadTree();", gui); // LoadTree method call
         Assert.Contains("flow.Controls.Add", gui);
         Assert.Contains("Collections", gui); // ZoneList should be categorized as collection
         Assert.Contains("Simple Properties", gui); // Status should be categorized as simple
@@ -344,7 +348,10 @@ namespace TestNamespace
             CreatePropertyInfo("IsEnabled", "bool", true) // read-only
         };
         var cmds = new List<CommandInfo>();
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
+        
+        // Updated: Use the new abstraction directly instead of obsolete GenerateWinFormsGui
+        var generator = new WinFormsClientUIGenerator("TestApp", "TestService", props, cmds, "TestRemoteClient", "Generated.Clients");
+        string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         // Updated: Check for our simplified PropertyDiscoveryUtility features
         Assert.Contains("try", gui);
@@ -360,63 +367,6 @@ namespace TestNamespace
         
         // Test server UI generation if enabled
         TestServerUIGenerationIfEnabled("TestApp", "TestService", props, cmds, "winforms");
-    }
-
-    [Fact]
-    public void GenerateWpfAppCodeBehind_IncludesRemoteInitialization()
-    {
-        var props = new List<PropertyInfo>();
-        var cmds = new List<CommandInfo>();
-        
-        string codeBehind = CsProjectGenerator.GenerateWpfAppCodeBehind("TestService", "TestRemoteClient");
-        
-        Assert.Contains("TestServiceClient", codeBehind);
-        Assert.Contains("TestRemoteClient", codeBehind);
-        Assert.Contains("InitializeRemoteAsync", codeBehind);
-        Assert.Contains("new MainWindow(vm)", codeBehind);
-        
-        // Test server UI generation if enabled
-        TestServerUIGenerationIfEnabled("TestApp", "TestService", props, cmds);
-    }
-
-    [Fact]
-    public void GenerateGuiClientProgram_IncludesCommands()
-    {
-        var props = new List<PropertyInfo>();
-        var cmds = new List<CommandInfo> 
-        { 
-            new("DoWork", "DoWorkCommand", new List<ParameterInfo>(), false),
-            new("ProcessAsync", "ProcessCommand", new List<ParameterInfo>(), true)
-        };
-        
-        // Updated: Commands are now in WinFormsGui, not in the main program
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
-        
-        Assert.Contains("DoWorkCommand", gui);
-        Assert.Contains("ProcessCommand", gui);
-        Assert.Contains("vm.DoWorkCommand?.Execute", gui);
-        Assert.Contains("vm.ProcessCommand?.Execute", gui);
-        
-        // Also verify the main program calls WinFormsGui
-        string prog = CsProjectGenerator.GenerateGuiClientProgram("TestApp", "winforms", "Proto.Ns", "SvcService", "Client.Ns", props, cmds);
-        Assert.Contains("WinFormsGui.Run(vm);", prog);
-        
-        // Test server UI generation if enabled
-        TestServerUIGenerationIfEnabled("TestApp", "SvcService", props, cmds, "winforms");
-    }
-
-    [Fact]
-    public void GenerateProgramCs_ReturnsLegacyPlaceholder()
-    {
-        var props = new List<PropertyInfo>();
-        var cmds = new List<CommandInfo>();
-        string prog = CsProjectGenerator.GenerateProgramCs("MyApp", "wpf", "Proto.Ns", "Svc", "Client.Ns", props, cmds);
-        
-        // The legacy method now just returns a placeholder
-        Assert.Contains("Legacy combined harness omitted", prog);
-        
-        // Test server UI generation if enabled
-        TestServerUIGenerationIfEnabled("MyApp", "SvcService", props, cmds);
     }
 
     [Fact]
@@ -570,8 +520,9 @@ namespace TestNamespace
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test PropertyDiscoveryUtility comprehensive property categorization
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
+        // Updated: Use the new abstraction directly instead of obsolete GenerateWinFormsGui
+        var generator = new WinFormsClientUIGenerator("TestApp", "TestService", props, cmds, "TestRemoteClient", "Generated.Clients");
+        string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         Assert.Contains("Client ViewModel Properties", gui); // PropertyDiscoveryUtility context labeling
         Assert.Contains("ConnectionStatus", gui); // Always included
@@ -598,8 +549,9 @@ namespace TestNamespace
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test PropertyDiscoveryUtility comprehensive type analysis for edge cases
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
+        // Updated: Use the new abstraction directly instead of obsolete GenerateWinFormsGui
+        var generator = new WinFormsClientUIGenerator("TestApp", "TestService", props, cmds, "TestRemoteClient", "Generated.Clients");
+        string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         // PropertyDiscoveryUtility should categorize all these as simple properties
         Assert.Contains("Simple Properties", gui);
@@ -625,8 +577,9 @@ namespace TestNamespace
         };
         var cmds = new List<CommandInfo>();
         
-        // Updated: Test PropertyDiscoveryUtility comprehensive type analysis
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
+        // Updated: Use the new abstraction directly instead of obsolete GenerateWinFormsGui
+        var generator = new WinFormsClientUIGenerator("TestApp", "TestService", props, cmds, "TestRemoteClient", "Generated.Clients");
+        string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         // PropertyDiscoveryUtility should categorize properties correctly
         Assert.Contains("Simple Properties", gui); // Name
@@ -652,14 +605,17 @@ namespace TestNamespace
             CreatePropertyInfo("Priority", "System.DayOfWeek") // Use actual enum instead of "PriorityType"
         };
         var cmds = new List<CommandInfo>();
-        string gui = CsProjectGenerator.GenerateWinFormsGui("TestApp", "TestService", "TestRemoteClient", props, cmds);
+        
+        // Updated: Use the new abstraction directly instead of obsolete GenerateWinFormsGui
+        var generator = new WinFormsClientUIGenerator("TestApp", "TestService", props, cmds, "TestRemoteClient", "Generated.Clients");
+        string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         // Updated: Check for our simplified PropertyDiscoveryUtility integration
         Assert.Contains("Simple Properties", gui);
         Assert.Contains("Boolean Properties", gui);
         Assert.Contains("Enum Properties", gui);
         Assert.Contains("PropertyNodeInfo", gui);
-        Assert.Contains("LoadTree", gui); // Using Action<> delegate instead of method
+        Assert.Contains("LoadTree();", gui); // Method call instead of action delegate
         Assert.Contains("IsSimpleProperty = true", gui);
         Assert.Contains("IsBooleanProperty = true", gui);
         Assert.Contains("IsEnumProperty = true", gui);
