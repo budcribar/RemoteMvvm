@@ -429,6 +429,66 @@ public abstract class UIGeneratorBase
         }
         """;
     }
+
+    /// <summary>
+    /// Generates reflection-based hierarchical tree loading logic (like WPF approach)
+    /// </summary>
+    protected string GenerateReflectionBasedTreeLogic(string treeVariableName, string viewModelVariableName)
+    {
+        var treeCommands = new List<TreeCommand>();
+        
+        // Generate the loading function structure with reflection-based hierarchy
+        treeCommands.Add(new TreeCommand(TreeCommandType.BeginFunction, "LoadTree"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.TryBegin));
+        treeCommands.Add(new TreeCommand(TreeCommandType.BeginUpdate, treeVariableName));
+        treeCommands.Add(new TreeCommand(TreeCommandType.Clear, treeVariableName));
+        treeCommands.Add(new TreeCommand(TreeCommandType.Comment, "Clear visited objects for cycle detection"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.AssignValue, "visitedObjects", "new HashSet<object>()"));
+        
+        // Create root node
+        treeCommands.Add(new TreeCommand(TreeCommandType.CreateNode, "rootNode", $"\"{GetRootNodeText()}\""));
+        treeCommands.Add(new TreeCommand(TreeCommandType.AddToTree, treeVariableName, "rootNode"));
+        
+        // Use reflection to discover properties dynamically
+        treeCommands.Add(new TreeCommand(TreeCommandType.Comment, "Use reflection to discover properties dynamically"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.AssignValue, "properties", 
+            $"{viewModelVariableName}.GetType().GetProperties().Where(p => p.CanRead && p.GetIndexParameters().Length == 0).ToList()"));
+        
+        // Iterate through properties
+        treeCommands.Add(new TreeCommand(TreeCommandType.ForEach, "prop", "properties"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.TryBegin));
+        
+        // Create property tree node using helper method
+        treeCommands.Add(new TreeCommand(TreeCommandType.AssignValue, "propNode", 
+            $"CreatePropertyTreeNode(prop, {viewModelVariableName}, 0, visitedObjects)"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.IfNotNull, "propNode"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.AddChildNode, "rootNode", "propNode"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.EndIf));
+        
+        treeCommands.Add(new TreeCommand(TreeCommandType.TryEnd));
+        treeCommands.Add(new TreeCommand(TreeCommandType.CatchBegin));
+        treeCommands.Add(new TreeCommand(TreeCommandType.CreateNode, "errorNode", "prop.Name + \": <error>\""));
+        treeCommands.Add(new TreeCommand(TreeCommandType.AddChildNode, "rootNode", "errorNode"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.CatchEnd));
+        
+        treeCommands.Add(new TreeCommand(TreeCommandType.EndForEach));
+        
+        treeCommands.Add(new TreeCommand(TreeCommandType.ExpandNode, "rootNode"));
+        
+        // Error handling and cleanup
+        treeCommands.Add(new TreeCommand(TreeCommandType.TryEnd));
+        treeCommands.Add(new TreeCommand(TreeCommandType.CatchBegin));
+        treeCommands.Add(new TreeCommand(TreeCommandType.Clear, treeVariableName));
+        treeCommands.Add(new TreeCommand(TreeCommandType.CreateNode, "errorNode", "\"Error loading properties: \" + ex.Message"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.AddToTree, treeVariableName, "errorNode"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.CatchEnd));
+        treeCommands.Add(new TreeCommand(TreeCommandType.FinallyBegin));
+        treeCommands.Add(new TreeCommand(TreeCommandType.EndUpdate, treeVariableName));
+        treeCommands.Add(new TreeCommand(TreeCommandType.FinallyEnd));
+        treeCommands.Add(new TreeCommand(TreeCommandType.EndFunction));
+        
+        return ConvertTreeCommandsToFrameworkCode(treeCommands);
+    }
 }
 
 /// <summary>
