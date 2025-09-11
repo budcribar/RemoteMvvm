@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GrpcRemoteMvvmModelUtil;
+using RemoteMvvmTool.UIComponents;
 
 namespace RemoteMvvmTool.Generators;
 
@@ -332,10 +333,10 @@ public class WpfServerUIGenerator : UIGeneratorBase
     }
 
     // For WPF, these are handled by XAML and code-behind, so we return empty implementations
-    protected override UIComponent GenerateTreeViewStructure() => new("Placeholder");
-    protected override UIComponent GeneratePropertyDetailsPanel() => new("Placeholder");
-    protected override UIComponent GenerateCommandButtons() => new("Placeholder");
-    protected override string GeneratePropertyChangeMonitoring() => "";
+    protected override UIComponent GenerateTreeViewStructure() => new ContainerComponent("Placeholder");
+    protected override UIComponent GeneratePropertyDetailsPanel() => new ContainerComponent("Placeholder");
+    protected override UIComponent GenerateCommandButtons() => new ContainerComponent("Placeholder");
+    protected override UIComponent GeneratePropertyChangeMonitoring() => new CodeBlockComponent(string.Empty);
 
     // WPF-specific tree operations (for potential future use in code-behind)
     protected override string GenerateTreeBeginUpdate(string treeVariableName) => $"{treeVariableName}.Items.Clear(); // WPF doesn't have BeginUpdate";

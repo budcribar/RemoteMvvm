@@ -1,54 +1,66 @@
 using System.Text;
+using RemoteMvvmTool.UIComponents;
 
 namespace RemoteMvvmTool.Generators;
 
 /// <summary>
 /// Converts <see cref="UIComponent"/> definitions into WinForms C# code.
 /// </summary>
-public class WinFormsUITranslator : IUiTranslator
+public class WinFormsUITranslator : IUITranslator
 {
-    public string Translate(UIComponent component, string indent = "")
+    public string Translate(UIComponent component)
     {
         var sb = new StringBuilder();
-        Translate(component, sb, indent, null);
+        Translate(component, sb, "", null);
         return sb.ToString();
     }
 
     private void Translate(UIComponent comp, StringBuilder sb, string indent, string? parent)
     {
-        switch (comp.Type)
+        switch (comp)
         {
-            case "StackPanel":
-                foreach (var child in comp.Children)
-                    Translate(child, sb, indent, parent);
-                return;
-            case "TreeView":
-                sb.AppendLine($"{indent}var {comp.Name} = new TreeView();");
+            case ContainerComponent container:
+                if (container.ContainerType == "StackPanel")
+                {
+                    foreach (var child in container.Children)
+                        Translate(child, sb, indent, parent);
+                }
+                else
+                {
+                    var name = container.Name ?? $"{container.ContainerType.ToLower()}1";
+                    sb.AppendLine($"{indent}var {name} = new {container.ContainerType}();");
+                    if (parent != null)
+                        sb.AppendLine($"{indent}{parent}.Controls.Add({name});");
+                    foreach (var child in container.Children)
+                        Translate(child, sb, indent, name);
+                }
                 break;
-            case "Button":
-                sb.AppendLine($"{indent}var {comp.Name} = new Button();");
-                if (!string.IsNullOrEmpty(comp.Content))
-                    sb.AppendLine($"{indent}{comp.Name}.Text = \"{comp.Content}\";");
+            case TreeViewComponent tree:
+                sb.AppendLine($"{indent}var {tree.Name} = new TreeView();");
+                if (parent != null)
+                    sb.AppendLine($"{indent}{parent}.Controls.Add({tree.Name});");
                 break;
-            case "Panel":
-                sb.AppendLine($"{indent}var {comp.Name} = new Panel();");
+            case ButtonComponent button:
+                sb.AppendLine($"{indent}var {button.Name} = new Button();");
+                if (!string.IsNullOrEmpty(button.Content))
+                    sb.AppendLine($"{indent}{button.Name}.Text = \"{button.Content}\";");
+                if (parent != null)
+                    sb.AppendLine($"{indent}{parent}.Controls.Add({button.Name});");
                 break;
-            case "TableLayoutPanel":
-                sb.AppendLine($"{indent}var {comp.Name} = new TableLayoutPanel();");
+            case TextBlockComponent text:
+                var lblName = text.Name ?? "label";
+                sb.AppendLine($"{indent}var {lblName} = new Label();");
+                sb.AppendLine($"{indent}{lblName}.Text = \"{text.Text}\";");
+                if (parent != null)
+                    sb.AppendLine($"{indent}{parent}.Controls.Add({lblName});");
+                break;
+            case CodeBlockComponent code:
+                foreach (var line in code.Code.Split('\n'))
+                    sb.AppendLine(indent + line);
                 break;
             default:
-                sb.AppendLine($"{indent}// Unknown component: {comp.Type}");
+                sb.AppendLine($"{indent}// Unknown component {comp.GetType().Name}");
                 break;
-        }
-
-        if (parent != null && comp.Name != null)
-        {
-            sb.AppendLine($"{indent}{parent}.Controls.Add({comp.Name});");
-        }
-
-        foreach (var child in comp.Children)
-        {
-            Translate(child, sb, indent, comp.Name ?? parent);
         }
     }
 }

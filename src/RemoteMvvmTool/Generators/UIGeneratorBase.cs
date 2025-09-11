@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GrpcRemoteMvvmModelUtil;
+using RemoteMvvmTool.UIComponents;
 
 namespace RemoteMvvmTool.Generators;
 
@@ -37,22 +38,22 @@ public abstract class UIGeneratorBase
     /// <summary>
     /// Generates the tree view structure - framework-specific implementation
     /// </summary>
-    protected abstract UIComponent GenerateTreeViewStructure();
+      protected abstract UIComponent GenerateTreeViewStructure();
 
     /// <summary>
     /// Generates the property details panel - framework-specific implementation
     /// </summary>
-    protected abstract UIComponent GeneratePropertyDetailsPanel();
+      protected abstract UIComponent GeneratePropertyDetailsPanel();
 
     /// <summary>
     /// Generates command buttons - framework-specific implementation
     /// </summary>
-    protected abstract UIComponent GenerateCommandButtons();
+      protected abstract UIComponent GenerateCommandButtons();
 
     /// <summary>
     /// Generates property change monitoring code - framework-specific implementation
     /// </summary>
-    protected abstract string GeneratePropertyChangeMonitoring();
+      protected abstract UIComponent GeneratePropertyChangeMonitoring();
 
     /// <summary>
     /// Gets the appropriate root node text based on context
