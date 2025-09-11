@@ -1,4 +1,4 @@
-# AGENTS Instructions
+﻿# AGENTS Instructions
 
 This repository contains both .NET and TypeScript sources. If you modify any code files under `src/` or `test/`, run the following checks before creating a pull request:
 
@@ -64,3 +64,175 @@ To build this project, use the following powershell command from the RemoteMvvm 
 ```powershell
 &"C:\Program Files\Microsoft Visual Studio\2022\Preview\MSBuild\Current\Bin\MSBuild.exe" RemoteMvvmTool.sln
 ```
+
+---
+
+## 🤖 Agent Best Practices & Lessons Learned
+
+### **Code Generation & Templates**
+
+#### 1. **Always Validate Generated Code Compiles**
+- **Issue**: Generated code with missing methods, variable scope issues, or unmatched braces
+- **Solution**: After any code generation changes, immediately run `run_build` to catch compilation errors
+- **Lesson**: Use `get_errors` on specific files during development, then `run_build` for final validation
+
+#### 2. **Handle Variable Scope Carefully in String Templates**
+- **Issue**: Generated code referenced variables (`obj`) that weren't in scope in the target context
+- **Solution**: Always verify variable names match the actual context where code will be generated
+- **Lesson**: When editing code generation templates, trace through variable lifetimes carefully
+
+#### 3. **Match Generated Code to XAML/UI Structure**
+- **Issue**: Code-behind referenced UI controls that didn't exist in XAML (`ServerPropertyDetailsPanel`)
+- **Solution**: Ensure generated code-behind only references controls that actually exist in the UI
+- **Lesson**: Generated UI code must be consistent across all layers (XAML, code-behind, logic)
+
+### **Property System & Reflection**
+
+#### 4. **Detect Read-Only Properties Properly**
+- **Issue**: Properties with `private set` were showing as editable in UI
+- **Solution**: Use `property.GetSetMethod(true)` and check `IsPrivate` to detect truly writable properties
+- **Pattern**: 
+  ```csharp
+  var setter = property.GetSetMethod(true);
+  var isReadOnly = setter == null || setter.IsPrivate;
+  ```
+
+#### 5. **Avoid Duplicate Property Displays**
+- **Issue**: Collection properties appeared in both TreeView and "Key Properties" section
+- **Solution**: Filter collections from simple property displays: `.Where(p => !analysis.CollectionProperties.Contains(p))`
+- **Lesson**: When displaying properties in multiple UI sections, ensure proper categorization and filtering
+
+### **Testing & Debugging Strategy**
+
+#### 6. **Read Test Error Messages Carefully**
+- **Issue**: Compilation errors in generated test code provide specific line numbers and missing symbols
+- **Solution**: Parse error messages to identify exact issues (missing methods, variable scope, syntax errors)
+- **Lesson**: Test error output is your best debugging tool for generated code issues
+
+#### 7. **Use Incremental Fixes**
+- **Issue**: Trying to fix multiple complex issues simultaneously can create cascading errors
+- **Solution**: Fix one compilation error at a time, build after each fix
+- **Pattern**: Fix → Build → Test → Next Issue
+
+#### 8. **Test Framework-Specific Differences**
+- **Issue**: WPF and WinForms have different patterns for UI generation and property handling
+- **Solution**: Understand each framework's specific requirements and patterns
+- **Lesson**: Don't assume solutions work the same across UI frameworks
+
+### **Code Architecture & Design**
+
+#### 9. **Separate Client vs Server Property Editing Logic**
+- **Issue**: Server-side property editing tried to use client-side UI controls
+- **Solution**: Keep client and server property editing logic completely separate
+- **Lesson**: When generating dual-purpose code, ensure proper separation of concerns
+
+#### 10. **Use Proper Abstraction for Cross-Platform Code**
+- **Issue**: UI generators shared code but had framework-specific requirements
+- **Solution**: Use base classes (`UIGeneratorBase`) with framework-specific implementations
+- **Lesson**: Abstract common patterns but allow framework-specific customization
+
+#### 11. **Handle Missing Method Dependencies**
+- **Issue**: Generated code called methods that weren't generated (`IsEditableType`, `CreateEditableField`)
+- **Solution**: Ensure all method dependencies are generated together or properly referenced
+- **Pattern**: When adding method calls, always add the method definitions in the same change
+
+### **Error Recovery & Resilience**
+
+#### 12. **Graceful Degradation for Property Editing**
+- **Issue**: Complex property editing features broke basic functionality
+- **Solution**: Implement basic functionality first, then add advanced features incrementally
+- **Lesson**: Always maintain a working baseline while adding enhancements
+
+#### 13. **Use Git Strategically for Code Generation**
+- **Issue**: Complex edits to code generators can introduce many issues simultaneously  
+- **Solution**: Use `git checkout -- filename` to revert problematic changes and start over
+- **Lesson**: Don't be afraid to revert and take a simpler approach
+
+#### 14. **Temporary Disabling vs Full Implementation**
+- **Issue**: Server-side property editing caused XAML control reference issues
+- **Solution**: Temporarily disable complex features to get basic functionality working
+- **Lesson**: Sometimes "comment out and revisit later" is better than "fix everything now"
+
+### **Communication & Documentation**
+
+#### 15. **Provide Clear Status Updates**
+- **Good**: "✅ Fixed duplicate ZoneList display by excluding collection properties"
+- **Bad**: "Made some changes to the WPF code"
+- **Lesson**: Specific, actionable status updates help track progress and identify remaining issues
+
+#### 16. **Explain the Root Cause**
+- **Issue**: User sees surface-level problem (temperature shows as editable)
+- **Solution**: Explain the underlying cause (private setter detection) and the fix
+- **Lesson**: Help users understand WHY the fix works, not just WHAT was fixed
+
+#### 17. **Suggest Specific Next Steps**
+- **Good**: "Run `dotnet test --filter 'NestedPropertyChange_Wpf_EndToEnd_Test'` to verify the fix"
+- **Bad**: "Test it and see if it works"
+- **Lesson**: Provide executable next steps rather than vague suggestions
+
+### **Essential Commands for Code Generation Issues**
+
+```bash
+# Build and catch compilation errors immediately
+dotnet build
+
+# Test specific functionality after fixes
+dotnet test --filter "TestName" --no-build
+
+# Revert problematic changes
+git checkout -- path/to/file.cs
+
+# Run specific WPF end-to-end tests
+dotnet test --filter "Wpf_EndToEnd"
+
+# Run specific WinForms end-to-end tests  
+dotnet test --filter "Winforms_EndToEnd"
+```
+
+### **Common Code Generation Patterns**
+
+#### Property Type Detection
+```csharp
+private static bool IsEditableType(Type type)
+{
+    var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+    
+    return underlyingType == typeof(int) ||
+           underlyingType == typeof(double) ||
+           underlyingType == typeof(decimal) ||
+           underlyingType == typeof(float) ||
+           underlyingType == typeof(bool) ||
+           underlyingType == typeof(string) ||
+           underlyingType.IsEnum;
+}
+```
+
+#### Read-Only Property Detection
+```csharp
+private static bool IsEffectivelyReadOnly(PropertyInfo property)
+{
+    var setter = property.GetSetMethod(true);
+    return setter == null || setter.IsPrivate;
+}
+```
+
+#### Collection Property Filtering
+```csharp
+var keyProperties = analysis.SimpleProperties.Concat(analysis.BooleanProperties)
+    .Where(p => !analysis.CollectionProperties.Contains(p)) // Exclude collections
+    .Take(6);
+```
+
+---
+
+## 📋 Code Generation Checklist
+
+Before committing changes to code generators:
+
+- [ ] `run_build` passes without errors
+- [ ] Relevant end-to-end tests pass
+- [ ] Generated code references only existing UI controls
+- [ ] Property categorization logic is consistent
+- [ ] Variable scope is correct in all generated contexts
+- [ ] All method dependencies are included
+- [ ] Framework-specific differences are handled properly
