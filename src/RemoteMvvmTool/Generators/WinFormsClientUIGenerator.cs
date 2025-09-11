@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using GrpcRemoteMvvmModelUtil;
+using RemoteMvvmTool.UIComponents;
 
 namespace RemoteMvvmTool.Generators;
 
@@ -85,7 +86,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         var uiTranslator = new WinFormsUITranslator();
 
         // Generate TreeView structure
-        sb.Append(uiTranslator.Translate(GenerateTreeViewStructure(), "                "));
+        sb.Append(uiTranslator.Translate(GenerateTreeViewStructure()));
         sb.AppendLine();
         sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
         sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
@@ -93,7 +94,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine();
 
         // Generate property details panel
-        sb.Append(uiTranslator.Translate(GeneratePropertyDetailsPanel(), "                "));
+        sb.Append(uiTranslator.Translate(GeneratePropertyDetailsPanel()));
         sb.AppendLine();
         sb.AppendLine("                tree.AfterSelect += (_, e) =>");
         sb.AppendLine("                {");
@@ -102,7 +103,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine();
 
         // Generate command buttons
-        sb.Append(uiTranslator.Translate(GenerateCommandButtons(), "                "));
+        sb.Append(uiTranslator.Translate(GenerateCommandButtons()));
         sb.AppendLine();
         
         // Generate hierarchical tree loading using reflection-based approach like WPF
@@ -317,7 +318,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine();
         
         // Generate property change monitoring
-        sb.Append(GeneratePropertyChangeMonitoring());
+        sb.Append(uiTranslator.Translate(GeneratePropertyChangeMonitoring()));
         sb.AppendLine();
         
         sb.AppendLine("                Application.Run(form);");
@@ -461,33 +462,33 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
 
     protected override UIComponent GenerateTreeViewStructure()
     {
-        var root = new UIComponent("StackPanel");
-        root.Children.Add(new UIComponent("TreeView", "tree"));
-        root.Children.Add(new UIComponent("Button", "refreshBtn", "Refresh"));
-        root.Children.Add(new UIComponent("Button", "expandBtn", "Expand All"));
-        root.Children.Add(new UIComponent("Button", "collapseBtn", "Collapse"));
+        var root = new ContainerComponent("StackPanel");
+        root.Children.Add(new TreeViewComponent("tree"));
+        root.Children.Add(new ButtonComponent("refreshBtn", "Refresh"));
+        root.Children.Add(new ButtonComponent("expandBtn", "Expand All"));
+        root.Children.Add(new ButtonComponent("collapseBtn", "Collapse"));
         return root;
     }
 
     protected override UIComponent GeneratePropertyDetailsPanel()
     {
-        return new UIComponent("TableLayoutPanel", "detailLayout");
+        return new ContainerComponent("TableLayoutPanel", "detailLayout");
     }
 
     protected override UIComponent GenerateCommandButtons()
     {
-        var root = new UIComponent("StackPanel");
+        var root = new ContainerComponent("StackPanel");
         int cmdIndex = 0;
         foreach (var c in Commands)
         {
             var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal) ? c.MethodName[..^5] : c.MethodName;
-            root.Children.Add(new UIComponent("Button", $"btn{cmdIndex}", baseName));
+            root.Children.Add(new ButtonComponent($"btn{cmdIndex}", baseName));
             cmdIndex++;
         }
         return root;
     }
 
-    protected override string GeneratePropertyChangeMonitoring()
+    protected override UIComponent GeneratePropertyChangeMonitoring()
     {
         var sb = new StringBuilder();
         sb.AppendLine("                // Property change monitoring");
@@ -499,7 +500,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("                        catch { }");
         sb.AppendLine("                    };");
         sb.AppendLine("                }");
-        return sb.ToString();
+        return new CodeBlockComponent(sb.ToString());
     }
 
     /// <summary>
