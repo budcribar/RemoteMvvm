@@ -107,15 +107,13 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         
         // Generate hierarchical tree loading using reflection-based approach like WPF
         sb.AppendLine("                // Hierarchical property tree loading like WPF");
-        sb.AppendLine("                var visitedObjects = new HashSet<object>();");
-        sb.AppendLine();
         sb.AppendLine("                void LoadTree()");
         sb.AppendLine("                {");
+        sb.AppendLine("                    var visitedObjects = new HashSet<object>();");
         sb.AppendLine("                    try");
         sb.AppendLine("                    {");
         sb.AppendLine("                        tree.BeginUpdate();");
         sb.AppendLine("                        tree.Nodes.Clear();");
-        sb.AppendLine("                        visitedObjects.Clear();");
         sb.AppendLine();
         sb.AppendLine("                        var rootNode = new TreeNode(\"Client ViewModel Properties\");");
         sb.AppendLine("                        tree.Nodes.Add(rootNode);");
@@ -129,7 +127,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("                        {");
         sb.AppendLine("                            try");
         sb.AppendLine("                            {");
-        sb.AppendLine("                                var propNode = CreatePropertyTreeNode(prop, vm, 0);");
+        sb.AppendLine("                                var propNode = CreatePropertyTreeNode(prop, vm, 0, visitedObjects);");
         sb.AppendLine("                                if (propNode != null)");
         sb.AppendLine("                                    rootNode.Nodes.Add(propNode);");
         sb.AppendLine("                            }");
@@ -154,7 +152,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("                    }");
         sb.AppendLine("                }");
         sb.AppendLine();
-        sb.AppendLine("                TreeNode? CreatePropertyTreeNode(System.Reflection.PropertyInfo prop, object obj, int depth)");
+        sb.AppendLine("                TreeNode? CreatePropertyTreeNode(System.Reflection.PropertyInfo prop, object obj, int depth, HashSet<object> visitedObjects)");
         sb.AppendLine("                {");
         sb.AppendLine("                    try");
         sb.AppendLine("                    {");
@@ -226,7 +224,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine();
         sb.AppendLine("                                            foreach (var itemProp in itemProperties)");
         sb.AppendLine("                                            {");
-        sb.AppendLine("                                                var childNode = CreatePropertyTreeNode(itemProp, item, depth + 1);");
+        sb.AppendLine("                                                var childNode = CreatePropertyTreeNode(itemProp, item, depth + 1, visitedObjects);");
         sb.AppendLine("                                                if (childNode != null)");
         sb.AppendLine("                                                    itemNode.Nodes.Add(childNode);");
         sb.AppendLine("                                            }");
@@ -246,7 +244,7 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine();
         sb.AppendLine("                                    foreach (var childProp in childProperties)");
         sb.AppendLine("                                    {");
-        sb.AppendLine("                                        var childNode = CreatePropertyTreeNode(childProp, value, depth + 1);");
+        sb.AppendLine("                                        var childNode = CreatePropertyTreeNode(childProp, value, depth + 1, visitedObjects);");
         sb.AppendLine("                                        if (childNode != null)");
         sb.AppendLine("                                            propNode.Nodes.Add(childNode);");
         sb.AppendLine("                                    }");
