@@ -43,7 +43,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
     }
 
     private readonly SampleViewModel _viewModel;
-    private static readonly ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification>, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>>();
+    private static readonly ConcurrentDictionary<string, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<string, Channel<SampleApp.ViewModels.Protos.PropertyChangeNotification>>();
+    private static readonly System.Threading.AsyncLocal<string?> _currentClientId = new();
     private readonly ILogger? _logger;
 
     public SampleViewModelGrpcServiceImpl(SampleViewModel viewModel, ILogger<SampleViewModelGrpcServiceImpl>? logger = null)
@@ -78,9 +79,9 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override async Task SubscribeToPropertyChanges(SampleApp.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<SampleApp.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
-        var clientId = request.ClientId ?? "unknown";
+        var clientId = request.ClientId ?? Guid.NewGuid().ToString();
         var channel = Channel.CreateUnbounded<SampleApp.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
-        _subscriberChannels.TryAdd(responseStream, channel);
+        _subscriberChannels[clientId] = channel;
         ClientCount = _subscriberChannels.Count;
         try
         {
@@ -95,7 +96,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         }
         finally
         {
-            _subscriberChannels.TryRemove(responseStream, out _);
+            _subscriberChannels.TryRemove(clientId, out _);
             channel.Writer.TryComplete();
             ClientCount = _subscriberChannels.Count;
         }
@@ -103,8 +104,9 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
 
     public override Task<SampleApp.ViewModels.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(SampleApp.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
+        _currentClientId.Value = request.ClientId;
         var response = new SampleApp.ViewModels.Protos.UpdatePropertyValueResponse();
-        
+
         try
         {
             // Execute property update directly - MVVM Toolkit handles threading automatically
@@ -116,7 +118,11 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             response.Success = false;
             response.ErrorMessage = ex.Message;
         }
-        
+        finally
+        {
+            _currentClientId.Value = null;
+        }
+
         Debug.WriteLine($"[GrpcService:SampleViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
         return Task.FromResult(response);
     }
@@ -528,11 +534,14 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
         };
         notification.NewValue = PackToAny(newValue);
 
+        var sourceClientId = _currentClientId.Value;
         // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
         _ = Task.Run(async () =>
         {
-            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
+            foreach (var kvp in _subscriberChannels)
             {
+                if (kvp.Key == sourceClientId) continue;
+                var channelWriter = kvp.Value.Writer;
                 try {
                     await channelWriter.WriteAsync(notification);
                 }
