@@ -266,6 +266,7 @@ public static class ProtoGenerator
         body.AppendLine("  string collection_key = 4;         // For dictionary keys or array indices");
         body.AppendLine("  int32 array_index = 5;             // For updating specific array elements");
         body.AppendLine("  string operation_type = 6;         // \"set\", \"add\", \"remove\", \"clear\", \"insert\"");
+        body.AppendLine("  string client_id = 7;             // Originating client identifier");
         body.AppendLine("}");
         body.AppendLine();
         body.AppendLine("message UpdatePropertyValueResponse {");
