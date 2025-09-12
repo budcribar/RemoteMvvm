@@ -43,15 +43,16 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
     }
 
     private readonly GameViewModel _viewModel;
-    private static readonly ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
+    private static readonly ConcurrentDictionary<string, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<string, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
+    private static readonly System.Threading.AsyncLocal<string?> _currentClientId = new();
     private readonly ILogger? _logger;
 
     public GameViewModelGrpcServiceImpl(GameViewModel viewModel, ILogger<GameViewModelGrpcServiceImpl>? logger = null)
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _logger = logger;
-        if (_viewModel is INotifyPropertyChanged inpc) { 
-            inpc.PropertyChanged += ViewModel_PropertyChanged; 
+        if (_viewModel is INotifyPropertyChanged inpc) {
+            AttachNestedPropertyChangedHandlers(inpc, string.Empty);
         }
     }
 
@@ -120,9 +121,9 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override async Task SubscribeToPropertyChanges(MonsterClicker.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
-        var clientId = request.ClientId ?? "unknown";
+        var clientId = request.ClientId ?? Guid.NewGuid().ToString();
         var channel = Channel.CreateUnbounded<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
-        _subscriberChannels.TryAdd(responseStream, channel);
+        _subscriberChannels[clientId] = channel;
         ClientCount = _subscriberChannels.Count;
         try
         {
@@ -137,7 +138,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         }
         finally
         {
-            _subscriberChannels.TryRemove(responseStream, out _);
+            _subscriberChannels.TryRemove(clientId, out _);
             channel.Writer.TryComplete();
             ClientCount = _subscriberChannels.Count;
         }
@@ -145,8 +146,9 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override Task<MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
+        _currentClientId.Value = request.ClientId;
         var response = new MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse();
-        
+
         try
         {
             // Execute property update directly - MVVM Toolkit handles threading automatically
@@ -158,7 +160,11 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             response.Success = false;
             response.ErrorMessage = ex.Message;
         }
-        
+        finally
+        {
+            _currentClientId.Value = null;
+        }
+
         Debug.WriteLine($"[GrpcService:GameViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
         return Task.FromResult(response);
     }
@@ -314,6 +320,23 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                     Debug.WriteLine($"[GrpcService:GameViewModel] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
                     propertyInfo.SetValue(target, convertedValue.Value);
                     response.Success = true;
+                    if (!propertyPath.Equals(request.PropertyName, StringComparison.Ordinal) &&
+                        !typeof(INotifyPropertyChanged).IsAssignableFrom(propertyInfo.DeclaringType!))
+                    {
+                        var notification = new MonsterClicker.ViewModels.Protos.PropertyChangeNotification
+                        {
+                            PropertyName = request.PropertyName,
+                            PropertyPath = propertyPath,
+                            ChangeType = "nested",
+                            NewValue = request.NewValue
+                        };
+                        var sourceClientId = request.ClientId;
+                        foreach (var kvp in _subscriberChannels)
+                        {
+                            if (kvp.Key == sourceClientId) continue;
+                            _ = kvp.Value.Writer.WriteAsync(notification);
+                        }
+                    }
                 }
                 else
                 {
@@ -462,7 +485,13 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                 return (true, anyValue.Unpack<DoubleValue>().Value, "");
             if (anyValue.Is(BoolValue.Descriptor) && targetType == typeof(bool))
                 return (true, anyValue.Unpack<BoolValue>().Value, "");
-            
+
+            // Handle DateTime conversions
+            if (anyValue.Is(Timestamp.Descriptor) && targetType == typeof(DateTime))
+                return (true, anyValue.Unpack<Timestamp>().ToDateTime(), "");
+            if (anyValue.Is(Timestamp.Descriptor) && targetType == typeof(DateTime?))
+                return (true, (DateTime?)anyValue.Unpack<Timestamp>().ToDateTime(), "");
+
             // Handle additional numeric type conversions
             if (anyValue.Is(Int32Value.Descriptor) && targetType == typeof(short))
                 return (true, (short)anyValue.Unpack<Int32Value>().Value, "");
@@ -553,6 +582,54 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         return (false, null, $"Cannot convert '{stringValue}' to {targetType.Name}");
     }
 
+    private void AttachNestedPropertyChangedHandlers(object obj, string prefix)
+    {
+        if (obj is not INotifyPropertyChanged inpc) return;
+        inpc.PropertyChanged += (s, e) =>
+        {
+            var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+            ViewModel_PropertyChanged(s, new PropertyChangedEventArgs(path));
+
+            var prop = s?.GetType().GetProperty(e.PropertyName);
+            var val = prop?.GetValue(s);
+            if (val is INotifyPropertyChanged child)
+            {
+                var childPrefix = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                AttachNestedPropertyChangedHandlers(child, childPrefix);
+            }
+            else if (val is System.Collections.IEnumerable enumerable && val is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"{e.PropertyName}[{index}]" : prefix + $".{e.PropertyName}[{index}]";
+                    if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+            }
+        };
+
+        foreach (var p in obj.GetType().GetProperties())
+        {
+            var val = p.GetValue(obj);
+            if (val is INotifyPropertyChanged child)
+            {
+                var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
+                AttachNestedPropertyChangedHandlers(child, childPrefix);
+            }
+            else if (val is System.Collections.IEnumerable enumerable && val is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"{p.Name}[{index}]" : prefix + $".{p.Name}[{index}]";
+                    if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+            }
+        }
+    }
+
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)
     {
         if (string.IsNullOrEmpty(e.PropertyName)) return;
@@ -570,11 +647,14 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         };
         notification.NewValue = PackToAny(newValue);
 
+        var sourceClientId = _currentClientId.Value;
         // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
         _ = Task.Run(async () =>
         {
-            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
+            foreach (var kvp in _subscriberChannels)
             {
+                if (kvp.Key == sourceClientId) continue;
+                var channelWriter = kvp.Value.Writer;
                 try {
                     await channelWriter.WriteAsync(notification);
                 }
