@@ -1,4 +1,5 @@
 using System.Text;
+using System.Linq;
 using RemoteMvvmTool.UIComponents;
 
 namespace RemoteMvvmTool.Generators;
@@ -8,10 +9,14 @@ namespace RemoteMvvmTool.Generators;
 /// </summary>
 public class WinFormsUITranslator : IUITranslator
 {
-    public string Translate(UIComponent component)
+    private int _autoNameCounter = 1;
+
+    public string Translate(UIComponent component) => Translate(component, "", null);
+
+    public string Translate(UIComponent component, string indent = "", string? parent = null)
     {
         var sb = new StringBuilder();
-        Translate(component, sb, "", null);
+        Translate(component, sb, indent, parent);
         return sb.ToString();
     }
 
@@ -22,13 +27,22 @@ public class WinFormsUITranslator : IUITranslator
             case ContainerComponent container:
                 if (container.ContainerType == "StackPanel")
                 {
-                    foreach (var child in container.Children)
+                    if (parent == null)
+                    {
+                        var name = container.Name ?? $"panel{_autoNameCounter++}";
+                        sb.AppendLine($"{indent}var {name} = new Panel {{ Dock = DockStyle.Fill }};");
+                        parent = name;
+                    }
+
+                    foreach (var child in container.Children.Where(c => c is not TreeViewComponent))
+                        Translate(child, sb, indent, parent);
+                    foreach (var child in container.Children.Where(c => c is TreeViewComponent))
                         Translate(child, sb, indent, parent);
                 }
                 else
                 {
-                    var name = container.Name ?? $"{container.ContainerType.ToLower()}1";
-                    sb.AppendLine($"{indent}var {name} = new {container.ContainerType}();");
+                    var name = container.Name ?? $"{container.ContainerType.ToLower()}{_autoNameCounter++}";
+                    sb.AppendLine($"{indent}var {name} = new {container.ContainerType} {{ Dock = DockStyle.Fill }};");
                     if (parent != null)
                         sb.AppendLine($"{indent}{parent}.Controls.Add({name});");
                     foreach (var child in container.Children)
@@ -36,7 +50,7 @@ public class WinFormsUITranslator : IUITranslator
                 }
                 break;
             case TreeViewComponent tree:
-                sb.AppendLine($"{indent}var {tree.Name} = new TreeView();");
+                sb.AppendLine($"{indent}var {tree.Name} = new TreeView {{ Dock = DockStyle.Fill }};");
                 if (parent != null)
                     sb.AppendLine($"{indent}{parent}.Controls.Add({tree.Name});");
                 break;
@@ -44,12 +58,14 @@ public class WinFormsUITranslator : IUITranslator
                 sb.AppendLine($"{indent}var {button.Name} = new Button();");
                 if (!string.IsNullOrEmpty(button.Content))
                     sb.AppendLine($"{indent}{button.Name}.Text = \"{button.Content}\";");
+                sb.AppendLine($"{indent}{button.Name}.Dock = DockStyle.Top;");
+                sb.AppendLine($"{indent}{button.Name}.AutoSize = true;");
                 if (parent != null)
                     sb.AppendLine($"{indent}{parent}.Controls.Add({button.Name});");
                 break;
             case TextBlockComponent text:
-                var lblName = text.Name ?? "label";
-                sb.AppendLine($"{indent}var {lblName} = new Label();");
+                var lblName = text.Name ?? $"label{_autoNameCounter++}";
+                sb.AppendLine($"{indent}var {lblName} = new Label {{ AutoSize = true, Dock = DockStyle.Top }};");
                 sb.AppendLine($"{indent}{lblName}.Text = \"{text.Text}\";");
                 if (parent != null)
                     sb.AppendLine($"{indent}{parent}.Controls.Add({lblName});");

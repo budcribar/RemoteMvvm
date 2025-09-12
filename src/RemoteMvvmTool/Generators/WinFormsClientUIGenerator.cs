@@ -84,12 +84,10 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine();
         
         var uiTranslator = new WinFormsUITranslator();
-        var uiRoot = new ContainerComponent("StackPanel");
-        uiRoot.Children.Add(GenerateTreeViewStructure());
-        uiRoot.Children.Add(GeneratePropertyDetailsPanel());
-        uiRoot.Children.Add(GenerateCommandButtons());
-        uiRoot.Children.Add(GeneratePropertyChangeMonitoring());
-        sb.Append(uiTranslator.Translate(uiRoot));
+        sb.Append(uiTranslator.Translate(GenerateTreeViewStructure(), "                ", "split.Panel1"));
+        sb.Append(uiTranslator.Translate(GenerateCommandButtons(), "                ", "split.Panel2"));
+        sb.Append(uiTranslator.Translate(GeneratePropertyDetailsPanel(), "                ", "split.Panel2"));
+        sb.Append(uiTranslator.Translate(GeneratePropertyChangeMonitoring(), "                "));
         sb.AppendLine();
         sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
         sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
