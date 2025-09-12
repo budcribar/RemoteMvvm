@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
+using System.Collections.Specialized;
 using HPSystemsTools;
 #if WPF_DISPATCHER
 using System.Windows;
@@ -266,7 +267,6 @@ namespace HPSystemsTools.RemoteClients
                 {
                     PropertyName = topLevel,
                     PropertyPath = propertyPath,
-                    ArrayIndex = -1,
                     ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
@@ -402,6 +402,38 @@ namespace HPSystemsTools.RemoteClients
                     var value = prop.GetValue(s);
                     var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
                     await UpdatePropertyValueAsync(path, value);
+
+                    if (value is INotifyPropertyChanged child)
+                    {
+                        AttachLocalPropertyChangedHandlers(child, path);
+                    }
+                    else if (value is System.Collections.IEnumerable enumVal && value is not string)
+                    {
+                        int idx = 0;
+                        foreach (var item in enumVal)
+                        {
+                            var childPrefix = string.IsNullOrEmpty(path) ? $"[{idx}]" : path + $"[{idx}]";
+                            AttachLocalPropertyChangedHandlers(item, childPrefix);
+                            idx++;
+                        }
+                        if (value is INotifyCollectionChanged incc)
+                        {
+                            var outerPath = path;
+                            incc.CollectionChanged += (s2, args) =>
+                            {
+                                if (args.NewItems != null)
+                                {
+                                    int start = args.NewStartingIndex;
+                                    foreach (var newItem in args.NewItems)
+                                    {
+                                        var childPrefix = string.IsNullOrEmpty(outerPath) ? $"[{start}]" : outerPath + $"[{start}]";
+                                        AttachLocalPropertyChangedHandlers(newItem, childPrefix);
+                                        start++;
+                                    }
+                                }
+                            };
+                        }
+                    }
                 };
             }
 
@@ -413,6 +445,23 @@ namespace HPSystemsTools.RemoteClients
                     var childPrefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : prefix + $"[{index}]";
                     AttachLocalPropertyChangedHandlers(item, childPrefix);
                     index++;
+                }
+                if (obj is INotifyCollectionChanged incc)
+                {
+                    var outerPrefix = prefix;
+                    incc.CollectionChanged += (s2, args) =>
+                    {
+                        if (args.NewItems != null)
+                        {
+                            int start = args.NewStartingIndex;
+                            foreach (var newItem in args.NewItems)
+                            {
+                                var childPrefix = string.IsNullOrEmpty(outerPrefix) ? $"[{start}]" : outerPrefix + $"[{start}]";
+                                AttachLocalPropertyChangedHandlers(newItem, childPrefix);
+                                start++;
+                            }
+                        }
+                    };
                 }
                 return;
             }

@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Threading.Channels;
 using Channel = System.Threading.Channels.Channel;
@@ -333,64 +334,139 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
                 }
             }
 
-            var finalPropertyName = pathParts[pathParts.Length - 1];
-            var propertyInfo = target?.GetType().GetProperty(finalPropertyName);
-            if (propertyInfo == null)
+            var finalPart = pathParts[pathParts.Length - 1];
+            int finalBracket = finalPart.IndexOf('[');
+            if (finalBracket >= 0)
             {
-                response.Success = false;
-                response.ErrorMessage = $"Property '{finalPropertyName}' not found";
-                return response;
-            }
-
-            if (propertyInfo.SetMethod == null || !propertyInfo.SetMethod.IsPublic)
-            {
-                response.Success = false;
-                response.ErrorMessage = $"Property '{finalPropertyName}' is read-only";
-                return response;
-            }
-
-            // Detect leaf element update inside a collection (Collection[index].Prop)
-            bool isLeafElementUpdate = propertyPath.Contains("]." + finalPropertyName, StringComparison.Ordinal);
-
-            // Store old value for undo/history
-            var oldValue = propertyInfo.GetValue(target);
-            if (oldValue != null) response.OldValue = PackToAny(oldValue);
-            
-            // Only treat as collection update when modifying the collection itself (not element property)
-            if (!isLeafElementUpdate && (!string.IsNullOrEmpty(request.CollectionKey) || (request.ArrayIndex > -1 && propertyPath.Equals(request.PropertyName, StringComparison.OrdinalIgnoreCase))))
-            {
-                response = HandleCollectionUpdate(target, propertyInfo, request);
-            }
-            else
-            {
-                var convertedValue = ConvertAnyToTargetType(request.NewValue, propertyInfo.PropertyType);
-                if (convertedValue.Success)
+                var propName = finalPart[..finalBracket];
+                var end = finalPart.IndexOf(']', finalBracket);
+                if (end < 0)
                 {
-                    Debug.WriteLine($"[GrpcService:PointerViewModel] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
-                    propertyInfo.SetValue(target, convertedValue.Value);
-                    response.Success = true;
-                    if (!propertyPath.Equals(request.PropertyName, StringComparison.Ordinal) &&
-                        !typeof(INotifyPropertyChanged).IsAssignableFrom(propertyInfo.DeclaringType!))
+                    response.Success = false;
+                    response.ErrorMessage = $"Invalid path segment '{finalPart}' in '{propertyPath}'";
+                    return response;
+                }
+                var indexStr = finalPart[(finalBracket + 1)..end];
+                var propertyInfo = target?.GetType().GetProperty(propName);
+                if (propertyInfo == null)
+                {
+                    response.Success = false;
+                    response.ErrorMessage = $"Property '{propName}' not found";
+                    return response;
+                }
+                var collection = propertyInfo.GetValue(target);
+                if (collection == null)
+                {
+                    response.Success = false;
+                    response.ErrorMessage = $"Collection property '{propName}' is null";
+                    return response;
+                }
+                if (collection is IList list && int.TryParse(indexStr, out int idx))
+                {
+                    if (idx < 0 || idx >= list.Count)
                     {
-                        var notification = new Pointer.ViewModels.Protos.PropertyChangeNotification
-                        {
-                            PropertyName = request.PropertyName,
-                            PropertyPath = propertyPath,
-                            ChangeType = "nested",
-                            NewValue = request.NewValue
-                        };
-                        var sourceClientId = request.ClientId;
-                        foreach (var kvp in _subscriberChannels)
-                        {
-                            if (kvp.Key == sourceClientId) continue;
-                            _ = kvp.Value.Writer.WriteAsync(notification);
-                        }
+                        response.Success = false;
+                        response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
+                        return response;
                     }
+                    var elementType = propertyInfo.PropertyType.GetGenericArguments()[0];
+                    var convertedValue = ConvertAnyToTargetType(request.NewValue, elementType);
+                    if (!convertedValue.Success)
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = convertedValue.ErrorMessage;
+                        return response;
+                    }
+                    response.OldValue = PackToAny(list[idx]);
+                    list[idx] = convertedValue.Value;
+                    response.Success = true;
+                    Debug.WriteLine($"[GrpcService:PointerViewModel] Updated array index {idx} to '{convertedValue.Value}'");
+                }
+                else if (collection is IDictionary dict)
+                {
+                    var keyType = propertyInfo.PropertyType.GetGenericArguments()[0];
+                    var valueType = propertyInfo.PropertyType.GetGenericArguments()[1];
+                    var convertedKey = ConvertStringToTargetType(indexStr, keyType);
+                    if (!convertedKey.Success)
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = $"Failed to convert key '{indexStr}': {convertedKey.ErrorMessage}";
+                        return response;
+                    }
+                    var convertedValue = ConvertAnyToTargetType(request.NewValue, valueType);
+                    if (!convertedValue.Success)
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = $"Failed to convert value: {convertedValue.ErrorMessage}";
+                        return response;
+                    }
+                    if (convertedKey.Value != null && dict.Contains(convertedKey.Value)) response.OldValue = PackToAny(dict[convertedKey.Value]);
+                    dict[convertedKey.Value!] = convertedValue.Value;
+                    response.Success = true;
+                    Debug.WriteLine($"[GrpcService:PointerViewModel] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'");
                 }
                 else
                 {
                     response.Success = false;
-                    response.ErrorMessage = convertedValue.ErrorMessage;
+                    response.ErrorMessage = $"Property '{propName}' is not an indexable collection";
+                }
+            }
+            else
+            {
+                var propertyInfo = target?.GetType().GetProperty(finalPart);
+                if (propertyInfo == null)
+                {
+                    response.Success = false;
+                    response.ErrorMessage = $"Property '{finalPart}' not found";
+                    return response;
+                }
+                if (propertyInfo.SetMethod == null || !propertyInfo.SetMethod.IsPublic)
+                {
+                    response.Success = false;
+                    response.ErrorMessage = $"Property '{finalPart}' is read-only";
+                    return response;
+                }
+
+                bool isLeafElementUpdate = propertyPath.Contains("]." + finalPart, StringComparison.Ordinal);
+
+                var oldValue = propertyInfo.GetValue(target);
+                if (oldValue != null) response.OldValue = PackToAny(oldValue);
+
+                if (!isLeafElementUpdate && !string.IsNullOrEmpty(request.CollectionKey) && propertyPath.Equals(request.PropertyName, StringComparison.OrdinalIgnoreCase))
+                {
+                    response = HandleCollectionUpdate(target, propertyInfo, request);
+                }
+                else
+                {
+                    var convertedValue = ConvertAnyToTargetType(request.NewValue, propertyInfo.PropertyType);
+                    if (convertedValue.Success)
+                    {
+                        Debug.WriteLine($"[GrpcService:PointerViewModel] Setting property '{finalPart}' via reflection to value: {convertedValue.Value}");
+                        propertyInfo.SetValue(target, convertedValue.Value);
+                        response.Success = true;
+                        if (!propertyPath.Equals(request.PropertyName, StringComparison.Ordinal) &&
+                            !typeof(INotifyPropertyChanged).IsAssignableFrom(propertyInfo.DeclaringType!))
+                        {
+                            var notification = new Pointer.ViewModels.Protos.PropertyChangeNotification
+                            {
+                                PropertyName = request.PropertyName,
+                                PropertyPath = propertyPath,
+                                ChangeType = "nested",
+                                NewValue = request.NewValue
+                            };
+                            var sourceClientId = request.ClientId;
+                            foreach (var kvp in _subscriberChannels)
+                            {
+                                if (kvp.Key == sourceClientId) continue;
+                                _ = kvp.Value.Writer.WriteAsync(notification);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        response.Success = false;
+                        response.ErrorMessage = convertedValue.ErrorMessage;
+                    }
                 }
             }
         }
@@ -445,37 +521,10 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
             response.Success = true;
             Debug.WriteLine($"[GrpcService:PointerViewModel] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'");
         }
-        // Handle list/array element replacement updates
-        else if (collection is System.Collections.IList list && request.ArrayIndex > -1)
-        {
-            if (request.ArrayIndex >= list.Count)
-            {
-                response.Success = false;
-                response.ErrorMessage = $"Array index {request.ArrayIndex} is out of bounds (count: {list.Count})";
-                return response;
-            }
-            
-            var elementType = propertyInfo.PropertyType.GetGenericArguments()[0];
-            var convertedValue = ConvertAnyToTargetType(request.NewValue, elementType);
-            
-            if (!convertedValue.Success)
-            {
-                response.Success = false;
-                response.ErrorMessage = convertedValue.ErrorMessage;
-                return response;
-            }
-            
-            // Store old value
-            response.OldValue = PackToAny(list[request.ArrayIndex]);
-            
-            list[request.ArrayIndex] = convertedValue.Value;
-            response.Success = true;
-            Debug.WriteLine($"[GrpcService:PointerViewModel] Updated array index {request.ArrayIndex} to '{convertedValue.Value}'");
-        }
         else
         {
             response.Success = false;
-            response.ErrorMessage = "Unsupported collection operation or missing index/key";
+            response.ErrorMessage = "Unsupported collection operation or missing key";
         }
         
         return response;
@@ -655,6 +704,23 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
                     if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
                     index++;
                 }
+                if (val is INotifyCollectionChanged incc)
+                {
+                    var propName = e.PropertyName;
+                    incc.CollectionChanged += (s2, args) =>
+                    {
+                        if (args.NewItems != null)
+                        {
+                            int start = args.NewStartingIndex;
+                            foreach (var newItem in args.NewItems)
+                            {
+                                var childPrefix = string.IsNullOrEmpty(prefix) ? $"{propName}[{start}]" : prefix + $".{propName}[{start}]";
+                                if (newItem != null) AttachNestedPropertyChangedHandlers(newItem, childPrefix);
+                                start++;
+                            }
+                        }
+                    };
+                }
             }
         };
 
@@ -674,6 +740,23 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
                     var childPrefix = string.IsNullOrEmpty(prefix) ? $"{p.Name}[{index}]" : prefix + $".{p.Name}[{index}]";
                     if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
                     index++;
+                }
+                if (val is INotifyCollectionChanged incc)
+                {
+                    var propName = p.Name;
+                    incc.CollectionChanged += (s2, args) =>
+                    {
+                        if (args.NewItems != null)
+                        {
+                            int start = args.NewStartingIndex;
+                            foreach (var newItem in args.NewItems)
+                            {
+                                var childPrefix = string.IsNullOrEmpty(prefix) ? $"{propName}[{start}]" : prefix + $".{propName}[{start}]";
+                                if (newItem != null) AttachNestedPropertyChangedHandlers(newItem, childPrefix);
+                                start++;
+                            }
+                        }
+                    };
                 }
             }
         }
