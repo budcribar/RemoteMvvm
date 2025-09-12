@@ -51,8 +51,8 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _logger = logger;
-        if (_viewModel is INotifyPropertyChanged inpc) { 
-            inpc.PropertyChanged += ViewModel_PropertyChanged; 
+        if (_viewModel is INotifyPropertyChanged inpc) {
+            AttachNestedPropertyChangedHandlers(inpc, string.Empty);
         }
     }
 
@@ -320,6 +320,23 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                     Debug.WriteLine($"[GrpcService:GameViewModel] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
                     propertyInfo.SetValue(target, convertedValue.Value);
                     response.Success = true;
+                    if (!propertyPath.Equals(request.PropertyName, StringComparison.Ordinal) &&
+                        !typeof(INotifyPropertyChanged).IsAssignableFrom(propertyInfo.DeclaringType!))
+                    {
+                        var notification = new MonsterClicker.ViewModels.Protos.PropertyChangeNotification
+                        {
+                            PropertyName = request.PropertyName,
+                            PropertyPath = propertyPath,
+                            ChangeType = "nested",
+                            NewValue = request.NewValue
+                        };
+                        var sourceClientId = request.ClientId;
+                        foreach (var kvp in _subscriberChannels)
+                        {
+                            if (kvp.Key == sourceClientId) continue;
+                            _ = kvp.Value.Writer.WriteAsync(notification);
+                        }
+                    }
                 }
                 else
                 {
@@ -468,7 +485,13 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
                 return (true, anyValue.Unpack<DoubleValue>().Value, "");
             if (anyValue.Is(BoolValue.Descriptor) && targetType == typeof(bool))
                 return (true, anyValue.Unpack<BoolValue>().Value, "");
-            
+
+            // Handle DateTime conversions
+            if (anyValue.Is(Timestamp.Descriptor) && targetType == typeof(DateTime))
+                return (true, anyValue.Unpack<Timestamp>().ToDateTime(), "");
+            if (anyValue.Is(Timestamp.Descriptor) && targetType == typeof(DateTime?))
+                return (true, (DateTime?)anyValue.Unpack<Timestamp>().ToDateTime(), "");
+
             // Handle additional numeric type conversions
             if (anyValue.Is(Int32Value.Descriptor) && targetType == typeof(short))
                 return (true, (short)anyValue.Unpack<Int32Value>().Value, "");
@@ -557,6 +580,34 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             return (false, null, $"Conversion error: {ex.Message}");
         }
         return (false, null, $"Cannot convert '{stringValue}' to {targetType.Name}");
+    }
+
+    private void AttachNestedPropertyChangedHandlers(object obj, string prefix)
+    {
+        if (obj is not INotifyPropertyChanged inpc) return;
+        inpc.PropertyChanged += (s, e) =>
+        {
+            var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+            ViewModel_PropertyChanged(s, new PropertyChangedEventArgs(path));
+
+            var prop = s?.GetType().GetProperty(e.PropertyName);
+            var val = prop?.GetValue(s);
+            if (val is INotifyPropertyChanged child)
+            {
+                var childPrefix = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                AttachNestedPropertyChangedHandlers(child, childPrefix);
+            }
+        };
+
+        foreach (var p in obj.GetType().GetProperties())
+        {
+            var val = p.GetValue(obj);
+            if (val is INotifyPropertyChanged child)
+            {
+                var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
+                AttachNestedPropertyChangedHandlers(child, childPrefix);
+            }
+        }
     }
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)

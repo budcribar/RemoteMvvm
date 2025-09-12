@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel;
 using Generated.ViewModels;
 #if WPF_DISPATCHER
 using System.Windows;
@@ -29,6 +30,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         private bool _isInitialized = false;
         private bool _isDisposed = false;
         private readonly string _clientId = Guid.NewGuid().ToString();
+        private bool _suppressLocalUpdates = false;
 
         private string _connectionStatus = "Unknown";
         public string ConnectionStatus
@@ -158,39 +160,41 @@ namespace MonsterClicker.ViewModels.RemoteClients
         /// </summary>
         /// <param name="propertyName">The name of the property to update</param>
         /// <param name="value">The new value to set</param>
-        public async Task UpdatePropertyValueAsync(string propertyName, object? value)
+        public async Task UpdatePropertyValueAsync(string propertyPath, object? value)
         {
             if (!_isInitialized || _isDisposed)
             {
-                Debug.WriteLine($"[ClientProxy:GameViewModel] UpdatePropertyValueAsync for {propertyName} skipped - not initialized or disposed");
+                Debug.WriteLine($"[ClientProxy:GameViewModel] UpdatePropertyValueAsync for {propertyPath} skipped - not initialized or disposed");
                 return;
             }
 
             try
             {
-                Debug.WriteLine($"[ClientProxy:GameViewModel] Updating server property {propertyName} = {value}");
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Updating server property {propertyPath} = {value}");
+                var topLevel = propertyPath.Split(new[] {'.','['}, 2)[0];
                 var request = new MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest
                 {
-                    PropertyName = propertyName,
+                    PropertyName = topLevel,
+                    PropertyPath = propertyPath,
                     ArrayIndex = -1,
                     ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
 
                 var response = await _grpcClient.UpdatePropertyValueAsync(request, cancellationToken: _cts.Token);
-                Debug.WriteLine($"[ClientProxy:GameViewModel] Property {propertyName} updated successfully on server");
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Property {propertyPath} updated successfully on server");
             }
             catch (RpcException ex)
             {
-                Debug.WriteLine($"[ClientProxy:GameViewModel] Error updating property {propertyName}: {ex.Status.StatusCode} - {ex.Status.Detail}");
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Error updating property {propertyPath}: {ex.Status.StatusCode} - {ex.Status.Detail}");
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"[ClientProxy:GameViewModel] Property update {propertyName} cancelled");
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Property update {propertyPath} cancelled");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ClientProxy:GameViewModel] Unexpected error updating property {propertyName}: {ex.Message}");
+                Debug.WriteLine($"[ClientProxy:GameViewModel] Unexpected error updating property {propertyPath}: {ex.Message}");
             }
         }
 
@@ -219,6 +223,59 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 System.Enum e => Any.Pack(new Int32Value { Value = Convert.ToInt32(e) }),
                 _ => Any.Pack(new StringValue { Value = value?.ToString() ?? "" })
             };
+        }
+
+        private static object? UnpackAny(Any value)
+        {
+            if (value.Is(StringValue.Descriptor)) return value.Unpack<StringValue>().Value;
+            if (value.Is(Int32Value.Descriptor)) return value.Unpack<Int32Value>().Value;
+            if (value.Is(Int64Value.Descriptor)) return value.Unpack<Int64Value>().Value;
+            if (value.Is(UInt32Value.Descriptor)) return value.Unpack<UInt32Value>().Value;
+            if (value.Is(UInt64Value.Descriptor)) return value.Unpack<UInt64Value>().Value;
+            if (value.Is(FloatValue.Descriptor)) return value.Unpack<FloatValue>().Value;
+            if (value.Is(DoubleValue.Descriptor)) return value.Unpack<DoubleValue>().Value;
+            if (value.Is(BoolValue.Descriptor)) return value.Unpack<BoolValue>().Value;
+            if (value.Is(Timestamp.Descriptor)) return value.Unpack<Timestamp>().ToDateTime();
+            if (value.Is(Google.Protobuf.WellKnownTypes.Duration.Descriptor)) return value.Unpack<Google.Protobuf.WellKnownTypes.Duration>().ToTimeSpan();
+            return null;
+        }
+
+        private static void SetValueByPath(object target, string path, object? newValue)
+        {
+            var parts = path.Split('.');
+            object? current = target;
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                var prop = current?.GetType().GetProperty(parts[i]);
+                current = prop?.GetValue(current);
+            }
+            var finalProp = current?.GetType().GetProperty(parts[^1]);
+            finalProp?.SetValue(current, newValue);
+            if (target is GameViewModelRemoteClient rc)
+            {
+                rc.AttachLocalPropertyChangedHandlers(newValue, path);
+            }
+        }
+
+        private void AttachLocalPropertyChangedHandlers(object? obj, string prefix)
+        {
+            if (obj is not INotifyPropertyChanged inpc) return;
+            inpc.PropertyChanged += async (s, e) =>
+            {
+                if (_suppressLocalUpdates) return;
+                var prop = s?.GetType().GetProperty(e.PropertyName);
+                if (prop == null) return;
+                var value = prop.GetValue(s);
+                var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                await UpdatePropertyValueAsync(path, value);
+            };
+
+            foreach (var p in obj.GetType().GetProperties())
+            {
+                var val = p.GetValue(obj);
+                var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
+                AttachLocalPropertyChangedHandlers(val, childPrefix);
+            }
         }
 
         private async Task StartPingLoopAsync()
@@ -279,6 +336,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[GameViewModelRemoteClient] Initial state received.");
+                _suppressLocalUpdates = true;
                 this.MonsterName = state.MonsterName;
                 this.MonsterMaxHealth = state.MonsterMaxHealth;
                 this.MonsterCurrentHealth = state.MonsterCurrentHealth;
@@ -287,6 +345,8 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 this.IsMonsterDefeated = state.IsMonsterDefeated;
                 this.CanUseSpecialAttack = state.CanUseSpecialAttack;
                 this.IsSpecialAttackOnCooldown = state.IsSpecialAttackOnCooldown;
+                _suppressLocalUpdates = false;
+                AttachLocalPropertyChangedHandlers(this, string.Empty);
                 _isInitialized = true;
                 Debug.WriteLine("[GameViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
@@ -358,8 +418,16 @@ namespace MonsterClicker.ViewModels.RemoteClients
                            try
                            {
                                Debug.WriteLine("[GameViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
-                               switch (update.PropertyName)
+                               _suppressLocalUpdates = true;
+                               if (update.ChangeType == "nested")
                                {
+                                   var val = UnpackAny(update.NewValue);
+                                   SetValueByPath(this, update.PropertyPath, val);
+                               }
+                               else
+                               {
+                                   switch (update.PropertyName)
+                                   {
                                    case nameof(MonsterName):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.MonsterName = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(MonsterMaxHealth):
@@ -376,10 +444,12 @@ namespace MonsterClicker.ViewModels.RemoteClients
                     if (update.NewValue!.Is(BoolValue.Descriptor)) this.CanUseSpecialAttack = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(IsSpecialAttackOnCooldown):
                     if (update.NewValue!.Is(BoolValue.Descriptor)) this.IsSpecialAttackOnCooldown = update.NewValue.Unpack<BoolValue>().Value; break;
-                                   default: Debug.WriteLine("[ClientProxy:GameViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
+                                       default: Debug.WriteLine("[ClientProxy:GameViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
+                                   }
                                }
                            }
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:GameViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
+                           finally { _suppressLocalUpdates = false; }
                         };
                         #if WPF_DISPATCHER
                         Application.Current?.Dispatcher.Invoke(updateAction);
