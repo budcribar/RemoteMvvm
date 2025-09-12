@@ -1236,8 +1236,90 @@ namespace ServerApp
 
         private static bool IsCollectionType(Type type)
         {
-            return type != typeof(string) && 
+            return type != typeof(string) &&
                    typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
+        }
+
+        private static bool IsEditableType(Type type)
+        {
+            var underlyingType = Nullable.GetUnderlyingType(type) ?? type;
+            return underlyingType == typeof(int) ||
+                   underlyingType == typeof(double) ||
+                   underlyingType == typeof(decimal) ||
+                   underlyingType == typeof(float) ||
+                   underlyingType == typeof(bool) ||
+                   underlyingType == typeof(string) ||
+                   underlyingType.IsEnum ||
+                   underlyingType == typeof(DateTime);
+        }
+
+        private static bool IsEffectivelyReadOnly(PropertyInfo property)
+        {
+            var setter = property.GetSetMethod(true);
+            return setter == null || setter.IsPrivate;
+        }
+
+        private FrameworkElement CreateEditableField(PropertyInfo property, object owner)
+        {
+            var propType = property.PropertyType;
+            var currentValue = property.GetValue(owner);
+            if (propType == typeof(bool) || propType == typeof(bool?))
+            {
+                var cb = new CheckBox { IsChecked = currentValue as bool? };
+                cb.Checked += (_, __) => { property.SetValue(owner, true); LoadPropertyTree(); UpdatePropertyDetails(); };
+                cb.Unchecked += (_, __) => { property.SetValue(owner, false); LoadPropertyTree(); UpdatePropertyDetails(); };
+                return cb;
+            }
+            if (propType.IsEnum)
+            {
+                var combo = new ComboBox { ItemsSource = Enum.GetValues(propType), SelectedItem = currentValue };
+                combo.SelectionChanged += (_, __) =>
+                {
+                    if (combo.SelectedItem != null)
+                    {
+                        property.SetValue(owner, combo.SelectedItem);
+                        LoadPropertyTree();
+                        UpdatePropertyDetails();
+                    }
+                };
+                return combo;
+            }
+            var tb = new TextBox { Text = currentValue?.ToString() ?? string.Empty, Width = 200 };
+            tb.LostFocus += (_, __) =>
+            {
+                try
+                {
+                    object? val;
+                    var text = tb.Text;
+                    if (propType == typeof(string))
+                        val = text;
+                    else if (propType == typeof(int) || propType == typeof(int?))
+                        val = string.IsNullOrWhiteSpace(text) ? null : int.Parse(text);
+                    else if (propType == typeof(double) || propType == typeof(double?))
+                        val = string.IsNullOrWhiteSpace(text) ? null : double.Parse(text);
+                    else if (propType == typeof(decimal) || propType == typeof(decimal?))
+                        val = string.IsNullOrWhiteSpace(text) ? null : decimal.Parse(text);
+                    else if (propType == typeof(float) || propType == typeof(float?))
+                        val = string.IsNullOrWhiteSpace(text) ? null : float.Parse(text);
+                    else if (propType == typeof(DateTime) || propType == typeof(DateTime?))
+                    {
+                        if (string.IsNullOrWhiteSpace(text)) val = null;
+                        else
+                        {
+                            var dt = DateTime.Parse(text, null, DateTimeStyles.RoundtripKind);
+                            if (dt.Kind == DateTimeKind.Unspecified) dt = DateTime.SpecifyKind(dt, DateTimeKind.Utc);
+                            val = dt;
+                        }
+                    }
+                    else
+                        val = text;
+                    property.SetValue(owner, val);
+                    LoadPropertyTree();
+                    UpdatePropertyDetails();
+                }
+                catch { }
+            };
+            return tb;
         }
 
         private void UpdatePropertyDetails()
