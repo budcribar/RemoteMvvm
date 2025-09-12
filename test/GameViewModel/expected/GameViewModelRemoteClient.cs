@@ -28,6 +28,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
+        private readonly string _clientId = Guid.NewGuid().ToString();
 
         private string _connectionStatus = "Unknown";
         public string ConnectionStatus
@@ -172,6 +173,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 {
                     PropertyName = propertyName,
                     ArrayIndex = -1,
+                    ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
 
@@ -342,7 +344,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 Debug.WriteLine("[GameViewModelRemoteClient] Starting property change listener...");
                 try
                 {
-                    var subscribeRequest = new MonsterClicker.ViewModels.Protos.SubscribeRequest { ClientId = Guid.NewGuid().ToString() };
+                    var subscribeRequest = new MonsterClicker.ViewModels.Protos.SubscribeRequest { ClientId = _clientId };
                     using var call = _grpcClient.SubscribeToPropertyChanges(subscribeRequest, cancellationToken: cancellationToken);
                     Debug.WriteLine("[GameViewModelRemoteClient] Subscribed to property changes. Waiting for updates...");
                     int updateCount = 0;

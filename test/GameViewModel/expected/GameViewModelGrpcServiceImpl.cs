@@ -43,7 +43,8 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
     }
 
     private readonly GameViewModel _viewModel;
-    private static readonly ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
+    private static readonly ConcurrentDictionary<string, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>> _subscriberChannels = new ConcurrentDictionary<string, Channel<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>>();
+    private static readonly System.Threading.AsyncLocal<string?> _currentClientId = new();
     private readonly ILogger? _logger;
 
     public GameViewModelGrpcServiceImpl(GameViewModel viewModel, ILogger<GameViewModelGrpcServiceImpl>? logger = null)
@@ -120,9 +121,9 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override async Task SubscribeToPropertyChanges(MonsterClicker.ViewModels.Protos.SubscribeRequest request, IServerStreamWriter<MonsterClicker.ViewModels.Protos.PropertyChangeNotification> responseStream, ServerCallContext context)
     {
-        var clientId = request.ClientId ?? "unknown";
+        var clientId = request.ClientId ?? Guid.NewGuid().ToString();
         var channel = Channel.CreateUnbounded<MonsterClicker.ViewModels.Protos.PropertyChangeNotification>(new UnboundedChannelOptions { SingleReader = true, SingleWriter = false });
-        _subscriberChannels.TryAdd(responseStream, channel);
+        _subscriberChannels[clientId] = channel;
         ClientCount = _subscriberChannels.Count;
         try
         {
@@ -137,7 +138,7 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         }
         finally
         {
-            _subscriberChannels.TryRemove(responseStream, out _);
+            _subscriberChannels.TryRemove(clientId, out _);
             channel.Writer.TryComplete();
             ClientCount = _subscriberChannels.Count;
         }
@@ -145,8 +146,9 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
 
     public override Task<MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse> UpdatePropertyValue(MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest request, ServerCallContext context)
     {
+        _currentClientId.Value = request.ClientId;
         var response = new MonsterClicker.ViewModels.Protos.UpdatePropertyValueResponse();
-        
+
         try
         {
             // Execute property update directly - MVVM Toolkit handles threading automatically
@@ -158,7 +160,11 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
             response.Success = false;
             response.ErrorMessage = ex.Message;
         }
-        
+        finally
+        {
+            _currentClientId.Value = null;
+        }
+
         Debug.WriteLine($"[GrpcService:GameViewModel] UpdatePropertyValue result: Success={response.Success}, Error={response.ErrorMessage}");
         return Task.FromResult(response);
     }
@@ -570,11 +576,14 @@ public partial class GameViewModelGrpcServiceImpl : GameViewModelService.GameVie
         };
         notification.NewValue = PackToAny(newValue);
 
+        var sourceClientId = _currentClientId.Value;
         // Send notifications to unbounded channels - use fire-and-forget Task.Run to avoid blocking the UI thread
         _ = Task.Run(async () =>
         {
-            foreach (var channelWriter in _subscriberChannels.Values.Select(c => c.Writer))
+            foreach (var kvp in _subscriberChannels)
             {
+                if (kvp.Key == sourceClientId) continue;
+                var channelWriter = kvp.Value.Writer;
                 try {
                     await channelWriter.WriteAsync(notification);
                 }
