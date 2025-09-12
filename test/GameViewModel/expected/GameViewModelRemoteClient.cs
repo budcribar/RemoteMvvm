@@ -242,33 +242,90 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         private static void SetValueByPath(object target, string path, object? newValue)
         {
-            var parts = path.Split('.');
+            var segments = path.Split('.');
             object? current = target;
-            for (int i = 0; i < parts.Length - 1; i++)
+
+            for (int i = 0; i < segments.Length; i++)
             {
-                var prop = current?.GetType().GetProperty(parts[i]);
-                current = prop?.GetValue(current);
-            }
-            var finalProp = current?.GetType().GetProperty(parts[^1]);
-            finalProp?.SetValue(current, newValue);
-            if (target is GameViewModelRemoteClient rc)
-            {
-                rc.AttachLocalPropertyChangedHandlers(newValue, path);
+                var part = segments[i];
+                int bracket = part.IndexOf('[');
+                if (bracket >= 0)
+                {
+                    var propName = part[..bracket];
+                    var end = part.IndexOf(']', bracket);
+                    if (end < 0) return;
+                    var indexStr = part[(bracket + 1)..end];
+                    var prop = current?.GetType().GetProperty(propName);
+                    if (prop?.GetValue(current) is System.Collections.IList list && int.TryParse(indexStr, out int idx))
+                    {
+                        if (idx < 0 || idx >= list.Count) return;
+                        if (i == segments.Length - 1)
+                        {
+                            list[idx] = newValue;
+                            if (target is GameViewModelRemoteClient rc)
+                            {
+                                rc.AttachLocalPropertyChangedHandlers(list[idx], path);
+                            }
+                            return;
+                        }
+                        current = list[idx];
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    if (i == segments.Length - 1)
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        prop?.SetValue(current, newValue);
+                        if (target is GameViewModelRemoteClient rc)
+                        {
+                            rc.AttachLocalPropertyChangedHandlers(newValue, path);
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        current = prop?.GetValue(current);
+                    }
+                }
+
+                if (current == null) return;
             }
         }
 
         private void AttachLocalPropertyChangedHandlers(object? obj, string prefix)
         {
-            if (obj is not INotifyPropertyChanged inpc) return;
-            inpc.PropertyChanged += async (s, e) =>
+            if (obj == null) return;
+
+            if (obj is INotifyPropertyChanged inpc)
             {
-                if (_suppressLocalUpdates) return;
-                var prop = s?.GetType().GetProperty(e.PropertyName);
-                if (prop == null) return;
-                var value = prop.GetValue(s);
-                var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
-                await UpdatePropertyValueAsync(path, value);
-            };
+                inpc.PropertyChanged += async (s, e) =>
+                {
+                    if (_suppressLocalUpdates) return;
+                    var prop = s?.GetType().GetProperty(e.PropertyName);
+                    if (prop == null) return;
+                    var value = prop.GetValue(s);
+                    var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    await UpdatePropertyValueAsync(path, value);
+                };
+            }
+
+            if (obj is System.Collections.IEnumerable enumerable && obj is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : prefix + $"[{index}]";
+                    AttachLocalPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+                return;
+            }
 
             foreach (var p in obj.GetType().GetProperties())
             {

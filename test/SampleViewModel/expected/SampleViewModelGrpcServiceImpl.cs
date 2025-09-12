@@ -555,6 +555,16 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
                 var childPrefix = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
                 AttachNestedPropertyChangedHandlers(child, childPrefix);
             }
+            else if (val is System.Collections.IEnumerable enumerable && val is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"{e.PropertyName}[{index}]" : prefix + $".{e.PropertyName}[{index}]";
+                    if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+            }
         };
 
         foreach (var p in obj.GetType().GetProperties())
@@ -564,6 +574,16 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             {
                 var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
                 AttachNestedPropertyChangedHandlers(child, childPrefix);
+            }
+            else if (val is System.Collections.IEnumerable enumerable && val is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"{p.Name}[{index}]" : prefix + $".{p.Name}[{index}]";
+                    if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
             }
         }
     }
