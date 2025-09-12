@@ -291,7 +291,14 @@ public partial class PointerViewModelGrpcServiceImpl : PointerViewModelService.P
                             response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
                             return response;
                         }
-                        target = list[idx] ?? new();
+                        var nextTarget = list[idx];
+                        if (nextTarget == null)
+                        {
+                            response.Success = false;
+                            response.ErrorMessage = $"Null value encountered at index {idx} for '{propName}'";
+                            return response;
+                        }
+                        target = nextTarget;
                     }
                     else
                     {

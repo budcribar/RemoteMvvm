@@ -14,6 +14,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
 using System.ComponentModel;
+using System.Collections.Specialized;
 using System.Diagnostics;
 using System.Threading.Channels;
 using Channel = System.Threading.Channels.Channel;
@@ -51,8 +52,8 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
     {
         _viewModel = viewModel ?? throw new ArgumentNullException(nameof(viewModel));
         _logger = logger;
-        if (_viewModel is INotifyPropertyChanged inpc) { 
-            inpc.PropertyChanged += ViewModel_PropertyChanged; 
+        if (_viewModel is INotifyPropertyChanged inpc) {
+            AttachNestedPropertyChangedHandlers(inpc, string.Empty);
         }
     }
 
@@ -213,7 +214,14 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
                             response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
                             return response;
                         }
-                        target = list[idx] ?? new();
+                        var nextTarget = list[idx];
+                        if (nextTarget == null)
+                        {
+                            response.Success = false;
+                            response.ErrorMessage = $"Null value encountered at index {idx} for '{propName}'";
+                            return response;
+                        }
+                        target = nextTarget;
                     }
                     else
                     {
@@ -278,6 +286,23 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
                     Debug.WriteLine($"[GrpcService:SampleViewModel] Setting property '{finalPropertyName}' via reflection to value: {convertedValue.Value}");
                     propertyInfo.SetValue(target, convertedValue.Value);
                     response.Success = true;
+                    if (!propertyPath.Equals(request.PropertyName, StringComparison.Ordinal) &&
+                        !typeof(INotifyPropertyChanged).IsAssignableFrom(propertyInfo.DeclaringType!))
+                    {
+                        var notification = new SampleApp.ViewModels.Protos.PropertyChangeNotification
+                        {
+                            PropertyName = request.PropertyName,
+                            PropertyPath = propertyPath,
+                            ChangeType = "nested",
+                            NewValue = request.NewValue
+                        };
+                        var sourceClientId = request.ClientId;
+                        foreach (var kvp in _subscriberChannels)
+                        {
+                            if (kvp.Key == sourceClientId) continue;
+                            _ = kvp.Value.Writer.WriteAsync(notification);
+                        }
+                    }
                 }
                 else
                 {
@@ -426,7 +451,13 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
                 return (true, anyValue.Unpack<DoubleValue>().Value, "");
             if (anyValue.Is(BoolValue.Descriptor) && targetType == typeof(bool))
                 return (true, anyValue.Unpack<BoolValue>().Value, "");
-            
+
+            // Handle DateTime conversions
+            if (anyValue.Is(Timestamp.Descriptor) && targetType == typeof(DateTime))
+                return (true, anyValue.Unpack<Timestamp>().ToDateTime(), "");
+            if (anyValue.Is(Timestamp.Descriptor) && targetType == typeof(DateTime?))
+                return (true, (DateTime?)anyValue.Unpack<Timestamp>().ToDateTime(), "");
+
             // Handle additional numeric type conversions
             if (anyValue.Is(Int32Value.Descriptor) && targetType == typeof(short))
                 return (true, (short)anyValue.Unpack<Int32Value>().Value, "");
@@ -515,6 +546,88 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             return (false, null, $"Conversion error: {ex.Message}");
         }
         return (false, null, $"Cannot convert '{stringValue}' to {targetType.Name}");
+    }
+
+    private void AttachNestedPropertyChangedHandlers(object obj, string prefix)
+    {
+        if (obj is not INotifyPropertyChanged inpc) return;
+        inpc.PropertyChanged += (s, e) =>
+        {
+            var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+            ViewModel_PropertyChanged(s, new PropertyChangedEventArgs(path));
+
+            var prop = s?.GetType().GetProperty(e.PropertyName);
+            var val = prop?.GetValue(s);
+            if (val is INotifyPropertyChanged child)
+            {
+                var childPrefix = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                AttachNestedPropertyChangedHandlers(child, childPrefix);
+            }
+            else if (val is System.Collections.IEnumerable enumerable && val is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"{e.PropertyName}[{index}]" : prefix + $".{e.PropertyName}[{index}]";
+                    if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+                if (val is INotifyCollectionChanged incc)
+                {
+                    var propName = e.PropertyName;
+                    incc.CollectionChanged += (s2, args) =>
+                    {
+                        if (args.NewItems != null)
+                        {
+                            int start = args.NewStartingIndex;
+                            foreach (var newItem in args.NewItems)
+                            {
+                                var childPrefix = string.IsNullOrEmpty(prefix) ? $"{propName}[{start}]" : prefix + $".{propName}[{start}]";
+                                if (newItem != null) AttachNestedPropertyChangedHandlers(newItem, childPrefix);
+                                start++;
+                            }
+                        }
+                    };
+                }
+            }
+        };
+
+        foreach (var p in obj.GetType().GetProperties())
+        {
+            var val = p.GetValue(obj);
+            if (val is INotifyPropertyChanged child)
+            {
+                var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
+                AttachNestedPropertyChangedHandlers(child, childPrefix);
+            }
+            else if (val is System.Collections.IEnumerable enumerable && val is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"{p.Name}[{index}]" : prefix + $".{p.Name}[{index}]";
+                    if (item != null) AttachNestedPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+                if (val is INotifyCollectionChanged incc)
+                {
+                    var propName = p.Name;
+                    incc.CollectionChanged += (s2, args) =>
+                    {
+                        if (args.NewItems != null)
+                        {
+                            int start = args.NewStartingIndex;
+                            foreach (var newItem in args.NewItems)
+                            {
+                                var childPrefix = string.IsNullOrEmpty(prefix) ? $"{propName}[{start}]" : prefix + $".{propName}[{start}]";
+                                if (newItem != null) AttachNestedPropertyChangedHandlers(newItem, childPrefix);
+                                start++;
+                            }
+                        }
+                    };
+                }
+            }
+        }
     }
 
     private async void ViewModel_PropertyChanged(object? sender, PropertyChangedEventArgs e)

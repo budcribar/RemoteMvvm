@@ -171,7 +171,6 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 var request = new MonsterClicker.ViewModels.Protos.UpdatePropertyValueRequest
                 {
                     PropertyName = propertyName,
-                    ArrayIndex = -1,
                     NewValue = PackValueToAny(value)
                 };
 
