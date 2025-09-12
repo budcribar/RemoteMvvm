@@ -79,28 +79,22 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine();
         
         var uiTranslator = new WinFormsUITranslator();
-
-        // Generate TreeView structure
-        sb.Append(uiTranslator.Translate(GenerateTreeViewStructure()));
+        var uiRoot = new ContainerComponent("StackPanel");
+        uiRoot.Children.Add(GenerateTreeViewStructure());
+        uiRoot.Children.Add(GeneratePropertyDetailsPanel());
+        uiRoot.Children.Add(GenerateCommandButtons());
+        uiRoot.Children.Add(GeneratePropertyChangeMonitoring());
+        sb.Append(uiTranslator.Translate(uiRoot));
         sb.AppendLine();
         sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
         sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
         sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
-        sb.AppendLine();
-
-        // Generate property details panel
-        sb.Append(uiTranslator.Translate(GeneratePropertyDetailsPanel()));
         sb.AppendLine();
         sb.AppendLine("                tree.AfterSelect += (_, e) =>");
         sb.AppendLine("                {");
         sb.AppendLine("                    ShowServerPropertyEditor(e.Node?.Tag as PropertyNodeInfo, detailLayout, vm);");
         sb.AppendLine("                };");
         sb.AppendLine();
-
-        // Generate command buttons
-        sb.Append(uiTranslator.Translate(GenerateCommandButtons()));
-        sb.AppendLine();
-        
         // Generate hierarchical tree loading using reflection-based approach like WPF
         sb.AppendLine("                // Hierarchical property tree loading like WPF");
         sb.AppendLine();
@@ -302,10 +296,6 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine();
         sb.AppendLine("                // Load initial tree");
         sb.AppendLine("                LoadTree();");
-        sb.AppendLine();
-        
-        // Generate property change monitoring
-        sb.Append(uiTranslator.Translate(GeneratePropertyChangeMonitoring()));
         sb.AppendLine();
         
         sb.AppendLine("                Application.Run(form);");

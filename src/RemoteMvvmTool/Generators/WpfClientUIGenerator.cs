@@ -225,6 +225,21 @@ public class WpfClientUIGenerator : UIGeneratorBase
     }
 
     /// <summary>
+    /// Generates XAML for the client window using the UI component tree
+    /// and the <see cref="WpfUITranslator"/>.
+    /// </summary>
+    public string GenerateEnhancedXaml()
+    {
+        var root = new ContainerComponent("StackPanel");
+        root.Children.Add(GenerateTreeViewStructure());
+        root.Children.Add(GeneratePropertyDetailsPanel());
+        root.Children.Add(GenerateCommandButtons());
+
+        var translator = new WpfUITranslator();
+        return translator.Translate(root);
+    }
+
+    /// <summary>
     /// Convert framework-agnostic tree commands to WPF-specific C# code
     /// </summary>
     protected override string ConvertTreeCommandsToFrameworkCode(List<TreeCommand> commands)
@@ -365,11 +380,41 @@ public class WpfClientUIGenerator : UIGeneratorBase
         return sb.ToString();
     }
 
-    // For WPF, these are handled by XAML and code-behind, so we return empty implementations
-    protected override UIComponent GenerateTreeViewStructure() => new ContainerComponent("Placeholder");
-    protected override UIComponent GeneratePropertyDetailsPanel() => new ContainerComponent("Placeholder");
-    protected override UIComponent GenerateCommandButtons() => new ContainerComponent("Placeholder");
-    protected override UIComponent GeneratePropertyChangeMonitoring() => new CodeBlockComponent(string.Empty);
+    // Build UI component tree for WPF
+    protected override UIComponent GenerateTreeViewStructure()
+    {
+        var root = new ContainerComponent("StackPanel");
+        root.Children.Add(new TreeViewComponent("PropertyTreeView"));
+        root.Children.Add(new ButtonComponent("RefreshBtn", "Refresh"));
+        root.Children.Add(new ButtonComponent("ExpandAllBtn", "Expand All"));
+        root.Children.Add(new ButtonComponent("CollapseAllBtn", "Collapse"));
+        return root;
+    }
+
+    protected override UIComponent GeneratePropertyDetailsPanel()
+    {
+        return new ContainerComponent("StackPanel", "PropertyDetailsPanel");
+    }
+
+    protected override UIComponent GenerateCommandButtons()
+    {
+        var panel = new ContainerComponent("StackPanel");
+        int cmdIndex = 0;
+        foreach (var c in Commands)
+        {
+            var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal)
+                ? c.MethodName[..^5]
+                : c.MethodName;
+            panel.Children.Add(new ButtonComponent($"CommandBtn{cmdIndex}", baseName));
+            cmdIndex++;
+        }
+        return panel;
+    }
+
+    protected override UIComponent GeneratePropertyChangeMonitoring()
+    {
+        return new CodeBlockComponent("// WPF handles property change monitoring in code-behind");
+    }
 
     // WPF-specific tree operations (for potential future use in code-behind)
     protected override string GenerateTreeBeginUpdate(string treeVariableName) => $"{treeVariableName}.Items.Clear(); // WPF doesn't have BeginUpdate";
