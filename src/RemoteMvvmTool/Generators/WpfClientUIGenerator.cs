@@ -365,9 +365,9 @@ public class WpfClientUIGenerator : UIGeneratorBase
     }
 
     // For WPF, these are handled by XAML and code-behind, so we return empty implementations
-    protected override string GenerateTreeViewStructure() => "";
-    protected override string GeneratePropertyDetailsPanel() => "";
-    protected override string GenerateCommandButtons() => "";
+    protected override UIComponent GenerateTreeViewStructure() => new("Placeholder");
+    protected override UIComponent GeneratePropertyDetailsPanel() => new("Placeholder");
+    protected override UIComponent GenerateCommandButtons() => new("Placeholder");
     protected override string GeneratePropertyChangeMonitoring() => "";
 
     // WPF-specific tree operations (for potential future use in code-behind)

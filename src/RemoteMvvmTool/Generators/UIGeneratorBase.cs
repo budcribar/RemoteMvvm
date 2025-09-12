@@ -37,17 +37,17 @@ public abstract class UIGeneratorBase
     /// <summary>
     /// Generates the tree view structure - framework-specific implementation
     /// </summary>
-    protected abstract string GenerateTreeViewStructure();
+    protected abstract UIComponent GenerateTreeViewStructure();
 
     /// <summary>
     /// Generates the property details panel - framework-specific implementation
     /// </summary>
-    protected abstract string GeneratePropertyDetailsPanel();
+    protected abstract UIComponent GeneratePropertyDetailsPanel();
 
     /// <summary>
     /// Generates command buttons - framework-specific implementation
     /// </summary>
-    protected abstract string GenerateCommandButtons();
+    protected abstract UIComponent GenerateCommandButtons();
 
     /// <summary>
     /// Generates property change monitoring code - framework-specific implementation

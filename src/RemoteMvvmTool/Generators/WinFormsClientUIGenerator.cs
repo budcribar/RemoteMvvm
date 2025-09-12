@@ -82,16 +82,27 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine($"                statusLbl.Text = \"{GetStatusText()}\";");
         sb.AppendLine();
         
+        var uiTranslator = new WinFormsUITranslator();
+
         // Generate TreeView structure
-        sb.Append(GenerateTreeViewStructure());
+        sb.Append(uiTranslator.Translate(GenerateTreeViewStructure(), "                "));
         sb.AppendLine();
-        
+        sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
+        sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
+        sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
+        sb.AppendLine();
+
         // Generate property details panel
-        sb.Append(GeneratePropertyDetailsPanel());
+        sb.Append(uiTranslator.Translate(GeneratePropertyDetailsPanel(), "                "));
         sb.AppendLine();
-        
+        sb.AppendLine("                tree.AfterSelect += (_, e) =>");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    ShowClientPropertyEditor(e.Node?.Tag as PropertyNodeInfo, detailLayout, vm);");
+        sb.AppendLine("                };");
+        sb.AppendLine();
+
         // Generate command buttons
-        sb.Append(GenerateCommandButtons());
+        sb.Append(uiTranslator.Translate(GenerateCommandButtons(), "                "));
         sb.AppendLine();
         
         // Generate hierarchical tree loading using reflection-based approach like WPF
@@ -450,172 +461,32 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         return sb.ToString();
     }
 
-    protected override string GenerateTreeViewStructure()
+    protected override UIComponent GenerateTreeViewStructure()
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("                // Left panel - TreeView with hierarchical property structure");
-        sb.AppendLine("                var leftPanel = new Panel { Dock = DockStyle.Fill };");
-        sb.AppendLine("                split.Panel1.Controls.Add(leftPanel);");
-        sb.AppendLine();
-        sb.AppendLine("                var treeLabel = new Label");
-        sb.AppendLine("                {");
-        sb.AppendLine($"                    Text = \"{GetRootNodeText()}\",");
-        sb.AppendLine("                    Font = new Font(\"Segoe UI\", 12, FontStyle.Bold),");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    Dock = DockStyle.Top,");
-        sb.AppendLine("                    Padding = new Padding(10, 10, 10, 5)");
-        sb.AppendLine("                };");
-        sb.AppendLine("                leftPanel.Controls.Add(treeLabel);");
-        sb.AppendLine();
-        sb.AppendLine("                // Tree control buttons");
-        sb.AppendLine("                var treeButtonsPanel = new FlowLayoutPanel");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Height = 35,");
-        sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
-        sb.AppendLine("                    AutoSize = false,");
-        sb.AppendLine("                    Dock = DockStyle.Bottom,");
-        sb.AppendLine("                    Padding = new Padding(10, 5, 10, 5)");
-        sb.AppendLine("                };");
-        sb.AppendLine("                leftPanel.Controls.Add(treeButtonsPanel);");
-        sb.AppendLine();
-        sb.AppendLine("                var refreshBtn = new Button { Text = \"Refresh\", Width = 70, Height = 25 };");
-        sb.AppendLine("                var expandBtn = new Button { Text = \"Expand All\", Width = 80, Height = 25 };");
-        sb.AppendLine("                var collapseBtn = new Button { Text = \"Collapse\", Width = 70, Height = 25 };");
-        sb.AppendLine("                treeButtonsPanel.Controls.Add(refreshBtn);");
-        sb.AppendLine("                treeButtonsPanel.Controls.Add(expandBtn);");
-        sb.AppendLine("                treeButtonsPanel.Controls.Add(collapseBtn);");
-        sb.AppendLine();
-        sb.AppendLine("                // TreeView with hierarchical display");
-        sb.AppendLine("                var tree = new TreeView");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Dock = DockStyle.Fill,");
-        sb.AppendLine("                    HideSelection = false,");
-        sb.AppendLine("                    ShowLines = true,");
-        sb.AppendLine("                    ShowPlusMinus = true,");
-        sb.AppendLine("                    ShowRootLines = true");
-        sb.AppendLine("                };");
-        sb.AppendLine("                leftPanel.Controls.Add(tree);");
-        sb.AppendLine();
-        
-        return sb.ToString();
+        var root = new UIComponent("StackPanel");
+        root.Children.Add(new UIComponent("TreeView", "tree"));
+        root.Children.Add(new UIComponent("Button", "refreshBtn", "Refresh"));
+        root.Children.Add(new UIComponent("Button", "expandBtn", "Expand All"));
+        root.Children.Add(new UIComponent("Button", "collapseBtn", "Collapse"));
+        return root;
     }
 
-    protected override string GeneratePropertyDetailsPanel()
+    protected override UIComponent GeneratePropertyDetailsPanel()
     {
-        var sb = new StringBuilder();
-        sb.AppendLine("                // Right panel - Property details and connection status");
-        sb.AppendLine("                var rightPanel = new Panel { Dock = DockStyle.Fill, AutoScroll = true };");
-        sb.AppendLine("                split.Panel2.Controls.Add(rightPanel);");
-        sb.AppendLine();
-        sb.AppendLine("                var flow = new FlowLayoutPanel");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Dock = DockStyle.Top,");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    FlowDirection = FlowDirection.TopDown,");
-        sb.AppendLine("                    WrapContents = false,");
-        sb.AppendLine("                    Padding = new Padding(10)");
-        sb.AppendLine("                };");
-        sb.AppendLine("                rightPanel.Controls.Add(flow);");
-        sb.AppendLine();
-        
-        // Enhanced property details section like WPF
-        sb.AppendLine("                var detailGroup = new GroupBox");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Text = \"Property Details\",");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
-        sb.AppendLine("                    Padding = new Padding(15),");
-        sb.AppendLine("                    Width = 380,");
-        sb.AppendLine("                    Font = new Font(\"Segoe UI\", 9, FontStyle.Bold)");
-        sb.AppendLine("                };");
-        sb.AppendLine("                flow.Controls.Add(detailGroup);");
-        sb.AppendLine();
-        sb.AppendLine("                var detailLayout = new TableLayoutPanel");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    ColumnCount = 2,");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    Width = 350,");
-        sb.AppendLine("                    CellBorderStyle = TableLayoutPanelCellBorderStyle.None,");
-        sb.AppendLine("                    Padding = new Padding(5)");
-        sb.AppendLine("                };");
-        sb.AppendLine("                detailGroup.Controls.Add(detailLayout);");
-        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));");
-        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));");
-        sb.AppendLine();
-        
-        // Add initial "select property" message
-        sb.AppendLine("                var selectPrompt = new Label");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Text = \"Select a property in the tree to view details\",");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    Font = new Font(\"Segoe UI\", 9, FontStyle.Italic),");
-        sb.AppendLine("                    ForeColor = Color.Gray,");
-        sb.AppendLine("                    Padding = new Padding(5)");
-        sb.AppendLine("                };");
-        sb.AppendLine("                detailLayout.Controls.Add(selectPrompt, 0, 0);");
-        sb.AppendLine("                detailLayout.SetColumnSpan(selectPrompt, 2);");
-        sb.AppendLine();
-        
-        sb.AppendLine("                // Tree selection event to update property details");
-        sb.AppendLine("                tree.AfterSelect += (_, e) =>");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    ShowClientPropertyEditor(e.Node?.Tag as PropertyNodeInfo, detailLayout, vm);");
-        sb.AppendLine("                };");
-        return sb.ToString();
+        return new UIComponent("TableLayoutPanel", "detailLayout");
     }
 
-    protected override string GenerateCommandButtons()
+    protected override UIComponent GenerateCommandButtons()
     {
-        if (!Commands.Any()) return "";
-        
-        var sb = new StringBuilder();
-        sb.AppendLine("                // Client Commands section");
-        sb.AppendLine("                var cmdGroup = new GroupBox");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Text = \"Commands\",");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
-        sb.AppendLine("                    Padding = new Padding(10)");
-        sb.AppendLine("                };");
-        sb.AppendLine("                flow.Controls.Add(cmdGroup);");
-        sb.AppendLine();
-        sb.AppendLine("                var cmdFlow = new FlowLayoutPanel");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    Dock = DockStyle.Top,");
-        sb.AppendLine("                    AutoSize = true,");
-        sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
-        sb.AppendLine("                    WrapContents = true");
-        sb.AppendLine("                };");
-        sb.AppendLine("                cmdGroup.Controls.Add(cmdFlow);");
-        
+        var root = new UIComponent("StackPanel");
         int cmdIndex = 0;
         foreach (var c in Commands)
         {
             var baseName = c.MethodName.EndsWith("Async", StringComparison.Ordinal) ? c.MethodName[..^5] : c.MethodName;
-            sb.AppendLine();
-            sb.AppendLine($"                var btn{cmdIndex} = new Button");
-            sb.AppendLine("                {");
-            sb.AppendLine($"                    Text = \"{baseName}\",");
-            sb.AppendLine("                    Width = 120,");
-            sb.AppendLine("                    Height = 30,");
-            sb.AppendLine("                    Margin = new Padding(0, 0, 10, 10)");
-            sb.AppendLine("                };");
-            sb.AppendLine($"                btn{cmdIndex}.Click += (_, __) =>");
-            sb.AppendLine("                {");
-            sb.AppendLine("                    try");
-            sb.AppendLine("                    {");
-            sb.AppendLine($"                        vm.{c.CommandPropertyName}?.Execute(null);");
-            sb.AppendLine("                    }");
-            sb.AppendLine("                    catch (Exception ex)");
-            sb.AppendLine("                    {");
-            sb.AppendLine($"                        MessageBox.Show($\"Error executing {baseName}: {{ex.Message}}\", \"Client Command Error\", MessageBoxButtons.OK, MessageBoxIcon.Warning);");
-            sb.AppendLine("                    }");
-            sb.AppendLine("                };");
-            sb.AppendLine($"                cmdFlow.Controls.Add(btn{cmdIndex});");
+            root.Children.Add(new UIComponent("Button", $"btn{cmdIndex}", baseName));
             cmdIndex++;
         }
-        
-        return sb.ToString();
+        return root;
     }
 
     protected override string GeneratePropertyChangeMonitoring()
