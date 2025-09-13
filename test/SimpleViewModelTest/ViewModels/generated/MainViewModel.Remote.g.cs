@@ -61,7 +61,7 @@ namespace SimpleViewModelTest.ViewModels
                     }
                     else
                     {
-                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1;
+                        listenOptions.Protocols = Microsoft.AspNetCore.Server.Kestrel.Core.HttpProtocols.Http1AndHttp2;
                     }
                 });
             });

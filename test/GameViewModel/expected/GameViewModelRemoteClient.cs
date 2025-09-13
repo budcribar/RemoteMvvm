@@ -17,15 +17,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
 using Generated.ViewModels;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
 
 namespace MonsterClicker.ViewModels.RemoteClients
 {
     public partial class GameViewModelRemoteClient : ObservableObject, IDisposable
     {
         private readonly MonsterClicker.ViewModels.Protos.GameViewModelService.GameViewModelServiceClient _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
@@ -150,6 +148,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         public GameViewModelRemoteClient(MonsterClicker.ViewModels.Protos.GameViewModelService.GameViewModelServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
             AttackMonsterCommand = new RelayCommand(RemoteExecute_AttackMonster);
             SpecialAttackCommand = new AsyncRelayCommand(RemoteExecute_SpecialAttackAsync);
             ResetGameCommand = new RelayCommand(RemoteExecute_ResetGame);
@@ -508,11 +507,10 @@ namespace MonsterClicker.ViewModels.RemoteClients
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:GameViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                            finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[GameViewModelRemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[GameViewModelRemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");
