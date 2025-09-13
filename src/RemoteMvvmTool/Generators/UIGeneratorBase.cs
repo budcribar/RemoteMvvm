@@ -170,8 +170,8 @@ public abstract class UIGeneratorBase
             
             commands.Add(new TreeCommand(TreeCommandType.CreateNode, $"{metadata.SafeVariableName}Node", 
                 $"\"{prop.Name}: \" + {metadata.SafeVariableName}Value"));
-            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node", 
-                $"\"{prop.Name}\"", viewModelVariableName, "IsSimpleProperty = true"));
+            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node",
+                $"\"{prop.Name}\"", viewModelVariableName, $"IsSimpleProperty = true, PropertyPath = \"{prop.Name}\"") );
             commands.Add(new TreeCommand(TreeCommandType.AddChildNode, "simplePropsNode", $"{metadata.SafeVariableName}Node"));
             
             commands.Add(new TreeCommand(TreeCommandType.TryEnd));
@@ -219,8 +219,8 @@ public abstract class UIGeneratorBase
                     $"\"{prop.Name}: \" + {viewModelVariableName}.{metadata.SafePropertyAccess}.ToString()"));
             }
             
-            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node", 
-                $"\"{prop.Name}\"", viewModelVariableName, "IsBooleanProperty = true"));
+            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node",
+                $"\"{prop.Name}\"", viewModelVariableName, $"IsBooleanProperty = true, PropertyPath = \"{prop.Name}\"") );
             commands.Add(new TreeCommand(TreeCommandType.AddChildNode, "boolPropsNode", $"{metadata.SafeVariableName}Node"));
             
             commands.Add(new TreeCommand(TreeCommandType.TryEnd));
@@ -258,8 +258,8 @@ public abstract class UIGeneratorBase
             
             commands.Add(new TreeCommand(TreeCommandType.CreateNode, $"{metadata.SafeVariableName}Node", 
                 $"\"{prop.Name} [\" + {viewModelVariableName}.{metadata.SafePropertyAccess}.{metadata.CountProperty} + \" items]\""));
-            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node", 
-                $"\"{prop.Name}\"", viewModelVariableName, "IsCollectionProperty = true"));
+            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node",
+                $"\"{prop.Name}\"", viewModelVariableName, $"IsCollectionProperty = true, PropertyPath = \"{prop.Name}\"") );
             commands.Add(new TreeCommand(TreeCommandType.AddChildNode, "collectionPropsNode", $"{metadata.SafeVariableName}Node"));
             
             // Add individual items (limit to first 3 for performance)
@@ -269,7 +269,7 @@ public abstract class UIGeneratorBase
             commands.Add(new TreeCommand(TreeCommandType.TryBegin));
             commands.Add(new TreeCommand(TreeCommandType.AssignValue, "itemText", "item.ToString()"));
             commands.Add(new TreeCommand(TreeCommandType.CreateNode, "itemNode", "\"[\" + idx + \"] \" + itemText"));
-            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, "itemNode", "\"[\" + idx + \"]\"", "item", "IsCollectionItem = true, CollectionIndex = idx"));
+            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, "itemNode", "\"[\" + idx + \"]\"", "item", $"IsCollectionItem = true, CollectionIndex = idx, PropertyPath = \"{prop.Name}[\" + idx + \"]\"") );
             commands.Add(new TreeCommand(TreeCommandType.AddChildNode, $"{metadata.SafeVariableName}Node", "itemNode"));
             commands.Add(new TreeCommand(TreeCommandType.TryEnd));
             commands.Add(new TreeCommand(TreeCommandType.CatchBegin));
@@ -321,8 +321,8 @@ public abstract class UIGeneratorBase
                 $"{viewModelVariableName}.{metadata.SafePropertyAccess}.GetType().Name"));
             commands.Add(new TreeCommand(TreeCommandType.CreateNode, $"{metadata.SafeVariableName}Node", 
                 $"\"{prop.Name} (\" + {metadata.SafeVariableName}TypeName + \")\""));
-            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node", 
-                $"\"{prop.Name}\"", $"{viewModelVariableName}.{metadata.SafePropertyAccess}", "IsComplexProperty = true"));
+            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node",
+                $"\"{prop.Name}\"", $"{viewModelVariableName}.{metadata.SafePropertyAccess}", $"IsComplexProperty = true, PropertyPath = \"{prop.Name}\"") );
             commands.Add(new TreeCommand(TreeCommandType.AddChildNode, "complexPropsNode", $"{metadata.SafeVariableName}Node"));
             
             commands.Add(new TreeCommand(TreeCommandType.Else));
@@ -375,8 +375,8 @@ public abstract class UIGeneratorBase
                     $"\"{prop.Name}: \" + {viewModelVariableName}.{metadata.SafePropertyAccess}.ToString()"));
             }
             
-            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node", 
-                $"\"{prop.Name}\"", viewModelVariableName, "IsEnumProperty = true"));
+            commands.Add(new TreeCommand(TreeCommandType.SetNodeTag, $"{metadata.SafeVariableName}Node",
+                $"\"{prop.Name}\"", viewModelVariableName, $"IsEnumProperty = true, PropertyPath = \"{prop.Name}\"") );
             commands.Add(new TreeCommand(TreeCommandType.AddChildNode, "enumPropsNode", $"{metadata.SafeVariableName}Node"));
             
             commands.Add(new TreeCommand(TreeCommandType.TryEnd));
@@ -419,6 +419,7 @@ public abstract class UIGeneratorBase
         public class PropertyNodeInfo
         {
             public string PropertyName { get; set; } = string.Empty;
+            public string PropertyPath { get; set; } = string.Empty;
             public object? Object { get; set; }
             public bool IsSimpleProperty { get; set; }
             public bool IsBooleanProperty { get; set; }

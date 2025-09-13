@@ -142,7 +142,7 @@ export {{ UpdatePropertyValueResponse }};
 ");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.js"),
             $"exports.{vmName}State = class {{}};" +
-            "exports.UpdatePropertyValueRequest = class { constructor(){ this.p=''; this.v=undefined; this.path=''; this.key=''; this.idx=-1; this.op=''; } setPropertyName(v){ this.p=v; } getPropertyName(){ return this.p; } setNewValue(v){ this.v=v; } getNewValue(){ return this.v; } setPropertyPath(v){ this.path=v; } getPropertyPath(){ return this.path; } setCollectionKey(v){ this.key=v; } getCollectionKey(){ return this.key; } setArrayIndex(v){ this.idx=v; } getArrayIndex(){ return this.idx; } setOperationType(v){ this.op=v; } getOperationType(){ return this.op; } };" +
+            "exports.UpdatePropertyValueRequest = class { constructor(){ this.p=''; this.v=undefined; this.path=''; this.key=''; this.op=''; } setPropertyName(v){ this.p=v; } getPropertyName(){ return this.p; } setNewValue(v){ this.v=v; } getNewValue(){ return this.v; } setPropertyPath(v){ this.path=v; } getPropertyPath(){ return this.path; } setCollectionKey(v){ this.key=v; } getCollectionKey(){ return this.key; } setOperationType(v){ this.op=v; } getOperationType(){ return this.op; } };" +
             "exports.UpdatePropertyValueResponse = class { constructor(){ this.success=true; this.error=''; } getSuccess(){ return this.success; } setSuccess(v){ this.success=v; } getErrorMessage(){ return this.error; } setErrorMessage(v){ this.error=v; } };" +
             "exports.SubscribeRequest = class { setClientId(){} };" +
             "exports.PropertyChangeNotification = class { getPropertyName(){return ''} getNewValue(){return null} getPropertyPath(){return ''} };" +
@@ -152,7 +152,7 @@ export {{ UpdatePropertyValueResponse }};
             "exports.CancelTestRequest = class {};");
         File.WriteAllText(Path.Combine(gen, serviceName + "_pb.d.ts"),
             $"export class {vmName}State {{}}\n" +
-            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; setPropertyPath(v:string):void; getPropertyPath():string; setCollectionKey(v:string):void; getCollectionKey():string; setArrayIndex(v:number):void; getArrayIndex():number; setOperationType(v:string):void; getOperationType():string; }\n" +
+            "export class UpdatePropertyValueRequest { setPropertyName(v:string):void; getPropertyName():string; setNewValue(v:any):void; getNewValue():any; setPropertyPath(v:string):void; getPropertyPath():string; setCollectionKey(v:string):void; getCollectionKey():string; setOperationType(v:string):void; getOperationType():string; }\n" +
             "export class UpdatePropertyValueResponse { getSuccess():boolean; setSuccess(v:boolean):void; getErrorMessage():string; setErrorMessage(v:string):void; }\n" +
             "export class SubscribeRequest { setClientId(v:string):void; }\n" +
             "export class PropertyChangeNotification { getPropertyName():string; getNewValue():any; getPropertyPath():string; }\n" +

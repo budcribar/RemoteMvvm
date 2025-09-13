@@ -137,7 +137,6 @@ public static class StronglyTypedTestClientGenerator
         sb.AppendLine("        var request = new UpdatePropertyValueRequest");
         sb.AppendLine("        {");
         sb.AppendLine("            PropertyName = propertyName,");
-        sb.AppendLine("            ArrayIndex = -1,");
         sb.AppendLine("            NewValue = Any.Pack(CreateValueFromObject(value))");
         sb.AppendLine("        };");
         sb.AppendLine("        await _grpcClient.UpdatePropertyValueAsync(request);");
@@ -149,7 +148,6 @@ public static class StronglyTypedTestClientGenerator
         sb.AppendLine("        {");
         sb.AppendLine("            PropertyName = propertyName,");
         sb.AppendLine("            PropertyPath = $\"{collectionName}[{index}].{propertyName}\",");
-        sb.AppendLine("            ArrayIndex = index,");
         sb.AppendLine("            NewValue = Any.Pack(CreateValueFromObject(value))");
         sb.AppendLine("        };");
         sb.AppendLine("        await _grpcClient.UpdatePropertyValueAsync(request);");
@@ -184,7 +182,6 @@ public static class StronglyTypedTestClientGenerator
             sb.AppendLine("        var request = new UpdatePropertyValueRequest");
             sb.AppendLine("        {");
             sb.AppendLine($"            PropertyName = \"{prop.Name}\",");
-            sb.AppendLine("            ArrayIndex = -1,");
             if (prop.TypeString == "System.String") sb.AppendLine("            NewValue = Any.Pack(new StringValue { Value = value })");
             else if (prop.TypeString == "System.Int32") sb.AppendLine("            NewValue = Any.Pack(new Int32Value { Value = value })");
             else if (prop.TypeString == "System.Boolean") sb.AppendLine("            NewValue = Any.Pack(new BoolValue { Value = value })");
@@ -296,7 +293,6 @@ public static class StronglyTypedTestClientGenerator
                 sb.AppendLine("            var request = new UpdatePropertyValueRequest { ");
                 sb.AppendLine("                PropertyName = propertyName,");
                 sb.AppendLine("                PropertyPath = $\"{_collectionName}[{_index}].{propertyName}\",");
-                sb.AppendLine("                ArrayIndex = _index,");
                 sb.AppendLine("                NewValue = Any.Pack(protoValue) ");
                 sb.AppendLine("            };");
                 sb.AppendLine("            await _client.UpdatePropertyValueAsync(request);");
