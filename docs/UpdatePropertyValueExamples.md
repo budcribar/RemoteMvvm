@@ -43,7 +43,7 @@ if (response.getSuccess()) {
 
 // Advanced update with options
 const response = await client.updatePropertyValueAdvanced("items", newValue, {
-    arrayIndex: 2,
+    propertyPath: "items[2]",
     operationType: 'set'
 });
 ```
@@ -76,7 +76,7 @@ var request = new UpdatePropertyValueRequest
 var request = new UpdatePropertyValueRequest
 {
     PropertyName = "Scores",
-    ArrayIndex = 5,                  // Update element at index 5
+    PropertyPath = "Scores[5]",      // Update element at index 5
     NewValue = Any.Pack(new Int32Value { Value = 1500 })
 };
 ```

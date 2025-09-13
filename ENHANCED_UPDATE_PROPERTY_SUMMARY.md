@@ -13,8 +13,7 @@ message UpdatePropertyValueRequest {
   google.protobuf.Any new_value = 2;
   string property_path = 3;          // For nested properties like "User.Address.Street"
   string collection_key = 4;         // For dictionary keys
-  int32 array_index = 5;             // For array indices
-  string operation_type = 6;         // "set", "add", "remove", "clear", "insert"
+  string operation_type = 5;         // "set", "add", "remove", "clear", "insert"
 }
 
 message UpdatePropertyValueResponse {
@@ -58,8 +57,8 @@ var response = await UpdatePropertyValue(new() {
 
 // Array element update
 var response = await UpdatePropertyValue(new() {
-    PropertyName = "Scores", 
-    ArrayIndex = 3,
+    PropertyName = "Scores",
+    PropertyPath = "Scores[3]",
     NewValue = Any.Pack(new Int32Value { Value = 9500 })
 });
 ```
@@ -137,7 +136,7 @@ var response = await grpcService.UpdatePropertyValue(request);
 var request = new UpdatePropertyValueRequest
 {
     PropertyName = "PlayerScores",
-    ArrayIndex = 2,
+    PropertyPath = "PlayerScores[2]",
     NewValue = Any.Pack(new Int32Value { Value = 5000 })
 };
 var response = await grpcService.UpdatePropertyValue(request);

@@ -34,9 +34,9 @@ message UpdatePropertyValueRequest {
   google.protobuf.Any new_value = 2;
   // Optional fields for complex property updates
   string property_path = 3;          // For nested properties like "User.Address.Street"
-  string collection_key = 4;         // For dictionary keys or array indices
-  int32 array_index = 5;             // For updating specific array elements
-  string operation_type = 6;         // "set", "add", "remove", "clear", "insert"
+  string collection_key = 4;         // For dictionary keys
+  string operation_type = 5;         // "set", "add", "remove", "clear", "insert"
+  string client_id = 6;             // Originating client identifier
 }
 
 message UpdatePropertyValueResponse {
