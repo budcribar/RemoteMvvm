@@ -192,11 +192,12 @@ namespace <<NAMESPACE>>
             {
                 inpc.PropertyChanged += async (s, e) =>
                 {
-                    if (_suppressLocalUpdates) return;
                     var prop = s?.GetType().GetProperty(e.PropertyName);
                     if (prop == null) return;
                     var value = prop.GetValue(s);
                     var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    OnPropertyChanged(path);
+                    if (_suppressLocalUpdates) return;
                     await UpdatePropertyValueAsync(path, value);
                 };
             }
