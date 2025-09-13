@@ -549,7 +549,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             ViewModel_PropertyChanged(s, new PropertyChangedEventArgs(path));
 
             var prop = s?.GetType().GetProperty(e.PropertyName);
-            var val = prop?.GetValue(s);
+            var val = prop != null && prop.GetIndexParameters().Length == 0 ? prop.GetValue(s) : null;
             if (val is INotifyPropertyChanged child)
             {
                 var childPrefix = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
@@ -567,7 +567,7 @@ public partial class SampleViewModelGrpcServiceImpl : CounterService.CounterServ
             }
         };
 
-        foreach (var p in obj.GetType().GetProperties())
+        foreach (var p in obj.GetType().GetProperties().Where(p => p.GetIndexParameters().Length == 0))
         {
             var val = p.GetValue(obj);
             if (val is INotifyPropertyChanged child)
