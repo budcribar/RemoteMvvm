@@ -15,15 +15,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
 using <<VIEW_MODEL_NS>>;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
 
 namespace <<NAMESPACE>>
 {
     public partial class <<VIEW_MODEL_NAME>>RemoteClient : ObservableObject, IDisposable
     {
         private readonly <<PROTO_NS>>.<<SERVICE_NAME>>.<<SERVICE_NAME>>Client _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
@@ -40,6 +38,7 @@ namespace <<NAMESPACE>>
 <<PROPERTY_DECLARATIONS>><<COMMAND_DECLARATIONS>>        public <<VIEW_MODEL_NAME>>RemoteClient(<<PROTO_NS>>.<<SERVICE_NAME>>.<<SERVICE_NAME>>Client grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
 <<COMMAND_INITIALIZATIONS>>        }
 
         /// <summary>
@@ -202,6 +201,12 @@ namespace <<NAMESPACE>>
                 };
             }
 
+            var type = obj.GetType();
+            if (type.IsValueType || obj is string)
+            {
+                return;
+            }
+
             if (obj is System.Collections.IEnumerable enumerable && obj is not string)
             {
                 int index = 0;
@@ -214,8 +219,9 @@ namespace <<NAMESPACE>>
                 return;
             }
 
-            foreach (var p in obj.GetType().GetProperties())
+            foreach (var p in type.GetProperties())
             {
+                if (p.GetIndexParameters().Length > 0) continue;
                 var val = p.GetValue(obj);
                 var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
                 AttachLocalPropertyChangedHandlers(val, childPrefix);
@@ -324,11 +330,10 @@ namespace <<NAMESPACE>>
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:<<VIEW_MODEL_NAME>>] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                            finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[<<VIEW_MODEL_NAME>>RemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[<<VIEW_MODEL_NAME>>RemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");
