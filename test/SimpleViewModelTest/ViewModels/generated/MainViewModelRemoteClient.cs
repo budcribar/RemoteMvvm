@@ -17,15 +17,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
 using SimpleViewModelTest.ViewModels;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
 
 namespace SimpleViewModelTest.ViewModels.RemoteClients
 {
     public partial class MainViewModelRemoteClient : ObservableObject, IDisposable
     {
         private readonly Generated.Protos.MainViewModelService.MainViewModelServiceClient _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
@@ -51,6 +49,7 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
         public MainViewModelRemoteClient(Generated.Protos.MainViewModelService.MainViewModelServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
             UpdateStatusCommand = new RelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus>(RemoteExecute_UpdateStatus);
         }
 
@@ -353,11 +352,10 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:MainViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                            finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[MainViewModelRemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[MainViewModelRemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");

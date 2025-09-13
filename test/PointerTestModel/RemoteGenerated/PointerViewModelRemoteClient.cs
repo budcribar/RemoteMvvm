@@ -17,15 +17,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
 using HPSystemsTools;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
 
 namespace HPSystemsTools.RemoteClients
 {
     public partial class PointerViewModelRemoteClient : ObservableObject, IDisposable
     {
         private readonly Pointer.ViewModels.Protos.PointerViewModelService.PointerViewModelServiceClient _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
@@ -234,6 +232,7 @@ namespace HPSystemsTools.RemoteClients
         public PointerViewModelRemoteClient(Pointer.ViewModels.Protos.PointerViewModelService.PointerViewModelServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
             InitializeCommand = new RelayCommand(RemoteExecute_Initialize);
             OnCursorTestCommand = new RelayCommand(RemoteExecute_OnCursorTest);
             OnClickTestCommand = new RelayCommand<int>(RemoteExecute_OnClickTest);
@@ -700,11 +699,10 @@ namespace HPSystemsTools.RemoteClients
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:PointerViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                            finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[PointerViewModelRemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[PointerViewModelRemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");

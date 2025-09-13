@@ -17,15 +17,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
 using HPSystemsTools.ViewModels;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
 
 namespace HPSystemsTools.ViewModels.RemoteClients
 {
     public partial class HP3LSThermalTestViewModelRemoteClient : ObservableObject, IDisposable
     {
         private readonly Generated.Protos.HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
@@ -131,6 +129,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
         public HP3LSThermalTestViewModelRemoteClient(Generated.Protos.HP3LSThermalTestViewModelService.HP3LSThermalTestViewModelServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
             StateChangedCommand = new RelayCommand<HPSystemsTools.Models.ThermalStateEnum>(RemoteExecute_StateChanged);
             CancelTestCommand = new RelayCommand(RemoteExecute_CancelTest);
         }
@@ -477,11 +476,10 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                            finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");
