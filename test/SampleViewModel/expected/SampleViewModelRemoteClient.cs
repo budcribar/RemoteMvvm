@@ -17,15 +17,13 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
 using Generated.ViewModels;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
 
 namespace SampleApp.ViewModels.RemoteClients
 {
     public partial class SampleViewModelRemoteClient : ObservableObject, IDisposable
     {
         private readonly SampleApp.ViewModels.Protos.CounterService.CounterServiceClient _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
@@ -72,6 +70,7 @@ namespace SampleApp.ViewModels.RemoteClients
         public SampleViewModelRemoteClient(SampleApp.ViewModels.Protos.CounterService.CounterServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
             IncrementCountCommand = new RelayCommand(RemoteExecute_IncrementCount);
             DelayedIncrementCommand = new AsyncRelayCommand<int>(RemoteExecute_DelayedIncrementAsync);
             SetNameToValueCommand = new RelayCommand<string?>(RemoteExecute_SetNameToValue);
@@ -224,17 +223,26 @@ namespace SampleApp.ViewModels.RemoteClients
         {
             if (obj == null) return;
 
-            if (obj is INotifyPropertyChanged inpc)
+            var isRoot = ReferenceEquals(obj, this);
+
+            if (!isRoot && obj is INotifyPropertyChanged inpc)
             {
                 inpc.PropertyChanged += async (s, e) =>
                 {
-                    if (_suppressLocalUpdates) return;
                     var prop = s?.GetType().GetProperty(e.PropertyName);
                     if (prop == null) return;
                     var value = prop.GetValue(s);
                     var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    OnPropertyChanged(path);
+                    if (_suppressLocalUpdates) return;
                     await UpdatePropertyValueAsync(path, value);
                 };
+            }
+
+            var type = obj.GetType();
+            if (type.IsValueType || obj is string)
+            {
+                return;
             }
 
             if (obj is System.Collections.IEnumerable enumerable && obj is not string)
@@ -249,8 +257,9 @@ namespace SampleApp.ViewModels.RemoteClients
                 return;
             }
 
-            foreach (var p in obj.GetType().GetProperties())
+            foreach (var p in type.GetProperties())
             {
+                if (p.GetIndexParameters().Length > 0) continue;
                 var val = p.GetValue(obj);
                 var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
                 AttachLocalPropertyChangedHandlers(val, childPrefix);
@@ -406,11 +415,10 @@ namespace SampleApp.ViewModels.RemoteClients
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:SampleViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                            finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[SampleViewModelRemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[SampleViewModelRemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");
