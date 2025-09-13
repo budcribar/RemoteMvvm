@@ -263,10 +263,9 @@ public static class ProtoGenerator
         body.AppendLine("  google.protobuf.Any new_value = 2;");
         body.AppendLine("  // Optional fields for complex property updates");
         body.AppendLine("  string property_path = 3;          // For nested properties like \"User.Address.Street\"");
-        body.AppendLine("  string collection_key = 4;         // For dictionary keys or array indices");
-        body.AppendLine("  int32 array_index = 5;             // For updating specific array elements");
-        body.AppendLine("  string operation_type = 6;         // \"set\", \"add\", \"remove\", \"clear\", \"insert\"");
-        body.AppendLine("  string client_id = 7;             // Originating client identifier");
+        body.AppendLine("  string collection_key = 4;         // For dictionary keys");
+        body.AppendLine("  string operation_type = 5;         // \"set\", \"add\", \"remove\", \"clear\", \"insert\"");
+        body.AppendLine("  string client_id = 6;             // Originating client identifier");
         body.AppendLine("}");
         body.AppendLine();
         body.AppendLine("message UpdatePropertyValueResponse {");

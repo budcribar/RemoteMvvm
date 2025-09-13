@@ -541,7 +541,6 @@ public static class TypeScriptClientGenerator
         }
         sb.AppendLine("        const req = new UpdatePropertyValueRequest();");
         sb.AppendLine("        req.setPropertyName(propertyName);");
-        sb.AppendLine("        req.setArrayIndex(-1); // Default to -1 for non-array properties");
         sb.AppendLine("        req.setNewValue(this.createAnyValue(value));");
         sb.AppendLine("        const response = await this.grpcClient.updatePropertyValue(req);");
         sb.AppendLine("        ");
@@ -585,7 +584,6 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        options?: {");
         sb.AppendLine("            propertyPath?: string;");
         sb.AppendLine("            collectionKey?: string;");
-        sb.AppendLine("            arrayIndex?: number;");
         sb.AppendLine("            operationType?: 'set' | 'add' | 'remove' | 'clear' | 'insert';");
         sb.AppendLine("        }");
         sb.AppendLine("    ): Promise<UpdatePropertyValueResponse> {");
@@ -595,7 +593,6 @@ public static class TypeScriptClientGenerator
         sb.AppendLine("        ");
         sb.AppendLine("        if (options?.propertyPath) req.setPropertyPath(options.propertyPath);");
         sb.AppendLine("        if (options?.collectionKey) req.setCollectionKey(options.collectionKey);");
-        sb.AppendLine("        if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);");
         sb.AppendLine("        if (options?.operationType) req.setOperationType(options.operationType);");
         sb.AppendLine("        ");
         sb.AppendLine("        const response = await this.grpcClient.updatePropertyValue(req);");

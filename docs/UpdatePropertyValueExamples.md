@@ -71,17 +71,27 @@ var request = new UpdatePropertyValueRequest
 };
 ```
 
-### 3. Array Element Updates  
+### 3. Array Element Updates
 ```csharp
 var request = new UpdatePropertyValueRequest
 {
     PropertyName = "Scores",
-    ArrayIndex = 5,                  // Update element at index 5
+    PropertyPath = "Scores[5]",     // Use bracket notation for array access
     NewValue = Any.Pack(new Int32Value { Value = 1500 })
 };
 ```
 
-### 4. Complex Collection Operations
+### 4. Nested Dictionary Property Updates
+```csharp
+var request = new UpdatePropertyValueRequest
+{
+    PropertyName = "Company",
+    PropertyPath = "Company.Departments[CA][LosAngeles].Name", // Dictionary key access
+    NewValue = Any.Pack(new StringValue { Value = "Central Office" })
+};
+```
+
+### 5. Complex Collection Operations
 ```csharp
 // Add to collection
 var addRequest = new UpdatePropertyValueRequest
