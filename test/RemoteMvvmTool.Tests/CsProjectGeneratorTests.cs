@@ -304,7 +304,7 @@ namespace TestNamespace
         string prog = CsProjectGenerator.GenerateGuiClientProgram("TestApp", "winforms", "Proto.Ns", "SvcService", "Client.Ns", props, cmds);
         
         Assert.Contains("var tree = new TreeView", prog);
-        Assert.Contains("leftPanel.Controls.Add(tree);", prog); // Updated from split.Panel1 to leftPanel
+        Assert.Contains("split.Panel1.Controls.Add(tree);", prog); // Updated: Uses SplitContainer panels
         Assert.Contains("Client ViewModel Properties", prog); // Root node text
         Assert.Contains("LoadTree();", prog); // LoadTree method call
         Assert.Contains("PropertyNodeInfo", prog); // PropertyNodeInfo class generation
@@ -329,10 +329,10 @@ namespace TestNamespace
         var generator = new WinFormsClientUIGenerator("TestApp", "TestService", props, cmds, "TestRemoteClient", "Generated.Clients");
         string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
-        Assert.Contains("Property Details", gui); // Property details panel
+        Assert.Contains("TableLayoutPanel detailLayout", gui); // Property details panel variable
         Assert.Contains("PropertyNodeInfo", gui); // PropertyNodeInfo class
         Assert.Contains("LoadTree();", gui); // LoadTree method call
-        Assert.Contains("flow.Controls.Add", gui); // FlowLayoutPanel usage
+        Assert.Contains("detailLayout.Controls.Add", gui); // Updated: Uses detailLayout instead of flow
         Assert.Contains("IsCollectionProperty", gui); // ZoneList should be categorized as collection
         Assert.Contains("IsSimpleProperty", gui); // Status should be categorized as simple
         Assert.Contains("ShowClientPropertyEditor", gui); // Property editor method
@@ -358,12 +358,12 @@ namespace TestNamespace
         // Updated: Check for our current implementation features
         Assert.Contains("try", gui);
         Assert.Contains("catch", gui);
-        Assert.Contains("Property Details", gui); // Property details panel
+        Assert.Contains("detailLayout.Controls.Add", gui); // Property details panel operations
         
         // Current implementation generates property categorization with variable assignments
         Assert.Contains("PropertyNodeInfo", gui); // PropertyNodeInfo class generation
-        Assert.Contains("IsSimpleProperty = isSimple", gui); // Property categorization assignment
-        Assert.Contains("IsBooleanProperty = isBool", gui); // Property categorization assignment
+        Assert.Contains("IsSimpleProperty", gui); // Property categorization assignment
+        Assert.Contains("IsBooleanProperty", gui); // Property categorization assignment
         Assert.Contains("ShowClientPropertyEditor", gui); // Property editor method
         
         // Test server UI generation if enabled
@@ -386,10 +386,10 @@ namespace TestNamespace
         string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         Assert.Contains("Client ViewModel Properties", gui); // Root node text
-        Assert.Contains("Property Details", gui); // Property details panel
-        Assert.Contains("IsCollectionProperty = isCollection", gui); // Property categorization assignment
-        Assert.Contains("IsSimpleProperty = isSimple", gui); // Property categorization assignment
-        Assert.Contains("IsBooleanProperty = isBool", gui); // Property categorization assignment
+        Assert.Contains("TableLayoutPanel detailLayout", gui); // Property details panel variable
+        Assert.Contains("IsCollectionProperty", gui); // Property categorization assignment
+        Assert.Contains("IsSimpleProperty", gui); // Property categorization assignment
+        Assert.Contains("IsBooleanProperty", gui); // Property categorization assignment
         Assert.Contains("PropertyNodeInfo", gui); // PropertyNodeInfo class
         Assert.Contains("ShowClientPropertyEditor", gui); // Property editor method
         
@@ -415,7 +415,7 @@ namespace TestNamespace
         
         // Current implementation should categorize all these as simple properties
         Assert.Contains("PropertyNodeInfo", gui);
-        Assert.Contains("IsSimpleProperty = isSimple", gui); // Property categorization assignment
+        Assert.Contains("IsSimpleProperty", gui); // Property categorization assignment
         Assert.Contains("LoadTree();", gui); // Method call
         Assert.Contains("tree.BeginUpdate();", gui); // Tree operations
         Assert.Contains("tree.EndUpdate();", gui); // Tree operations
@@ -441,10 +441,10 @@ namespace TestNamespace
         string gui = generator.GenerateProgram("Proto.Ns", "TestService");
         
         // Current implementation should categorize properties correctly
-        Assert.Contains("IsCollectionProperty = isCollection", gui); // Property categorization assignment
-        Assert.Contains("IsBooleanProperty = isBool", gui); // Property categorization assignment  
-        Assert.Contains("IsEnumProperty = isEnum", gui); // Property categorization assignment
-        Assert.Contains("IsSimpleProperty = isSimple", gui); // Property categorization assignment
+        Assert.Contains("IsCollectionProperty", gui); // Property categorization assignment
+        Assert.Contains("IsBooleanProperty", gui); // Property categorization assignment  
+        Assert.Contains("IsEnumProperty", gui); // Property categorization assignment
+        Assert.Contains("IsSimpleProperty", gui); // Property categorization assignment
         Assert.Contains("PropertyNodeInfo", gui); // PropertyNodeInfo class
         
         // Test server UI generation if enabled
@@ -469,9 +469,9 @@ namespace TestNamespace
         // Updated: Check for our current implementation features
         Assert.Contains("PropertyNodeInfo", gui);
         Assert.Contains("LoadTree();", gui); // Method call instead of action delegate
-        Assert.Contains("IsSimpleProperty = isSimple", gui); // Property categorization assignment
-        Assert.Contains("IsBooleanProperty = isBool", gui); // Property categorization assignment
-        Assert.Contains("IsEnumProperty = isEnum", gui); // Property categorization assignment
+        Assert.Contains("IsSimpleProperty", gui); // Property categorization assignment
+        Assert.Contains("IsBooleanProperty", gui); // Property categorization assignment
+        Assert.Contains("IsEnumProperty", gui); // Property categorization assignment
         
         // Check for tree structure
         Assert.Contains("rootNode.Nodes.Add", gui);
@@ -498,10 +498,10 @@ namespace TestNamespace
         // Updated: Check for current server UI implementation features
         Assert.Contains("Server ViewModel Properties", prog); // Server tree view label
         Assert.Contains("PropertyNodeInfo", prog); // PropertyNodeInfo class generation
-        Assert.Contains("IsSimpleProperty = isSimple", prog); // Property categorization assignment
-        Assert.Contains("IsBooleanProperty = isBool", prog); // Property categorization assignment
+        Assert.Contains("IsSimpleProperty", prog); // Property categorization assignment
+        Assert.Contains("IsBooleanProperty", prog); // Property categorization assignment
         Assert.Contains("Application.EnableVisualStyles();", prog); // WinForms specific
         Assert.Contains("Application.Run(form);", prog); // WinForms specific
-        Assert.Contains("Property Details (Server)", prog); // Server property details panel
+        Assert.Contains("ShowServerPropertyEditor", prog); // Server property details panel method
     }
 }

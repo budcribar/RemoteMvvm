@@ -177,7 +177,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
                     PropertyName = topLevel,
                     PropertyPath = propertyPath,
                     ArrayIndex = -1,
-                    //ClientId = _clientId,
+                    ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
 

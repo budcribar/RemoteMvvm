@@ -55,6 +55,7 @@ message UpdatePropertyValueRequest {
   string collection_key = 4;         // For dictionary keys or array indices
   int32 array_index = 5;             // For updating specific array elements
   string operation_type = 6;         // "set", "add", "remove", "clear", "insert"
+  string client_id = 7;             // Originating client identifier
 }
 
 message UpdatePropertyValueResponse {

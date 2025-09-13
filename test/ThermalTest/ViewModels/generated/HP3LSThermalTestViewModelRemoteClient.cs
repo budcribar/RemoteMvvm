@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel;
 using HPSystemsTools.ViewModels;
 #if WPF_DISPATCHER
 using System.Windows;
@@ -28,6 +29,8 @@ namespace HPSystemsTools.ViewModels.RemoteClients
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
+        private readonly string _clientId = Guid.NewGuid().ToString();
+        private bool _suppressLocalUpdates = false;
 
         private string _connectionStatus = "Unknown";
         public string ConnectionStatus
@@ -137,38 +140,41 @@ namespace HPSystemsTools.ViewModels.RemoteClients
         /// </summary>
         /// <param name="propertyName">The name of the property to update</param>
         /// <param name="value">The new value to set</param>
-        public async Task UpdatePropertyValueAsync(string propertyName, object? value)
+        public async Task UpdatePropertyValueAsync(string propertyPath, object? value)
         {
             if (!_isInitialized || _isDisposed)
             {
-                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] UpdatePropertyValueAsync for {propertyName} skipped - not initialized or disposed");
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] UpdatePropertyValueAsync for {propertyPath} skipped - not initialized or disposed");
                 return;
             }
 
             try
             {
-                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Updating server property {propertyName} = {value}");
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Updating server property {propertyPath} = {value}");
+                var topLevel = propertyPath.Split(new[] {'.','['}, 2)[0];
                 var request = new Generated.Protos.UpdatePropertyValueRequest
                 {
-                    PropertyName = propertyName,
+                    PropertyName = topLevel,
+                    PropertyPath = propertyPath,
                     ArrayIndex = -1,
+                    ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
 
                 var response = await _grpcClient.UpdatePropertyValueAsync(request, cancellationToken: _cts.Token);
-                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Property {propertyName} updated successfully on server");
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Property {propertyPath} updated successfully on server");
             }
             catch (RpcException ex)
             {
-                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Error updating property {propertyName}: {ex.Status.StatusCode} - {ex.Status.Detail}");
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Error updating property {propertyPath}: {ex.Status.StatusCode} - {ex.Status.Detail}");
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Property update {propertyName} cancelled");
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Property update {propertyPath} cancelled");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unexpected error updating property {propertyName}: {ex.Message}");
+                Debug.WriteLine($"[ClientProxy:HP3LSThermalTestViewModel] Unexpected error updating property {propertyPath}: {ex.Message}");
             }
         }
 
@@ -197,6 +203,116 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 System.Enum e => Any.Pack(new Int32Value { Value = Convert.ToInt32(e) }),
                 _ => Any.Pack(new StringValue { Value = value?.ToString() ?? "" })
             };
+        }
+
+        private static object? UnpackAny(Any value)
+        {
+            if (value.Is(StringValue.Descriptor)) return value.Unpack<StringValue>().Value;
+            if (value.Is(Int32Value.Descriptor)) return value.Unpack<Int32Value>().Value;
+            if (value.Is(Int64Value.Descriptor)) return value.Unpack<Int64Value>().Value;
+            if (value.Is(UInt32Value.Descriptor)) return value.Unpack<UInt32Value>().Value;
+            if (value.Is(UInt64Value.Descriptor)) return value.Unpack<UInt64Value>().Value;
+            if (value.Is(FloatValue.Descriptor)) return value.Unpack<FloatValue>().Value;
+            if (value.Is(DoubleValue.Descriptor)) return value.Unpack<DoubleValue>().Value;
+            if (value.Is(BoolValue.Descriptor)) return value.Unpack<BoolValue>().Value;
+            if (value.Is(Timestamp.Descriptor)) return value.Unpack<Timestamp>().ToDateTime();
+            if (value.Is(Google.Protobuf.WellKnownTypes.Duration.Descriptor)) return value.Unpack<Google.Protobuf.WellKnownTypes.Duration>().ToTimeSpan();
+            return null;
+        }
+
+        private static void SetValueByPath(object target, string path, object? newValue)
+        {
+            var segments = path.Split('.');
+            object? current = target;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var part = segments[i];
+                int bracket = part.IndexOf('[');
+                if (bracket >= 0)
+                {
+                    var propName = part[..bracket];
+                    var end = part.IndexOf(']', bracket);
+                    if (end < 0) return;
+                    var indexStr = part[(bracket + 1)..end];
+                    var prop = current?.GetType().GetProperty(propName);
+                    if (prop?.GetValue(current) is System.Collections.IList list && int.TryParse(indexStr, out int idx))
+                    {
+                        if (idx < 0 || idx >= list.Count) return;
+                        if (i == segments.Length - 1)
+                        {
+                            list[idx] = newValue;
+                            if (target is HP3LSThermalTestViewModelRemoteClient rc)
+                            {
+                                rc.AttachLocalPropertyChangedHandlers(list[idx], path);
+                            }
+                            return;
+                        }
+                        current = list[idx];
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    if (i == segments.Length - 1)
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        prop?.SetValue(current, newValue);
+                        if (target is HP3LSThermalTestViewModelRemoteClient rc)
+                        {
+                            rc.AttachLocalPropertyChangedHandlers(newValue, path);
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        current = prop?.GetValue(current);
+                    }
+                }
+
+                if (current == null) return;
+            }
+        }
+
+        private void AttachLocalPropertyChangedHandlers(object? obj, string prefix)
+        {
+            if (obj == null) return;
+
+            if (obj is INotifyPropertyChanged inpc)
+            {
+                inpc.PropertyChanged += async (s, e) =>
+                {
+                    if (_suppressLocalUpdates) return;
+                    var prop = s?.GetType().GetProperty(e.PropertyName);
+                    if (prop == null) return;
+                    var value = prop.GetValue(s);
+                    var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    await UpdatePropertyValueAsync(path, value);
+                };
+            }
+
+            if (obj is System.Collections.IEnumerable enumerable && obj is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : prefix + $"[{index}]";
+                    AttachLocalPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+                return;
+            }
+
+            foreach (var p in obj.GetType().GetProperties())
+            {
+                var val = p.GetValue(obj);
+                var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
+                AttachLocalPropertyChangedHandlers(val, childPrefix);
+            }
         }
 
         private async Task StartPingLoopAsync()
@@ -258,6 +374,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Initial state received.");
+                _suppressLocalUpdates = true;
                 this.Instructions = state.Instructions;
                 this.CpuTemperatureThreshold = state.CpuTemperatureThreshold;
                 this.CpuLoadThreshold = state.CpuLoadThreshold;
@@ -267,6 +384,8 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                 this.ShowDescription = state.ShowDescription;
                 this.ShowReadme = state.ShowReadme;
+                _suppressLocalUpdates = false;
+                AttachLocalPropertyChangedHandlers(this, string.Empty);
                 _isInitialized = true;
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
@@ -311,7 +430,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Starting property change listener...");
                 try
                 {
-                    var subscribeRequest = new Generated.Protos.SubscribeRequest { ClientId = Guid.NewGuid().ToString() };
+                    var subscribeRequest = new Generated.Protos.SubscribeRequest { ClientId = _clientId };
                     using var call = _grpcClient.SubscribeToPropertyChanges(subscribeRequest, cancellationToken: cancellationToken);
                     Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Subscribed to property changes. Waiting for updates...");
                     int updateCount = 0;
@@ -325,8 +444,16 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                            try
                            {
                                Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
-                               switch (update.PropertyName)
+                               _suppressLocalUpdates = true;
+                               if (update.ChangeType == "nested")
                                {
+                                   var val = UnpackAny(update.NewValue);
+                                   SetValueByPath(this, update.PropertyPath, val);
+                               }
+                               else
+                               {
+                                   switch (update.PropertyName)
+                                   {
                                    case nameof(Instructions):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.Instructions = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(CpuTemperatureThreshold):
@@ -343,10 +470,12 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                     if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowDescription = update.NewValue.Unpack<BoolValue>().Value; break;
                                    case nameof(ShowReadme):
                     if (update.NewValue!.Is(BoolValue.Descriptor)) this.ShowReadme = update.NewValue.Unpack<BoolValue>().Value; break;
-                                   default: Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
+                                       default: Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
+                                   }
                                }
                            }
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:HP3LSThermalTestViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
+                           finally { _suppressLocalUpdates = false; }
                         };
                         #if WPF_DISPATCHER
                         Application.Current?.Dispatcher.Invoke(updateAction);

@@ -29,41 +29,41 @@ namespace Generated.Protos {
             "L2VtcHR5LnByb3RvIkgKEk1haW5WaWV3TW9kZWxTdGF0ZRIyCgdkZXZpY2Vz",
             "GAEgAygLMiEuZ2VuZXJhdGVkX3Byb3Rvcy5EZXZpY2VJbmZvU3RhdGUiLwoP",
             "RGV2aWNlSW5mb1N0YXRlEgwKBG5hbWUYASABKAkSDgoGc3RhdHVzGAIgASgF",
-            "IrgBChpVcGRhdGVQcm9wZXJ0eVZhbHVlUmVxdWVzdBIVCg1wcm9wZXJ0eV9u",
+            "IssBChpVcGRhdGVQcm9wZXJ0eVZhbHVlUmVxdWVzdBIVCg1wcm9wZXJ0eV9u",
             "YW1lGAEgASgJEicKCW5ld192YWx1ZRgCIAEoCzIULmdvb2dsZS5wcm90b2J1",
             "Zi5BbnkSFQoNcHJvcGVydHlfcGF0aBgDIAEoCRIWCg5jb2xsZWN0aW9uX2tl",
             "eRgEIAEoCRITCgthcnJheV9pbmRleBgFIAEoBRIWCg5vcGVyYXRpb25fdHlw",
-            "ZRgGIAEoCSKJAQobVXBkYXRlUHJvcGVydHlWYWx1ZVJlc3BvbnNlEg8KB3N1",
-            "Y2Nlc3MYASABKAgSFQoNZXJyb3JfbWVzc2FnZRgCIAEoCRIZChF2YWxpZGF0",
-            "aW9uX2Vycm9ycxgDIAEoCRInCglvbGRfdmFsdWUYBCABKAsyFC5nb29nbGUu",
-            "cHJvdG9idWYuQW55IrEBChpQcm9wZXJ0eUNoYW5nZU5vdGlmaWNhdGlvbhIV",
-            "Cg1wcm9wZXJ0eV9uYW1lGAEgASgJEicKCW5ld192YWx1ZRgCIAEoCzIULmdv",
-            "b2dsZS5wcm90b2J1Zi5BbnkSFQoNcHJvcGVydHlfcGF0aBgDIAEoCRITCgtj",
-            "aGFuZ2VfdHlwZRgEIAEoCRInCglvbGRfdmFsdWUYBSABKAsyFC5nb29nbGUu",
-            "cHJvdG9idWYuQW55IiUKE1VwZGF0ZVN0YXR1c1JlcXVlc3QSDgoGc3RhdHVz",
-            "GAEgASgFIhYKFFVwZGF0ZVN0YXR1c1Jlc3BvbnNlIiUKEFN1YnNjcmliZVJl",
-            "cXVlc3QSEQoJY2xpZW50X2lkGAEgASgJIk4KGENvbm5lY3Rpb25TdGF0dXNS",
-            "ZXNwb25zZRIyCgZzdGF0dXMYASABKA4yIi5nZW5lcmF0ZWRfcHJvdG9zLkNv",
-            "bm5lY3Rpb25TdGF0dXMqQAoQQ29ubmVjdGlvblN0YXR1cxILCgdVTktOT1dO",
-            "EAASDQoJQ09OTkVDVEVEEAESEAoMRElTQ09OTkVDVEVEEAIy8QMKFE1haW5W",
-            "aWV3TW9kZWxTZXJ2aWNlEkgKCEdldFN0YXRlEhYuZ29vZ2xlLnByb3RvYnVm",
-            "LkVtcHR5GiQuZ2VuZXJhdGVkX3Byb3Rvcy5NYWluVmlld01vZGVsU3RhdGUS",
-            "cgoTVXBkYXRlUHJvcGVydHlWYWx1ZRIsLmdlbmVyYXRlZF9wcm90b3MuVXBk",
-            "YXRlUHJvcGVydHlWYWx1ZVJlcXVlc3QaLS5nZW5lcmF0ZWRfcHJvdG9zLlVw",
-            "ZGF0ZVByb3BlcnR5VmFsdWVSZXNwb25zZRJwChpTdWJzY3JpYmVUb1Byb3Bl",
-            "cnR5Q2hhbmdlcxIiLmdlbmVyYXRlZF9wcm90b3MuU3Vic2NyaWJlUmVxdWVz",
-            "dBosLmdlbmVyYXRlZF9wcm90b3MuUHJvcGVydHlDaGFuZ2VOb3RpZmljYXRp",
-            "b24wARJdCgxVcGRhdGVTdGF0dXMSJS5nZW5lcmF0ZWRfcHJvdG9zLlVwZGF0",
-            "ZVN0YXR1c1JlcXVlc3QaJi5nZW5lcmF0ZWRfcHJvdG9zLlVwZGF0ZVN0YXR1",
-            "c1Jlc3BvbnNlEkoKBFBpbmcSFi5nb29nbGUucHJvdG9idWYuRW1wdHkaKi5n",
-            "ZW5lcmF0ZWRfcHJvdG9zLkNvbm5lY3Rpb25TdGF0dXNSZXNwb25zZUITqgIQ",
-            "R2VuZXJhdGVkLlByb3Rvc2IGcHJvdG8z"));
+            "ZRgGIAEoCRIRCgljbGllbnRfaWQYByABKAkiiQEKG1VwZGF0ZVByb3BlcnR5",
+            "VmFsdWVSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEhUKDWVycm9yX21lc3Nh",
+            "Z2UYAiABKAkSGQoRdmFsaWRhdGlvbl9lcnJvcnMYAyABKAkSJwoJb2xkX3Zh",
+            "bHVlGAQgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSKxAQoaUHJvcGVydHlD",
+            "aGFuZ2VOb3RpZmljYXRpb24SFQoNcHJvcGVydHlfbmFtZRgBIAEoCRInCglu",
+            "ZXdfdmFsdWUYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55EhUKDXByb3Bl",
+            "cnR5X3BhdGgYAyABKAkSEwoLY2hhbmdlX3R5cGUYBCABKAkSJwoJb2xkX3Zh",
+            "bHVlGAUgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSIlChNVcGRhdGVTdGF0",
+            "dXNSZXF1ZXN0Eg4KBnN0YXR1cxgBIAEoBSIWChRVcGRhdGVTdGF0dXNSZXNw",
+            "b25zZSIlChBTdWJzY3JpYmVSZXF1ZXN0EhEKCWNsaWVudF9pZBgBIAEoCSJO",
+            "ChhDb25uZWN0aW9uU3RhdHVzUmVzcG9uc2USMgoGc3RhdHVzGAEgASgOMiIu",
+            "Z2VuZXJhdGVkX3Byb3Rvcy5Db25uZWN0aW9uU3RhdHVzKkAKEENvbm5lY3Rp",
+            "b25TdGF0dXMSCwoHVU5LTk9XThAAEg0KCUNPTk5FQ1RFRBABEhAKDERJU0NP",
+            "Tk5FQ1RFRBACMvEDChRNYWluVmlld01vZGVsU2VydmljZRJICghHZXRTdGF0",
+            "ZRIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRokLmdlbmVyYXRlZF9wcm90b3Mu",
+            "TWFpblZpZXdNb2RlbFN0YXRlEnIKE1VwZGF0ZVByb3BlcnR5VmFsdWUSLC5n",
+            "ZW5lcmF0ZWRfcHJvdG9zLlVwZGF0ZVByb3BlcnR5VmFsdWVSZXF1ZXN0Gi0u",
+            "Z2VuZXJhdGVkX3Byb3Rvcy5VcGRhdGVQcm9wZXJ0eVZhbHVlUmVzcG9uc2US",
+            "cAoaU3Vic2NyaWJlVG9Qcm9wZXJ0eUNoYW5nZXMSIi5nZW5lcmF0ZWRfcHJv",
+            "dG9zLlN1YnNjcmliZVJlcXVlc3QaLC5nZW5lcmF0ZWRfcHJvdG9zLlByb3Bl",
+            "cnR5Q2hhbmdlTm90aWZpY2F0aW9uMAESXQoMVXBkYXRlU3RhdHVzEiUuZ2Vu",
+            "ZXJhdGVkX3Byb3Rvcy5VcGRhdGVTdGF0dXNSZXF1ZXN0GiYuZ2VuZXJhdGVk",
+            "X3Byb3Rvcy5VcGRhdGVTdGF0dXNSZXNwb25zZRJKCgRQaW5nEhYuZ29vZ2xl",
+            "LnByb3RvYnVmLkVtcHR5GiouZ2VuZXJhdGVkX3Byb3Rvcy5Db25uZWN0aW9u",
+            "U3RhdHVzUmVzcG9uc2VCE6oCEEdlbmVyYXRlZC5Qcm90b3NiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.AnyReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.EmptyReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Generated.Protos.ConnectionStatus), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.MainViewModelState), global::Generated.Protos.MainViewModelState.Parser, new[]{ "Devices" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.DeviceInfoState), global::Generated.Protos.DeviceInfoState.Parser, new[]{ "Name", "Status" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdatePropertyValueRequest), global::Generated.Protos.UpdatePropertyValueRequest.Parser, new[]{ "PropertyName", "NewValue", "PropertyPath", "CollectionKey", "ArrayIndex", "OperationType" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdatePropertyValueRequest), global::Generated.Protos.UpdatePropertyValueRequest.Parser, new[]{ "PropertyName", "NewValue", "PropertyPath", "CollectionKey", "ArrayIndex", "OperationType", "ClientId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdatePropertyValueResponse), global::Generated.Protos.UpdatePropertyValueResponse.Parser, new[]{ "Success", "ErrorMessage", "ValidationErrors", "OldValue" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.PropertyChangeNotification), global::Generated.Protos.PropertyChangeNotification.Parser, new[]{ "PropertyName", "NewValue", "PropertyPath", "ChangeType", "OldValue" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdateStatusRequest), global::Generated.Protos.UpdateStatusRequest.Parser, new[]{ "Status" }, null, null, null, null),
@@ -560,6 +560,7 @@ namespace Generated.Protos {
       collectionKey_ = other.collectionKey_;
       arrayIndex_ = other.arrayIndex_;
       operationType_ = other.operationType_;
+      clientId_ = other.clientId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -653,6 +654,21 @@ namespace Generated.Protos {
       }
     }
 
+    /// <summary>Field number for the "client_id" field.</summary>
+    public const int ClientIdFieldNumber = 7;
+    private string clientId_ = "";
+    /// <summary>
+    /// Originating client identifier
+    /// </summary>
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
+    public string ClientId {
+      get { return clientId_; }
+      set {
+        clientId_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
     public override bool Equals(object other) {
@@ -674,6 +690,7 @@ namespace Generated.Protos {
       if (CollectionKey != other.CollectionKey) return false;
       if (ArrayIndex != other.ArrayIndex) return false;
       if (OperationType != other.OperationType) return false;
+      if (ClientId != other.ClientId) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -687,6 +704,7 @@ namespace Generated.Protos {
       if (CollectionKey.Length != 0) hash ^= CollectionKey.GetHashCode();
       if (ArrayIndex != 0) hash ^= ArrayIndex.GetHashCode();
       if (OperationType.Length != 0) hash ^= OperationType.GetHashCode();
+      if (ClientId.Length != 0) hash ^= ClientId.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -729,6 +747,10 @@ namespace Generated.Protos {
         output.WriteRawTag(50);
         output.WriteString(OperationType);
       }
+      if (ClientId.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(ClientId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -763,6 +785,10 @@ namespace Generated.Protos {
         output.WriteRawTag(50);
         output.WriteString(OperationType);
       }
+      if (ClientId.Length != 0) {
+        output.WriteRawTag(58);
+        output.WriteString(ClientId);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(ref output);
       }
@@ -790,6 +816,9 @@ namespace Generated.Protos {
       }
       if (OperationType.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(OperationType);
+      }
+      if (ClientId.Length != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeStringSize(ClientId);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -823,6 +852,9 @@ namespace Generated.Protos {
       }
       if (other.OperationType.Length != 0) {
         OperationType = other.OperationType;
+      }
+      if (other.ClientId.Length != 0) {
+        ClientId = other.ClientId;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -870,6 +902,10 @@ namespace Generated.Protos {
             OperationType = input.ReadString();
             break;
           }
+          case 58: {
+            ClientId = input.ReadString();
+            break;
+          }
         }
       }
     #endif
@@ -914,6 +950,10 @@ namespace Generated.Protos {
           }
           case 50: {
             OperationType = input.ReadString();
+            break;
+          }
+          case 58: {
+            ClientId = input.ReadString();
             break;
           }
         }
