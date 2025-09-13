@@ -15,20 +15,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.ComponentModel;
 using Generated.ViewModels;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
 
 namespace SampleApp.ViewModels.RemoteClients
 {
     public partial class SampleViewModelRemoteClient : ObservableObject, IDisposable
     {
         private readonly SampleApp.ViewModels.Protos.CounterService.CounterServiceClient _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
         private readonly string _clientId = Guid.NewGuid().ToString();
+        private bool _suppressLocalUpdates = false;
 
         private string _connectionStatus = "Unknown";
         public string ConnectionStatus
@@ -70,6 +70,7 @@ namespace SampleApp.ViewModels.RemoteClients
         public SampleViewModelRemoteClient(SampleApp.ViewModels.Protos.CounterService.CounterServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
             IncrementCountCommand = new RelayCommand(RemoteExecute_IncrementCount);
             DelayedIncrementCommand = new AsyncRelayCommand<int>(RemoteExecute_DelayedIncrementAsync);
             SetNameToValueCommand = new RelayCommand<string?>(RemoteExecute_SetNameToValue);
@@ -80,39 +81,41 @@ namespace SampleApp.ViewModels.RemoteClients
         /// </summary>
         /// <param name="propertyName">The name of the property to update</param>
         /// <param name="value">The new value to set</param>
-        public async Task UpdatePropertyValueAsync(string propertyName, object? value)
+        public async Task UpdatePropertyValueAsync(string propertyPath, object? value)
         {
             if (!_isInitialized || _isDisposed)
             {
-                Debug.WriteLine($"[ClientProxy:SampleViewModel] UpdatePropertyValueAsync for {propertyName} skipped - not initialized or disposed");
+                Debug.WriteLine($"[ClientProxy:SampleViewModel] UpdatePropertyValueAsync for {propertyPath} skipped - not initialized or disposed");
                 return;
             }
 
             try
             {
-                Debug.WriteLine($"[ClientProxy:SampleViewModel] Updating server property {propertyName} = {value}");
+                Debug.WriteLine($"[ClientProxy:SampleViewModel] Updating server property {propertyPath} = {value}");
+                var topLevel = propertyPath.Split(new[] {'.','['}, 2)[0];
                 var request = new SampleApp.ViewModels.Protos.UpdatePropertyValueRequest
                 {
-                    PropertyName = propertyName,
+                    PropertyName = topLevel,
+                    PropertyPath = propertyPath,
                     ArrayIndex = -1,
                     ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
 
                 var response = await _grpcClient.UpdatePropertyValueAsync(request, cancellationToken: _cts.Token);
-                Debug.WriteLine($"[ClientProxy:SampleViewModel] Property {propertyName} updated successfully on server");
+                Debug.WriteLine($"[ClientProxy:SampleViewModel] Property {propertyPath} updated successfully on server");
             }
             catch (RpcException ex)
             {
-                Debug.WriteLine($"[ClientProxy:SampleViewModel] Error updating property {propertyName}: {ex.Status.StatusCode} - {ex.Status.Detail}");
+                Debug.WriteLine($"[ClientProxy:SampleViewModel] Error updating property {propertyPath}: {ex.Status.StatusCode} - {ex.Status.Detail}");
             }
             catch (OperationCanceledException)
             {
-                Debug.WriteLine($"[ClientProxy:SampleViewModel] Property update {propertyName} cancelled");
+                Debug.WriteLine($"[ClientProxy:SampleViewModel] Property update {propertyPath} cancelled");
             }
             catch (Exception ex)
             {
-                Debug.WriteLine($"[ClientProxy:SampleViewModel] Unexpected error updating property {propertyName}: {ex.Message}");
+                Debug.WriteLine($"[ClientProxy:SampleViewModel] Unexpected error updating property {propertyPath}: {ex.Message}");
             }
         }
 
@@ -141,6 +144,124 @@ namespace SampleApp.ViewModels.RemoteClients
                 System.Enum e => Any.Pack(new Int32Value { Value = Convert.ToInt32(e) }),
                 _ => Any.Pack(new StringValue { Value = value?.ToString() ?? "" })
             };
+        }
+
+        private static object? UnpackAny(Any value)
+        {
+            if (value.Is(StringValue.Descriptor)) return value.Unpack<StringValue>().Value;
+            if (value.Is(Int32Value.Descriptor)) return value.Unpack<Int32Value>().Value;
+            if (value.Is(Int64Value.Descriptor)) return value.Unpack<Int64Value>().Value;
+            if (value.Is(UInt32Value.Descriptor)) return value.Unpack<UInt32Value>().Value;
+            if (value.Is(UInt64Value.Descriptor)) return value.Unpack<UInt64Value>().Value;
+            if (value.Is(FloatValue.Descriptor)) return value.Unpack<FloatValue>().Value;
+            if (value.Is(DoubleValue.Descriptor)) return value.Unpack<DoubleValue>().Value;
+            if (value.Is(BoolValue.Descriptor)) return value.Unpack<BoolValue>().Value;
+            if (value.Is(Timestamp.Descriptor)) return value.Unpack<Timestamp>().ToDateTime();
+            if (value.Is(Google.Protobuf.WellKnownTypes.Duration.Descriptor)) return value.Unpack<Google.Protobuf.WellKnownTypes.Duration>().ToTimeSpan();
+            return null;
+        }
+
+        private static void SetValueByPath(object target, string path, object? newValue)
+        {
+            var segments = path.Split('.');
+            object? current = target;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var part = segments[i];
+                int bracket = part.IndexOf('[');
+                if (bracket >= 0)
+                {
+                    var propName = part[..bracket];
+                    var end = part.IndexOf(']', bracket);
+                    if (end < 0) return;
+                    var indexStr = part[(bracket + 1)..end];
+                    var prop = current?.GetType().GetProperty(propName);
+                    if (prop?.GetValue(current) is System.Collections.IList list && int.TryParse(indexStr, out int idx))
+                    {
+                        if (idx < 0 || idx >= list.Count) return;
+                        if (i == segments.Length - 1)
+                        {
+                            list[idx] = newValue;
+                            if (target is SampleViewModelRemoteClient rc)
+                            {
+                                rc.AttachLocalPropertyChangedHandlers(list[idx], path);
+                            }
+                            return;
+                        }
+                        current = list[idx];
+                    }
+                    else
+                    {
+                        return;
+                    }
+                }
+                else
+                {
+                    if (i == segments.Length - 1)
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        prop?.SetValue(current, newValue);
+                        if (target is SampleViewModelRemoteClient rc)
+                        {
+                            rc.AttachLocalPropertyChangedHandlers(newValue, path);
+                        }
+                        return;
+                    }
+                    else
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        current = prop?.GetValue(current);
+                    }
+                }
+
+                if (current == null) return;
+            }
+        }
+
+        private void AttachLocalPropertyChangedHandlers(object? obj, string prefix)
+        {
+            if (obj == null) return;
+
+            if (obj is INotifyPropertyChanged inpc)
+            {
+                inpc.PropertyChanged += async (s, e) =>
+                {
+                    var prop = s?.GetType().GetProperty(e.PropertyName);
+                    if (prop == null) return;
+                    var value = prop.GetValue(s);
+                    var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    OnPropertyChanged(path);
+                    if (_suppressLocalUpdates) return;
+                    await UpdatePropertyValueAsync(path, value);
+                };
+            }
+
+            var type = obj.GetType();
+            if (type.IsValueType || obj is string)
+            {
+                return;
+            }
+
+            if (obj is System.Collections.IEnumerable enumerable && obj is not string)
+            {
+                int index = 0;
+                foreach (var item in enumerable)
+                {
+                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : prefix + $"[{index}]";
+                    AttachLocalPropertyChangedHandlers(item, childPrefix);
+                    index++;
+                }
+                return;
+            }
+
+            foreach (var p in type.GetProperties())
+            {
+                if (p.GetIndexParameters().Length > 0) continue;
+                var val = p.GetValue(obj);
+                var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
+                AttachLocalPropertyChangedHandlers(val, childPrefix);
+            }
         }
 
         private async Task StartPingLoopAsync()
@@ -195,8 +316,11 @@ namespace SampleApp.ViewModels.RemoteClients
                 using var linkedCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, _cts.Token);
                 var state = await _grpcClient.GetStateAsync(new Empty(), cancellationToken: linkedCts.Token);
                 Debug.WriteLine("[SampleViewModelRemoteClient] Initial state received.");
+                _suppressLocalUpdates = true;
                 this.Name = state.Name;
                 this.Count = state.Count;
+                _suppressLocalUpdates = false;
+                AttachLocalPropertyChangedHandlers(this, string.Empty);
                 _isInitialized = true;
                 Debug.WriteLine("[SampleViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
@@ -268,22 +392,31 @@ namespace SampleApp.ViewModels.RemoteClients
                            try
                            {
                                Debug.WriteLine("[SampleViewModelRemoteClient] Dispatcher: Attempting to update \"" + update.PropertyName + "\" (Update #" + updateCount + ").");
-                               switch (update.PropertyName)
+                               _suppressLocalUpdates = true;
+                               if (update.ChangeType == "nested")
                                {
+                                   var val = UnpackAny(update.NewValue);
+                                   SetValueByPath(this, update.PropertyPath, val);
+                               }
+                               else
+                               {
+                                   switch (update.PropertyName)
+                                   {
                                    case nameof(Name):
                  if (update.NewValue!.Is(StringValue.Descriptor)) this.Name = update.NewValue.Unpack<StringValue>().Value; break;
                                    case nameof(Count):
                      if (update.NewValue!.Is(Int32Value.Descriptor)) this.Count = (int)update.NewValue.Unpack<Int32Value>().Value; break;
-                                   default: Debug.WriteLine("[ClientProxy:SampleViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
+                                       default: Debug.WriteLine("[ClientProxy:SampleViewModel] Unknown property in notification: \"" + update.PropertyName + "\""); break;
+                                   }
                                }
                            }
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:SampleViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
+                           finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[SampleViewModelRemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[SampleViewModelRemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");

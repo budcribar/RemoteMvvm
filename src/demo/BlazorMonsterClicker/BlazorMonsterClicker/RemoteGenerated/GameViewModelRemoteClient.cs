@@ -16,16 +16,14 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
-using MonsterClicker.ViewModels;
-#if WPF_DISPATCHER
-using System.Windows;
-#endif
+using Generated.ViewModels;
 
 namespace MonsterClicker.ViewModels.RemoteClients
 {
     public partial class GameViewModelRemoteClient : ObservableObject, IDisposable
     {
         private readonly MonsterClicker.ViewModels.Protos.GameViewModelService.GameViewModelServiceClient _grpcClient;
+        private readonly SynchronizationContext? _syncContext;
         private CancellationTokenSource _cts = new CancellationTokenSource();
         private bool _isInitialized = false;
         private bool _isDisposed = false;
@@ -150,6 +148,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         public GameViewModelRemoteClient(MonsterClicker.ViewModels.Protos.GameViewModelService.GameViewModelServiceClient grpcClient)
         {
             _grpcClient = grpcClient ?? throw new ArgumentNullException(nameof(grpcClient));
+            _syncContext = SynchronizationContext.Current;
             AttackMonsterCommand = new RelayCommand(RemoteExecute_AttackMonster);
             SpecialAttackCommand = new AsyncRelayCommand(RemoteExecute_SpecialAttackAsync);
             ResetGameCommand = new RelayCommand(RemoteExecute_ResetGame);
@@ -177,7 +176,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
                     PropertyName = topLevel,
                     PropertyPath = propertyPath,
                     ArrayIndex = -1,
-                    //ClientId = _clientId,
+                    ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
 
@@ -306,13 +305,20 @@ namespace MonsterClicker.ViewModels.RemoteClients
             {
                 inpc.PropertyChanged += async (s, e) =>
                 {
-                    if (_suppressLocalUpdates) return;
                     var prop = s?.GetType().GetProperty(e.PropertyName);
                     if (prop == null) return;
                     var value = prop.GetValue(s);
                     var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    OnPropertyChanged(path);
+                    if (_suppressLocalUpdates) return;
                     await UpdatePropertyValueAsync(path, value);
                 };
+            }
+
+            var type = obj.GetType();
+            if (type.IsValueType || obj is string)
+            {
+                return;
             }
 
             if (obj is System.Collections.IEnumerable enumerable && obj is not string)
@@ -327,8 +333,9 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 return;
             }
 
-            foreach (var p in obj.GetType().GetProperties())
+            foreach (var p in type.GetProperties())
             {
+                if (p.GetIndexParameters().Length > 0) continue;
                 var val = p.GetValue(obj);
                 var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
                 AttachLocalPropertyChangedHandlers(val, childPrefix);
@@ -508,11 +515,10 @@ namespace MonsterClicker.ViewModels.RemoteClients
                            catch (Exception exInAction) { Debug.WriteLine("[ClientProxy:GameViewModel] EXCEPTION INSIDE updateAction for \"" + update.PropertyName + "\": " + exInAction.ToString()); }
                            finally { _suppressLocalUpdates = false; }
                         };
-                        #if WPF_DISPATCHER
-                        Application.Current?.Dispatcher.Invoke(updateAction);
-                        #else
-                        updateAction();
-                        #endif
+                        if (_syncContext != null)
+                            _syncContext.Post(_ => updateAction(), null);
+                        else
+                            updateAction();
                         Debug.WriteLine("[GameViewModelRemoteClient] Processed update #" + updateCount + " for \"" + update.PropertyName + "\". Still listening...");
                     }
                     Debug.WriteLine("[GameViewModelRemoteClient] ReadAllAsync completed or cancelled after " + updateCount + " updates.");
