@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
-using MonsterClicker.ViewModels;
+using Generated.ViewModels;
 
 namespace MonsterClicker.ViewModels.RemoteClients
 {
@@ -314,6 +314,12 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 };
             }
 
+            var type = obj.GetType();
+            if (type.IsValueType || obj is string)
+            {
+                return;
+            }
+
             if (obj is System.Collections.IEnumerable enumerable && obj is not string)
             {
                 int index = 0;
@@ -326,8 +332,9 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 return;
             }
 
-            foreach (var p in obj.GetType().GetProperties())
+            foreach (var p in type.GetProperties())
             {
+                if (p.GetIndexParameters().Length > 0) continue;
                 var val = p.GetValue(obj);
                 var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
                 AttachLocalPropertyChangedHandlers(val, childPrefix);
