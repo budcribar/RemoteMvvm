@@ -301,7 +301,9 @@ namespace MonsterClicker.ViewModels.RemoteClients
         {
             if (obj == null) return;
 
-            if (obj is INotifyPropertyChanged inpc)
+            var isRoot = ReferenceEquals(obj, this);
+
+            if (!isRoot && obj is INotifyPropertyChanged inpc)
             {
                 inpc.PropertyChanged += async (s, e) =>
                 {
