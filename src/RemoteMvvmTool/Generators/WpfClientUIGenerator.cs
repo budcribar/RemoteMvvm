@@ -81,6 +81,8 @@ public class WpfClientUIGenerator : UIGeneratorBase
         sb.AppendLine("using System.Linq;");
         sb.AppendLine("using System.Windows;");
         sb.AppendLine("using System.Windows.Controls;");
+        sb.AppendLine("using System.Reflection;");
+        sb.AppendLine("using Microsoft.Win32;");
         sb.AppendLine("using Generated.Clients;");
         sb.AppendLine();
         sb.AppendLine("namespace GuiClientApp");
@@ -105,6 +107,8 @@ public class WpfClientUIGenerator : UIGeneratorBase
         sb.AppendLine("            RefreshBtn.Click += (_, __) => LoadTree();");
         sb.AppendLine("            ExpandAllBtn.Click += (_, __) => ExpandAll(PropertyTreeView);");
         sb.AppendLine("            CollapseAllBtn.Click += (_, __) => CollapseAll(PropertyTreeView);");
+        sb.AppendLine("            SaveBtn.Click += (_, __) => SaveViewModel();");
+        sb.AppendLine("            LoadBtn.Click += (_, __) => LoadViewModel();");
         sb.AppendLine();
         sb.AppendLine("            // Set up property change monitoring");
         sb.AppendLine("            if (_viewModel is INotifyPropertyChanged inpc)");
@@ -193,7 +197,41 @@ public class WpfClientUIGenerator : UIGeneratorBase
         sb.AppendLine("            }");
         sb.AppendLine("        }");
         sb.AppendLine();
-        
+
+        sb.AppendLine("        private void SaveViewModel()");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var dlg = new SaveFileDialog { Filter = \"ViewModel State (*.bin)|*.bin|All Files (*.*)|*.*\" };");
+        sb.AppendLine("            if (dlg.ShowDialog() == true)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                try");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    _viewModel.GetType().GetMethod(\"SaveToFile\")?.Invoke(_viewModel, new object[] { dlg.FileName });");
+        sb.AppendLine("                }");
+        sb.AppendLine("                catch (Exception ex)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    MessageBox.Show($\"Error saving view model: {ex.Message}\", \"Save Error\");");
+        sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        private void LoadViewModel()");
+        sb.AppendLine("        {");
+        sb.AppendLine("            var dlg = new OpenFileDialog { Filter = \"ViewModel State (*.bin)|*.bin|All Files (*.*)|*.*\" };");
+        sb.AppendLine("            if (dlg.ShowDialog() == true)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                try");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    _viewModel.GetType().GetMethod(\"LoadFromFile\")?.Invoke(_viewModel, new object[] { dlg.FileName });");
+        sb.AppendLine("                    LoadTree();");
+        sb.AppendLine("                }");
+        sb.AppendLine("                catch (Exception ex)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    MessageBox.Show($\"Error loading view model: {ex.Message}\", \"Load Error\");");
+        sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+
         // Helper methods
         sb.AppendLine("        private void ExpandAll(ItemsControl control)");
         sb.AppendLine("        {");
@@ -388,6 +426,8 @@ public class WpfClientUIGenerator : UIGeneratorBase
         root.Children.Add(new ButtonComponent("RefreshBtn", "Refresh"));
         root.Children.Add(new ButtonComponent("ExpandAllBtn", "Expand All"));
         root.Children.Add(new ButtonComponent("CollapseAllBtn", "Collapse"));
+        root.Children.Add(new ButtonComponent("SaveBtn", "Save"));
+        root.Children.Add(new ButtonComponent("LoadBtn", "Load"));
         return root;
     }
 
