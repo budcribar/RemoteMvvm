@@ -80,7 +80,6 @@ export class MainViewModelRemoteClient {
     async updatePropertyValue(propertyName: string, value: any): Promise<UpdatePropertyValueResponse> {
         const req = new UpdatePropertyValueRequest();
         req.setPropertyName(propertyName);
-        req.setArrayIndex(-1); // Default to -1 for non-array properties
         req.setNewValue(this.createAnyValue(value));
         const response = await this.grpcClient.updatePropertyValue(req);
         
@@ -122,7 +121,6 @@ export class MainViewModelRemoteClient {
         options?: {
             propertyPath?: string;
             collectionKey?: string;
-            arrayIndex?: number;
             operationType?: 'set' | 'add' | 'remove' | 'clear' | 'insert';
         }
     ): Promise<UpdatePropertyValueResponse> {
@@ -132,7 +130,6 @@ export class MainViewModelRemoteClient {
         
         if (options?.propertyPath) req.setPropertyPath(options.propertyPath);
         if (options?.collectionKey) req.setCollectionKey(options.collectionKey);
-        if (options?.arrayIndex !== undefined) req.setArrayIndex(options.arrayIndex);
         if (options?.operationType) req.setOperationType(options.operationType);
         
         const response = await this.grpcClient.updatePropertyValue(req);

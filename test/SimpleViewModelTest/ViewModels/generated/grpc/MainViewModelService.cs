@@ -29,41 +29,41 @@ namespace Generated.Protos {
             "L2VtcHR5LnByb3RvIkgKEk1haW5WaWV3TW9kZWxTdGF0ZRIyCgdkZXZpY2Vz",
             "GAEgAygLMiEuZ2VuZXJhdGVkX3Byb3Rvcy5EZXZpY2VJbmZvU3RhdGUiLwoP",
             "RGV2aWNlSW5mb1N0YXRlEgwKBG5hbWUYASABKAkSDgoGc3RhdHVzGAIgASgF",
-            "IssBChpVcGRhdGVQcm9wZXJ0eVZhbHVlUmVxdWVzdBIVCg1wcm9wZXJ0eV9u",
+            "IrYBChpVcGRhdGVQcm9wZXJ0eVZhbHVlUmVxdWVzdBIVCg1wcm9wZXJ0eV9u",
             "YW1lGAEgASgJEicKCW5ld192YWx1ZRgCIAEoCzIULmdvb2dsZS5wcm90b2J1",
             "Zi5BbnkSFQoNcHJvcGVydHlfcGF0aBgDIAEoCRIWCg5jb2xsZWN0aW9uX2tl",
-            "eRgEIAEoCRITCgthcnJheV9pbmRleBgFIAEoBRIWCg5vcGVyYXRpb25fdHlw",
-            "ZRgGIAEoCRIRCgljbGllbnRfaWQYByABKAkiiQEKG1VwZGF0ZVByb3BlcnR5",
-            "VmFsdWVSZXNwb25zZRIPCgdzdWNjZXNzGAEgASgIEhUKDWVycm9yX21lc3Nh",
-            "Z2UYAiABKAkSGQoRdmFsaWRhdGlvbl9lcnJvcnMYAyABKAkSJwoJb2xkX3Zh",
-            "bHVlGAQgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSKxAQoaUHJvcGVydHlD",
-            "aGFuZ2VOb3RpZmljYXRpb24SFQoNcHJvcGVydHlfbmFtZRgBIAEoCRInCglu",
-            "ZXdfdmFsdWUYAiABKAsyFC5nb29nbGUucHJvdG9idWYuQW55EhUKDXByb3Bl",
-            "cnR5X3BhdGgYAyABKAkSEwoLY2hhbmdlX3R5cGUYBCABKAkSJwoJb2xkX3Zh",
-            "bHVlGAUgASgLMhQuZ29vZ2xlLnByb3RvYnVmLkFueSIlChNVcGRhdGVTdGF0",
-            "dXNSZXF1ZXN0Eg4KBnN0YXR1cxgBIAEoBSIWChRVcGRhdGVTdGF0dXNSZXNw",
-            "b25zZSIlChBTdWJzY3JpYmVSZXF1ZXN0EhEKCWNsaWVudF9pZBgBIAEoCSJO",
-            "ChhDb25uZWN0aW9uU3RhdHVzUmVzcG9uc2USMgoGc3RhdHVzGAEgASgOMiIu",
-            "Z2VuZXJhdGVkX3Byb3Rvcy5Db25uZWN0aW9uU3RhdHVzKkAKEENvbm5lY3Rp",
-            "b25TdGF0dXMSCwoHVU5LTk9XThAAEg0KCUNPTk5FQ1RFRBABEhAKDERJU0NP",
-            "Tk5FQ1RFRBACMvEDChRNYWluVmlld01vZGVsU2VydmljZRJICghHZXRTdGF0",
-            "ZRIWLmdvb2dsZS5wcm90b2J1Zi5FbXB0eRokLmdlbmVyYXRlZF9wcm90b3Mu",
-            "TWFpblZpZXdNb2RlbFN0YXRlEnIKE1VwZGF0ZVByb3BlcnR5VmFsdWUSLC5n",
-            "ZW5lcmF0ZWRfcHJvdG9zLlVwZGF0ZVByb3BlcnR5VmFsdWVSZXF1ZXN0Gi0u",
-            "Z2VuZXJhdGVkX3Byb3Rvcy5VcGRhdGVQcm9wZXJ0eVZhbHVlUmVzcG9uc2US",
-            "cAoaU3Vic2NyaWJlVG9Qcm9wZXJ0eUNoYW5nZXMSIi5nZW5lcmF0ZWRfcHJv",
-            "dG9zLlN1YnNjcmliZVJlcXVlc3QaLC5nZW5lcmF0ZWRfcHJvdG9zLlByb3Bl",
-            "cnR5Q2hhbmdlTm90aWZpY2F0aW9uMAESXQoMVXBkYXRlU3RhdHVzEiUuZ2Vu",
-            "ZXJhdGVkX3Byb3Rvcy5VcGRhdGVTdGF0dXNSZXF1ZXN0GiYuZ2VuZXJhdGVk",
-            "X3Byb3Rvcy5VcGRhdGVTdGF0dXNSZXNwb25zZRJKCgRQaW5nEhYuZ29vZ2xl",
-            "LnByb3RvYnVmLkVtcHR5GiouZ2VuZXJhdGVkX3Byb3Rvcy5Db25uZWN0aW9u",
-            "U3RhdHVzUmVzcG9uc2VCE6oCEEdlbmVyYXRlZC5Qcm90b3NiBnByb3RvMw=="));
+            "eRgEIAEoCRIWCg5vcGVyYXRpb25fdHlwZRgFIAEoCRIRCgljbGllbnRfaWQY",
+            "BiABKAkiiQEKG1VwZGF0ZVByb3BlcnR5VmFsdWVSZXNwb25zZRIPCgdzdWNj",
+            "ZXNzGAEgASgIEhUKDWVycm9yX21lc3NhZ2UYAiABKAkSGQoRdmFsaWRhdGlv",
+            "bl9lcnJvcnMYAyABKAkSJwoJb2xkX3ZhbHVlGAQgASgLMhQuZ29vZ2xlLnBy",
+            "b3RvYnVmLkFueSKxAQoaUHJvcGVydHlDaGFuZ2VOb3RpZmljYXRpb24SFQoN",
+            "cHJvcGVydHlfbmFtZRgBIAEoCRInCgluZXdfdmFsdWUYAiABKAsyFC5nb29n",
+            "bGUucHJvdG9idWYuQW55EhUKDXByb3BlcnR5X3BhdGgYAyABKAkSEwoLY2hh",
+            "bmdlX3R5cGUYBCABKAkSJwoJb2xkX3ZhbHVlGAUgASgLMhQuZ29vZ2xlLnBy",
+            "b3RvYnVmLkFueSIlChNVcGRhdGVTdGF0dXNSZXF1ZXN0Eg4KBnN0YXR1cxgB",
+            "IAEoBSIWChRVcGRhdGVTdGF0dXNSZXNwb25zZSIlChBTdWJzY3JpYmVSZXF1",
+            "ZXN0EhEKCWNsaWVudF9pZBgBIAEoCSJOChhDb25uZWN0aW9uU3RhdHVzUmVz",
+            "cG9uc2USMgoGc3RhdHVzGAEgASgOMiIuZ2VuZXJhdGVkX3Byb3Rvcy5Db25u",
+            "ZWN0aW9uU3RhdHVzKkAKEENvbm5lY3Rpb25TdGF0dXMSCwoHVU5LTk9XThAA",
+            "Eg0KCUNPTk5FQ1RFRBABEhAKDERJU0NPTk5FQ1RFRBACMvEDChRNYWluVmll",
+            "d01vZGVsU2VydmljZRJICghHZXRTdGF0ZRIWLmdvb2dsZS5wcm90b2J1Zi5F",
+            "bXB0eRokLmdlbmVyYXRlZF9wcm90b3MuTWFpblZpZXdNb2RlbFN0YXRlEnIK",
+            "E1VwZGF0ZVByb3BlcnR5VmFsdWUSLC5nZW5lcmF0ZWRfcHJvdG9zLlVwZGF0",
+            "ZVByb3BlcnR5VmFsdWVSZXF1ZXN0Gi0uZ2VuZXJhdGVkX3Byb3Rvcy5VcGRh",
+            "dGVQcm9wZXJ0eVZhbHVlUmVzcG9uc2UScAoaU3Vic2NyaWJlVG9Qcm9wZXJ0",
+            "eUNoYW5nZXMSIi5nZW5lcmF0ZWRfcHJvdG9zLlN1YnNjcmliZVJlcXVlc3Qa",
+            "LC5nZW5lcmF0ZWRfcHJvdG9zLlByb3BlcnR5Q2hhbmdlTm90aWZpY2F0aW9u",
+            "MAESXQoMVXBkYXRlU3RhdHVzEiUuZ2VuZXJhdGVkX3Byb3Rvcy5VcGRhdGVT",
+            "dGF0dXNSZXF1ZXN0GiYuZ2VuZXJhdGVkX3Byb3Rvcy5VcGRhdGVTdGF0dXNS",
+            "ZXNwb25zZRJKCgRQaW5nEhYuZ29vZ2xlLnByb3RvYnVmLkVtcHR5GiouZ2Vu",
+            "ZXJhdGVkX3Byb3Rvcy5Db25uZWN0aW9uU3RhdHVzUmVzcG9uc2VCE6oCEEdl",
+            "bmVyYXRlZC5Qcm90b3NiBnByb3RvMw=="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Google.Protobuf.WellKnownTypes.AnyReflection.Descriptor, global::Google.Protobuf.WellKnownTypes.EmptyReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(new[] {typeof(global::Generated.Protos.ConnectionStatus), }, null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.MainViewModelState), global::Generated.Protos.MainViewModelState.Parser, new[]{ "Devices" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.DeviceInfoState), global::Generated.Protos.DeviceInfoState.Parser, new[]{ "Name", "Status" }, null, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdatePropertyValueRequest), global::Generated.Protos.UpdatePropertyValueRequest.Parser, new[]{ "PropertyName", "NewValue", "PropertyPath", "CollectionKey", "ArrayIndex", "OperationType", "ClientId" }, null, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdatePropertyValueRequest), global::Generated.Protos.UpdatePropertyValueRequest.Parser, new[]{ "PropertyName", "NewValue", "PropertyPath", "CollectionKey", "OperationType", "ClientId" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdatePropertyValueResponse), global::Generated.Protos.UpdatePropertyValueResponse.Parser, new[]{ "Success", "ErrorMessage", "ValidationErrors", "OldValue" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.PropertyChangeNotification), global::Generated.Protos.PropertyChangeNotification.Parser, new[]{ "PropertyName", "NewValue", "PropertyPath", "ChangeType", "OldValue" }, null, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Generated.Protos.UpdateStatusRequest), global::Generated.Protos.UpdateStatusRequest.Parser, new[]{ "Status" }, null, null, null, null),
@@ -558,7 +558,6 @@ namespace Generated.Protos {
       newValue_ = other.newValue_ != null ? other.newValue_.Clone() : null;
       propertyPath_ = other.propertyPath_;
       collectionKey_ = other.collectionKey_;
-      arrayIndex_ = other.arrayIndex_;
       operationType_ = other.operationType_;
       clientId_ = other.clientId_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
@@ -613,7 +612,7 @@ namespace Generated.Protos {
     public const int CollectionKeyFieldNumber = 4;
     private string collectionKey_ = "";
     /// <summary>
-    /// For dictionary keys or array indices
+    /// For dictionary keys
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
@@ -624,23 +623,8 @@ namespace Generated.Protos {
       }
     }
 
-    /// <summary>Field number for the "array_index" field.</summary>
-    public const int ArrayIndexFieldNumber = 5;
-    private int arrayIndex_;
-    /// <summary>
-    /// For updating specific array elements
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    [global::System.CodeDom.Compiler.GeneratedCode("protoc", null)]
-    public int ArrayIndex {
-      get { return arrayIndex_; }
-      set {
-        arrayIndex_ = value;
-      }
-    }
-
     /// <summary>Field number for the "operation_type" field.</summary>
-    public const int OperationTypeFieldNumber = 6;
+    public const int OperationTypeFieldNumber = 5;
     private string operationType_ = "";
     /// <summary>
     /// "set", "add", "remove", "clear", "insert"
@@ -655,7 +639,7 @@ namespace Generated.Protos {
     }
 
     /// <summary>Field number for the "client_id" field.</summary>
-    public const int ClientIdFieldNumber = 7;
+    public const int ClientIdFieldNumber = 6;
     private string clientId_ = "";
     /// <summary>
     /// Originating client identifier
@@ -688,7 +672,6 @@ namespace Generated.Protos {
       if (!object.Equals(NewValue, other.NewValue)) return false;
       if (PropertyPath != other.PropertyPath) return false;
       if (CollectionKey != other.CollectionKey) return false;
-      if (ArrayIndex != other.ArrayIndex) return false;
       if (OperationType != other.OperationType) return false;
       if (ClientId != other.ClientId) return false;
       return Equals(_unknownFields, other._unknownFields);
@@ -702,7 +685,6 @@ namespace Generated.Protos {
       if (newValue_ != null) hash ^= NewValue.GetHashCode();
       if (PropertyPath.Length != 0) hash ^= PropertyPath.GetHashCode();
       if (CollectionKey.Length != 0) hash ^= CollectionKey.GetHashCode();
-      if (ArrayIndex != 0) hash ^= ArrayIndex.GetHashCode();
       if (OperationType.Length != 0) hash ^= OperationType.GetHashCode();
       if (ClientId.Length != 0) hash ^= ClientId.GetHashCode();
       if (_unknownFields != null) {
@@ -739,16 +721,12 @@ namespace Generated.Protos {
         output.WriteRawTag(34);
         output.WriteString(CollectionKey);
       }
-      if (ArrayIndex != 0) {
-        output.WriteRawTag(40);
-        output.WriteInt32(ArrayIndex);
-      }
       if (OperationType.Length != 0) {
-        output.WriteRawTag(50);
+        output.WriteRawTag(42);
         output.WriteString(OperationType);
       }
       if (ClientId.Length != 0) {
-        output.WriteRawTag(58);
+        output.WriteRawTag(50);
         output.WriteString(ClientId);
       }
       if (_unknownFields != null) {
@@ -777,16 +755,12 @@ namespace Generated.Protos {
         output.WriteRawTag(34);
         output.WriteString(CollectionKey);
       }
-      if (ArrayIndex != 0) {
-        output.WriteRawTag(40);
-        output.WriteInt32(ArrayIndex);
-      }
       if (OperationType.Length != 0) {
-        output.WriteRawTag(50);
+        output.WriteRawTag(42);
         output.WriteString(OperationType);
       }
       if (ClientId.Length != 0) {
-        output.WriteRawTag(58);
+        output.WriteRawTag(50);
         output.WriteString(ClientId);
       }
       if (_unknownFields != null) {
@@ -810,9 +784,6 @@ namespace Generated.Protos {
       }
       if (CollectionKey.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(CollectionKey);
-      }
-      if (ArrayIndex != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ArrayIndex);
       }
       if (OperationType.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(OperationType);
@@ -846,9 +817,6 @@ namespace Generated.Protos {
       }
       if (other.CollectionKey.Length != 0) {
         CollectionKey = other.CollectionKey;
-      }
-      if (other.ArrayIndex != 0) {
-        ArrayIndex = other.ArrayIndex;
       }
       if (other.OperationType.Length != 0) {
         OperationType = other.OperationType;
@@ -894,15 +862,11 @@ namespace Generated.Protos {
             CollectionKey = input.ReadString();
             break;
           }
-          case 40: {
-            ArrayIndex = input.ReadInt32();
-            break;
-          }
-          case 50: {
+          case 42: {
             OperationType = input.ReadString();
             break;
           }
-          case 58: {
+          case 50: {
             ClientId = input.ReadString();
             break;
           }
@@ -944,15 +908,11 @@ namespace Generated.Protos {
             CollectionKey = input.ReadString();
             break;
           }
-          case 40: {
-            ArrayIndex = input.ReadInt32();
-            break;
-          }
-          case 50: {
+          case 42: {
             OperationType = input.ReadString();
             break;
           }
-          case 58: {
+          case 50: {
             ClientId = input.ReadString();
             break;
           }

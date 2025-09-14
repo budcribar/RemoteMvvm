@@ -175,7 +175,6 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 {
                     PropertyName = topLevel,
                     PropertyPath = propertyPath,
-                    ArrayIndex = -1,
                     ClientId = _clientId,
                     NewValue = PackValueToAny(value)
                 };
@@ -251,27 +250,50 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 if (bracket >= 0)
                 {
                     var propName = part[..bracket];
-                    var end = part.IndexOf(']', bracket);
-                    if (end < 0) return;
-                    var indexStr = part[(bracket + 1)..end];
                     var prop = current?.GetType().GetProperty(propName);
-                    if (prop?.GetValue(current) is System.Collections.IList list && int.TryParse(indexStr, out int idx))
+                    current = prop?.GetValue(current);
+                    var remainder = part[bracket..];
+                    while (remainder.StartsWith("["))
                     {
-                        if (idx < 0 || idx >= list.Count) return;
-                        if (i == segments.Length - 1)
+                        var end = remainder.IndexOf(']', 1);
+                        if (end < 0) return;
+                        var indexStr = remainder[1..end];
+                        remainder = remainder[(end + 1)..];
+
+                        if (current is System.Collections.IList list && int.TryParse(indexStr, out int idx))
                         {
-                            list[idx] = newValue;
-                            if (target is GameViewModelRemoteClient rc)
+                            if (idx < 0 || idx >= list.Count) return;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
                             {
-                                rc.AttachLocalPropertyChangedHandlers(list[idx], path);
+                                list[idx] = newValue;
+                                if (target is GameViewModelRemoteClient rc)
+                                {
+                                    rc.AttachLocalPropertyChangedHandlers(list[idx], path);
+                                }
+                                return;
                             }
+                            current = list[idx];
+                        }
+                        else if (current is System.Collections.IDictionary dict)
+                        {
+                            var key = indexStr;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
+                            {
+                                dict[key] = newValue;
+                                if (target is GameViewModelRemoteClient rc)
+                                {
+                                    rc.AttachLocalPropertyChangedHandlers(newValue, path);
+                                }
+                                return;
+                            }
+                            current = dict[key];
+                        }
+                        else
+                        {
                             return;
                         }
-                        current = list[idx];
-                    }
-                    else
-                    {
-                        return;
+
+                        if (current == null) return;
                     }
                 }
                 else
@@ -301,17 +323,26 @@ namespace MonsterClicker.ViewModels.RemoteClients
         {
             if (obj == null) return;
 
-            if (obj is INotifyPropertyChanged inpc)
+            var isRoot = ReferenceEquals(obj, this);
+
+            if (!isRoot && obj is INotifyPropertyChanged inpc)
             {
                 inpc.PropertyChanged += async (s, e) =>
                 {
-                    if (_suppressLocalUpdates) return;
                     var prop = s?.GetType().GetProperty(e.PropertyName);
                     if (prop == null) return;
                     var value = prop.GetValue(s);
                     var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    OnPropertyChanged(path);
+                    if (_suppressLocalUpdates) return;
                     await UpdatePropertyValueAsync(path, value);
                 };
+            }
+
+            var type = obj.GetType();
+            if (type.IsValueType || obj is string)
+            {
+                return;
             }
 
             if (obj is System.Collections.IEnumerable enumerable && obj is not string)
@@ -326,8 +357,9 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 return;
             }
 
-            foreach (var p in obj.GetType().GetProperties())
+            foreach (var p in type.GetProperties())
             {
+                if (p.GetIndexParameters().Length > 0) continue;
                 var val = p.GetValue(obj);
                 var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
                 AttachLocalPropertyChangedHandlers(val, childPrefix);

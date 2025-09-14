@@ -224,7 +224,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             object target = _viewModel;
             var pathParts = propertyPath.Split('.');
             
-            // Navigate to nested property if needed, handling collection indices
+            // Navigate to nested property if needed, handling collection indices and dictionary keys
             for (int i = 0; i < pathParts.Length - 1; i++)
             {
                 var part = pathParts[i];
@@ -232,14 +232,6 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
                 if (bracketIndex >= 0)
                 {
                     var propName = part[..bracketIndex];
-                    var end = part.IndexOf(']', bracketIndex);
-                    if (end < 0)
-                    {
-                        response.Success = false;
-                        response.ErrorMessage = $"Invalid path segment '{part}' in '{propertyPath}'";
-                        return response;
-                    }
-                    var indexStr = part[(bracketIndex + 1)..end];
                     var prop = target?.GetType().GetProperty(propName);
                     if (prop == null)
                     {
@@ -247,22 +239,57 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
                         response.ErrorMessage = $"Property '{propName}' not found in path '{propertyPath}'";
                         return response;
                     }
-                    if (prop.GetValue(target) is IList list && int.TryParse(indexStr, out int idx))
+                    var nextTarget = prop.GetValue(target);
+                    var remainder = part[bracketIndex..];
+                    while (remainder.StartsWith("["))
                     {
-                        if (idx < 0 || idx >= list.Count)
+                        var end = remainder.IndexOf(']', 1);
+                        if (end < 0)
                         {
                             response.Success = false;
-                            response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
+                            response.ErrorMessage = $"Invalid path segment '{part}' in '{propertyPath}'";
                             return response;
                         }
-                        target = list[idx] ?? new();
+                        var indexStr = remainder[1..end];
+                        remainder = remainder[(end + 1)..];
+
+                        if (nextTarget is IList list && int.TryParse(indexStr, out int idx))
+                        {
+                            if (idx < 0 || idx >= list.Count)
+                            {
+                                response.Success = false;
+                                response.ErrorMessage = $"Index {idx} out of range for '{propName}'";
+                                return response;
+                            }
+                            nextTarget = list[idx];
+                        }
+                        else if (nextTarget is IDictionary dict)
+                        {
+                            var keyType = nextTarget.GetType().GetGenericArguments()[0];
+                            var keyResult = ConvertStringToTargetType(indexStr, keyType);
+                            if (!keyResult.Success)
+                            {
+                                response.Success = false;
+                                response.ErrorMessage = keyResult.ErrorMessage;
+                                return response;
+                            }
+                            nextTarget = dict[keyResult.Value!];
+                        }
+                        else
+                        {
+                            response.Success = false;
+                            response.ErrorMessage = $"Property '{propName}' is not an indexable collection";
+                            return response;
+                        }
+
+                        if (nextTarget == null)
+                        {
+                            response.Success = false;
+                            response.ErrorMessage = $"Null value encountered at '{propName}' in path '{propertyPath}'";
+                            return response;
+                        }
                     }
-                    else
-                    {
-                        response.Success = false;
-                        response.ErrorMessage = $"Property '{propName}' is not an indexable list";
-                        return response;
-                    }
+                    target = nextTarget;
                 }
                 else
                 {
@@ -284,7 +311,22 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
                 }
             }
 
-            var finalPropertyName = pathParts[pathParts.Length - 1];
+            var finalPart = pathParts[pathParts.Length - 1];
+            var bracketPos = finalPart.IndexOf('[');
+            var finalPropertyName = bracketPos >= 0 ? finalPart[..bracketPos] : finalPart;
+            int collectionIndex = -1;
+            if (bracketPos >= 0)
+            {
+                var end = finalPart.IndexOf(']', bracketPos);
+                if (end < 0)
+                {
+                    response.Success = false;
+                    response.ErrorMessage = $"Invalid path segment '{finalPart}' in '{propertyPath}'";
+                    return response;
+                }
+                var indexStr = finalPart[(bracketPos + 1)..end];
+                int.TryParse(indexStr, out collectionIndex);
+            }
             var propertyInfo = target?.GetType().GetProperty(finalPropertyName);
             if (propertyInfo == null)
             {
@@ -308,9 +350,9 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             if (oldValue != null) response.OldValue = PackToAny(oldValue);
             
             // Only treat as collection update when modifying the collection itself (not element property)
-            if (!isLeafElementUpdate && (!string.IsNullOrEmpty(request.CollectionKey) || (request.ArrayIndex > -1 && propertyPath.Equals(request.PropertyName, StringComparison.OrdinalIgnoreCase))))
+            if (!isLeafElementUpdate && (!string.IsNullOrEmpty(request.CollectionKey) || collectionIndex > -1))
             {
-                response = HandleCollectionUpdate(target, propertyInfo, request);
+                response = HandleCollectionUpdate(target, propertyInfo, request, collectionIndex);
             }
             else
             {
@@ -355,7 +397,7 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
         return response;
     }
 
-    private Generated.Protos.UpdatePropertyValueResponse HandleCollectionUpdate(object target, System.Reflection.PropertyInfo propertyInfo, Generated.Protos.UpdatePropertyValueRequest request)
+    private Generated.Protos.UpdatePropertyValueResponse HandleCollectionUpdate(object target, System.Reflection.PropertyInfo propertyInfo, Generated.Protos.UpdatePropertyValueRequest request, int arrayIndex)
     {
         var response = new Generated.Protos.UpdatePropertyValueResponse();
         
@@ -397,12 +439,12 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             Debug.WriteLine($"[GrpcService:HP3LSThermalTestViewModel] Updated dictionary key '{convertedKey.Value}' to '{convertedValue.Value}'");
         }
         // Handle list/array element replacement updates
-        else if (collection is System.Collections.IList list && request.ArrayIndex > -1)
+        else if (collection is System.Collections.IList list && arrayIndex > -1)
         {
-            if (request.ArrayIndex >= list.Count)
+            if (arrayIndex >= list.Count)
             {
                 response.Success = false;
-                response.ErrorMessage = $"Array index {request.ArrayIndex} is out of bounds (count: {list.Count})";
+                response.ErrorMessage = $"Array index {arrayIndex} is out of bounds (count: {list.Count})";
                 return response;
             }
             
@@ -417,11 +459,11 @@ public partial class HP3LSThermalTestViewModelGrpcServiceImpl : HP3LSThermalTest
             }
             
             // Store old value
-            response.OldValue = PackToAny(list[request.ArrayIndex]);
-            
-            list[request.ArrayIndex] = convertedValue.Value;
+            response.OldValue = PackToAny(list[arrayIndex]);
+
+            list[arrayIndex] = convertedValue.Value;
             response.Success = true;
-            Debug.WriteLine($"[GrpcService:HP3LSThermalTestViewModel] Updated array index {request.ArrayIndex} to '{convertedValue.Value}'");
+            Debug.WriteLine($"[GrpcService:HP3LSThermalTestViewModel] Updated array index {arrayIndex} to '{convertedValue.Value}'");
         }
         else
         {
