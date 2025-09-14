@@ -37,7 +37,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial string MonsterName { get; set; }
+        private string _monsterName;
         partial void OnMonsterNameChanged(string value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -45,7 +45,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial int MonsterMaxHealth { get; set; }
+        private int _monsterMaxHealth;
         partial void OnMonsterMaxHealthChanged(int value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -53,7 +53,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial int MonsterCurrentHealth { get; set; }
+        private int _monsterCurrentHealth;
         partial void OnMonsterCurrentHealthChanged(int value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -61,7 +61,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial int PlayerDamage { get; set; }
+        private int _playerDamage;
         partial void OnPlayerDamageChanged(int value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -69,7 +69,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial string GameMessage { get; set; }
+        private string _gameMessage;
         partial void OnGameMessageChanged(string value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -77,7 +77,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial bool IsMonsterDefeated { get; set; }
+        private bool _isMonsterDefeated;
         partial void OnIsMonsterDefeatedChanged(bool value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -85,7 +85,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial bool CanUseSpecialAttack { get; set; }
+        private bool _canUseSpecialAttack;
         partial void OnCanUseSpecialAttackChanged(bool value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -93,7 +93,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
         }
 
         [ObservableProperty]
-        public partial bool IsSpecialAttackOnCooldown { get; set; }
+        private bool _isSpecialAttackOnCooldown;
         partial void OnIsSpecialAttackOnCooldownChanged(bool value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
