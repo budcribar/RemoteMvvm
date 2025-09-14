@@ -57,18 +57,31 @@ public static class ClientGenerator
         var propertyDecls = new StringBuilder();
         foreach (var prop in props)
         {
-            string setter = (prop.IsReadOnly || IsCollectionType(prop) || IsComplexType(prop)) ? "private set;" : "set;";
-            propertyDecls.AppendLine($"        [ObservableProperty]");
-            propertyDecls.AppendLine($"        public partial {prop.TypeString} {prop.Name} {{ get; {setter} }}");
-            if (!prop.IsReadOnly && !IsCollectionType(prop) && !IsComplexType(prop))
+            string fieldName = "_" + char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
+            bool isSimple = !IsCollectionType(prop) && !IsComplexType(prop);
+
+            if (isSimple && !prop.IsReadOnly)
             {
+                propertyDecls.AppendLine($"        [ObservableProperty]");
+                propertyDecls.AppendLine($"        private {prop.TypeString} {fieldName};");
+                propertyDecls.AppendLine();
                 propertyDecls.AppendLine($"        partial void On{prop.Name}Changed({prop.TypeString} value)");
                 propertyDecls.AppendLine("        {");
                 propertyDecls.AppendLine("            if (_isInitialized && !_suppressLocalUpdates)");
                 propertyDecls.AppendLine($"                _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
                 propertyDecls.AppendLine("        }");
+                propertyDecls.AppendLine();
             }
-            propertyDecls.AppendLine();
+            else
+            {
+                propertyDecls.AppendLine($"        private {prop.TypeString} {fieldName};");
+                propertyDecls.AppendLine($"        public {prop.TypeString} {prop.Name}");
+                propertyDecls.AppendLine("        {");
+                propertyDecls.AppendLine($"            get => {fieldName};");
+                propertyDecls.AppendLine($"            private set => SetProperty(ref {fieldName}, value);");
+                propertyDecls.AppendLine("        }");
+                propertyDecls.AppendLine();
+            }
         }
 
         var commandDecls = new StringBuilder();
