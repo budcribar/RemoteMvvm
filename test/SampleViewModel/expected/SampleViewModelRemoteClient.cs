@@ -15,8 +15,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.ComponentModel;
-using System.Collections.Specialized;
 using Generated.ViewModels;
 
 namespace SampleApp.ViewModels.RemoteClients
@@ -38,30 +36,20 @@ namespace SampleApp.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        private string _name = default!;
-        public string Name
+        [ObservableProperty]
+        public partial string Name { get; set; }
+        partial void OnNameChanged(string value)
         {
-            get => _name;
-            set
-            {
-                if (SetProperty(ref _name, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("Name", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("Name", value);
         }
 
-        private int _count = default!;
-        public int Count
+        [ObservableProperty]
+        public partial int Count { get; set; }
+        partial void OnCountChanged(int value)
         {
-            get => _count;
-            set
-            {
-                if (SetProperty(ref _count, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("Count", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("Count", value);
         }
 
         public IRelayCommand IncrementCountCommand { get; }
@@ -189,11 +177,6 @@ namespace SampleApp.ViewModels.RemoteClients
                             if (i == segments.Length - 1 && remainder.Length == 0)
                             {
                                 list[idx] = newValue;
-                                if (target is SampleViewModelRemoteClient rc)
-                                {
-                                    var pathCopy = path;
-                                    rc.AttachLocalPropertyChangedHandlers(list[idx], () => pathCopy);
-                                }
                                 return;
                             }
                             current = list[idx];
@@ -204,11 +187,6 @@ namespace SampleApp.ViewModels.RemoteClients
                             if (i == segments.Length - 1 && remainder.Length == 0)
                             {
                                 dict[key] = newValue;
-                                if (target is SampleViewModelRemoteClient rc)
-                                {
-                                    var pathCopy = path;
-                                    rc.AttachLocalPropertyChangedHandlers(newValue, () => pathCopy);
-                                }
                                 return;
                             }
                             current = dict[key];
@@ -227,11 +205,6 @@ namespace SampleApp.ViewModels.RemoteClients
                     {
                         var prop = current?.GetType().GetProperty(part);
                         prop?.SetValue(current, newValue);
-                        if (target is SampleViewModelRemoteClient rc)
-                        {
-                            var pathCopy = path;
-                            rc.AttachLocalPropertyChangedHandlers(newValue, () => pathCopy);
-                        }
                         return;
                     }
                     else
@@ -242,93 +215,6 @@ namespace SampleApp.ViewModels.RemoteClients
                 }
 
                 if (current == null) return;
-            }
-        }
-
-        private void AttachLocalPropertyChangedHandlers(object? obj, Func<string> pathProvider)
-        {
-            if (obj == null) return;
-
-            var isRoot = ReferenceEquals(obj, this);
-
-            if (!isRoot && obj is INotifyPropertyChanged inpc)
-            {
-                inpc.PropertyChanged += async (s, e) =>
-                {
-                    var prop = s?.GetType().GetProperty(e.PropertyName);
-                    if (prop == null) return;
-                    var value = prop.GetValue(s);
-                    var basePath = pathProvider();
-                    var path = string.IsNullOrEmpty(basePath) ? e.PropertyName : basePath + "." + e.PropertyName;
-                    OnPropertyChanged(path);
-                    if (_suppressLocalUpdates) return;
-                    await UpdatePropertyValueAsync(path, value);
-                };
-            }
-
-            var type = obj.GetType();
-            if (type.IsValueType || obj is string)
-            {
-                return;
-            }
-
-            if (obj is System.Collections.IList list)
-            {
-                for (int i = 0; i < list.Count; i++)
-                {
-                    var item = list[i];
-                    var currentItem = item;
-                    AttachLocalPropertyChangedHandlers(currentItem, () =>
-                    {
-                        var prefix = pathProvider();
-                        var idx = list.IndexOf(currentItem);
-                        return string.IsNullOrEmpty(prefix) ? $"[{idx}]" : prefix + $"[{idx}]";
-                    });
-                }
-
-                if (obj is INotifyCollectionChanged ncc)
-                {
-                    ncc.CollectionChanged += (_, e) =>
-                    {
-                        if (e.NewItems != null)
-                            foreach (var ni in e.NewItems)
-                                AttachLocalPropertyChangedHandlers(ni, () =>
-                                {
-                                    var prefix = pathProvider();
-                                    var idx = list.IndexOf(ni);
-                                    return string.IsNullOrEmpty(prefix) ? $"[{idx}]" : prefix + $"[{idx}]";
-                                });
-                    };
-                }
-                return;
-            }
-
-            if (obj is System.Collections.IEnumerable enumerable && obj is not string)
-            {
-                int index = 0;
-                foreach (var item in enumerable)
-                {
-                    var captured = index;
-                    AttachLocalPropertyChangedHandlers(item, () =>
-                    {
-                        var prefix = pathProvider();
-                        return string.IsNullOrEmpty(prefix) ? $"[{captured}]" : prefix + $"[{captured}]";
-                    });
-                    index++;
-                }
-                return;
-            }
-
-            foreach (var p in type.GetProperties())
-            {
-                if (p.GetIndexParameters().Length > 0) continue;
-                var val = p.GetValue(obj);
-                var propName = p.Name;
-                AttachLocalPropertyChangedHandlers(val, () =>
-                {
-                    var prefix = pathProvider();
-                    return string.IsNullOrEmpty(prefix) ? propName : prefix + "." + propName;
-                });
             }
         }
 
@@ -388,7 +274,6 @@ namespace SampleApp.ViewModels.RemoteClients
                 this.Name = state.Name;
                 this.Count = state.Count;
                 _suppressLocalUpdates = false;
-                AttachLocalPropertyChangedHandlers(this, () => string.Empty);
                 _isInitialized = true;
                 Debug.WriteLine("[SampleViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
