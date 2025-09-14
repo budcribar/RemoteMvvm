@@ -42,12 +42,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _show;
             set
             {
-                if (SetProperty(ref _show, value) && _isInitialized)
+                var oldValue = _show;
+                if (SetProperty(ref _show, value))
                 {
-                    _ = UpdatePropertyValueAsync("Show", value);
+                    OnShowChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Show", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowChanged(bool oldValue, bool newValue);
 
         private bool _showSpinner = default!;
         public bool ShowSpinner
@@ -55,12 +62,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _showSpinner;
             set
             {
-                if (SetProperty(ref _showSpinner, value) && _isInitialized)
+                var oldValue = _showSpinner;
+                if (SetProperty(ref _showSpinner, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowSpinner", value);
+                    OnShowSpinnerChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowSpinner", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowSpinnerChanged(bool oldValue, bool newValue);
 
         private int _clicksToPass = default!;
         public int ClicksToPass
@@ -68,12 +82,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _clicksToPass;
             set
             {
-                if (SetProperty(ref _clicksToPass, value) && _isInitialized)
+                var oldValue = _clicksToPass;
+                if (SetProperty(ref _clicksToPass, value))
                 {
-                    _ = UpdatePropertyValueAsync("ClicksToPass", value);
+                    OnClicksToPassChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ClicksToPass", value);
+                    }
                 }
             }
         }
+
+        partial void OnClicksToPassChanged(int oldValue, int newValue);
 
         private bool _is3Btn = default!;
         public bool Is3Btn
@@ -81,12 +102,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _is3Btn;
             set
             {
-                if (SetProperty(ref _is3Btn, value) && _isInitialized)
+                var oldValue = _is3Btn;
+                if (SetProperty(ref _is3Btn, value))
                 {
-                    _ = UpdatePropertyValueAsync("Is3Btn", value);
+                    OnIs3BtnChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Is3Btn", value);
+                    }
                 }
             }
         }
+
+        partial void OnIs3BtnChanged(bool oldValue, bool newValue);
 
         private int _testTimeoutSec = default!;
         public int TestTimeoutSec
@@ -94,12 +122,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _testTimeoutSec;
             set
             {
-                if (SetProperty(ref _testTimeoutSec, value) && _isInitialized)
+                var oldValue = _testTimeoutSec;
+                if (SetProperty(ref _testTimeoutSec, value))
                 {
-                    _ = UpdatePropertyValueAsync("TestTimeoutSec", value);
+                    OnTestTimeoutSecChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("TestTimeoutSec", value);
+                    }
                 }
             }
         }
+
+        partial void OnTestTimeoutSecChanged(int oldValue, int newValue);
 
         private string _instructions = default!;
         public string Instructions
@@ -107,12 +142,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _instructions;
             set
             {
-                if (SetProperty(ref _instructions, value) && _isInitialized)
+                var oldValue = _instructions;
+                if (SetProperty(ref _instructions, value))
                 {
-                    _ = UpdatePropertyValueAsync("Instructions", value);
+                    OnInstructionsChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Instructions", value);
+                    }
                 }
             }
         }
+
+        partial void OnInstructionsChanged(string oldValue, string newValue);
 
         private bool _showCursorTest = default!;
         public bool ShowCursorTest
@@ -120,12 +162,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _showCursorTest;
             set
             {
-                if (SetProperty(ref _showCursorTest, value) && _isInitialized)
+                var oldValue = _showCursorTest;
+                if (SetProperty(ref _showCursorTest, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowCursorTest", value);
+                    OnShowCursorTestChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowCursorTest", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowCursorTestChanged(bool oldValue, bool newValue);
 
         private bool _showConfigSelection = default!;
         public bool ShowConfigSelection
@@ -133,12 +182,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _showConfigSelection;
             set
             {
-                if (SetProperty(ref _showConfigSelection, value) && _isInitialized)
+                var oldValue = _showConfigSelection;
+                if (SetProperty(ref _showConfigSelection, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowConfigSelection", value);
+                    OnShowConfigSelectionChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowConfigSelection", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowConfigSelectionChanged(bool oldValue, bool newValue);
 
         private bool _showClickInstructions = default!;
         public bool ShowClickInstructions
@@ -146,12 +202,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _showClickInstructions;
             set
             {
-                if (SetProperty(ref _showClickInstructions, value) && _isInitialized)
+                var oldValue = _showClickInstructions;
+                if (SetProperty(ref _showClickInstructions, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowClickInstructions", value);
+                    OnShowClickInstructionsChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowClickInstructions", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowClickInstructionsChanged(bool oldValue, bool newValue);
 
         private bool _showTimer = default!;
         public bool ShowTimer
@@ -159,12 +222,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _showTimer;
             set
             {
-                if (SetProperty(ref _showTimer, value) && _isInitialized)
+                var oldValue = _showTimer;
+                if (SetProperty(ref _showTimer, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowTimer", value);
+                    OnShowTimerChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowTimer", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowTimerChanged(bool oldValue, bool newValue);
 
         private bool _showBottom = default!;
         public bool ShowBottom
@@ -172,12 +242,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _showBottom;
             set
             {
-                if (SetProperty(ref _showBottom, value) && _isInitialized)
+                var oldValue = _showBottom;
+                if (SetProperty(ref _showBottom, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowBottom", value);
+                    OnShowBottomChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowBottom", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowBottomChanged(bool oldValue, bool newValue);
 
         private string _timerText = default!;
         public string TimerText
@@ -185,12 +262,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _timerText;
             set
             {
-                if (SetProperty(ref _timerText, value) && _isInitialized)
+                var oldValue = _timerText;
+                if (SetProperty(ref _timerText, value))
                 {
-                    _ = UpdatePropertyValueAsync("TimerText", value);
+                    OnTimerTextChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("TimerText", value);
+                    }
                 }
             }
         }
+
+        partial void OnTimerTextChanged(string oldValue, string newValue);
 
         private string _selectedDevice = default!;
         public string SelectedDevice
@@ -198,12 +282,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _selectedDevice;
             set
             {
-                if (SetProperty(ref _selectedDevice, value) && _isInitialized)
+                var oldValue = _selectedDevice;
+                if (SetProperty(ref _selectedDevice, value))
                 {
-                    _ = UpdatePropertyValueAsync("SelectedDevice", value);
+                    OnSelectedDeviceChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("SelectedDevice", value);
+                    }
                 }
             }
         }
+
+        partial void OnSelectedDeviceChanged(string oldValue, string newValue);
 
         private int _lastClickCount = default!;
         public int LastClickCount
@@ -211,12 +302,19 @@ namespace Pointer.ViewModels.RemoteClients
             get => _lastClickCount;
             set
             {
-                if (SetProperty(ref _lastClickCount, value) && _isInitialized)
+                var oldValue = _lastClickCount;
+                if (SetProperty(ref _lastClickCount, value))
                 {
-                    _ = UpdatePropertyValueAsync("LastClickCount", value);
+                    OnLastClickCountChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("LastClickCount", value);
+                    }
                 }
             }
         }
+
+        partial void OnLastClickCountChanged(int oldValue, int newValue);
 
         public IRelayCommand InitializeCommand { get; }
         public IRelayCommand OnCursorTestCommand { get; }

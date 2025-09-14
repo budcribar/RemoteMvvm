@@ -42,12 +42,19 @@ namespace SampleApp.ViewModels.RemoteClients
             get => _name;
             set
             {
-                if (SetProperty(ref _name, value) && _isInitialized)
+                var oldValue = _name;
+                if (SetProperty(ref _name, value))
                 {
-                    _ = UpdatePropertyValueAsync("Name", value);
+                    OnNameChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Name", value);
+                    }
                 }
             }
         }
+
+        partial void OnNameChanged(string oldValue, string newValue);
 
         private int _count = default!;
         public int Count
@@ -55,12 +62,19 @@ namespace SampleApp.ViewModels.RemoteClients
             get => _count;
             set
             {
-                if (SetProperty(ref _count, value) && _isInitialized)
+                var oldValue = _count;
+                if (SetProperty(ref _count, value))
                 {
-                    _ = UpdatePropertyValueAsync("Count", value);
+                    OnCountChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Count", value);
+                    }
                 }
             }
         }
+
+        partial void OnCountChanged(int oldValue, int newValue);
 
         public IRelayCommand IncrementCountCommand { get; }
         public IAsyncRelayCommand<int> DelayedIncrementCommand { get; }

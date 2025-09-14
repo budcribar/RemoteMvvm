@@ -40,8 +40,17 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
         public System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> Devices
         {
             get => _devices;
-            private set => SetProperty(ref _devices, value);
+            private set
+            {
+                var oldValue = _devices;
+                if (SetProperty(ref _devices, value))
+                {
+                    OnDevicesChanged(oldValue, value);
+                }
+            }
         }
+
+        partial void OnDevicesChanged(System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> oldValue, System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> newValue);
 
         public IRelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus> UpdateStatusCommand { get; }
 

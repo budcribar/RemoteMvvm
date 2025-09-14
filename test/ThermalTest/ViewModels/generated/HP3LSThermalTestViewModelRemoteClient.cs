@@ -40,8 +40,17 @@ namespace HPSystemsTools.ViewModels.RemoteClients
         public string Instructions
         {
             get => _instructions;
-            private set => SetProperty(ref _instructions, value);
+            private set
+            {
+                var oldValue = _instructions;
+                if (SetProperty(ref _instructions, value))
+                {
+                    OnInstructionsChanged(oldValue, value);
+                }
+            }
         }
+
+        partial void OnInstructionsChanged(string oldValue, string newValue);
 
         private int _cpuTemperatureThreshold = default!;
         public int CpuTemperatureThreshold
@@ -49,12 +58,19 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             get => _cpuTemperatureThreshold;
             set
             {
-                if (SetProperty(ref _cpuTemperatureThreshold, value) && _isInitialized)
+                var oldValue = _cpuTemperatureThreshold;
+                if (SetProperty(ref _cpuTemperatureThreshold, value))
                 {
-                    _ = UpdatePropertyValueAsync("CpuTemperatureThreshold", value);
+                    OnCpuTemperatureThresholdChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("CpuTemperatureThreshold", value);
+                    }
                 }
             }
         }
+
+        partial void OnCpuTemperatureThresholdChanged(int oldValue, int newValue);
 
         private int _cpuLoadThreshold = default!;
         public int CpuLoadThreshold
@@ -62,12 +78,19 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             get => _cpuLoadThreshold;
             set
             {
-                if (SetProperty(ref _cpuLoadThreshold, value) && _isInitialized)
+                var oldValue = _cpuLoadThreshold;
+                if (SetProperty(ref _cpuLoadThreshold, value))
                 {
-                    _ = UpdatePropertyValueAsync("CpuLoadThreshold", value);
+                    OnCpuLoadThresholdChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("CpuLoadThreshold", value);
+                    }
                 }
             }
         }
+
+        partial void OnCpuLoadThresholdChanged(int oldValue, int newValue);
 
         private int _cpuLoadTimeSpan = default!;
         public int CpuLoadTimeSpan
@@ -75,26 +98,51 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             get => _cpuLoadTimeSpan;
             set
             {
-                if (SetProperty(ref _cpuLoadTimeSpan, value) && _isInitialized)
+                var oldValue = _cpuLoadTimeSpan;
+                if (SetProperty(ref _cpuLoadTimeSpan, value))
                 {
-                    _ = UpdatePropertyValueAsync("CpuLoadTimeSpan", value);
+                    OnCpuLoadTimeSpanChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("CpuLoadTimeSpan", value);
+                    }
                 }
             }
         }
+
+        partial void OnCpuLoadTimeSpanChanged(int oldValue, int newValue);
 
         private HPSystemsTools.ViewModels.ZoneCollection _zones = default!;
         public HPSystemsTools.ViewModels.ZoneCollection Zones
         {
             get => _zones;
-            private set => SetProperty(ref _zones, value);
+            private set
+            {
+                var oldValue = _zones;
+                if (SetProperty(ref _zones, value))
+                {
+                    OnZonesChanged(oldValue, value);
+                }
+            }
         }
+
+        partial void OnZonesChanged(HPSystemsTools.ViewModels.ZoneCollection oldValue, HPSystemsTools.ViewModels.ZoneCollection newValue);
 
         private HPSystemsTools.Models.TestSettingsModel _testSettings = default!;
         public HPSystemsTools.Models.TestSettingsModel TestSettings
         {
             get => _testSettings;
-            private set => SetProperty(ref _testSettings, value);
+            private set
+            {
+                var oldValue = _testSettings;
+                if (SetProperty(ref _testSettings, value))
+                {
+                    OnTestSettingsChanged(oldValue, value);
+                }
+            }
         }
+
+        partial void OnTestSettingsChanged(HPSystemsTools.Models.TestSettingsModel oldValue, HPSystemsTools.Models.TestSettingsModel newValue);
 
         private bool _showDescription = default!;
         public bool ShowDescription
@@ -102,12 +150,19 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             get => _showDescription;
             set
             {
-                if (SetProperty(ref _showDescription, value) && _isInitialized)
+                var oldValue = _showDescription;
+                if (SetProperty(ref _showDescription, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowDescription", value);
+                    OnShowDescriptionChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowDescription", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowDescriptionChanged(bool oldValue, bool newValue);
 
         private bool _showReadme = default!;
         public bool ShowReadme
@@ -115,12 +170,19 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             get => _showReadme;
             set
             {
-                if (SetProperty(ref _showReadme, value) && _isInitialized)
+                var oldValue = _showReadme;
+                if (SetProperty(ref _showReadme, value))
                 {
-                    _ = UpdatePropertyValueAsync("ShowReadme", value);
+                    OnShowReadmeChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowReadme", value);
+                    }
                 }
             }
         }
+
+        partial void OnShowReadmeChanged(bool oldValue, bool newValue);
 
         public IRelayCommand<HPSystemsTools.Models.ThermalStateEnum> StateChangedCommand { get; }
         public IRelayCommand CancelTestCommand { get; }
