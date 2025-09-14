@@ -42,12 +42,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _monsterName;
             set
             {
-                if (SetProperty(ref _monsterName, value) && _isInitialized)
+                var oldValue = _monsterName;
+                if (SetProperty(ref _monsterName, value))
                 {
-                    _ = UpdatePropertyValueAsync("MonsterName", value);
+                    OnMonsterNameChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("MonsterName", value);
+                    }
                 }
             }
         }
+
+        partial void OnMonsterNameChanged(string oldValue, string newValue);
 
         private int _monsterMaxHealth = default!;
         public int MonsterMaxHealth
@@ -55,12 +62,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _monsterMaxHealth;
             set
             {
-                if (SetProperty(ref _monsterMaxHealth, value) && _isInitialized)
+                var oldValue = _monsterMaxHealth;
+                if (SetProperty(ref _monsterMaxHealth, value))
                 {
-                    _ = UpdatePropertyValueAsync("MonsterMaxHealth", value);
+                    OnMonsterMaxHealthChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("MonsterMaxHealth", value);
+                    }
                 }
             }
         }
+
+        partial void OnMonsterMaxHealthChanged(int oldValue, int newValue);
 
         private int _monsterCurrentHealth = default!;
         public int MonsterCurrentHealth
@@ -68,12 +82,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _monsterCurrentHealth;
             set
             {
-                if (SetProperty(ref _monsterCurrentHealth, value) && _isInitialized)
+                var oldValue = _monsterCurrentHealth;
+                if (SetProperty(ref _monsterCurrentHealth, value))
                 {
-                    _ = UpdatePropertyValueAsync("MonsterCurrentHealth", value);
+                    OnMonsterCurrentHealthChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("MonsterCurrentHealth", value);
+                    }
                 }
             }
         }
+
+        partial void OnMonsterCurrentHealthChanged(int oldValue, int newValue);
 
         private int _playerDamage = default!;
         public int PlayerDamage
@@ -81,12 +102,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _playerDamage;
             set
             {
-                if (SetProperty(ref _playerDamage, value) && _isInitialized)
+                var oldValue = _playerDamage;
+                if (SetProperty(ref _playerDamage, value))
                 {
-                    _ = UpdatePropertyValueAsync("PlayerDamage", value);
+                    OnPlayerDamageChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("PlayerDamage", value);
+                    }
                 }
             }
         }
+
+        partial void OnPlayerDamageChanged(int oldValue, int newValue);
 
         private string _gameMessage = default!;
         public string GameMessage
@@ -94,12 +122,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _gameMessage;
             set
             {
-                if (SetProperty(ref _gameMessage, value) && _isInitialized)
+                var oldValue = _gameMessage;
+                if (SetProperty(ref _gameMessage, value))
                 {
-                    _ = UpdatePropertyValueAsync("GameMessage", value);
+                    OnGameMessageChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("GameMessage", value);
+                    }
                 }
             }
         }
+
+        partial void OnGameMessageChanged(string oldValue, string newValue);
 
         private bool _isMonsterDefeated = default!;
         public bool IsMonsterDefeated
@@ -107,12 +142,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _isMonsterDefeated;
             set
             {
-                if (SetProperty(ref _isMonsterDefeated, value) && _isInitialized)
+                var oldValue = _isMonsterDefeated;
+                if (SetProperty(ref _isMonsterDefeated, value))
                 {
-                    _ = UpdatePropertyValueAsync("IsMonsterDefeated", value);
+                    OnIsMonsterDefeatedChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("IsMonsterDefeated", value);
+                    }
                 }
             }
         }
+
+        partial void OnIsMonsterDefeatedChanged(bool oldValue, bool newValue);
 
         private bool _canUseSpecialAttack = default!;
         public bool CanUseSpecialAttack
@@ -120,12 +162,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _canUseSpecialAttack;
             set
             {
-                if (SetProperty(ref _canUseSpecialAttack, value) && _isInitialized)
+                var oldValue = _canUseSpecialAttack;
+                if (SetProperty(ref _canUseSpecialAttack, value))
                 {
-                    _ = UpdatePropertyValueAsync("CanUseSpecialAttack", value);
+                    OnCanUseSpecialAttackChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("CanUseSpecialAttack", value);
+                    }
                 }
             }
         }
+
+        partial void OnCanUseSpecialAttackChanged(bool oldValue, bool newValue);
 
         private bool _isSpecialAttackOnCooldown = default!;
         public bool IsSpecialAttackOnCooldown
@@ -133,12 +182,19 @@ namespace MonsterClicker.ViewModels.RemoteClients
             get => _isSpecialAttackOnCooldown;
             set
             {
-                if (SetProperty(ref _isSpecialAttackOnCooldown, value) && _isInitialized)
+                var oldValue = _isSpecialAttackOnCooldown;
+                if (SetProperty(ref _isSpecialAttackOnCooldown, value))
                 {
-                    _ = UpdatePropertyValueAsync("IsSpecialAttackOnCooldown", value);
+                    OnIsSpecialAttackOnCooldownChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("IsSpecialAttackOnCooldown", value);
+                    }
                 }
             }
         }
+
+        partial void OnIsSpecialAttackOnCooldownChanged(bool oldValue, bool newValue);
 
         public IRelayCommand AttackMonsterCommand { get; }
         public IAsyncRelayCommand SpecialAttackCommand { get; }

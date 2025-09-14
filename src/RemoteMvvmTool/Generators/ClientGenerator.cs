@@ -62,24 +62,38 @@ public static class ClientGenerator
             propertyDecls.AppendLine($"        public {prop.TypeString} {prop.Name}");
             propertyDecls.AppendLine("        {");
             propertyDecls.AppendLine($"            get => {backingFieldName};");
-            
-            // For read-only properties, keep private setter
+
+            // For read-only properties or complex/collection types, keep private setter but still invoke partial change handler
             if (prop.IsReadOnly || IsCollectionType(prop) || IsComplexType(prop))
             {
-                propertyDecls.AppendLine($"            private set => SetProperty(ref {backingFieldName}, value);");
+                propertyDecls.AppendLine("            private set");
+                propertyDecls.AppendLine("            {");
+                propertyDecls.AppendLine($"                var oldValue = {backingFieldName};");
+                propertyDecls.AppendLine($"                if (SetProperty(ref {backingFieldName}, value))");
+                propertyDecls.AppendLine("                {");
+                propertyDecls.AppendLine($"                    On{prop.Name}Changed(oldValue, value);");
+                propertyDecls.AppendLine("                }");
+                propertyDecls.AppendLine("            }");
             }
             else
             {
-                // For writable properties, add public setter that triggers server update
+                // For writable properties, add public setter that triggers server update and partial change handler
                 propertyDecls.AppendLine("            set");
                 propertyDecls.AppendLine("            {");
-                propertyDecls.AppendLine($"                if (SetProperty(ref {backingFieldName}, value) && _isInitialized)");
+                propertyDecls.AppendLine($"                var oldValue = {backingFieldName};");
+                propertyDecls.AppendLine($"                if (SetProperty(ref {backingFieldName}, value))");
                 propertyDecls.AppendLine("                {");
-                propertyDecls.AppendLine($"                    _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
+                propertyDecls.AppendLine($"                    On{prop.Name}Changed(oldValue, value);");
+                propertyDecls.AppendLine("                    if (_isInitialized)");
+                propertyDecls.AppendLine("                    {");
+                propertyDecls.AppendLine($"                        _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
+                propertyDecls.AppendLine("                    }");
                 propertyDecls.AppendLine("                }");
                 propertyDecls.AppendLine("            }");
             }
             propertyDecls.AppendLine("        }");
+            propertyDecls.AppendLine();
+            propertyDecls.AppendLine($"        partial void On{prop.Name}Changed({prop.TypeString} oldValue, {prop.TypeString} newValue);");
             propertyDecls.AppendLine();
         }
 
