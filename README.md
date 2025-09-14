@@ -2,6 +2,10 @@
 
 This repository contains the RemoteMvvm tools and sample projects, including a TypeScript demo.
 
+## Partial Change Hooks
+
+Generated clients expose partial `On<Property>Changed` methods so you can react to property updates with custom UI logic.
+
 ## Building the TypeScript Demo
 
 The TypeScript demo is located in `src/demo/TypeScriptMonsterClicker`.
