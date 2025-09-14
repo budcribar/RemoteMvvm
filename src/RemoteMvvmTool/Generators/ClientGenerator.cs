@@ -124,6 +124,64 @@ public static class ClientGenerator
                 commandInits.AppendLine($"            {cmd.CommandPropertyName} = new {commandConcreteType}({remoteExecuteMethodName});");
         }
 
+        // Identify collection properties whose elements notify of changes
+        var collectionsNeedingHandlers = GetCollectionsNeedingEventHandlers(props);
+
+        // Generate nested collection handlers to propagate item changes back to the server
+        var nestedHandlersSb = new StringBuilder();
+        foreach (var collection in collectionsNeedingHandlers)
+        {
+            var propName = collection.Name;
+            var elementTypeName = GetElementTypeName(collection.FullTypeSymbol!);
+            var handlerName = propName + "_RemoteMvvm_CollectionChanged";
+            var itemHandlerName = propName + "_RemoteMvvm_ItemPropertyChanged";
+            nestedHandlersSb.AppendLine($$"""
+        private void {{handlerName}}(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            if (e.NewItems != null)
+            {
+                foreach ({{elementTypeName}} item in e.NewItems)
+                {
+                    item.PropertyChanged += {{itemHandlerName}};
+                    var index = {{propName}}.IndexOf(item);
+                    foreach (var prop in typeof({{elementTypeName}}).GetProperties(System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Public))
+                    {
+                        var val = prop.GetValue(item);
+                        var path = $"{{propName}}[" + index + "]." + prop.Name;
+                        _ = UpdatePropertyValueAsync(path, val);
+                    }
+                }
+            }
+            if (e.OldItems != null)
+                foreach ({{elementTypeName}} item in e.OldItems)
+                    item.PropertyChanged -= {{itemHandlerName}};
+        }
+
+        private void {{itemHandlerName}}(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            var index = {{propName}}.IndexOf(({{elementTypeName}})sender!);
+            var value = sender!.GetType().GetProperty(e.PropertyName!)?.GetValue(sender);
+            var path = $"{{propName}}[" + index + "]." + e.PropertyName;
+            _ = UpdatePropertyValueAsync(path, value);
+        }
+
+""");
+        }
+
+        // Helper to wire handlers after assigning collections
+        string BuildCollectionEventWiring(int indent)
+        {
+            var sb = new StringBuilder();
+            var ind = new string(' ', indent);
+            foreach (var collection in collectionsNeedingHandlers)
+            {
+                var propName = collection.Name;
+                sb.AppendLine($"{ind}{propName}.CollectionChanged += {propName}_RemoteMvvm_CollectionChanged;");
+                sb.AppendLine($"{ind}foreach (var item in {propName}) item.PropertyChanged += {propName}_RemoteMvvm_ItemPropertyChanged;");
+            }
+            return sb.ToString();
+        }
+
         string KeyFromProto(string expr, ITypeSymbol type)
         {
             if (type.TypeKind == TypeKind.Enum || type.TypeKind == TypeKind.Error)
@@ -370,8 +428,8 @@ public static class ClientGenerator
             return psb.ToString();
         }
 
-        var assignmentsPing = BuildPropertyAssignments(32);
-        var assignmentsInit = BuildPropertyAssignments(16);
+        var assignmentsPing = BuildPropertyAssignments(32) + BuildCollectionEventWiring(32);
+        var assignmentsInit = BuildPropertyAssignments(16) + BuildCollectionEventWiring(16);
 
         var commandMethods = new StringBuilder();
         foreach (var cmd in cmds)
@@ -413,6 +471,9 @@ public static class ClientGenerator
             commandMethods.AppendLine();
         }
 
+        // Prepend nested collection handlers to the method list
+        commandMethods.Insert(0, nestedHandlersSb.ToString());
+
         var result = GeneratorHelpers.ReplacePlaceholders(template, new Dictionary<string, string>
         {
             ["<<AUTO_GENERATED_HEADER>>"] = headerSb.ToString().TrimEnd(),
@@ -433,11 +494,46 @@ public static class ClientGenerator
         return result;
     }
 
+    private static List<PropertyInfo> GetCollectionsNeedingEventHandlers(List<PropertyInfo> properties)
+    {
+        return properties
+            .Where(p => p.FullTypeSymbol != null && IsObservableCollectionOfNotifyingElements(p.FullTypeSymbol!))
+            .GroupBy(p => p.Name)
+            .Select(g => g.First())
+            .ToList();
+    }
+
+    private static bool IsObservableCollectionOfNotifyingElements(ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol is not INamedTypeSymbol namedType) return false;
+        if (!namedType.IsGenericType) return false;
+        var genericTypeDefinition = namedType.ConstructedFrom.ToDisplayString();
+        if (genericTypeDefinition != "System.Collections.ObjectModel.ObservableCollection<T>") return false;
+        var elementType = namedType.TypeArguments[0];
+        return ImplementsINotifyPropertyChanged(elementType);
+    }
+
+    private static bool ImplementsINotifyPropertyChanged(ITypeSymbol typeSymbol)
+    {
+        if (typeSymbol is not INamedTypeSymbol namedType) return false;
+        return namedType.AllInterfaces.Any(i => i.ToDisplayString() == "System.ComponentModel.INotifyPropertyChanged");
+    }
+
+    private static string GetElementTypeName(ITypeSymbol collectionType)
+    {
+        if (collectionType is INamedTypeSymbol namedType && namedType.IsGenericType)
+        {
+            var elementType = namedType.TypeArguments[0];
+            return elementType.ToDisplayString();
+        }
+        return "object";
+    }
+
     private static bool IsCollectionType(PropertyInfo prop)
     {
         var typeString = prop.TypeString.ToLowerInvariant();
-        return typeString.Contains("observablecollection") || 
-               typeString.Contains("list<") || 
+        return typeString.Contains("observablecollection") ||
+               typeString.Contains("list<") ||
                typeString.Contains("dictionary<") || 
                typeString.EndsWith("[]") || 
                typeString.Contains("icollection") || 
