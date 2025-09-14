@@ -92,6 +92,8 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
         sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
         sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
+        sb.AppendLine("                saveBtn.Click += (_, __) => SaveViewModel(vm);");
+        sb.AppendLine("                loadBtn.Click += (_, __) => { LoadViewModel(vm); LoadTree(); };");
         sb.AppendLine();
         sb.AppendLine("                tree.AfterSelect += (_, e) =>");
         sb.AppendLine("                {");
@@ -247,7 +249,40 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("                detailLayout.RowCount = 1;");
         sb.AppendLine("            }");
         sb.AppendLine("        }");
-        
+
+        sb.AppendLine();
+        sb.AppendLine("        private static void SaveViewModel(object vm)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            using var dlg = new SaveFileDialog { Filter = \"ViewModel State (*.bin)|*.bin|All Files (*.*)|*.*\" };");
+        sb.AppendLine("            if (dlg.ShowDialog() == DialogResult.OK)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                try");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    vm.GetType().GetMethod(\"SaveToFile\")?.Invoke(vm, new object[] { dlg.FileName });");
+        sb.AppendLine("                }");
+        sb.AppendLine("                catch (Exception ex)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    MessageBox.Show($\"Error saving view model: {ex.Message}\", \"Save Error\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
+        sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        private static void LoadViewModel(object vm)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            using var dlg = new OpenFileDialog { Filter = \"ViewModel State (*.bin)|*.bin|All Files (*.*)|*.*\" };");
+        sb.AppendLine("            if (dlg.ShowDialog() == DialogResult.OK)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                try");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    vm.GetType().GetMethod(\"LoadFromFile\")?.Invoke(vm, new object[] { dlg.FileName });");
+        sb.AppendLine("                }");
+        sb.AppendLine("                catch (Exception ex)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    MessageBox.Show($\"Error loading view model: {ex.Message}\", \"Load Error\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
+        sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
@@ -260,6 +295,8 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         root.Children.Add(new ButtonComponent("refreshBtn", "Refresh"));
         root.Children.Add(new ButtonComponent("expandBtn", "Expand All"));
         root.Children.Add(new ButtonComponent("collapseBtn", "Collapse"));
+        root.Children.Add(new ButtonComponent("saveBtn", "Save"));
+        root.Children.Add(new ButtonComponent("loadBtn", "Load"));
         return root;
     }
 
