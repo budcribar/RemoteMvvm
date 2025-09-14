@@ -15,8 +15,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.ComponentModel;
-using System.Collections.Specialized;
 using Generated.ViewModels;
 
 namespace MonsterClicker.ViewModels.RemoteClients
@@ -38,108 +36,68 @@ namespace MonsterClicker.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        private string _monsterName = default!;
-        public string MonsterName
+        [ObservableProperty]
+        public partial string MonsterName { get; set; }
+        partial void OnMonsterNameChanged(string value)
         {
-            get => _monsterName;
-            set
-            {
-                if (SetProperty(ref _monsterName, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("MonsterName", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("MonsterName", value);
         }
 
-        private int _monsterMaxHealth = default!;
-        public int MonsterMaxHealth
+        [ObservableProperty]
+        public partial int MonsterMaxHealth { get; set; }
+        partial void OnMonsterMaxHealthChanged(int value)
         {
-            get => _monsterMaxHealth;
-            set
-            {
-                if (SetProperty(ref _monsterMaxHealth, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("MonsterMaxHealth", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("MonsterMaxHealth", value);
         }
 
-        private int _monsterCurrentHealth = default!;
-        public int MonsterCurrentHealth
+        [ObservableProperty]
+        public partial int MonsterCurrentHealth { get; set; }
+        partial void OnMonsterCurrentHealthChanged(int value)
         {
-            get => _monsterCurrentHealth;
-            set
-            {
-                if (SetProperty(ref _monsterCurrentHealth, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("MonsterCurrentHealth", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("MonsterCurrentHealth", value);
         }
 
-        private int _playerDamage = default!;
-        public int PlayerDamage
+        [ObservableProperty]
+        public partial int PlayerDamage { get; set; }
+        partial void OnPlayerDamageChanged(int value)
         {
-            get => _playerDamage;
-            set
-            {
-                if (SetProperty(ref _playerDamage, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("PlayerDamage", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("PlayerDamage", value);
         }
 
-        private string _gameMessage = default!;
-        public string GameMessage
+        [ObservableProperty]
+        public partial string GameMessage { get; set; }
+        partial void OnGameMessageChanged(string value)
         {
-            get => _gameMessage;
-            set
-            {
-                if (SetProperty(ref _gameMessage, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("GameMessage", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("GameMessage", value);
         }
 
-        private bool _isMonsterDefeated = default!;
-        public bool IsMonsterDefeated
+        [ObservableProperty]
+        public partial bool IsMonsterDefeated { get; set; }
+        partial void OnIsMonsterDefeatedChanged(bool value)
         {
-            get => _isMonsterDefeated;
-            set
-            {
-                if (SetProperty(ref _isMonsterDefeated, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("IsMonsterDefeated", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("IsMonsterDefeated", value);
         }
 
-        private bool _canUseSpecialAttack = default!;
-        public bool CanUseSpecialAttack
+        [ObservableProperty]
+        public partial bool CanUseSpecialAttack { get; set; }
+        partial void OnCanUseSpecialAttackChanged(bool value)
         {
-            get => _canUseSpecialAttack;
-            set
-            {
-                if (SetProperty(ref _canUseSpecialAttack, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("CanUseSpecialAttack", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("CanUseSpecialAttack", value);
         }
 
-        private bool _isSpecialAttackOnCooldown = default!;
-        public bool IsSpecialAttackOnCooldown
+        [ObservableProperty]
+        public partial bool IsSpecialAttackOnCooldown { get; set; }
+        partial void OnIsSpecialAttackOnCooldownChanged(bool value)
         {
-            get => _isSpecialAttackOnCooldown;
-            set
-            {
-                if (SetProperty(ref _isSpecialAttackOnCooldown, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("IsSpecialAttackOnCooldown", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("IsSpecialAttackOnCooldown", value);
         }
 
         public IRelayCommand AttackMonsterCommand { get; }
@@ -267,11 +225,6 @@ namespace MonsterClicker.ViewModels.RemoteClients
                             if (i == segments.Length - 1 && remainder.Length == 0)
                             {
                                 list[idx] = newValue;
-                                if (target is GameViewModelRemoteClient rc)
-                                {
-                                    var pathCopy = path;
-                                    rc.AttachLocalPropertyChangedHandlers(list[idx], () => pathCopy);
-                                }
                                 return;
                             }
                             current = list[idx];
@@ -282,11 +235,6 @@ namespace MonsterClicker.ViewModels.RemoteClients
                             if (i == segments.Length - 1 && remainder.Length == 0)
                             {
                                 dict[key] = newValue;
-                                if (target is GameViewModelRemoteClient rc)
-                                {
-                                    var pathCopy = path;
-                                    rc.AttachLocalPropertyChangedHandlers(newValue, () => pathCopy);
-                                }
                                 return;
                             }
                             current = dict[key];
@@ -305,11 +253,6 @@ namespace MonsterClicker.ViewModels.RemoteClients
                     {
                         var prop = current?.GetType().GetProperty(part);
                         prop?.SetValue(current, newValue);
-                        if (target is GameViewModelRemoteClient rc)
-                        {
-                            var pathCopy = path;
-                            rc.AttachLocalPropertyChangedHandlers(newValue, () => pathCopy);
-                        }
                         return;
                     }
                     else
@@ -320,93 +263,6 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 }
 
                 if (current == null) return;
-            }
-        }
-
-        private void AttachLocalPropertyChangedHandlers(object? obj, Func<string> pathProvider)
-        {
-            if (obj == null) return;
-
-            var isRoot = ReferenceEquals(obj, this);
-
-            if (!isRoot && obj is INotifyPropertyChanged inpc)
-            {
-                inpc.PropertyChanged += async (s, e) =>
-                {
-                    var prop = s?.GetType().GetProperty(e.PropertyName);
-                    if (prop == null) return;
-                    var value = prop.GetValue(s);
-                    var basePath = pathProvider();
-                    var path = string.IsNullOrEmpty(basePath) ? e.PropertyName : basePath + "." + e.PropertyName;
-                    OnPropertyChanged(path);
-                    if (_suppressLocalUpdates) return;
-                    await UpdatePropertyValueAsync(path, value);
-                };
-            }
-
-            var type = obj.GetType();
-            if (type.IsValueType || obj is string)
-            {
-                return;
-            }
-
-            if (obj is System.Collections.IList list)
-            {
-                for (int i = 0; i < list.Count; i++)
-                {
-                    var item = list[i];
-                    var currentItem = item;
-                    AttachLocalPropertyChangedHandlers(currentItem, () =>
-                    {
-                        var prefix = pathProvider();
-                        var idx = list.IndexOf(currentItem);
-                        return string.IsNullOrEmpty(prefix) ? $"[{idx}]" : prefix + $"[{idx}]";
-                    });
-                }
-
-                if (obj is INotifyCollectionChanged ncc)
-                {
-                    ncc.CollectionChanged += (_, e) =>
-                    {
-                        if (e.NewItems != null)
-                            foreach (var ni in e.NewItems)
-                                AttachLocalPropertyChangedHandlers(ni, () =>
-                                {
-                                    var prefix = pathProvider();
-                                    var idx = list.IndexOf(ni);
-                                    return string.IsNullOrEmpty(prefix) ? $"[{idx}]" : prefix + $"[{idx}]";
-                                });
-                    };
-                }
-                return;
-            }
-
-            if (obj is System.Collections.IEnumerable enumerable && obj is not string)
-            {
-                int index = 0;
-                foreach (var item in enumerable)
-                {
-                    var captured = index;
-                    AttachLocalPropertyChangedHandlers(item, () =>
-                    {
-                        var prefix = pathProvider();
-                        return string.IsNullOrEmpty(prefix) ? $"[{captured}]" : prefix + $"[{captured}]";
-                    });
-                    index++;
-                }
-                return;
-            }
-
-            foreach (var p in type.GetProperties())
-            {
-                if (p.GetIndexParameters().Length > 0) continue;
-                var val = p.GetValue(obj);
-                var propName = p.Name;
-                AttachLocalPropertyChangedHandlers(val, () =>
-                {
-                    var prefix = pathProvider();
-                    return string.IsNullOrEmpty(prefix) ? propName : prefix + "." + propName;
-                });
             }
         }
 
@@ -478,7 +334,6 @@ namespace MonsterClicker.ViewModels.RemoteClients
                 this.CanUseSpecialAttack = state.CanUseSpecialAttack;
                 this.IsSpecialAttackOnCooldown = state.IsSpecialAttackOnCooldown;
                 _suppressLocalUpdates = false;
-                AttachLocalPropertyChangedHandlers(this, () => string.Empty);
                 _isInitialized = true;
                 Debug.WriteLine("[GameViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);

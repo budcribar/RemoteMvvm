@@ -57,29 +57,17 @@ public static class ClientGenerator
         var propertyDecls = new StringBuilder();
         foreach (var prop in props)
         {
-            string backingFieldName = $"_{GeneratorHelpers.LowercaseFirst(prop.Name)}";
-            propertyDecls.AppendLine($"        private {prop.TypeString} {backingFieldName} = default!;");
-            propertyDecls.AppendLine($"        public {prop.TypeString} {prop.Name}");
-            propertyDecls.AppendLine("        {");
-            propertyDecls.AppendLine($"            get => {backingFieldName};");
-            
-            // For read-only properties, keep private setter
-            if (prop.IsReadOnly || IsCollectionType(prop) || IsComplexType(prop))
+            string setter = (prop.IsReadOnly || IsCollectionType(prop) || IsComplexType(prop)) ? "private set;" : "set;";
+            propertyDecls.AppendLine($"        [ObservableProperty]");
+            propertyDecls.AppendLine($"        public partial {prop.TypeString} {prop.Name} {{ get; {setter} }}");
+            if (!prop.IsReadOnly && !IsCollectionType(prop) && !IsComplexType(prop))
             {
-                propertyDecls.AppendLine($"            private set => SetProperty(ref {backingFieldName}, value);");
+                propertyDecls.AppendLine($"        partial void On{prop.Name}Changed({prop.TypeString} value)");
+                propertyDecls.AppendLine("        {");
+                propertyDecls.AppendLine("            if (_isInitialized && !_suppressLocalUpdates)");
+                propertyDecls.AppendLine($"                _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
+                propertyDecls.AppendLine("        }");
             }
-            else
-            {
-                // For writable properties, add public setter that triggers server update
-                propertyDecls.AppendLine("            set");
-                propertyDecls.AppendLine("            {");
-                propertyDecls.AppendLine($"                if (SetProperty(ref {backingFieldName}, value) && _isInitialized)");
-                propertyDecls.AppendLine("                {");
-                propertyDecls.AppendLine($"                    _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
-                propertyDecls.AppendLine("                }");
-                propertyDecls.AppendLine("            }");
-            }
-            propertyDecls.AppendLine("        }");
             propertyDecls.AppendLine();
         }
 
