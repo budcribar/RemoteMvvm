@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.ComponentModel;
+using System.Collections.Specialized;
 using Generated.ViewModels;
 
 namespace SampleApp.ViewModels.RemoteClients
@@ -190,7 +191,8 @@ namespace SampleApp.ViewModels.RemoteClients
                                 list[idx] = newValue;
                                 if (target is SampleViewModelRemoteClient rc)
                                 {
-                                    rc.AttachLocalPropertyChangedHandlers(list[idx], path);
+                                    var pathCopy = path;
+                                    rc.AttachLocalPropertyChangedHandlers(list[idx], () => pathCopy);
                                 }
                                 return;
                             }
@@ -204,7 +206,8 @@ namespace SampleApp.ViewModels.RemoteClients
                                 dict[key] = newValue;
                                 if (target is SampleViewModelRemoteClient rc)
                                 {
-                                    rc.AttachLocalPropertyChangedHandlers(newValue, path);
+                                    var pathCopy = path;
+                                    rc.AttachLocalPropertyChangedHandlers(newValue, () => pathCopy);
                                 }
                                 return;
                             }
@@ -226,7 +229,8 @@ namespace SampleApp.ViewModels.RemoteClients
                         prop?.SetValue(current, newValue);
                         if (target is SampleViewModelRemoteClient rc)
                         {
-                            rc.AttachLocalPropertyChangedHandlers(newValue, path);
+                            var pathCopy = path;
+                            rc.AttachLocalPropertyChangedHandlers(newValue, () => pathCopy);
                         }
                         return;
                     }
@@ -241,7 +245,7 @@ namespace SampleApp.ViewModels.RemoteClients
             }
         }
 
-        private void AttachLocalPropertyChangedHandlers(object? obj, string prefix)
+        private void AttachLocalPropertyChangedHandlers(object? obj, Func<string> pathProvider)
         {
             if (obj == null) return;
 
@@ -254,7 +258,8 @@ namespace SampleApp.ViewModels.RemoteClients
                     var prop = s?.GetType().GetProperty(e.PropertyName);
                     if (prop == null) return;
                     var value = prop.GetValue(s);
-                    var path = string.IsNullOrEmpty(prefix) ? e.PropertyName : prefix + "." + e.PropertyName;
+                    var basePath = pathProvider();
+                    var path = string.IsNullOrEmpty(basePath) ? e.PropertyName : basePath + "." + e.PropertyName;
                     OnPropertyChanged(path);
                     if (_suppressLocalUpdates) return;
                     await UpdatePropertyValueAsync(path, value);
@@ -267,13 +272,48 @@ namespace SampleApp.ViewModels.RemoteClients
                 return;
             }
 
+            if (obj is System.Collections.IList list)
+            {
+                for (int i = 0; i < list.Count; i++)
+                {
+                    var item = list[i];
+                    var currentItem = item;
+                    AttachLocalPropertyChangedHandlers(currentItem, () =>
+                    {
+                        var prefix = pathProvider();
+                        var idx = list.IndexOf(currentItem);
+                        return string.IsNullOrEmpty(prefix) ? $"[{idx}]" : prefix + $"[{idx}]";
+                    });
+                }
+
+                if (obj is INotifyCollectionChanged ncc)
+                {
+                    ncc.CollectionChanged += (_, e) =>
+                    {
+                        if (e.NewItems != null)
+                            foreach (var ni in e.NewItems)
+                                AttachLocalPropertyChangedHandlers(ni, () =>
+                                {
+                                    var prefix = pathProvider();
+                                    var idx = list.IndexOf(ni);
+                                    return string.IsNullOrEmpty(prefix) ? $"[{idx}]" : prefix + $"[{idx}]";
+                                });
+                    };
+                }
+                return;
+            }
+
             if (obj is System.Collections.IEnumerable enumerable && obj is not string)
             {
                 int index = 0;
                 foreach (var item in enumerable)
                 {
-                    var childPrefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : prefix + $"[{index}]";
-                    AttachLocalPropertyChangedHandlers(item, childPrefix);
+                    var captured = index;
+                    AttachLocalPropertyChangedHandlers(item, () =>
+                    {
+                        var prefix = pathProvider();
+                        return string.IsNullOrEmpty(prefix) ? $"[{captured}]" : prefix + $"[{captured}]";
+                    });
                     index++;
                 }
                 return;
@@ -283,8 +323,12 @@ namespace SampleApp.ViewModels.RemoteClients
             {
                 if (p.GetIndexParameters().Length > 0) continue;
                 var val = p.GetValue(obj);
-                var childPrefix = string.IsNullOrEmpty(prefix) ? p.Name : prefix + "." + p.Name;
-                AttachLocalPropertyChangedHandlers(val, childPrefix);
+                var propName = p.Name;
+                AttachLocalPropertyChangedHandlers(val, () =>
+                {
+                    var prefix = pathProvider();
+                    return string.IsNullOrEmpty(prefix) ? propName : prefix + "." + propName;
+                });
             }
         }
 
@@ -344,7 +388,7 @@ namespace SampleApp.ViewModels.RemoteClients
                 this.Name = state.Name;
                 this.Count = state.Count;
                 _suppressLocalUpdates = false;
-                AttachLocalPropertyChangedHandlers(this, string.Empty);
+                AttachLocalPropertyChangedHandlers(this, () => string.Empty);
                 _isInitialized = true;
                 Debug.WriteLine("[SampleViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
