@@ -87,7 +87,7 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
         sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
         sb.AppendLine("                saveBtn.Click += (_, __) => SaveViewModel(vm);");
-        sb.AppendLine("                loadBtn.Click += (_, __) => { LoadViewModel(vm); LoadTree(); UpdateServerStatus(); };");
+        sb.AppendLine("                loadBtn.Click += (_, __) => { LoadViewModel(vm); LoadTree(); UpdateServerStatus(vm, statusLbl); };");
         sb.AppendLine();
         sb.AppendLine("                tree.AfterSelect += (_, e) =>");
         sb.AppendLine("                {");
@@ -100,6 +100,7 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
 
         sb.AppendLine("                // Load initial tree");
         sb.AppendLine("                LoadTree();");
+        sb.AppendLine("                UpdateServerStatus(vm, statusLbl);");
         sb.AppendLine();
         
         sb.AppendLine("                Application.Run(form);");
@@ -181,6 +182,30 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("                {");
         sb.AppendLine("                    MessageBox.Show($\"Error loading view model: {ex.Message}\", \"Load Error\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
         sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("        }");
+        sb.AppendLine();
+        sb.AppendLine("        private static void UpdateServerStatus(object vm, ToolStripStatusLabel statusLbl)");
+        sb.AppendLine("        {");
+        sb.AppendLine("            try");
+        sb.AppendLine("            {");
+        sb.AppendLine("                statusLbl.Text = \"Server Status: Running\";");
+        sb.AppendLine("                statusLbl.ForeColor = Color.Green;");
+        sb.AppendLine();
+        sb.AppendLine("                var serverOptionsProperty = vm.GetType().GetProperty(\"ServerOptions\");");
+        sb.AppendLine("                if (serverOptionsProperty?.GetValue(vm) is object serverOptions)");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    var portProperty = serverOptions.GetType().GetProperty(\"Port\");");
+        sb.AppendLine("                    if (portProperty?.GetValue(serverOptions) is int port)");
+        sb.AppendLine("                    {");
+        sb.AppendLine("                        statusLbl.Text = $\"Server Status: Running on Port {port}\";");
+        sb.AppendLine("                    }");
+        sb.AppendLine("                }");
+        sb.AppendLine("            }");
+        sb.AppendLine("            catch");
+        sb.AppendLine("            {");
+        sb.AppendLine("                statusLbl.Text = \"Server Status: Unknown\";");
+        sb.AppendLine("                statusLbl.ForeColor = Color.Orange;");
         sb.AppendLine("            }");
         sb.AppendLine("        }");
 
