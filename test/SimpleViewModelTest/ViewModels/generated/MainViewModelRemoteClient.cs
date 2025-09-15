@@ -37,12 +37,21 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        private System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> _devices = default!;
+        private System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> _devices;
         public System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> Devices
         {
             get => _devices;
-            private set => SetProperty(ref _devices, value);
+            private set
+            {
+                var oldValue = _devices;
+                if (SetProperty(ref _devices, value))
+                {
+                    OnDevicesChanged(oldValue, value);
+                }
+            }
         }
+
+        partial void OnDevicesChanged(System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> oldValue, System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo> newValue);
 
         public IRelayCommand<SimpleViewModelTest.ViewModels.DeviceStatus> UpdateStatusCommand { get; }
 
@@ -135,6 +144,75 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
             if (value.Is(Timestamp.Descriptor)) return value.Unpack<Timestamp>().ToDateTime();
             if (value.Is(Google.Protobuf.WellKnownTypes.Duration.Descriptor)) return value.Unpack<Google.Protobuf.WellKnownTypes.Duration>().ToTimeSpan();
             return null;
+        }
+
+        private static void SetValueByPath(object target, string path, object? newValue)
+        {
+            var segments = path.Split('.');
+            object? current = target;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var part = segments[i];
+                int bracket = part.IndexOf('[');
+                if (bracket >= 0)
+                {
+                    var propName = part[..bracket];
+                    var prop = current?.GetType().GetProperty(propName);
+                    current = prop?.GetValue(current);
+                    var remainder = part[bracket..];
+                    while (remainder.StartsWith("["))
+                    {
+                        var end = remainder.IndexOf(']', 1);
+                        if (end < 0) return;
+                        var indexStr = remainder[1..end];
+                        remainder = remainder[(end + 1)..];
+
+                        if (current is System.Collections.IList list && int.TryParse(indexStr, out int idx))
+                        {
+                            if (idx < 0 || idx >= list.Count) return;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
+                            {
+                                list[idx] = newValue;
+                                return;
+                            }
+                            current = list[idx];
+                        }
+                        else if (current is System.Collections.IDictionary dict)
+                        {
+                            var key = indexStr;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
+                            {
+                                dict[key] = newValue;
+                                return;
+                            }
+                            current = dict[key];
+                        }
+                        else
+                        {
+                            return;
+                        }
+
+                        if (current == null) return;
+                    }
+                }
+                else
+                {
+                    if (i == segments.Length - 1)
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        prop?.SetValue(current, newValue);
+                        return;
+                    }
+                    else
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        current = prop?.GetValue(current);
+                    }
+                }
+
+                if (current == null) return;
+            }
         }
 
         private static void SetValueByPath(object target, string path, object? newValue)
@@ -319,7 +397,6 @@ namespace SimpleViewModelTest.ViewModels.RemoteClients
                 _suppressLocalUpdates = true;
                 this.Devices = new System.Collections.Generic.List<SimpleViewModelTest.ViewModels.DeviceInfo>(state.Devices.Select(ProtoStateConverters.FromProto));
                 _suppressLocalUpdates = false;
-                AttachLocalPropertyChangedHandlers(this, string.Empty);
                 _isInitialized = true;
                 Debug.WriteLine("[MainViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);

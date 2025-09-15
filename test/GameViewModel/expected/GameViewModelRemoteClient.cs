@@ -41,72 +41,162 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         partial void OnMonsterNameChanged(string value)
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("MonsterName", value);
+            get => _monsterName;
+            set
+            {
+                var oldValue = _monsterName;
+                if (SetProperty(ref _monsterName, value))
+                {
+                    OnMonsterNameChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("MonsterName", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private int _monsterMaxHealth;
+        partial void OnMonsterNameChanged(string oldValue, string newValue);
 
-        partial void OnMonsterMaxHealthChanged(int value)
+        private int _monsterMaxHealth = default!;
+        public int MonsterMaxHealth
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("MonsterMaxHealth", value);
+            get => _monsterMaxHealth;
+            set
+            {
+                var oldValue = _monsterMaxHealth;
+                if (SetProperty(ref _monsterMaxHealth, value))
+                {
+                    OnMonsterMaxHealthChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("MonsterMaxHealth", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private int _monsterCurrentHealth;
+        partial void OnMonsterMaxHealthChanged(int oldValue, int newValue);
 
-        partial void OnMonsterCurrentHealthChanged(int value)
+        private int _monsterCurrentHealth = default!;
+        public int MonsterCurrentHealth
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("MonsterCurrentHealth", value);
+            get => _monsterCurrentHealth;
+            set
+            {
+                var oldValue = _monsterCurrentHealth;
+                if (SetProperty(ref _monsterCurrentHealth, value))
+                {
+                    OnMonsterCurrentHealthChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("MonsterCurrentHealth", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private int _playerDamage;
+        partial void OnMonsterCurrentHealthChanged(int oldValue, int newValue);
 
-        partial void OnPlayerDamageChanged(int value)
+        private int _playerDamage = default!;
+        public int PlayerDamage
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("PlayerDamage", value);
+            get => _playerDamage;
+            set
+            {
+                var oldValue = _playerDamage;
+                if (SetProperty(ref _playerDamage, value))
+                {
+                    OnPlayerDamageChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("PlayerDamage", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private string _gameMessage;
+        partial void OnPlayerDamageChanged(int oldValue, int newValue);
 
-        partial void OnGameMessageChanged(string value)
+        private string _gameMessage = default!;
+        public string GameMessage
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("GameMessage", value);
+            get => _gameMessage;
+            set
+            {
+                var oldValue = _gameMessage;
+                if (SetProperty(ref _gameMessage, value))
+                {
+                    OnGameMessageChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("GameMessage", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _isMonsterDefeated;
+        partial void OnGameMessageChanged(string oldValue, string newValue);
 
-        partial void OnIsMonsterDefeatedChanged(bool value)
+        private bool _isMonsterDefeated = default!;
+        public bool IsMonsterDefeated
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("IsMonsterDefeated", value);
+            get => _isMonsterDefeated;
+            set
+            {
+                var oldValue = _isMonsterDefeated;
+                if (SetProperty(ref _isMonsterDefeated, value))
+                {
+                    OnIsMonsterDefeatedChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("IsMonsterDefeated", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _canUseSpecialAttack;
+        partial void OnIsMonsterDefeatedChanged(bool oldValue, bool newValue);
 
-        partial void OnCanUseSpecialAttackChanged(bool value)
+        private bool _canUseSpecialAttack = default!;
+        public bool CanUseSpecialAttack
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("CanUseSpecialAttack", value);
+            get => _canUseSpecialAttack;
+            set
+            {
+                var oldValue = _canUseSpecialAttack;
+                if (SetProperty(ref _canUseSpecialAttack, value))
+                {
+                    OnCanUseSpecialAttackChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("CanUseSpecialAttack", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _isSpecialAttackOnCooldown;
+        partial void OnCanUseSpecialAttackChanged(bool oldValue, bool newValue);
 
-        partial void OnIsSpecialAttackOnCooldownChanged(bool value)
+        private bool _isSpecialAttackOnCooldown = default!;
+        public bool IsSpecialAttackOnCooldown
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("IsSpecialAttackOnCooldown", value);
+            get => _isSpecialAttackOnCooldown;
+            set
+            {
+                var oldValue = _isSpecialAttackOnCooldown;
+                if (SetProperty(ref _isSpecialAttackOnCooldown, value))
+                {
+                    OnIsSpecialAttackOnCooldownChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("IsSpecialAttackOnCooldown", value);
+                    }
+                }
+            }
         }
+
+        partial void OnIsSpecialAttackOnCooldownChanged(bool oldValue, bool newValue);
 
         public IRelayCommand AttackMonsterCommand { get; }
         public IAsyncRelayCommand SpecialAttackCommand { get; }

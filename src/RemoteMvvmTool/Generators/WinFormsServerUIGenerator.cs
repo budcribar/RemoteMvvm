@@ -97,12 +97,18 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         // Generate static tree loading logic using precomputed property descriptors
         sb.Append("                " + GenerateFrameworkAgnosticTreeLogic("tree", "vm").Replace("\\n", "\\n                "));
         sb.AppendLine();
-
-        sb.AppendLine("                // Load initial tree");
-        sb.AppendLine("                LoadTree();");
-        sb.AppendLine("                UpdateServerStatus(vm, statusLbl);");
-        sb.AppendLine();
         
+        // Generate property tree loading using compile-time analysis
+        sb.Append("        " + GenerateFrameworkAgnosticTreeLogic("tree", "vm").Replace("\n", "\n        "));
+        sb.AppendLine();
+        sb.AppendLine("            // Load initial tree");
+        sb.AppendLine("            LoadTree();");
+        sb.AppendLine();
+
+        // Generate property change monitoring
+        sb.Append(GeneratePropertyChangeMonitoring());
+        sb.AppendLine();
+
         sb.AppendLine("                Application.Run(form);");
         sb.AppendLine("            }");
         sb.AppendLine("            catch (Exception ex)");
@@ -112,7 +118,6 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("                Console.WriteLine(\"SERVER_ERROR_END\");");
         sb.AppendLine("            }");
         sb.AppendLine("        }");
-
         // Generate property editor method
         sb.AppendLine();
         sb.AppendLine("        private static void ShowServerPropertyEditor(PropertyNodeInfo? nodeInfo, TableLayoutPanel detailLayout, object vm)");

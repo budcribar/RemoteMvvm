@@ -103,19 +103,17 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         // Generate static tree loading logic using precomputed property descriptors
         sb.Append("                " + GenerateFrameworkAgnosticTreeLogic("tree", "vm").Replace("\n", "\n                "));
         sb.AppendLine();
-
-        // Generate try..catch for initial tree load
-        sb.AppendLine("                try");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    LoadTree();");
-        sb.AppendLine("                }");
-        sb.AppendLine("                catch (Exception ex)");
-        sb.AppendLine("                {");
-        sb.AppendLine("                    // Handle any errors during initial load");
-        sb.AppendLine("                    MessageBox.Show($\"Error loading tree: {ex.Message}\", \"Tree Load Error\", MessageBoxButtons.OK, MessageBoxIcon.Error);");
-        sb.AppendLine("                }");
+        // Generate property tree loading using compile-time analysis
+        sb.Append("        " + GenerateFrameworkAgnosticTreeLogic("tree", "vm").Replace("\n", "\n        "));
         sb.AppendLine();
-        
+        sb.AppendLine("            // Load initial tree");
+        sb.AppendLine("            LoadTree();");
+        sb.AppendLine();
+
+        // Generate property change monitoring
+        sb.Append(GeneratePropertyChangeMonitoring());
+        sb.AppendLine();
+
         sb.AppendLine("                Application.Run(form);");
         sb.AppendLine("            }");
         sb.AppendLine("            catch (Exception ex)");
@@ -125,7 +123,6 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("                Console.WriteLine(\"CLIENT_ERROR_END\");");
         sb.AppendLine("            }");
         sb.AppendLine("        }");
-
         // Generate property editor method
         sb.AppendLine();
         sb.AppendLine("        private static void ShowClientPropertyEditor(PropertyNodeInfo? nodeInfo, TableLayoutPanel detailLayout, object vm)");

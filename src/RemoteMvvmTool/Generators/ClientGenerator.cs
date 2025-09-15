@@ -57,31 +57,44 @@ public static class ClientGenerator
         var propertyDecls = new StringBuilder();
         foreach (var prop in props)
         {
-            string fieldName = "_" + char.ToLowerInvariant(prop.Name[0]) + prop.Name.Substring(1);
-            bool isSimple = !IsCollectionType(prop) && !IsComplexType(prop);
+            string backingFieldName = $"_{GeneratorHelpers.LowercaseFirst(prop.Name)}";
+            propertyDecls.AppendLine($"        private {prop.TypeString} {backingFieldName} = default!;");
+            propertyDecls.AppendLine($"        public {prop.TypeString} {prop.Name}");
+            propertyDecls.AppendLine("        {");
+            propertyDecls.AppendLine($"            get => {backingFieldName};");
 
-            if (isSimple && !prop.IsReadOnly)
+            // For read-only properties or complex/collection types, keep private setter but still invoke partial change handler
+            if (prop.IsReadOnly || IsCollectionType(prop) || IsComplexType(prop))
             {
-                propertyDecls.AppendLine($"        [ObservableProperty]");
-                propertyDecls.AppendLine($"        private {prop.TypeString} {fieldName};");
-                propertyDecls.AppendLine();
-                propertyDecls.AppendLine($"        partial void On{prop.Name}Changed({prop.TypeString} value)");
-                propertyDecls.AppendLine("        {");
-                propertyDecls.AppendLine("            if (_isInitialized && !_suppressLocalUpdates)");
-                propertyDecls.AppendLine($"                _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
-                propertyDecls.AppendLine("        }");
-                propertyDecls.AppendLine();
+                propertyDecls.AppendLine("            private set");
+                propertyDecls.AppendLine("            {");
+                propertyDecls.AppendLine($"                var oldValue = {backingFieldName};");
+                propertyDecls.AppendLine($"                if (SetProperty(ref {backingFieldName}, value))");
+                propertyDecls.AppendLine("                {");
+                propertyDecls.AppendLine($"                    On{prop.Name}Changed(oldValue, value);");
+                propertyDecls.AppendLine("                }");
+                propertyDecls.AppendLine("            }");
             }
             else
             {
-                propertyDecls.AppendLine($"        private {prop.TypeString} {fieldName};");
-                propertyDecls.AppendLine($"        public {prop.TypeString} {prop.Name}");
-                propertyDecls.AppendLine("        {");
-                propertyDecls.AppendLine($"            get => {fieldName};");
-                propertyDecls.AppendLine($"            private set => SetProperty(ref {fieldName}, value);");
-                propertyDecls.AppendLine("        }");
-                propertyDecls.AppendLine();
+                // For writable properties, add public setter that triggers server update and partial change handler
+                propertyDecls.AppendLine("            set");
+                propertyDecls.AppendLine("            {");
+                propertyDecls.AppendLine($"                var oldValue = {backingFieldName};");
+                propertyDecls.AppendLine($"                if (SetProperty(ref {backingFieldName}, value))");
+                propertyDecls.AppendLine("                {");
+                propertyDecls.AppendLine($"                    On{prop.Name}Changed(oldValue, value);");
+                propertyDecls.AppendLine("                    if (_isInitialized)");
+                propertyDecls.AppendLine("                    {");
+                propertyDecls.AppendLine($"                        _ = UpdatePropertyValueAsync(\"{prop.Name}\", value);");
+                propertyDecls.AppendLine("                    }");
+                propertyDecls.AppendLine("                }");
+                propertyDecls.AppendLine("            }");
             }
+            propertyDecls.AppendLine("        }");
+            propertyDecls.AppendLine();
+            propertyDecls.AppendLine($"        partial void On{prop.Name}Changed({prop.TypeString} oldValue, {prop.TypeString} newValue);");
+            propertyDecls.AppendLine();
         }
 
         var commandDecls = new StringBuilder();

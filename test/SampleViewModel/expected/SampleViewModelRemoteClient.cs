@@ -41,18 +41,42 @@ namespace SampleApp.ViewModels.RemoteClients
 
         partial void OnNameChanged(string value)
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("Name", value);
+            get => _name;
+            set
+            {
+                var oldValue = _name;
+                if (SetProperty(ref _name, value))
+                {
+                    OnNameChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Name", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private int _count;
+        partial void OnNameChanged(string oldValue, string newValue);
 
-        partial void OnCountChanged(int value)
+        private int _count = default!;
+        public int Count
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("Count", value);
+            get => _count;
+            set
+            {
+                var oldValue = _count;
+                if (SetProperty(ref _count, value))
+                {
+                    OnCountChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Count", value);
+                    }
+                }
+            }
         }
+
+        partial void OnCountChanged(int oldValue, int newValue);
 
         public IRelayCommand IncrementCountCommand { get; }
         public IAsyncRelayCommand<int> DelayedIncrementCommand { get; }

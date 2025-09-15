@@ -41,126 +41,282 @@ namespace HPSystemsTools.RemoteClients
 
         partial void OnShowChanged(bool value)
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("Show", value);
+            get => _show;
+            set
+            {
+                var oldValue = _show;
+                if (SetProperty(ref _show, value))
+                {
+                    OnShowChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Show", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _showSpinner;
+        partial void OnShowChanged(bool oldValue, bool newValue);
 
-        partial void OnShowSpinnerChanged(bool value)
+        private bool _showSpinner = default!;
+        public bool ShowSpinner
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("ShowSpinner", value);
+            get => _showSpinner;
+            set
+            {
+                var oldValue = _showSpinner;
+                if (SetProperty(ref _showSpinner, value))
+                {
+                    OnShowSpinnerChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowSpinner", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private int _clicksToPass;
+        partial void OnShowSpinnerChanged(bool oldValue, bool newValue);
 
-        partial void OnClicksToPassChanged(int value)
+        private int _clicksToPass = default!;
+        public int ClicksToPass
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("ClicksToPass", value);
+            get => _clicksToPass;
+            set
+            {
+                var oldValue = _clicksToPass;
+                if (SetProperty(ref _clicksToPass, value))
+                {
+                    OnClicksToPassChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ClicksToPass", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _is3Btn;
+        partial void OnClicksToPassChanged(int oldValue, int newValue);
 
-        partial void OnIs3BtnChanged(bool value)
+        private bool _is3Btn = default!;
+        public bool Is3Btn
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("Is3Btn", value);
+            get => _is3Btn;
+            set
+            {
+                var oldValue = _is3Btn;
+                if (SetProperty(ref _is3Btn, value))
+                {
+                    OnIs3BtnChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Is3Btn", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private int _testTimeoutSec;
+        partial void OnIs3BtnChanged(bool oldValue, bool newValue);
 
-        partial void OnTestTimeoutSecChanged(int value)
+        private int _testTimeoutSec = default!;
+        public int TestTimeoutSec
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("TestTimeoutSec", value);
+            get => _testTimeoutSec;
+            set
+            {
+                var oldValue = _testTimeoutSec;
+                if (SetProperty(ref _testTimeoutSec, value))
+                {
+                    OnTestTimeoutSecChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("TestTimeoutSec", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private string _instructions;
+        partial void OnTestTimeoutSecChanged(int oldValue, int newValue);
 
-        partial void OnInstructionsChanged(string value)
+        private string _instructions = default!;
+        public string Instructions
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("Instructions", value);
+            get => _instructions;
+            set
+            {
+                var oldValue = _instructions;
+                if (SetProperty(ref _instructions, value))
+                {
+                    OnInstructionsChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("Instructions", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _showCursorTest;
+        partial void OnInstructionsChanged(string oldValue, string newValue);
 
-        partial void OnShowCursorTestChanged(bool value)
+        private bool _showCursorTest = default!;
+        public bool ShowCursorTest
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("ShowCursorTest", value);
+            get => _showCursorTest;
+            set
+            {
+                var oldValue = _showCursorTest;
+                if (SetProperty(ref _showCursorTest, value))
+                {
+                    OnShowCursorTestChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowCursorTest", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _showConfigSelection;
+        partial void OnShowCursorTestChanged(bool oldValue, bool newValue);
 
-        partial void OnShowConfigSelectionChanged(bool value)
+        private bool _showConfigSelection = default!;
+        public bool ShowConfigSelection
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("ShowConfigSelection", value);
+            get => _showConfigSelection;
+            set
+            {
+                var oldValue = _showConfigSelection;
+                if (SetProperty(ref _showConfigSelection, value))
+                {
+                    OnShowConfigSelectionChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowConfigSelection", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _showClickInstructions;
+        partial void OnShowConfigSelectionChanged(bool oldValue, bool newValue);
 
-        partial void OnShowClickInstructionsChanged(bool value)
+        private bool _showClickInstructions = default!;
+        public bool ShowClickInstructions
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("ShowClickInstructions", value);
+            get => _showClickInstructions;
+            set
+            {
+                var oldValue = _showClickInstructions;
+                if (SetProperty(ref _showClickInstructions, value))
+                {
+                    OnShowClickInstructionsChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowClickInstructions", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _showTimer;
+        partial void OnShowClickInstructionsChanged(bool oldValue, bool newValue);
 
-        partial void OnShowTimerChanged(bool value)
+        private bool _showTimer = default!;
+        public bool ShowTimer
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("ShowTimer", value);
+            get => _showTimer;
+            set
+            {
+                var oldValue = _showTimer;
+                if (SetProperty(ref _showTimer, value))
+                {
+                    OnShowTimerChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowTimer", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private bool _showBottom;
+        partial void OnShowTimerChanged(bool oldValue, bool newValue);
 
-        partial void OnShowBottomChanged(bool value)
+        private bool _showBottom = default!;
+        public bool ShowBottom
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("ShowBottom", value);
+            get => _showBottom;
+            set
+            {
+                var oldValue = _showBottom;
+                if (SetProperty(ref _showBottom, value))
+                {
+                    OnShowBottomChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("ShowBottom", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private string _timerText;
+        partial void OnShowBottomChanged(bool oldValue, bool newValue);
 
-        partial void OnTimerTextChanged(string value)
+        private string _timerText = default!;
+        public string TimerText
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("TimerText", value);
+            get => _timerText;
+            set
+            {
+                var oldValue = _timerText;
+                if (SetProperty(ref _timerText, value))
+                {
+                    OnTimerTextChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("TimerText", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private string _selectedDevice;
+        partial void OnTimerTextChanged(string oldValue, string newValue);
 
-        partial void OnSelectedDeviceChanged(string value)
+        private string _selectedDevice = default!;
+        public string SelectedDevice
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("SelectedDevice", value);
+            get => _selectedDevice;
+            set
+            {
+                var oldValue = _selectedDevice;
+                if (SetProperty(ref _selectedDevice, value))
+                {
+                    OnSelectedDeviceChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("SelectedDevice", value);
+                    }
+                }
+            }
         }
 
-        [ObservableProperty]
-        private int _lastClickCount;
+        partial void OnSelectedDeviceChanged(string oldValue, string newValue);
 
-        partial void OnLastClickCountChanged(int value)
+        private int _lastClickCount = default!;
+        public int LastClickCount
         {
-            if (_isInitialized && !_suppressLocalUpdates)
-                _ = UpdatePropertyValueAsync("LastClickCount", value);
+            get => _lastClickCount;
+            set
+            {
+                var oldValue = _lastClickCount;
+                if (SetProperty(ref _lastClickCount, value))
+                {
+                    OnLastClickCountChanged(oldValue, value);
+                    if (_isInitialized)
+                    {
+                        _ = UpdatePropertyValueAsync("LastClickCount", value);
+                    }
+                }
+            }
         }
+
+        partial void OnLastClickCountChanged(int oldValue, int newValue);
 
         public IRelayCommand InitializeCommand { get; }
         public IRelayCommand OnCursorTestCommand { get; }
