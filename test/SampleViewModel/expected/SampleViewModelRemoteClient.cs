@@ -38,6 +38,7 @@ namespace SampleApp.ViewModels.RemoteClients
 
         [ObservableProperty]
         private string _name;
+
         partial void OnNameChanged(string value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -46,6 +47,7 @@ namespace SampleApp.ViewModels.RemoteClients
 
         [ObservableProperty]
         private int _count;
+
         partial void OnCountChanged(int value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
