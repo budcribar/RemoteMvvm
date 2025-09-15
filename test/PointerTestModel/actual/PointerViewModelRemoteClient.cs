@@ -36,186 +36,130 @@ namespace Pointer.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        private bool _show = default!;
-        public bool Show
+        [ObservableProperty]
+        private bool _show;
+
+        partial void OnShowChanged(bool value)
         {
-            get => _show;
-            set
-            {
-                if (SetProperty(ref _show, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("Show", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("Show", value);
         }
 
-        private bool _showSpinner = default!;
-        public bool ShowSpinner
+        [ObservableProperty]
+        private bool _showSpinner;
+
+        partial void OnShowSpinnerChanged(bool value)
         {
-            get => _showSpinner;
-            set
-            {
-                if (SetProperty(ref _showSpinner, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("ShowSpinner", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowSpinner", value);
         }
 
-        private int _clicksToPass = default!;
-        public int ClicksToPass
+        [ObservableProperty]
+        private int _clicksToPass;
+
+        partial void OnClicksToPassChanged(int value)
         {
-            get => _clicksToPass;
-            set
-            {
-                if (SetProperty(ref _clicksToPass, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("ClicksToPass", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ClicksToPass", value);
         }
 
-        private bool _is3Btn = default!;
-        public bool Is3Btn
+        [ObservableProperty]
+        private bool _is3Btn;
+
+        partial void OnIs3BtnChanged(bool value)
         {
-            get => _is3Btn;
-            set
-            {
-                if (SetProperty(ref _is3Btn, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("Is3Btn", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("Is3Btn", value);
         }
 
-        private int _testTimeoutSec = default!;
-        public int TestTimeoutSec
+        [ObservableProperty]
+        private int _testTimeoutSec;
+
+        partial void OnTestTimeoutSecChanged(int value)
         {
-            get => _testTimeoutSec;
-            set
-            {
-                if (SetProperty(ref _testTimeoutSec, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("TestTimeoutSec", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("TestTimeoutSec", value);
         }
 
-        private string _instructions = default!;
-        public string Instructions
+        [ObservableProperty]
+        private string _instructions;
+
+        partial void OnInstructionsChanged(string value)
         {
-            get => _instructions;
-            set
-            {
-                if (SetProperty(ref _instructions, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("Instructions", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("Instructions", value);
         }
 
-        private bool _showCursorTest = default!;
-        public bool ShowCursorTest
+        [ObservableProperty]
+        private bool _showCursorTest;
+
+        partial void OnShowCursorTestChanged(bool value)
         {
-            get => _showCursorTest;
-            set
-            {
-                if (SetProperty(ref _showCursorTest, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("ShowCursorTest", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowCursorTest", value);
         }
 
-        private bool _showConfigSelection = default!;
-        public bool ShowConfigSelection
+        [ObservableProperty]
+        private bool _showConfigSelection;
+
+        partial void OnShowConfigSelectionChanged(bool value)
         {
-            get => _showConfigSelection;
-            set
-            {
-                if (SetProperty(ref _showConfigSelection, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("ShowConfigSelection", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowConfigSelection", value);
         }
 
-        private bool _showClickInstructions = default!;
-        public bool ShowClickInstructions
+        [ObservableProperty]
+        private bool _showClickInstructions;
+
+        partial void OnShowClickInstructionsChanged(bool value)
         {
-            get => _showClickInstructions;
-            set
-            {
-                if (SetProperty(ref _showClickInstructions, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("ShowClickInstructions", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowClickInstructions", value);
         }
 
-        private bool _showTimer = default!;
-        public bool ShowTimer
+        [ObservableProperty]
+        private bool _showTimer;
+
+        partial void OnShowTimerChanged(bool value)
         {
-            get => _showTimer;
-            set
-            {
-                if (SetProperty(ref _showTimer, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("ShowTimer", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowTimer", value);
         }
 
-        private bool _showBottom = default!;
-        public bool ShowBottom
+        [ObservableProperty]
+        private bool _showBottom;
+
+        partial void OnShowBottomChanged(bool value)
         {
-            get => _showBottom;
-            set
-            {
-                if (SetProperty(ref _showBottom, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("ShowBottom", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowBottom", value);
         }
 
-        private string _timerText = default!;
-        public string TimerText
+        [ObservableProperty]
+        private string _timerText;
+
+        partial void OnTimerTextChanged(string value)
         {
-            get => _timerText;
-            set
-            {
-                if (SetProperty(ref _timerText, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("TimerText", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("TimerText", value);
         }
 
-        private string _selectedDevice = default!;
-        public string SelectedDevice
+        [ObservableProperty]
+        private string _selectedDevice;
+
+        partial void OnSelectedDeviceChanged(string value)
         {
-            get => _selectedDevice;
-            set
-            {
-                if (SetProperty(ref _selectedDevice, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("SelectedDevice", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("SelectedDevice", value);
         }
 
-        private int _lastClickCount = default!;
-        public int LastClickCount
+        [ObservableProperty]
+        private int _lastClickCount;
+
+        partial void OnLastClickCountChanged(int value)
         {
-            get => _lastClickCount;
-            set
-            {
-                if (SetProperty(ref _lastClickCount, value) && _isInitialized)
-                {
-                    _ = UpdatePropertyValueAsync("LastClickCount", value);
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("LastClickCount", value);
         }
 
         public IRelayCommand InitializeCommand { get; }
@@ -309,6 +253,75 @@ namespace Pointer.ViewModels.RemoteClients
             };
         }
 
+        private static void SetValueByPath(object target, string path, object? newValue)
+        {
+            var segments = path.Split('.');
+            object? current = target;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var part = segments[i];
+                int bracket = part.IndexOf('[');
+                if (bracket >= 0)
+                {
+                    var propName = part[..bracket];
+                    var prop = current?.GetType().GetProperty(propName);
+                    current = prop?.GetValue(current);
+                    var remainder = part[bracket..];
+                    while (remainder.StartsWith("["))
+                    {
+                        var end = remainder.IndexOf(']', 1);
+                        if (end < 0) return;
+                        var indexStr = remainder[1..end];
+                        remainder = remainder[(end + 1)..];
+
+                        if (current is System.Collections.IList list && int.TryParse(indexStr, out int idx))
+                        {
+                            if (idx < 0 || idx >= list.Count) return;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
+                            {
+                                list[idx] = newValue;
+                                return;
+                            }
+                            current = list[idx];
+                        }
+                        else if (current is System.Collections.IDictionary dict)
+                        {
+                            var key = indexStr;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
+                            {
+                                dict[key] = newValue;
+                                return;
+                            }
+                            current = dict[key];
+                        }
+                        else
+                        {
+                            return;
+                        }
+
+                        if (current == null) return;
+                    }
+                }
+                else
+                {
+                    if (i == segments.Length - 1)
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        prop?.SetValue(current, newValue);
+                        return;
+                    }
+                    else
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        current = prop?.GetValue(current);
+                    }
+                }
+
+                if (current == null) return;
+            }
+        }
+
         private async Task StartPingLoopAsync()
         {
             string lastStatus = ConnectionStatus;
@@ -387,6 +400,7 @@ namespace Pointer.ViewModels.RemoteClients
                 this.TimerText = state.TimerText;
                 this.SelectedDevice = state.SelectedDevice;
                 this.LastClickCount = state.LastClickCount;
+                _suppressLocalUpdates = false;
                 _isInitialized = true;
                 Debug.WriteLine("[PointerViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);

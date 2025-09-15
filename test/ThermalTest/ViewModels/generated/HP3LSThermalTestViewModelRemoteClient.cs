@@ -36,7 +36,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        private string _instructions = default!;
+        private string _instructions;
         public string Instructions
         {
             get => _instructions;
@@ -50,69 +50,34 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             }
         }
 
-        partial void OnInstructionsChanged(string oldValue, string newValue);
+        [ObservableProperty]
+        private int _cpuTemperatureThreshold;
 
-        private int _cpuTemperatureThreshold = default!;
-        public int CpuTemperatureThreshold
+        partial void OnCpuTemperatureThresholdChanged(int value)
         {
-            get => _cpuTemperatureThreshold;
-            set
-            {
-                var oldValue = _cpuTemperatureThreshold;
-                if (SetProperty(ref _cpuTemperatureThreshold, value))
-                {
-                    OnCpuTemperatureThresholdChanged(oldValue, value);
-                    if (_isInitialized)
-                    {
-                        _ = UpdatePropertyValueAsync("CpuTemperatureThreshold", value);
-                    }
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("CpuTemperatureThreshold", value);
         }
 
-        partial void OnCpuTemperatureThresholdChanged(int oldValue, int newValue);
+        [ObservableProperty]
+        private int _cpuLoadThreshold;
 
-        private int _cpuLoadThreshold = default!;
-        public int CpuLoadThreshold
+        partial void OnCpuLoadThresholdChanged(int value)
         {
-            get => _cpuLoadThreshold;
-            set
-            {
-                var oldValue = _cpuLoadThreshold;
-                if (SetProperty(ref _cpuLoadThreshold, value))
-                {
-                    OnCpuLoadThresholdChanged(oldValue, value);
-                    if (_isInitialized)
-                    {
-                        _ = UpdatePropertyValueAsync("CpuLoadThreshold", value);
-                    }
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("CpuLoadThreshold", value);
         }
 
-        partial void OnCpuLoadThresholdChanged(int oldValue, int newValue);
+        [ObservableProperty]
+        private int _cpuLoadTimeSpan;
 
-        private int _cpuLoadTimeSpan = default!;
-        public int CpuLoadTimeSpan
+        partial void OnCpuLoadTimeSpanChanged(int value)
         {
-            get => _cpuLoadTimeSpan;
-            set
-            {
-                var oldValue = _cpuLoadTimeSpan;
-                if (SetProperty(ref _cpuLoadTimeSpan, value))
-                {
-                    OnCpuLoadTimeSpanChanged(oldValue, value);
-                    if (_isInitialized)
-                    {
-                        _ = UpdatePropertyValueAsync("CpuLoadTimeSpan", value);
-                    }
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("CpuLoadTimeSpan", value);
         }
 
-        partial void OnCpuLoadTimeSpanChanged(int oldValue, int newValue);
-
-        private HPSystemsTools.ViewModels.ZoneCollection _zones = default!;
+        private HPSystemsTools.ViewModels.ZoneCollection _zones;
         public HPSystemsTools.ViewModels.ZoneCollection Zones
         {
             get => _zones;
@@ -126,9 +91,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             }
         }
 
-        partial void OnZonesChanged(HPSystemsTools.ViewModels.ZoneCollection oldValue, HPSystemsTools.ViewModels.ZoneCollection newValue);
-
-        private HPSystemsTools.Models.TestSettingsModel _testSettings = default!;
+        private HPSystemsTools.Models.TestSettingsModel _testSettings;
         public HPSystemsTools.Models.TestSettingsModel TestSettings
         {
             get => _testSettings;
@@ -142,44 +105,22 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             }
         }
 
-        partial void OnTestSettingsChanged(HPSystemsTools.Models.TestSettingsModel oldValue, HPSystemsTools.Models.TestSettingsModel newValue);
+        [ObservableProperty]
+        private bool _showDescription;
 
-        private bool _showDescription = default!;
-        public bool ShowDescription
+        partial void OnShowDescriptionChanged(bool value)
         {
-            get => _showDescription;
-            set
-            {
-                var oldValue = _showDescription;
-                if (SetProperty(ref _showDescription, value))
-                {
-                    OnShowDescriptionChanged(oldValue, value);
-                    if (_isInitialized)
-                    {
-                        _ = UpdatePropertyValueAsync("ShowDescription", value);
-                    }
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowDescription", value);
         }
 
-        partial void OnShowDescriptionChanged(bool oldValue, bool newValue);
+        [ObservableProperty]
+        private bool _showReadme;
 
-        private bool _showReadme = default!;
-        public bool ShowReadme
+        partial void OnShowReadmeChanged(bool value)
         {
-            get => _showReadme;
-            set
-            {
-                var oldValue = _showReadme;
-                if (SetProperty(ref _showReadme, value))
-                {
-                    OnShowReadmeChanged(oldValue, value);
-                    if (_isInitialized)
-                    {
-                        _ = UpdatePropertyValueAsync("ShowReadme", value);
-                    }
-                }
-            }
+            if (_isInitialized && !_suppressLocalUpdates)
+                _ = UpdatePropertyValueAsync("ShowReadme", value);
         }
 
         partial void OnShowReadmeChanged(bool oldValue, bool newValue);
@@ -261,6 +202,75 @@ namespace HPSystemsTools.ViewModels.RemoteClients
             };
         }
 
+        private static void SetValueByPath(object target, string path, object? newValue)
+        {
+            var segments = path.Split('.');
+            object? current = target;
+
+            for (int i = 0; i < segments.Length; i++)
+            {
+                var part = segments[i];
+                int bracket = part.IndexOf('[');
+                if (bracket >= 0)
+                {
+                    var propName = part[..bracket];
+                    var prop = current?.GetType().GetProperty(propName);
+                    current = prop?.GetValue(current);
+                    var remainder = part[bracket..];
+                    while (remainder.StartsWith("["))
+                    {
+                        var end = remainder.IndexOf(']', 1);
+                        if (end < 0) return;
+                        var indexStr = remainder[1..end];
+                        remainder = remainder[(end + 1)..];
+
+                        if (current is System.Collections.IList list && int.TryParse(indexStr, out int idx))
+                        {
+                            if (idx < 0 || idx >= list.Count) return;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
+                            {
+                                list[idx] = newValue;
+                                return;
+                            }
+                            current = list[idx];
+                        }
+                        else if (current is System.Collections.IDictionary dict)
+                        {
+                            var key = indexStr;
+                            if (i == segments.Length - 1 && remainder.Length == 0)
+                            {
+                                dict[key] = newValue;
+                                return;
+                            }
+                            current = dict[key];
+                        }
+                        else
+                        {
+                            return;
+                        }
+
+                        if (current == null) return;
+                    }
+                }
+                else
+                {
+                    if (i == segments.Length - 1)
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        prop?.SetValue(current, newValue);
+                        return;
+                    }
+                    else
+                    {
+                        var prop = current?.GetType().GetProperty(part);
+                        current = prop?.GetValue(current);
+                    }
+                }
+
+                if (current == null) return;
+            }
+        }
+
         private async Task StartPingLoopAsync()
         {
             string lastStatus = ConnectionStatus;
@@ -329,6 +339,7 @@ namespace HPSystemsTools.ViewModels.RemoteClients
                 this.TestSettings = ProtoStateConverters.FromProto(state.TestSettings);
                 this.ShowDescription = state.ShowDescription;
                 this.ShowReadme = state.ShowReadme;
+                _suppressLocalUpdates = false;
                 _isInitialized = true;
                 Debug.WriteLine("[HP3LSThermalTestViewModelRemoteClient] Initialized successfully.");
                 StartListeningToPropertyChanges(_cts.Token);
