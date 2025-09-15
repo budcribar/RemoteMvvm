@@ -80,6 +80,34 @@ public abstract class UIGeneratorBase
     }
 
     /// <summary>
+    /// Indents a multi-line code block with the provided indent while preserving line breaks.
+    /// </summary>
+    /// <param name="code">Code that should be indented.</param>
+    /// <param name="indent">Indentation prefix applied to every non-empty line.</param>
+    /// <returns>Indented code block.</returns>
+    protected static string IndentCodeBlock(string code, string indent)
+    {
+        var normalized = code.Replace("\r\n", "\n");
+        var lines = normalized.Split('\n');
+        var sb = new StringBuilder();
+
+        foreach (var line in lines)
+        {
+            if (line.Length == 0)
+            {
+                sb.AppendLine();
+            }
+            else
+            {
+                sb.Append(indent);
+                sb.AppendLine(line);
+            }
+        }
+
+        return sb.ToString();
+    }
+
+    /// <summary>
     /// Generates framework-agnostic tree loading logic that can be converted to specific frameworks
     /// </summary>
     protected string GenerateFrameworkAgnosticTreeLogic(string treeVariableName, string viewModelVariableName)
