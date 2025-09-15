@@ -234,6 +234,26 @@ Both clients start a long-running subscription that listens for `PropertyChangeN
 4. A successful response returns `Success = true` plus the `OldValue` ("1 Remote Way"). Clients receive immediate confirmation to provide optimistic UI feedback.
 5. The server raises `PropertyChanged` on the real view model. A change notification is dispatched to all subscribers except the originator, which already reflects the new value.
 
+### Collection example: adjusting an order total
+The same flow works for collection elements. Assume the first `Order` in `TestModel.Orders` has `Id = "A100"` and `Total = 120.00m`.
+
+1. The client-side proxy tracks each collection entry by index. When a user edits the **Total** field, the generated setter derives a property path such as `Orders[0].Total`.
+2. The proxy extracts the top-level property (`Orders`) and sends an update that includes the originating client identifier:
+   ```csharp
+   var request = new UpdatePropertyValueRequest
+   {
+       PropertyName = "Orders",
+       PropertyPath = "Orders[0].Total",
+       ClientId = _clientId,
+       NewValue = Any.Pack(new StringValue { Value = "180.50" }) // decimals travel as strings
+   };
+   await _grpcClient.UpdatePropertyValueAsync(request);
+   ```
+3. The server splits `PropertyPath`, locates the `Orders` collection, parses the index (`0`), and finds the `Total` property on the selected `Order` instance. `ConvertAnyToTargetType` recognizes the `StringValue` payload and converts it back to `decimal`.
+4. Because this is a leaf element update inside a collection, `HandleSetOperation` writes the value into the existing order object rather than treating it as a list replacement. The previous total is saved in `response.OldValue` for change history and returned to the caller.
+5. The order entries do not implement `INotifyPropertyChanged`, so the server manually enqueues a `PropertyChangeNotification` with `PropertyName = "Orders"`, `PropertyPath = "Orders[0].Total"`, and `ChangeType = "nested"`. Subscribers reuse the path to call `SetValueByPath` and update their local proxies.
+6. Every connected client except the originator receives the notification and refreshes the UI. The originating client already shows the new value and simply confirms the optimistic update against the successful response.
+
 ### Server → client flow
 1. The server updates `Settings["Theme"] = "Dark"` in response to an admin command.
 2. The `PropertyChanged` event causes the update dispatcher to enqueue a `PropertyChangeNotification`:
