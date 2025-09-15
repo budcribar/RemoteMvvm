@@ -258,7 +258,11 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("            {");
         sb.AppendLine("                try");
         sb.AppendLine("                {");
-        sb.AppendLine("                    vm.GetType().GetMethod(\"SaveToFile\")?.Invoke(vm, new object[] { dlg.FileName });");
+        sb.AppendLine("                    var method = vm.GetType().GetMethod(\"SaveToFile\");");
+        sb.AppendLine("                    if (method != null)");
+        sb.AppendLine("                        method.Invoke(vm, new object[] { dlg.FileName });");
+        sb.AppendLine("                    else");
+        sb.AppendLine("                        MessageBox.Show(\"SaveToFile method not found on view model\", \"Save Error\", MessageBoxButtons.OK, MessageBoxIcon.Warning);");
         sb.AppendLine("                }");
         sb.AppendLine("                catch (Exception ex)");
         sb.AppendLine("                {");
@@ -274,7 +278,11 @@ public class WinFormsClientUIGenerator : UIGeneratorBase
         sb.AppendLine("            {");
         sb.AppendLine("                try");
         sb.AppendLine("                {");
-        sb.AppendLine("                    vm.GetType().GetMethod(\"LoadFromFile\")?.Invoke(vm, new object[] { dlg.FileName });");
+        sb.AppendLine("                    var method = vm.GetType().GetMethod(\"LoadFromFile\");");
+        sb.AppendLine("                    if (method != null)");
+        sb.AppendLine("                        method.Invoke(vm, new object[] { dlg.FileName });");
+        sb.AppendLine("                    else");
+        sb.AppendLine("                        MessageBox.Show(\"LoadFromFile method not found on view model\", \"Load Error\", MessageBoxButtons.OK, MessageBoxIcon.Warning);");
         sb.AppendLine("                }");
         sb.AppendLine("                catch (Exception ex)");
         sb.AppendLine("                {");
