@@ -34,9 +34,10 @@ public class WinFormsUITranslator : IUITranslator
                         parent = name;
                     }
 
-                    foreach (var child in container.Children.Where(c => c is not TreeViewComponent))
-                        Translate(child, sb, indent, parent);
+                    // Add tree views first so they dock correctly beneath top-docked controls
                     foreach (var child in container.Children.Where(c => c is TreeViewComponent))
+                        Translate(child, sb, indent, parent);
+                    foreach (var child in container.Children.Where(c => c is not TreeViewComponent))
                         Translate(child, sb, indent, parent);
                 }
                 else
