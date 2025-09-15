@@ -36,10 +36,8 @@ namespace HPSystemsTools.RemoteClients
             private set => SetProperty(ref _connectionStatus, value);
         }
 
-        [ObservableProperty]
-        private bool _show;
-
-        partial void OnShowChanged(bool value)
+        private bool _show = default!;
+        public bool Show
         {
             get => _show;
             set
