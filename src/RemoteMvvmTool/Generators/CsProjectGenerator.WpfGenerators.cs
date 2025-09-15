@@ -100,73 +100,6 @@ public static partial class CsProjectGenerator
         sb.AppendLine("        </GroupBox>");
         sb.AppendLine();
         
-        // Generate key properties display using legacy property analysis
-        var keyProperties = analysis.SimpleProperties.Concat(analysis.BooleanProperties)
-            .Take(6);
-            
-        if (keyProperties.Any())
-        {
-            sb.AppendLine("        <GroupBox Header=\"Key Properties\" Margin=\"0,0,0,15\">");
-            sb.AppendLine("          <StackPanel>");
-            
-            foreach (var prop in keyProperties)
-            {
-                var metadata = analysis.GetMetadata(prop);
-                
-                if (analysis.BooleanProperties.Contains(prop))
-                {
-                    if (prop.IsReadOnly)
-                    {
-                        sb.AppendLine($"          <TextBlock Text=\"{prop.Name}: {{Binding {metadata.SafePropertyAccess}, Mode=OneWay}}\" Margin=\"0,2,0,2\"/>");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"          <CheckBox Content=\"{prop.Name}\" IsChecked=\"{{Binding {metadata.SafePropertyAccess}, Mode=TwoWay}}\" Margin=\"0,2,0,2\"/>");
-                    }
-                }
-                else
-                {
-                    if (prop.IsReadOnly)
-                    {
-                        sb.AppendLine($"          <TextBlock Text=\"{prop.Name}\" FontWeight=\"SemiBold\" Margin=\"0,6,0,0\"/>");
-                        sb.AppendLine($"          <TextBlock Text=\"{{Binding {metadata.SafePropertyAccess}, Mode=OneWay}}\" Margin=\"0,0,0,4\" TextWrapping=\"Wrap\"/>");
-                    }
-                    else
-                    {
-                        sb.AppendLine($"          <TextBlock Text=\"{prop.Name}\" FontWeight=\"SemiBold\" Margin=\"0,6,0,0\"/>");
-                        sb.AppendLine($"          <TextBox Text=\"{{Binding {metadata.SafePropertyAccess}, Mode=TwoWay}}\" Margin=\"0,0,0,4\"/>");
-                    }
-                }
-            }
-            
-            sb.AppendLine("          </StackPanel>");
-            sb.AppendLine("        </GroupBox>");
-        }
-        
-        // Generate collections display using legacy property analysis
-        var collectionProperties = analysis.CollectionProperties.Take(3);
-            
-        foreach (var prop in collectionProperties)
-        {
-            var metadata = analysis.GetMetadata(prop);
-            
-            sb.AppendLine($"        <GroupBox Header=\"{prop.Name}\" Margin=\"0,0,0,15\">");
-            sb.AppendLine($"          <ListBox ItemsSource=\"{{Binding {metadata.SafePropertyAccess}}}\" MaxHeight=\"200\">");
-            sb.AppendLine("            <ListBox.ItemTemplate>");
-            sb.AppendLine("              <DataTemplate>");
-            sb.AppendLine("                <StackPanel Orientation=\"Horizontal\" Margin=\"2\">");
-            
-            // Generate generic property displays for collection items
-            sb.AppendLine("                  <TextBlock Text=\"Item: \" FontWeight=\"SemiBold\"/>");
-            sb.AppendLine("                  <TextBlock Text=\"{Binding}\" Margin=\"0,0,8,0\"/>");
-            
-            sb.AppendLine("                </StackPanel>");
-            sb.AppendLine("              </DataTemplate>");
-            sb.AppendLine("            </ListBox.ItemTemplate>");
-            sb.AppendLine("          </ListBox>");
-            sb.AppendLine("        </GroupBox>");
-        }
-        
         // Commands section if commands exist
         if (cmds.Any())
         {
@@ -460,7 +393,10 @@ namespace GuiClientApp
                                 {
                                     if (itemIndex >= 3) break; // Limit to first 3 items
                                     if (item == null) continue;
-                        
+
+                                    if (item is INotifyPropertyChanged itemInpc)
+                                        SubscribeToPropertyChanges(itemInpc);
+
                                     var itemProperties = item.GetType().GetProperties()
                                         .Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
                                         .Take(5)
@@ -1099,31 +1035,32 @@ namespace ServerApp
                                 foreach (var item in enumerable)
                                 {
                                     if (itemIndex >= 3) break; // Limit to first 3 items
-                                    
-                                    var itemProperties = item?.GetType().GetProperties()
+                                    if (item is null) continue;
+
+                                    if (item is INotifyPropertyChanged itemInpc)
+                                        SubscribeToPropertyChanges(itemInpc);
+
+                                    var itemProperties = item.GetType().GetProperties()
                                         .Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
                                         .Take(5)
                                         .ToList();
-                        
-                                    var itemNode = new TreeViewItem 
-                                    { 
-                                        Header = $"[{itemIndex}] {item?.GetType().Name ?? "null"}",
+
+                                    var itemNode = new TreeViewItem
+                                    {
+                                        Header = $"[{itemIndex}] {item.GetType().Name}",
                                         Tag = new { Property = (System.Reflection.PropertyInfo?)null, Value = item, Object = item }
                                     };
-                        
-                                    if (itemProperties != null)
+
+                                    foreach (var itemProp in itemProperties)
                                     {
-                                        foreach (var itemProp in itemProperties)
+                                        var childItem = CreatePropertyTreeItem(itemProp, item, depth + 1);
+                                        if (childItem != null)
                                         {
-                                            var childItem = CreatePropertyTreeItem(itemProp, item!, depth + 1);
-                                            if (childItem != null)
-                                            {
-                                                itemNode.Items.Add(childItem);
-                                                AttachTreeViewItemEvents(childItem);
-                                            }
+                                            itemNode.Items.Add(childItem);
+                                            AttachTreeViewItemEvents(childItem);
                                         }
                                     }
-                        
+
                                     propItem.Items.Add(itemNode);
                                     AttachTreeViewItemEvents(itemNode);
                                     itemIndex++;

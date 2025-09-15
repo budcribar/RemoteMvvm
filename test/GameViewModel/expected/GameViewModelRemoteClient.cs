@@ -38,6 +38,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private string _monsterName;
+
         partial void OnMonsterNameChanged(string value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -46,6 +47,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private int _monsterMaxHealth;
+
         partial void OnMonsterMaxHealthChanged(int value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -54,6 +56,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private int _monsterCurrentHealth;
+
         partial void OnMonsterCurrentHealthChanged(int value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -62,6 +65,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private int _playerDamage;
+
         partial void OnPlayerDamageChanged(int value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -70,6 +74,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private string _gameMessage;
+
         partial void OnGameMessageChanged(string value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -78,6 +83,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private bool _isMonsterDefeated;
+
         partial void OnIsMonsterDefeatedChanged(bool value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -86,6 +92,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private bool _canUseSpecialAttack;
+
         partial void OnCanUseSpecialAttackChanged(bool value)
         {
             if (_isInitialized && !_suppressLocalUpdates)
@@ -94,6 +101,7 @@ namespace MonsterClicker.ViewModels.RemoteClients
 
         [ObservableProperty]
         private bool _isSpecialAttackOnCooldown;
+
         partial void OnIsSpecialAttackOnCooldownChanged(bool value)
         {
             if (_isInitialized && !_suppressLocalUpdates)

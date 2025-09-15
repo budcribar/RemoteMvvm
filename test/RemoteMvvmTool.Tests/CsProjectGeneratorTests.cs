@@ -244,7 +244,7 @@ namespace TestNamespace
     }
 
     [Fact]
-    public void GenerateWpfMainWindowXaml_HandlesCollections()
+    public void GenerateWpfMainWindowXaml_OmitsCollectionSections()
     {
         var props = new List<PropertyInfo>
         {
@@ -253,18 +253,19 @@ namespace TestNamespace
         };
         var cmds = new List<CommandInfo>();
         string xaml = CsProjectGenerator.GenerateWpfMainWindowXaml("TestApp", "TestRemoteClient", props, cmds);
-        
-        // Should create ListBox for collections
-        Assert.Contains("<ListBox ItemsSource=\"{Binding ZoneList}\"", xaml);
-        Assert.Contains("<ListBox.ItemTemplate>", xaml);
-        Assert.Contains("<DataTemplate>", xaml);
-        
-        // Updated: New approach uses generic {Binding} instead of specific property bindings
-        Assert.Contains("Text=\"{Binding}\"", xaml); // Generic item binding instead of specific Zone/Temperature
-        
-        // Should create TextBox for simple properties  
+
+        // Should not create ListBox for collections
+        Assert.DoesNotContain("<ListBox ItemsSource=\"{Binding ZoneList}\"", xaml);
+
+        // Should still include property details section
+        Assert.Contains("<GroupBox Header=\"Property Details\"", xaml);
+
+        // Should create TextBox for simple properties
         Assert.Contains("{Binding Status, Mode=TwoWay}", xaml);
-        
+
+        // Key Properties section should be omitted
+        Assert.DoesNotContain("Header=\"Key Properties\"", xaml);
+
         // Test server UI generation if enabled
         TestServerUIGenerationIfEnabled("TestApp", "TestService", props, cmds);
     }
