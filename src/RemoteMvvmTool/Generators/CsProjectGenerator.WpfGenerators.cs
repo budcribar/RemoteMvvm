@@ -208,10 +208,11 @@ namespace GuiClientApp
         private readonly object _viewModel;
         private readonly HashSet<object> _visitedObjects = new();
         private readonly HashSet<string> _expandedPaths = new();
+        private readonly HashSet<object> _subscribedObjects = new();
 
-        public MainWindow(object vm) 
-        { 
-            InitializeComponent(); 
+        public MainWindow(object vm)
+        {
+            InitializeComponent();
             DataContext = vm;
             _viewModel = vm;
             
@@ -223,10 +224,7 @@ namespace GuiClientApp
             // Set up property change monitoring - rely on server notifications instead of periodic polling
             if (_viewModel is INotifyPropertyChanged inpc)
             {
-                inpc.PropertyChanged += (_, e) => 
-                {
-                    Dispatcher.BeginInvoke(() => RefreshProperties());
-                };
+                SubscribeToPropertyChanges(inpc);
             }
             
             // Wire up tree selection changed
@@ -234,6 +232,22 @@ namespace GuiClientApp
             
             // Initial load
             Loaded += (_, __) => RefreshProperties();
+        }
+
+        private void SubscribeToPropertyChanges(INotifyPropertyChanged obj)
+        {
+            if (_subscribedObjects.Contains(obj))
+                return;
+
+            _subscribedObjects.Add(obj);
+            obj.PropertyChanged += (_, __) =>
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    RefreshProperties();
+                    UpdatePropertyDetails();
+                });
+            };
         }
 
         private void RefreshProperties()
@@ -394,6 +408,8 @@ namespace GuiClientApp
                 if (depth > 5) return null;
                 
                 var value = prop.GetValue(obj);
+                if (value is INotifyPropertyChanged nestedInpc)
+                    SubscribeToPropertyChanges(nestedInpc);
                 var displayValue = value?.ToString() ?? "<null>";
                 
                 // Cycle detection - prevent infinite recursion
@@ -831,8 +847,9 @@ namespace ServerApp
         private readonly object _viewModel;
         private readonly HashSet<object> _visitedObjects = new();
         private readonly HashSet<string> _expandedPaths = new();
+        private readonly HashSet<object> _subscribedObjects = new();
 
-        public MainWindow(object vm) 
+        public MainWindow(object vm)
         { 
             InitializeComponent(); 
             DataContext = vm;
@@ -846,24 +863,34 @@ namespace ServerApp
             // Set up property change monitoring - rely on server notifications instead of periodic polling
             if (_viewModel is INotifyPropertyChanged inpc)
             {
-                inpc.PropertyChanged += (_, e) => 
-                {
-                    Dispatcher.BeginInvoke(() => 
-                    {
-                        RefreshProperties();
-                        UpdateServerStatus();
-                    });
-                };
+                SubscribeToPropertyChanges(inpc);
             }
             
             // Wire up tree selection changed
             PropertyTreeView.SelectedItemChanged += (_, e) => UpdatePropertyDetails();
             
             // Initial load
-            Loaded += (_, __) => 
+            Loaded += (_, __) =>
             {
                 RefreshProperties();
                 UpdateServerStatus();
+            };
+        }
+
+        private void SubscribeToPropertyChanges(INotifyPropertyChanged obj)
+        {
+            if (_subscribedObjects.Contains(obj))
+                return;
+
+            _subscribedObjects.Add(obj);
+            obj.PropertyChanged += (_, __) =>
+            {
+                Dispatcher.BeginInvoke(() =>
+                {
+                    RefreshProperties();
+                    UpdateServerStatus();
+                    UpdatePropertyDetails();
+                });
             };
         }
 
@@ -1021,6 +1048,8 @@ namespace ServerApp
                 if (depth > 5) return null;
                 
                 var value = prop.GetValue(obj);
+                if (value is INotifyPropertyChanged nestedInpc)
+                    SubscribeToPropertyChanges(nestedInpc);
                 var displayValue = value?.ToString() ?? "<null>";
                 
                 // Cycle detection - prevent infinite recursion
