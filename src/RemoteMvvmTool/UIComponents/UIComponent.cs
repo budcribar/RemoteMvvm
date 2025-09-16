@@ -22,11 +22,13 @@ public abstract class UIComponent
 public class ContainerComponent : UIComponent
 {
     public string ContainerType { get; }
+    public string? CssClass { get; }
 
-    public ContainerComponent(string containerType, string? name = null)
+    public ContainerComponent(string containerType, string? name = null, string? cssClass = null)
         : base(name)
     {
         ContainerType = containerType;
+        CssClass = cssClass;
     }
 }
 
@@ -74,5 +76,38 @@ public class CodeBlockComponent : UIComponent
     public CodeBlockComponent(string code) : base()
     {
         Code = code;
+    }
+}
+
+/// <summary>
+/// Represents a semantic heading element for HTML-centric translators.
+/// </summary>
+public class HeadingComponent : UIComponent
+{
+    public string Text { get; }
+    public int Level { get; }
+
+    public HeadingComponent(string text, int level = 3)
+        : base()
+    {
+        Text = text;
+        Level = level;
+    }
+}
+
+/// <summary>
+/// Represents a lightweight placeholder element such as a div or section that
+/// should be emitted with an explicit tag name and optional CSS class.
+/// </summary>
+public class PlaceholderComponent : UIComponent
+{
+    public string TagName { get; }
+    public string? CssClass { get; }
+
+    public PlaceholderComponent(string tagName, string name, string? cssClass = null)
+        : base(name)
+    {
+        TagName = tagName;
+        CssClass = cssClass;
     }
 }

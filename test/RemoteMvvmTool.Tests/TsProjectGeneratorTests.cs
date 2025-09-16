@@ -93,17 +93,12 @@ public class TsProjectGeneratorTests
             new("DoWork", "DoWorkCommand", new List<ParameterInfo>(), false)
         };
         string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, cmds);
-        Assert.Contains("vm.zoneList.forEach", ts);
-        Assert.Contains("vm.zones.forEach", ts);
-        Assert.Contains("document.createElement('details')", ts);
-        Assert.Contains("Object.entries(vm.testSettings", ts);
-        Assert.Contains("const testSettingsContainer = document.createElement('div');", ts);
-        Assert.Contains("await vm.updatePropertyValueDebounced('ZoneList'", ts);
-        Assert.Contains("await vm.updatePropertyValueDebounced('Zones'", ts);
-        Assert.Contains("await vm.updatePropertyValueDebounced('TestSettings'", ts);
-        Assert.Contains("await vm.doWork", ts);
-        Assert.Contains("querySelector('details[data-root]')", ts);
-        Assert.Contains("querySelectorAll('details[data-index]')", ts);
+        Assert.Contains("function LoadTree", ts);
+        Assert.Contains("createTreeNode", ts);
+        Assert.Contains("setNodeInfo", ts);
+        Assert.Contains("renderPropertyDetails", ts);
+        Assert.Contains("async function initialize()", ts);
+        Assert.DoesNotContain("updatePropertyValueDebounced", ts);
     }
 
     [Fact]
@@ -116,12 +111,11 @@ public class TsProjectGeneratorTests
             new("TestSettings", "TestSettingsModel", null!)
         };
         string html = TsProjectGenerator.GenerateIndexHtml("Vm", props, new List<CommandInfo>());
-        Assert.Contains("<div id='zoneList'></div>", html);
-        Assert.Contains("<div id='zones'></div>", html);
-        Assert.Contains("<div id='testSettings'></div>", html);
-        Assert.Contains("<style>", html);
-        Assert.DoesNotContain("<input id='zoneList'", html);
-        Assert.DoesNotContain("<input id='zones'", html);
+        Assert.Contains("class=\"content-layout\"", html);
+        Assert.Contains("class=\"tree-panel\"", html);
+        Assert.Contains("class=\"details-panel\"", html);
+        Assert.DoesNotContain("<div id='zoneList'", html);
+        Assert.DoesNotContain("<div id='zones'", html);
     }
 
     [Fact]
@@ -132,8 +126,8 @@ public class TsProjectGeneratorTests
             new("Name", "string", null!, true)
         };
         string ts = TsProjectGenerator.GenerateAppTs("Vm", "VmService", props, new List<CommandInfo>());
-        Assert.Contains("textContent = String(vm.name);", ts);
-        Assert.DoesNotContain("updatePropertyValueDebounced('Name'", ts);
+        Assert.Contains("interface PropertyNodeInfo", ts);
+        Assert.DoesNotContain("updatePropertyValueDebounced", ts);
     }
 
     [Fact]
@@ -144,7 +138,8 @@ public class TsProjectGeneratorTests
             new("Name", "string", null!, true)
         };
         string html = TsProjectGenerator.GenerateIndexHtml("Vm", props, new List<CommandInfo>());
-        Assert.Contains("<span id='name'></span>", html);
+        Assert.Contains("class=\"container\"", html);
+        Assert.Contains("class=\"status\"", html);
         Assert.DoesNotContain("<input id='name'", html);
     }
 
