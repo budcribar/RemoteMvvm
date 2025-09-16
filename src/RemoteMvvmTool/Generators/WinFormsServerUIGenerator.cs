@@ -21,7 +21,6 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
     {
         var sb = new StringBuilder();
         sb.AppendLine("using System;");
-        sb.AppendLine("using System.Threading;");
         sb.AppendLine("using PeakSWC.Mvvm.Remote;");
         sb.AppendLine($"using {protoNs};");
         sb.AppendLine("using Generated.ViewModels;");
@@ -42,7 +41,10 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("        public static void Main(string[] args)");
         sb.AppendLine("        {");
         sb.AppendLine("            int port = 50052;");
-        sb.AppendLine("            if (args.Length > 0 && int.TryParse(args[0], out var p)) port = p;");
+        sb.AppendLine("            if (args.Length > 0 && int.TryParse(args[0], out var parsed))");
+        sb.AppendLine("            {");
+        sb.AppendLine("                port = parsed;");
+        sb.AppendLine("            }");
         sb.AppendLine();
         sb.AppendLine("            try");
         sb.AppendLine("            {");
@@ -52,7 +54,7 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("                Console.WriteLine($\"Server ready on port {port}\");");
         sb.AppendLine();
         sb.AppendLine("                Application.EnableVisualStyles();");
-        sb.AppendLine($"                var form = new Form");
+        sb.AppendLine("                var form = new Form");
         sb.AppendLine("                {");
         sb.AppendLine($"                    Text = \"Server GUI - {ProjectName}\",");
         sb.AppendLine("                    Width = 1150,");
@@ -60,210 +62,228 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("                    StartPosition = FormStartPosition.CenterScreen");
         sb.AppendLine("                };");
         sb.AppendLine();
-        
-        // Generate the two-panel layout like WPF
-        sb.AppendLine("                var split = new SplitContainer { Dock = DockStyle.Fill, SplitterDistance = 500 };");
+        sb.AppendLine("                var split = new SplitContainer");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Dock = DockStyle.Fill,");
+        sb.AppendLine("                    SplitterDistance = 480");
+        sb.AppendLine("                };");
         sb.AppendLine("                form.Controls.Add(split);");
         sb.AppendLine();
-        
-        // Generate status strip
         sb.AppendLine("                var statusStrip = new StatusStrip();");
-        sb.AppendLine("                var statusLbl = new ToolStripStatusLabel();");
-        sb.AppendLine("                statusStrip.Items.Add(statusLbl);");
-        sb.AppendLine("                form.Controls.Add(statusStrip);");
+        sb.AppendLine("                var statusLabel = new ToolStripStatusLabel { Text = \"Server Status: Running\" };");
+        sb.AppendLine("                statusStrip.Items.Add(statusLabel);");
         sb.AppendLine("                statusStrip.Dock = DockStyle.Bottom;");
-        sb.AppendLine("                statusLbl.Text = \"Server Status: Running\";");
+        sb.AppendLine("                form.Controls.Add(statusStrip);");
         sb.AppendLine();
-        
-        var uiTranslator = new WinFormsUITranslator();
+        sb.AppendLine("                var tree = new TreeView { Dock = DockStyle.Fill };");
+        sb.AppendLine("                split.Panel1.Controls.Add(tree);");
+        sb.AppendLine();
+        sb.AppendLine("                var treeToolbar = new FlowLayoutPanel");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Dock = DockStyle.Top,");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
+        sb.AppendLine("                    Padding = new Padding(6)");
+        sb.AppendLine("                };");
+        sb.AppendLine("                var refreshBtn = new Button { Text = \"Refresh\" };");
+        sb.AppendLine("                var expandBtn = new Button { Text = \"Expand All\" };");
+        sb.AppendLine("                var collapseBtn = new Button { Text = \"Collapse\" };");
+        sb.AppendLine("                treeToolbar.Controls.AddRange(new Control[] { refreshBtn, expandBtn, collapseBtn });");
+        sb.AppendLine("                split.Panel1.Controls.Add(treeToolbar);");
+        sb.AppendLine();
+        sb.AppendLine("                var detailLayout = new TableLayoutPanel");
+        sb.AppendLine("                {");
+        sb.AppendLine("                    Dock = DockStyle.Fill,");
+        sb.AppendLine("                    ColumnCount = 2,");
+        sb.AppendLine("                    AutoSize = true,");
+        sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
+        sb.AppendLine("                    Padding = new Padding(6)");
+        sb.AppendLine("                };");
+        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));");
+        sb.AppendLine("                detailLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));");
+        sb.AppendLine("                split.Panel2.Controls.Add(detailLayout);");
+        sb.AppendLine();
 
-        // Generate TreeView structure
-        sb.Append(uiTranslator.Translate(GenerateTreeViewStructure(), "                "));
-        sb.AppendLine();
+        if (Commands.Count > 0)
+        {
+            sb.AppendLine("                var commandPanel = new FlowLayoutPanel");
+            sb.AppendLine("                {");
+            sb.AppendLine("                    Dock = DockStyle.Bottom,");
+            sb.AppendLine("                    AutoSize = true,");
+            sb.AppendLine("                    AutoSizeMode = AutoSizeMode.GrowAndShrink,");
+            sb.AppendLine("                    FlowDirection = FlowDirection.LeftToRight,");
+            sb.AppendLine("                    Padding = new Padding(6)");
+            sb.AppendLine("                };");
+            int buttonIndex = 0;
+            foreach (var command in Commands)
+            {
+                var baseName = command.MethodName.EndsWith("Async", StringComparison.Ordinal)
+                    ? command.MethodName[..^"Async".Length]
+                    : command.MethodName;
+                sb.AppendLine($"                var btn{buttonIndex} = new Button {{ Text = \"{baseName}\", AutoSize = true }};");
+                sb.AppendLine($"                btn{buttonIndex}.Enabled = false; // Server UI is read-only for commands");
+                sb.AppendLine($"                commandPanel.Controls.Add(btn{buttonIndex});");
+                buttonIndex++;
+            }
+            sb.AppendLine("                split.Panel2.Controls.Add(commandPanel);");
+            sb.AppendLine();
+        }
+
         sb.AppendLine("                refreshBtn.Click += (_, __) => LoadTree();");
         sb.AppendLine("                expandBtn.Click += (_, __) => tree.ExpandAll();");
         sb.AppendLine("                collapseBtn.Click += (_, __) => tree.CollapseAll();");
-        sb.AppendLine();
-
-        // Generate property details panel
-        sb.Append(uiTranslator.Translate(GeneratePropertyDetailsPanel(), "                "));
         sb.AppendLine();
         sb.AppendLine("                tree.AfterSelect += (_, e) =>");
         sb.AppendLine("                {");
         sb.AppendLine("                    ShowServerPropertyEditor(e.Node?.Tag as PropertyNodeInfo, detailLayout, vm);");
         sb.AppendLine("                };");
         sb.AppendLine();
-
-        // Generate command buttons
-        sb.Append(uiTranslator.Translate(GenerateCommandButtons(), "                "));
-        sb.AppendLine();
-        
-        // Generate hierarchical tree loading using reflection-based approach like WPF
         sb.AppendLine("                // Hierarchical property tree loading like WPF");
-        sb.Append(GenerateReflectionBasedTreeLogic("tree", "vm").Replace("\n", "\n                "));
-        sb.Append(
-            """
-                TreeNode? CreatePropertyTreeNode(System.Reflection.PropertyInfo prop, object obj, int depth, HashSet<object> visitedObjects)
+        sb.AppendLine(Indent(GenerateReflectionBasedTreeLogic("tree", "vm"), "                "));
+        sb.AppendLine(Indent("""
+TreeNode? CreatePropertyTreeNode(System.Reflection.PropertyInfo prop, object obj, int depth, HashSet<object> visitedObjects)
+{
+    try
+    {
+        if (depth > 5) return null;
+
+        var value = prop.GetValue(obj);
+        var displayValue = value?.ToString() ?? "<null>";
+
+        if (value != null && !IsSimpleType(prop.PropertyType))
+        {
+            if (visitedObjects.Contains(value))
+            {
+                var circularNode = new TreeNode($"{prop.Name}: [Circular Reference]");
+                circularNode.Tag = CreatePropertyNodeInfo(prop.Name, value, true, false, false, false, false, false, -1);
+                return circularNode;
+            }
+        }
+
+        bool isCollection = IsCollectionType(prop.PropertyType);
+        if (isCollection && value != null)
+        {
+            var countProp = value.GetType().GetProperty("Count") ?? value.GetType().GetProperty("Length");
+            if (countProp != null)
+            {
+                var count = countProp.GetValue(value);
+                displayValue = $"[{count} items]";
+            }
+        }
+
+        var propNode = new TreeNode($"{prop.Name}: {displayValue}");
+
+        bool isSimple = IsSimpleType(prop.PropertyType);
+        bool isBool = prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?);
+        bool isEnum = prop.PropertyType.IsEnum;
+        bool isComplex = !isSimple && !isCollection && !isBool && !isEnum;
+
+        propNode.Tag = CreatePropertyNodeInfo(prop.Name, value, isSimple, isBool, isEnum, isCollection, isComplex, false, -1);
+
+        if (value != null && !isSimple)
+        {
+            try
+            {
+                visitedObjects.Add(value);
+
+                if (isCollection && value is System.Collections.IEnumerable enumerable)
                 {
-                    try
+                    int itemIndex = 0;
+                    foreach (var item in enumerable)
                     {
-                        // Prevent infinite recursion with depth limit and cycle detection
-                        if (depth > 5) return null;
+                        if (itemIndex >= 3) break;
+                        if (item == null) continue;
 
-                        var value = prop.GetValue(obj);
-                        var displayValue = value?.ToString() ?? "<null>";
+                        var itemProperties = item.GetType().GetProperties()
+                            .Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
+                            .Take(5)
+                            .ToList();
 
-                        // Cycle detection - prevent infinite recursion
-                        if (value != null && !IsSimpleType(prop.PropertyType))
+                        var itemNode = new TreeNode($"[{itemIndex}] {item.GetType().Name}");
+                        itemNode.Tag = CreatePropertyNodeInfo($"[{itemIndex}]", item, false, false, false, false, true, true, itemIndex);
+
+                        foreach (var itemProp in itemProperties)
                         {
-                            if (visitedObjects.Contains(value))
-                            {
-                                var circularNode = new TreeNode($"{prop.Name}: [Circular Reference]");
-                                circularNode.Tag = CreatePropertyNodeInfo(prop.Name, value, true, false, false, false, false, false, -1);
-                                return circularNode;
-                            }
+                            var childNode = CreatePropertyTreeNode(itemProp, item, depth + 1, visitedObjects);
+                            if (childNode != null)
+                                itemNode.Nodes.Add(childNode);
                         }
 
-                        // For collections, show count information
-                        bool isCollection = IsCollectionType(prop.PropertyType);
-                        if (isCollection && value != null)
-                        {
-                            var countProp = value.GetType().GetProperty("Count") ?? value.GetType().GetProperty("Length");
-                            if (countProp != null)
-                            {
-                                var count = countProp.GetValue(value);
-                                displayValue = $"[{count} items]";
-                            }
-                        }
-
-                        var propNode = new TreeNode($"{prop.Name}: {displayValue}");
-
-                        // Create PropertyNodeInfo with appropriate flags
-                        bool isSimple = IsSimpleType(prop.PropertyType);
-                        bool isBool = prop.PropertyType == typeof(bool) || prop.PropertyType == typeof(bool?);
-                        bool isEnum = prop.PropertyType.IsEnum;
-                        bool isComplex = !isSimple && !isCollection && !isBool && !isEnum;
-
-                        propNode.Tag = CreatePropertyNodeInfo(prop.Name, value, isSimple, isBool, isEnum, isCollection, isComplex, false, -1);
-
-                        // For complex objects, try to expand their properties
-                        if (value != null && !isSimple)
-                        {
-                            try
-                            {
-                                // Add to visited objects to prevent cycles
-                                visitedObjects.Add(value);
-
-                                if (isCollection)
-                                {
-                                    // For collections, show first few items
-                                    if (value is System.Collections.IEnumerable enumerable)
-                                    {
-                                        int itemIndex = 0;
-                                        foreach (var item in enumerable)
-                                        {
-                                            if (itemIndex >= 3) break; // Limit to first 3 items
-                                            if (item == null) continue;
-
-                                            var itemProperties = item.GetType().GetProperties()
-                                                .Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
-                                                .Take(5)
-                                                .ToList();
-
-                                            var itemNode = new TreeNode($"[{itemIndex}] {item.GetType().Name}");
-                                            itemNode.Tag = CreatePropertyNodeInfo($"[{itemIndex}]", item, false, false, false, false, true, true, itemIndex);
-
-                                            foreach (var itemProp in itemProperties)
-                                            {
-                                                var childNode = CreatePropertyTreeNode(itemProp, item, depth + 1, visitedObjects);
-                                                if (childNode != null)
-                                                    itemNode.Nodes.Add(childNode);
-                                            }
-
-                                            propNode.Nodes.Add(itemNode);
-                                            itemIndex++;
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    // For other complex objects, show their properties
-                                    var childProperties = value.GetType().GetProperties()
-                                        .Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
-                                        .Take(10) // Limit depth to prevent UI overload
-                                        .ToList();
-
-                                    foreach (var childProp in childProperties)
-                                    {
-                                        var childNode = CreatePropertyTreeNode(childProp, value, depth + 1, visitedObjects);
-                                        if (childNode != null)
-                                            propNode.Nodes.Add(childNode);
-                                    }
-                                }
-
-                                // Remove from visited objects when done
-                                visitedObjects.Remove(value);
-                            }
-                            catch
-                            {
-                                // Ignore child property errors and remove from visited set
-                                if (value != null)
-                                    visitedObjects.Remove(value);
-                            }
-                        }
-
-                        return propNode;
+                        propNode.Nodes.Add(itemNode);
+                        itemIndex++;
                     }
-                    catch
+                }
+                else if (!isCollection)
+                {
+                    var childProperties = value.GetType().GetProperties()
+                        .Where(p => p.CanRead && p.GetIndexParameters().Length == 0)
+                        .Take(10)
+                        .ToList();
+
+                    foreach (var childProp in childProperties)
                     {
-                        return null;
+                        var childNode = CreatePropertyTreeNode(childProp, value, depth + 1, visitedObjects);
+                        if (childNode != null)
+                            propNode.Nodes.Add(childNode);
                     }
                 }
 
-                // Helper methods for type checking
-                bool IsSimpleType(Type type)
-                {
-                    return type.IsPrimitive ||
-                           type == typeof(string) ||
-                           type == typeof(DateTime) ||
-                           type == typeof(decimal) ||
-                           type == typeof(Guid) ||
-                           type.IsEnum ||
-                           (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
-                }
+                visitedObjects.Remove(value);
+            }
+            catch
+            {
+                if (value != null)
+                    visitedObjects.Remove(value);
+            }
+        }
 
-                bool IsCollectionType(Type type)
-                {
-                    return type != typeof(string) &&
-                           typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
-                }
+        return propNode;
+    }
+    catch
+    {
+        return null;
+    }
+}
 
-                PropertyNodeInfo CreatePropertyNodeInfo(string name, object? obj, bool isSimple, bool isBool, bool isEnum, bool isCollection, bool isComplex, bool isCollectionItem, int collectionIndex)
-                {
-                    return new PropertyNodeInfo
-                    {
-                        PropertyName = name,
-                        Object = obj,
-                        IsSimpleProperty = isSimple,
-                        IsBooleanProperty = isBool,
-                        IsEnumProperty = isEnum,
-                        IsCollectionProperty = isCollection,
-                        IsComplexProperty = isComplex,
-                        IsCollectionItem = isCollectionItem,
-                        CollectionIndex = collectionIndex
-                    };
-                }
+bool IsSimpleType(Type type)
+{
+    return type.IsPrimitive ||
+           type == typeof(string) ||
+           type == typeof(DateTime) ||
+           type == typeof(decimal) ||
+           type == typeof(Guid) ||
+           type.IsEnum ||
+           (type.IsGenericType && type.GetGenericTypeDefinition() == typeof(Nullable<>));
+}
 
-        """.Replace("\n", "\n                "));
+bool IsCollectionType(Type type)
+{
+    return type != typeof(string) &&
+           typeof(System.Collections.IEnumerable).IsAssignableFrom(type);
+}
+
+PropertyNodeInfo CreatePropertyNodeInfo(string name, object? obj, bool isSimple, bool isBool, bool isEnum, bool isCollection, bool isComplex, bool isCollectionItem, int collectionIndex)
+{
+    return new PropertyNodeInfo
+    {
+        PropertyName = name,
+        Object = obj,
+        IsSimpleProperty = isSimple,
+        IsBooleanProperty = isBool,
+        IsEnumProperty = isEnum,
+        IsCollectionProperty = isCollection,
+        IsComplexProperty = isComplex,
+        IsCollectionItem = isCollectionItem,
+        CollectionIndex = collectionIndex
+    };
+}
+""", "                "));
         sb.AppendLine();
         sb.AppendLine("                // Load initial tree");
         sb.AppendLine("                LoadTree();");
         sb.AppendLine();
-        
-        // Generate property change monitoring
         sb.Append(GeneratePropertyChangeMonitoring());
         sb.AppendLine();
-        
         sb.AppendLine("                Application.Run(form);");
         sb.AppendLine("            }");
         sb.AppendLine("            catch (Exception ex)");
@@ -273,22 +293,20 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("                Console.WriteLine(\"SERVER_ERROR_END\");");
         sb.AppendLine("            }");
         sb.AppendLine("        }");
-
-        // Generate property editor method
         sb.AppendLine();
         sb.AppendLine("        private static void ShowServerPropertyEditor(PropertyNodeInfo? nodeInfo, TableLayoutPanel detailLayout, object vm)");
         sb.AppendLine("        {");
-        sb.AppendLine("            // Clear existing controls");
+        sb.AppendLine("            detailLayout.SuspendLayout();");
         sb.AppendLine("            foreach (Control control in detailLayout.Controls.OfType<Control>().ToArray())");
         sb.AppendLine("            {");
         sb.AppendLine("                detailLayout.Controls.Remove(control);");
         sb.AppendLine("                control.Dispose();");
         sb.AppendLine("            }");
+        sb.AppendLine("            detailLayout.RowStyles.Clear();");
         sb.AppendLine("            detailLayout.RowCount = 0;");
         sb.AppendLine();
         sb.AppendLine("            if (nodeInfo?.Object == null)");
         sb.AppendLine("            {");
-        sb.AppendLine("                // Show default \"select property\" message");
         sb.AppendLine("                var selectPrompt = new Label");
         sb.AppendLine("                {");
         sb.AppendLine("                    Text = \"Select a property in the tree to view details\",");
@@ -300,37 +318,78 @@ public class WinFormsServerUIGenerator : UIGeneratorBase
         sb.AppendLine("                detailLayout.Controls.Add(selectPrompt, 0, 0);");
         sb.AppendLine("                detailLayout.SetColumnSpan(selectPrompt, 2);");
         sb.AppendLine("                detailLayout.RowCount = 1;");
+        sb.AppendLine("                detailLayout.ResumeLayout();");
         sb.AppendLine("                return;");
         sb.AppendLine("            }");
         sb.AppendLine();
         sb.AppendLine("            int row = 0;");
         sb.AppendLine();
-        sb.AppendLine("            // Show property name");
-        sb.AppendLine("            var nameLabel = new Label { Text = \"Property:\", AutoSize = true, Font = new Font(\"Segoe UI\", 9, FontStyle.Bold) };");
-        sb.AppendLine("            var nameValue = new Label { Text = nodeInfo.PropertyName, AutoSize = true };");
-        sb.AppendLine("            detailLayout.Controls.Add(nameLabel, 0, row);");
-        sb.AppendLine("            detailLayout.Controls.Add(nameValue, 1, row);");
-        sb.AppendLine("            row++;");
+        sb.AppendLine("            void AddRow(Control label, Control value)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                label.Margin = new Padding(0, 0, 6, 6);");
+        sb.AppendLine("                value.Margin = new Padding(0, 0, 0, 6);");
+        sb.AppendLine("                detailLayout.Controls.Add(label, 0, row);");
+        sb.AppendLine("                detailLayout.Controls.Add(value, 1, row);");
+        sb.AppendLine("                detailLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize));");
+        sb.AppendLine("                row++;");
+        sb.AppendLine("            }");
         sb.AppendLine();
-        sb.AppendLine("            // Show property type info");
-        sb.AppendLine("            var typeLabel = new Label { Text = \"Type:\", AutoSize = true };");
-        sb.AppendLine("            var typeInfo = \"Unknown\";");
-        sb.AppendLine("            if (nodeInfo.IsSimpleProperty) typeInfo = \"Simple Property\";");
-        sb.AppendLine("            else if (nodeInfo.IsBooleanProperty) typeInfo = \"Boolean Property\";");
-        sb.AppendLine("            else if (nodeInfo.IsEnumProperty) typeInfo = \"Enum Property\";");
-        sb.AppendLine("            else if (nodeInfo.IsCollectionProperty) typeInfo = \"Collection Property\";");
-        sb.AppendLine("            else if (nodeInfo.IsComplexProperty) typeInfo = \"Complex Property\";");
-        sb.AppendLine("            var typeValue = new Label { Text = typeInfo, AutoSize = true, ForeColor = Color.Blue };");
-        sb.AppendLine("            detailLayout.Controls.Add(typeLabel, 0, row);");
-        sb.AppendLine("            detailLayout.Controls.Add(typeValue, 1, row);");
-        sb.AppendLine("            row++;");
+        sb.AppendLine("            AddRow(new Label { Text = \"Property:\", AutoSize = true, Font = new Font(\"Segoe UI\", 9, FontStyle.Bold) },");
+        sb.AppendLine("                    new Label { Text = nodeInfo.PropertyName, AutoSize = true });");
+        sb.AppendLine();
+        sb.AppendLine("            string typeInfo = nodeInfo.IsSimpleProperty ? \"Simple Property\" :");
+        sb.AppendLine("                nodeInfo.IsBooleanProperty ? \"Boolean Property\" :");
+        sb.AppendLine("                nodeInfo.IsEnumProperty ? \"Enum Property\" :");
+        sb.AppendLine("                nodeInfo.IsCollectionProperty ? \"Collection Property\" :");
+        sb.AppendLine("                nodeInfo.IsComplexProperty ? \"Complex Property\" : \"Unknown\";");
+        sb.AppendLine("            AddRow(new Label { Text = \"Type:\", AutoSize = true },");
+        sb.AppendLine("                    new Label { Text = typeInfo, AutoSize = true, ForeColor = Color.Blue });");
+        sb.AppendLine();
+        sb.AppendLine("            if (nodeInfo.IsCollectionItem)");
+        sb.AppendLine("            {");
+        sb.AppendLine("                AddRow(new Label { Text = \"Index:\", AutoSize = true },");
+        sb.AppendLine("                        new Label { Text = nodeInfo.CollectionIndex.ToString(), AutoSize = true });");
+        sb.AppendLine("            }");
+        sb.AppendLine();
+        sb.AppendLine("            AddRow(new Label { Text = \"Object Type:\", AutoSize = true },");
+        sb.AppendLine("                    new Label { Text = nodeInfo.Object?.GetType().Name ?? \"<null>\", AutoSize = true });");
         sb.AppendLine();
         sb.AppendLine("            detailLayout.RowCount = row;");
+        sb.AppendLine("            detailLayout.ResumeLayout();");
         sb.AppendLine("        }");
-        
         sb.AppendLine("    }");
         sb.AppendLine("}");
         return sb.ToString();
+    }
+
+    private static string Indent(string text, string indent)
+    {
+        if (string.IsNullOrEmpty(text))
+        {
+            return string.Empty;
+        }
+
+        var normalized = text.Replace("\r\n", "\n");
+        var lines = normalized.Split('\n');
+        var builder = new StringBuilder();
+        for (int i = 0; i < lines.Length; i++)
+        {
+            // Skip a trailing empty line to avoid indenting an extra blank line
+            if (i == lines.Length - 1 && string.IsNullOrEmpty(lines[i]))
+            {
+                continue;
+            }
+
+            if (i > 0)
+            {
+                builder.Append('\n');
+            }
+
+            builder.Append(indent);
+            builder.Append(lines[i]);
+        }
+
+        return builder.ToString();
     }
 
     protected override UIComponent GenerateTreeViewStructure()
