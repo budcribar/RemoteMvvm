@@ -461,6 +461,20 @@ public abstract class UIGeneratorBase
     }
 
     /// <summary>
+    /// Generates strongly typed hierarchical tree loading logic that mirrors the WPF editor layout
+    /// without relying on runtime reflection.
+    /// </summary>
+    /// <param name="treeVariableName">Tree control variable name.</param>
+    /// <param name="viewModelVariableName">Root view model variable name.</param>
+    /// <param name="viewModelTypeName">Fully qualified view model type name.</param>
+    /// <returns>C# code for the hierarchical tree loader.</returns>
+    protected string GenerateHierarchicalTreeLogic(string treeVariableName, string viewModelVariableName, string viewModelTypeName)
+    {
+        var generator = new HierarchicalTreeGenerator(treeVariableName, viewModelVariableName, viewModelTypeName, GetRootNodeText(), Properties);
+        return generator.Generate();
+    }
+
+    /// <summary>
     /// Generates reflection-based hierarchical tree loading logic (like WPF approach)
     /// </summary>
     protected string GenerateReflectionBasedTreeLogic(string treeVariableName, string viewModelVariableName)
@@ -489,8 +503,8 @@ public abstract class UIGeneratorBase
         treeCommands.Add(new TreeCommand(TreeCommandType.TryBegin));
         
         // Create property tree node using helper method
-        treeCommands.Add(new TreeCommand(TreeCommandType.AssignValue, "propNode", 
-            $"CreatePropertyTreeNode(prop, {viewModelVariableName}, 0, visitedObjects)"));
+        treeCommands.Add(new TreeCommand(TreeCommandType.AssignValue, "propNode",
+            $"CreatePropertyTreeNode(prop, {viewModelVariableName}, 0, visitedObjects, prop.Name)"));
         treeCommands.Add(new TreeCommand(TreeCommandType.IfNotNull, "propNode"));
         treeCommands.Add(new TreeCommand(TreeCommandType.AddChildNode, "rootNode", "propNode"));
         treeCommands.Add(new TreeCommand(TreeCommandType.EndIf));
