@@ -1,4 +1,6 @@
-﻿# AGENTS Instructions
+﻿Review the RemoteMvvmOverview.md file under the docs folder
+
+# AGENTS Instructions
 
 This repository contains both .NET and TypeScript sources. If you modify any code files under `src/` or `test/`, run the following checks before creating a pull request:
 

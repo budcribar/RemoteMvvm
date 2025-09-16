@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 18
-VisualStudioVersion = 18.0.11010.61 d18.0
+VisualStudioVersion = 18.0.11010.61
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonsterClicker", "src\demo\MonsterClicker\MonsterClicker.csproj", "{8320DA7B-82A6-474A-AB17-1B464AA023D7}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -16,8 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8EC462FD-D22E-90A8-E5CE-7E832BA40C5D}"
 	ProjectSection(SolutionItems) = preProject
 		AGENTS.md = AGENTS.md
-		docs\CodeGenerationAndSync.md = docs\CodeGenerationAndSync.md
-		docs\UpdatePropertyValueExamples.md = docs\UpdatePropertyValueExamples.md
+		docs\RemoteMvvmOverview.md = docs\RemoteMvvmOverview.md
 	EndProjectSection
 EndProject
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "TypeScriptMonsterClicker", "src\demo\TypeScriptMonsterClicker\TypeScriptMonsterClicker.esproj", "{7F84A14F-D16E-AA0A-0252-1BCF79CD5AB6}"
